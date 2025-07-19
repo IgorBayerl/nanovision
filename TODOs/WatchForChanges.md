@@ -275,5 +275,5 @@ The implementation will be integrated into the existing application entrypoint (
 ## 5. Future Possibilities & Enhancements
 
 *   **Performance Optimization (Intelligent Re-parsing)**: The current plan re-runs the entire pipeline. A more advanced version could cache the `ParserResult` of each input file. When a single file changes, the system would only re-parse that one file and then re-run the `analyzer.MergeParserResults` with the updated set of cached results. This would provide a near-instantaneous update for projects with many large, unchanged report files.
-*   **Configuration File Watching**: Extend the watch functionality to monitor a project-specific configuration file (e.g., `.reportgenerator.yml`). If the configuration changes (e.g., a filter is updated), the tool would automatically reload the settings and regenerate the report.
+*   **Configuration File Watching**: Extend the watch functionality to monitor a project-specific configuration file (e.g., `.adlercov.yml`). If the configuration changes (e.g., a filter is updated), the tool would automatically reload the settings and regenerate the report.
 *   **Browser Live-Reload**: Integrate a lightweight web server and WebSocket connection to automatically refresh the HTML report in the browser whenever it's regenerated, completing the live feedback loop.

@@ -1,6 +1,6 @@
 <h1 align="center">
 
-<img src="imgs/adlercov.png" alt="ReportGenerator" width="200"/>
+<img src="imgs/adlercov.png" alt="AdlerCov" width="200"/>
 <br/>
 AdlerCov
 </h1>
