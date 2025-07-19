@@ -35,6 +35,7 @@ type processingOrchestrator struct {
 	processedAssemblyFiles            map[string]struct{}
 	detectedBranchCoverage            bool
 	logger                            *slog.Logger
+	unresolvedSourceFiles             []string
 }
 
 func newProcessingOrchestrator(
@@ -50,6 +51,7 @@ func newProcessingOrchestrator(
 		uniqueFilePathsForGrandTotalLines: make(map[string]int),
 		detectedBranchCoverage:            false,
 		logger:                            logger,
+		unresolvedSourceFiles:             make([]string, 0),
 	}
 }
 
@@ -155,7 +157,8 @@ func (o *processingOrchestrator) processClassGroup(logicalClassName string, clas
 func (o *processingOrchestrator) processFileForClass(filePath string, classModel *model.Class, fragments []ClassXML, fileFormatter language.Processor) (*model.CodeFile, []model.Method, error) {
 	resolvedPath, err := utils.FindFileInSourceDirs(filePath, o.sourceDirs, o.fileReader)
 	if err != nil {
-		o.logger.Warn("Source file not found, line content will be missing.", "file", filePath, "class", classModel.DisplayName)
+		o.logger.Error("Source file not found.", "file", filePath, "class", classModel.DisplayName)
+		o.unresolvedSourceFiles = append(o.unresolvedSourceFiles, filePath)
 		resolvedPath = filePath
 	}
 

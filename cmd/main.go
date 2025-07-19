@@ -19,6 +19,7 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/reportconfig"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter"
 	"github.com/IgorBayerl/AdlerCov/internal/settings"
+	"github.com/IgorBayerl/AdlerCov/internal/utils"
 
 	// reporters
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/htmlreport"
@@ -192,13 +193,15 @@ func createReportConfiguration(flags *cliFlags, verbosity logging.VerbosityLevel
 	)
 }
 
-func parseAndMergeReports(logger *slog.Logger, reportConfig *reportconfig.ReportConfiguration, parserFactory *parsers.ParserFactory) (*model.SummaryResult, error) {
+// parseReportFiles iterates through the report file patterns, parses each valid file,
+// and returns the collected results, any unresolved source file paths, and any parsing errors.
+func parseReportFiles(logger *slog.Logger, reportConfig *reportconfig.ReportConfiguration, parserFactory *parsers.ParserFactory) ([]*parsers.ParserResult, []string, []string) {
 	var parserResults []*parsers.ParserResult
 	var parserErrors []string
+	var allUnresolvedFiles []string
 
 	for _, reportFile := range reportConfig.ReportFiles() {
 		logger.Info("Attempting to parse report file", "file", reportFile)
-		// Use the injected factory instance to find the right parser
 		parserInstance, err := parserFactory.FindParserForFile(reportFile)
 		if err != nil {
 			msg := fmt.Sprintf("no suitable parser found for file %s: %v", reportFile, err)
@@ -209,7 +212,6 @@ func parseAndMergeReports(logger *slog.Logger, reportConfig *reportconfig.Report
 
 		logger.Info("Using parser for file", "parser", parserInstance.Name(), "file", reportFile)
 
-		// The Parse method will now use the language factory from the reportConfig
 		result, err := parserInstance.Parse(reportFile, reportConfig)
 		if err != nil {
 			msg := fmt.Sprintf("error parsing file %s with %s: %v", reportFile, parserInstance.Name(), err)
@@ -217,6 +219,11 @@ func parseAndMergeReports(logger *slog.Logger, reportConfig *reportconfig.Report
 			logger.Error(msg)
 			continue
 		}
+
+		if len(result.UnresolvedSourceFiles) > 0 {
+			allUnresolvedFiles = append(allUnresolvedFiles, result.UnresolvedSourceFiles...)
+		}
+
 		parserResults = append(parserResults, result)
 		logger.Info("Successfully parsed file", "file", reportFile)
 
@@ -228,10 +235,38 @@ func parseAndMergeReports(logger *slog.Logger, reportConfig *reportconfig.Report
 		}
 	}
 
+	return parserResults, allUnresolvedFiles, parserErrors
+}
+
+func parseAndMergeReports(logger *slog.Logger, reportConfig *reportconfig.ReportConfiguration, parserFactory *parsers.ParserFactory) (*model.SummaryResult, error) {
+	parserResults, allUnresolvedFiles, parserErrors := parseReportFiles(logger, reportConfig, parserFactory)
+
+	// any source files were not found.
+	if len(allUnresolvedFiles) > 0 {
+		uniqueUnresolvedFiles := utils.DistinctBy(allUnresolvedFiles, func(s string) string { return s })
+
+		logger.Error("Failed to find source files referenced in coverage report",
+			"count", len(uniqueUnresolvedFiles))
+		logger.Error("This is a fatal error because it would result in an incorrect or empty report")
+		logger.Error("Please provide the root directory of your source code using the '-sourcedirs' flag")
+		logger.Error("Examples of missing files:")
+
+		limit := 5
+		if len(uniqueUnresolvedFiles) < limit {
+			limit = len(uniqueUnresolvedFiles)
+		}
+		for i := 0; i < limit; i++ {
+			logger.Error("Missing file", "file", uniqueUnresolvedFiles[i])
+		}
+
+		return nil, errors.New("failed to find source files referenced in coverage report")
+	}
+
+	// no reports could be parsed at all
 	if len(parserResults) == 0 {
 		errMsg := "no coverage reports could be parsed successfully"
 		if len(parserErrors) > 0 {
-			errMsg = fmt.Sprintf("%s. Errors:\n- %s", errMsg, strings.Join(parserErrors, "\n- "))
+			errMsg = fmt.Sprintf("%s. Errors:\r\n- %s", errMsg, strings.Join(parserErrors, "\r\n- "))
 		}
 		return nil, errors.New(errMsg)
 	}

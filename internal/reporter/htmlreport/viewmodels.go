@@ -283,7 +283,7 @@ type CardViewModel struct {
 	SubTitle                   string // e.g., "72%"
 	SubTitlePercentageBarValue int    // e.g., 27 for 72% coverage (100-72)
 	Rows                       []CardRowViewModel
-	ProRequired                bool // For the "Method Coverage" card
+	ProRequired                bool
 }
 
 // CardRowViewModel represents a row in a summary card

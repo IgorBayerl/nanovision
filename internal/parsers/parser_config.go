@@ -18,6 +18,7 @@ type ParserResult struct {
 	ParserName             string
 	MinimumTimeStamp       *time.Time
 	MaximumTimeStamp       *time.Time
+	UnresolvedSourceFiles  []string
 }
 
 type ParserConfig interface {

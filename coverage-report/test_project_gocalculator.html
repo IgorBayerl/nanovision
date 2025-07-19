@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE,chrome=1" />
+<link href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAn1BMVEUAAADCAAAAAAA3yDfUAAA3yDfUAAA8PDzr6+sAAAD4+Pg3yDeQkJDTAADt7e3V1dU3yDdCQkIAAADbMTHUAABBykHUAAA2yDY3yDfr6+vTAAB3diDR0dGYcHDUAAAjhiPSAAA3yDeuAADUAAA3yDf////OCALg9+BLzktBuzRelimzKgv87+/dNTVflSn1/PWz6rO126g5yDlYniy0KgwjJ0TyAAAAI3RSTlMABAj0WD6rJcsN7X1HzMqUJyYW+/X08+bltqSeaVRBOy0cE+citBEAAADBSURBVDjLlczXEoIwFIThJPYGiL0XiL3r+z+bBOJs9JDMuLffP8v+Gxfc6aIyDQVjQcnqnvRDEQwLJYtXpZT+YhDHKIjLbS+OUeT4TjkKi6OwOArq+yeKXD9uDqQQbcOjyCy0e6bTojZSftX+U6zUQ7OuittDu1k0WHqRFfdXQijgjKfF6ZwAikvmKD6OQjmKWUcDigkztm5FZN05nMON9ZcoinlBmTNnAUdBnRbUUbgdBZwWbkcBpwXcVsBtxfjb31j1QB5qeebOAAAAAElFTkSuQmCC" rel="icon" type="image/x-icon" />
+<title>calculator - Coverage Report</title>
+<link rel="stylesheet" type="text/css" href="report.css" />
+<link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <script>
+        window.classDetails = JSON.parse({"class":{"name":"calculator","rp":"","cl":22,"ucl":6,"cal":28,"tl":109,"cb":0,"tb":0,"cm":10,"fcm":7,"tm":11,"lch":null,"bch":null,"mch":null,"mfch":null,"hc":null,"metrics":{"Cyclomatic complexity":23}},"files":[{"p":"Testprojects\\Go\\calculator\\calculator.go","ls":[{"ln":1,"lc":"package calculator","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":2,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":3,"lc":"// Add returns the sum of two integers.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":4,"lc":"func Add(a, b int) int {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":5,"lc":"\treturn a + b","h":1,"lvs":"green","cb":0,"tb":0},{"ln":6,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":7,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":8,"lc":"// Subtract returns the difference between two integers.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":9,"lc":"func Subtract(a, b int) int {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":10,"lc":"\treturn a - b","h":1,"lvs":"green","cb":0,"tb":0},{"ln":11,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":12,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":13,"lc":"// Multiply returns the product of two integers.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":14,"lc":"// This function is intentionally not fully covered by tests.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":15,"lc":"func Multiply(a, b int) int {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":16,"lc":"\tif a == 0 || b == 0 {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":17,"lc":"\t\treturn 0","h":1,"lvs":"green","cb":0,"tb":0},{"ln":18,"lc":"\t}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":19,"lc":"\treturn a * b","h":0,"lvs":"red","cb":0,"tb":0},{"ln":20,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":21,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":22,"lc":"// Divide performs integer division and returns the result and a remainder.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":23,"lc":"// This function will be partially tested to demonstrate branch coverage.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":24,"lc":"func Divide(a, b int) (int, int) {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":25,"lc":"\tif b == 0 {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":26,"lc":"\t\treturn 0, 0 // Avoid panic on division by zero","h":0,"lvs":"red","cb":0,"tb":0},{"ln":27,"lc":"\t}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":28,"lc":"\treturn a / b, a % b","h":1,"lvs":"green","cb":0,"tb":0},{"ln":29,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":30,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":31,"lc":"// GetGradeForScore calculates a letter grade based on a numeric score.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":32,"lc":"// This function has a high cyclomatic complexity to stress test the metrics.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":33,"lc":"// Complexity is introduced by the initial check (with an OR) and the switch statement.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":34,"lc":"func GetGradeForScore(score int) string {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":35,"lc":"\t// Each condition adds to the complexity. The \"||\" operator is one decision point.","h":1,"lvs":"green","cb":0,"tb":0},{"ln":36,"lc":"\tif score \u003c 0 || score \u003e 100 {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":37,"lc":"\t\treturn \"Invalid Score\"","h":1,"lvs":"green","cb":0,"tb":0},{"ln":38,"lc":"\t}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":39,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":40,"lc":"\t// A switch statement is a series of decision points.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":41,"lc":"\tswitch {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":42,"lc":"\tcase score \u003e= 90:","h":1,"lvs":"green","cb":0,"tb":0},{"ln":43,"lc":"\t\treturn \"A\"","h":1,"lvs":"green","cb":0,"tb":0},{"ln":44,"lc":"\tcase score \u003e= 80:","h":1,"lvs":"green","cb":0,"tb":0},{"ln":45,"lc":"\t\treturn \"B\"","h":1,"lvs":"green","cb":0,"tb":0},{"ln":46,"lc":"\tcase score \u003e= 70:","h":0,"lvs":"red","cb":0,"tb":0},{"ln":47,"lc":"\t\treturn \"C\" // This case will be intentionally untested.","h":0,"lvs":"red","cb":0,"tb":0},{"ln":48,"lc":"\tcase score \u003e= 60:","h":1,"lvs":"green","cb":0,"tb":0},{"ln":49,"lc":"\t\treturn \"D\"","h":1,"lvs":"green","cb":0,"tb":0},{"ln":50,"lc":"\tdefault:","h":1,"lvs":"green","cb":0,"tb":0},{"ln":51,"lc":"\t\treturn \"F\"","h":1,"lvs":"green","cb":0,"tb":0},{"ln":52,"lc":"\t}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":53,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0}],"cl":13,"cal":16,"tl":53,"mmh":null,"mmr":null,"ce":null},{"p":"Testprojects\\Go\\calculator\\entities.go","ls":[{"ln":1,"lc":"package calculator","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":2,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":3,"lc":"import \"fmt\"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":4,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":5,"lc":"// Counter is a simple struct to demonstrate methods with receivers.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":6,"lc":"type Counter struct {","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":7,"lc":"\tvalue int","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":8,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":9,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":10,"lc":"// Increment increases the counter's value by one (pointer receiver).","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":11,"lc":"func (c *Counter) Increment() {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":12,"lc":"\tc.value++","h":1,"lvs":"green","cb":0,"tb":0},{"ln":13,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":14,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":15,"lc":"// Value returns the current value of the counter (value receiver).","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":16,"lc":"func (c Counter) Value() int {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":17,"lc":"\treturn c.value","h":1,"lvs":"green","cb":0,"tb":0},{"ln":18,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":19,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":20,"lc":"// Add adds a given amount to the counter.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":21,"lc":"// This method has a branch to test conditional coverage.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":22,"lc":"func (c *Counter) Add(amount int) {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":23,"lc":"\tif amount \u003c 0 {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":24,"lc":"\t\t// Do not add negative numbers; this branch will be tested.","h":1,"lvs":"green","cb":0,"tb":0},{"ln":25,"lc":"\t\treturn","h":1,"lvs":"green","cb":0,"tb":0},{"ln":26,"lc":"\t}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":27,"lc":"\tc.value += amount","h":1,"lvs":"green","cb":0,"tb":0},{"ln":28,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":29,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":30,"lc":"// MessageBuilder is another example struct for testing.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":31,"lc":"type MessageBuilder struct {","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":32,"lc":"\tgreeting string","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":33,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":34,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":35,"lc":"// NewMessageBuilder creates a new MessageBuilder.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":36,"lc":"// This function will not be covered by tests to show uncovered code.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":37,"lc":"func NewMessageBuilder(greeting string) *MessageBuilder {","h":0,"lvs":"red","cb":0,"tb":0},{"ln":38,"lc":"\tif greeting == \"\" {","h":0,"lvs":"red","cb":0,"tb":0},{"ln":39,"lc":"\t\treturn \u0026MessageBuilder{greeting: \"Hello\"}","h":0,"lvs":"red","cb":0,"tb":0},{"ln":40,"lc":"\t}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":41,"lc":"\treturn \u0026MessageBuilder{greeting: greeting}","h":0,"lvs":"red","cb":0,"tb":0},{"ln":42,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":43,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":44,"lc":"// Greet returns a formatted greeting string.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":45,"lc":"func (mb *MessageBuilder) Greet(name string) string {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":46,"lc":"\tif name == \"\" {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":47,"lc":"\t\treturn fmt.Sprintf(\"%s, World!\", mb.greeting)","h":1,"lvs":"green","cb":0,"tb":0},{"ln":48,"lc":"\t}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":49,"lc":"\treturn fmt.Sprintf(\"%s, %s!\", mb.greeting, name)","h":1,"lvs":"green","cb":0,"tb":0},{"ln":50,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":51,"lc":"","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":52,"lc":"// unexportedHelper is an unexported function to see if it appears in coverage.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":53,"lc":"// It should not be part of the public API but will be covered by tests.","h":-1,"lvs":"gray","cb":0,"tb":0},{"ln":54,"lc":"func unexportedHelper() string {","h":1,"lvs":"green","cb":0,"tb":0},{"ln":55,"lc":"\treturn \"I am a helper\"","h":1,"lvs":"green","cb":0,"tb":0},{"ln":56,"lc":"}","h":-1,"lvs":"gray","cb":0,"tb":0}],"cl":9,"cal":12,"tl":56,"mmh":null,"mmr":null,"ce":null}]});
+        window.assemblies = JSON.parse([{"name":"test_project_go","classes":[{"name":"calculator_2","rp":"test_project_gocalculator_2.html","cl":14,"ucl":14,"cal":28,"tl":109,"cb":0,"tb":0,"cm":5,"fcm":3,"tm":11,"lch":[],"bch":[],"mch":[],"mfch":[],"hc":[],"metrics":{"Cyclomatic complexity":23}},{"name":"calculator","rp":"test_project_gocalculator.html","cl":22,"ucl":6,"cal":28,"tl":109,"cb":0,"tb":0,"cm":10,"fcm":7,"tm":11,"lch":[],"bch":[],"mch":[],"mfch":[],"hc":[],"metrics":{"Cyclomatic complexity":23}}]}]);
+        window.translations = JSON.parse({"AllChanges":"All changes","AllFiles":"All files","ApplySettings":"Apply settings","Assemblies2":"Assemblies","Assembly":"Assembly","Average":"Average","BranchCoverage":"Branch coverage","BranchCoverageDecreaseOnly":"Branch coverage: Decrease only","BranchCoverageIncreaseOnly":"Branch coverage: Increase only","BranchCoverageNUnit":"Branch coverage (NUnit)","Branches":"Branches","ByAssembly":"By assembly","ByNamespace":"By namespace, Level:","ChartLoading":"Chart loading...","Class":"Class","Classes":"Classes","CodeElementCoverageQuota2":"Method/property coverage","CompareHistory":"Compare with:","CompareWithBranch":"Compare with branch","Coverable":"Coverable","CoverableLines":"Coverable lines","Coverage":"Coverage","Coverage3":"Coverage","CoverageDate":"Coverage date","CoverageReport":"Coverage Report","CoverageTypes":"Coverage types","Covered":"Covered","CoveredBranches2":"Covered branches","CoveredCodeElements":"Covered methods/properties","CoveredLines":"Covered lines","CrapScore":"CrapScore","CurrentBranch":"Current branch","CyclomaticComplexity":"Cyclomatic complexity","Date":"Date","ExecutionTime":"Execution time","File":"File","Files":"Files","Files2":"Files","Files3":"File(s)","Filter":"Filter","FullCodeElementCoverageQuota2":"Full method/property coverage","FullCoveredCodeElements":"Fully covered methods/properties","FullMethodCoverage":"Full method coverage","FullMethodCoverageDecreaseOnly":"Full method coverage: Decrease only","FullMethodCoverageIncreaseOnly":"Full method coverage: Increase only","FullyCovered":"Fully covered","FullyCoveredMessage":"The element is fully covered by tests.","GeneratedBy":"Generated by","Grouping":"Grouping:","HideHelp":"Hide help","HideHistoricChart":"Hide historic chart","HistoricCoverage":"Historic Coverage","History":"History","Information":"Information","Line":"Line","LineCoverage":"Line coverage","LineCoverageDecreaseOnly":"Line coverage: Decrease only","LineCoverageIncreaseOnly":"Line coverage: Increase only","LineCoverageNUnit":"Line coverage (NUnit)","Lines":"Lines","LoadingData":"Loading data...","MethodCoverage":"Method coverage","MethodCoverageDecreaseOnly":"Method coverage: Decrease only","MethodCoverageIncreaseOnly":"Method coverage: Increase only","MethodCoverageProButton":"Upgrade to PRO version","MethodCoverageProVersion":"This feature is only available for sponsors.","Methods":"Methods","MethodsProperties":"Methods/Properties","Metrics":"Metrics","NPathComplexity":"NPath complexity","Name":"Name","NoCommonCommits":"No common commits found for comparison.","NoCoverageData":"No coverage data available.","NoCoveredAssemblies":"No assemblies have been covered.","NoData":"No data available.","NoFilesFound":"No files found.","NoGitInfo":"No Git information available for comparison.","NoGrouping":"No grouping","NoRiskHotspots":"No risk hotspots found.","NotCovered":"Not covered","NotCoveredMessage":"The element is not covered by any test.","OverallCoverage":"Overall coverage","Parser":"Parser","PartiallyCovered":"Partially covered","PartiallyCoveredMessage":"The element is only partially covered by tests.","Percentage":"Percentage","RiskHotspots":"Risk Hotspots","SelectCoverageTypes":"Select coverage types","SelectCoverageTypesAndMetrics":"Select coverage types \u0026 metrics","SequenceCoverage":"Sequence coverage","Settings":"Settings","ShowAll":"Show all","ShowHelp":"Show help","ShowHistoricChart":"Show historic chart","ShowLess":"Show less","ShowMore":"Show more","Sponsor":"Sponsor","SponsorTooltip":"Sponsor ReportGenerator on GitHub","Star":"Star","StarTooltip":"Star ReportGenerator on GitHub","Summary":"Summary","Tag":"Tag","Total":"Total","TotalBranches":"Total branches","TotalCodeElements":"Total methods/properties","TotalLines":"Total lines","Uncovered":"Uncovered","UncoveredLines":"Uncovered lines","allChanges":"All changes","branchCoverage":"Branch coverage","branchCoverageDecreaseOnly":"Branch coverage: Decrease only","branchCoverageIncreaseOnly":"Branch coverage: Increase only","byAssembly":"By assembly","byNamespace":"By namespace, Level:","collapseAll":"Collapse all","compareHistory":"Compare with:","coverable":"Coverable","coverage":"Line coverage","coverageTypes":"Coverage types","covered":"Covered","date":"Date","expandAll":"Expand all","filter":"Filter","fullMethodCoverage":"Full method coverage","fullMethodCoverageDecreaseOnly":"Full method coverage: Decrease only","fullMethodCoverageIncreaseOnly":"Full method coverage: Increase only","grouping":"Grouping:","history":"History","lineCoverageDecreaseOnly":"Line coverage: Decrease only","lineCoverageIncreaseOnly":"Line coverage: Increase only","methodCoverage":"Method coverage","methodCoverageDecreaseOnly":"Method coverage: Decrease only","methodCoverageIncreaseOnly":"Method coverage: Increase only","methodCoverageProVersion":"This feature is only available for sponsors.","metrics":"Metrics","name":"Name","noGrouping":"No grouping","percentage":"Percentage","selectCoverageTypes":"Select coverage types","selectCoverageTypesAndMetrics":"Select coverage types \u0026 metrics","total":"Total","uncovered":"Uncovered"});
+        window.branchCoverageAvailable =  false ;
+        window.methodCoverageAvailable =  true ;
+        window.maximumDecimalPlacesForCoverageQuotas =  1 ;
+        window.riskHotspots = JSON.parse([]); 
+        window.metrics = JSON.parse([{"name":"NPath complexity","abbreviation":"npath","explanationUrl":"https://modess.io/npath-complexity-cyclomatic-complexity-explained/"},{"name":"CrapScore","abbreviation":"crap","explanationUrl":"https://testing.googleblog.com/2011/02/this-code-is-crap.html"}]);
+        window.riskHotspotMetrics = JSON.parse([{"name":"Cyclomatic complexity","abbreviation":"cyclomatic","explanationUrl":"https://www.ndepend.com/docs/code-metrics#CC"},{"name":"CrapScore","abbreviation":"crap","explanationUrl":"https://testing.googleblog.com/2011/02/this-code-is-crap.html"},{"name":"NPath complexity","abbreviation":"npath","explanationUrl":"https://modess.io/npath-complexity-cyclomatic-complexity-explained/"}]);
+        window.historicCoverageExecutionTimes = JSON.parse([]);
+    </script>
+
+    <div class="container">
+        <div class="containerleft">
+            <h1><a href="index.html" class="back">&lt;</a> Summary</h1>
+
+            <div class="card-group">
+                <div class="card">
+                    <div class="card-header">Information</div>
+                    <div class="card-body">
+                        <div class="table">
+                            <table>
+                                <tr><th>Class:</th><td class="limit-width" title="calculator">calculator</td></tr>
+                                <tr><th>Assembly:</th><td class="limit-width" title="test_project_go/calculator">test_project_go/calculator</td></tr>
+                                <tr><th>File(s):</th><td class="overflow-wrap">
+                                    
+                                    
+                                    
+                                        <a href="#calculator.go" class="navigatetohash">File 1: Testprojects\Go\calculator\calculator.go</a><br />
+                                    
+                                        <a href="#entities.go" class="navigatetohash">File 2: Testprojects\Go\calculator\entities.go</a>
+                                    
+                                </td></tr>
+                                
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-group">
+                <div class="card">
+                    <div class="card-header">Line coverage</div>
+                    <div class="card-body">
+                        <div class="large cardpercentagebar cardpercentagebar21">78%</div>
+                        <div class="table">
+                            <table>
+                                <tr><th>Covered lines:</th><td class="limit-width right" title="22">22</td></tr>
+                                <tr><th>Uncovered lines:</th><td class="limit-width right" title="6">6</td></tr>
+                                <tr><th>Coverable lines:</th><td class="limit-width right" title="28">28</td></tr>
+                                <tr><th>Total lines:</th><td class="limit-width right" title="109">109</td></tr>
+                                <tr><th>Line coverage:</th><td class="limit-width right" title="22 of 28">22 of 28</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                 <div class="card">
+                    <div class="card-header">Method coverage</div>
+                    <div class="card-body">
+                        
+                        <div class="large cardpercentagebar cardpercentagebar9">91%</div>
+                        <div class="table">
+                            <table>
+                                <tr><th>Covered methods/properties:</th><td class="limit-width right" title="10">10</td></tr>
+                                <tr><th>Fully covered methods/properties:</th><td class="limit-width right" title="7">7</td></tr>
+                                <tr><th>Total methods/properties:</th><td class="limit-width right" title="11">11</td></tr>
+                                <tr><th>Method/property coverage:</th><td class="limit-width right" title="10 of 11">10 of 11</td></tr>
+                                <tr><th>Full method/property coverage:</th><td class="limit-width right" title="7 of 11">7 of 11</td></tr>
+                            </table>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+             
+            <h1>Metrics</h1>
+            <div class="table-responsive">
+                <table class="overview table-fixed">
+                    <colgroup>
+                        <col class="column-min-200" />
+                        
+                        <col class="column105" />
+                        
+                        <col class="column105" />
+                        
+                        <col class="column105" />
+                        
+                        <col class="column105" />
+                        
+                    </colgroup>
+                    <thead><tr><th>Methods</th>
+                        
+                        <th>Branch coverage <a href="https://en.wikipedia.org/wiki/Code_coverage" target="_blank"><i class="icon-info-circled"></i></a></th>
+                        
+                        <th>CrapScore <a href="https://testing.googleblog.com/2011/02/this-code-is-crap.html" target="_blank"><i class="icon-info-circled"></i></a></th>
+                        
+                        <th>Cyclomatic complexity <a href="https://en.wikipedia.org/wiki/Cyclomatic_complexity" target="_blank"><i class="icon-info-circled"></i></a></th>
+                        
+                        <th>Line coverage <a href="https://en.wikipedia.org/wiki/Code_coverage" target="_blank"><i class="icon-info-circled"></i></a></th>
+                        
+                    </tr></thead>
+                    <tbody>
+                        
+                        <tr><td title="Add"><a href="#calculator.go_line4" class="navigatetohash">File 1: Add</a></td>
+                            <td>N/A</td><td>1.00</td><td>1</td><td>100.0</td>
+                        </tr>
+                        
+                        <tr><td title="Subtract"><a href="#calculator.go_line9" class="navigatetohash">File 1: Subtract</a></td>
+                            <td>N/A</td><td>1.00</td><td>1</td><td>100.0</td>
+                        </tr>
+                        
+                        <tr><td title="Multiply"><a href="#calculator.go_line15" class="navigatetohash">File 1: Multiply</a></td>
+                            <td>N/A</td><td>3.33</td><td>3</td><td>66.7</td>
+                        </tr>
+                        
+                        <tr><td title="Divide"><a href="#calculator.go_line24" class="navigatetohash">File 1: Divide</a></td>
+                            <td>N/A</td><td>2.15</td><td>2</td><td>66.7</td>
+                        </tr>
+                        
+                        <tr><td title="GetGradeForScore"><a href="#calculator.go_line34" class="navigatetohash">File 1: GetGradeForScore</a></td>
+                            <td>N/A</td><td>7.10</td><td>7</td><td>87.5</td>
+                        </tr>
+                        
+                        <tr><td title="(*Counter).Increment"><a href="#entities.go_line11" class="navigatetohash">File 2: (*Counter).Increment</a></td>
+                            <td>N/A</td><td>1.00</td><td>1</td><td>100.0</td>
+                        </tr>
+                        
+                        <tr><td title="(Counter).Value"><a href="#entities.go_line16" class="navigatetohash">File 2: (Counter).Value</a></td>
+                            <td>N/A</td><td>1.00</td><td>1</td><td>100.0</td>
+                        </tr>
+                        
+                        <tr><td title="(*Counter).Add"><a href="#entities.go_line22" class="navigatetohash">File 2: (*Counter).Add</a></td>
+                            <td>N/A</td><td>2.00</td><td>2</td><td>100.0</td>
+                        </tr>
+                        
+                        <tr><td title="NewMessageBuilder"><a href="#entities.go_line37" class="navigatetohash">File 2: NewMessageBuilder</a></td>
+                            <td>N/A</td><td>6.00</td><td>2</td><td>0.0</td>
+                        </tr>
+                        
+                        <tr><td title="(*MessageBuilder).Greet"><a href="#entities.go_line45" class="navigatetohash">File 2: (*MessageBuilder).Greet</a></td>
+                            <td>N/A</td><td>2.00</td><td>2</td><td>100.0</td>
+                        </tr>
+                        
+                        <tr><td title="unexportedHelper"><a href="#entities.go_line54" class="navigatetohash">File 2: unexportedHelper</a></td>
+                            <td>N/A</td><td>1.00</td><td>1</td><td>100.0</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+            
+
+            <h1>File(s)</h1>
+            
+            <h2 id="calculator.go">Testprojects\Go\calculator\calculator.go</h2>
+            <div class="table-responsive">
+                <table class="lineAnalysis">
+                    <thead><tr><th></th><th>#</th><th>Line</th><th></th><th>Line coverage</th></tr></thead>
+                    <tbody>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line1"></a><code>1</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>package&nbsp;calculator</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line2"></a><code>2</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line3"></a><code>3</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Add&nbsp;returns&nbsp;the&nbsp;sum&nbsp;of&nbsp;two&nbsp;integers.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line4"></a><code>4</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;Add(a,&nbsp;b&nbsp;int)&nbsp;int&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line5"></a><code>5</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;a&nbsp;+&nbsp;b</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line6"></a><code>6</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line7"></a><code>7</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line8"></a><code>8</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Subtract&nbsp;returns&nbsp;the&nbsp;difference&nbsp;between&nbsp;two&nbsp;integers.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line9"></a><code>9</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;Subtract(a,&nbsp;b&nbsp;int)&nbsp;int&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line10"></a><code>10</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;a&nbsp;-&nbsp;b</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line11"></a><code>11</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line12"></a><code>12</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line13"></a><code>13</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Multiply&nbsp;returns&nbsp;the&nbsp;product&nbsp;of&nbsp;two&nbsp;integers.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line14"></a><code>14</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;This&nbsp;function&nbsp;is&nbsp;intentionally&nbsp;not&nbsp;fully&nbsp;covered&nbsp;by&nbsp;tests.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line15"></a><code>15</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;Multiply(a,&nbsp;b&nbsp;int)&nbsp;int&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line16"></a><code>16</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;a&nbsp;==&nbsp;0&nbsp;||&nbsp;b&nbsp;==&nbsp;0&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line17"></a><code>17</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;0</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line18"></a><code>18</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Covered (0 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;red&#34;,&#34;VC&#34;:&#34;0&#34;}}">
+                            <td class="red"> </td>
+                            <td class="leftmargin rightmargin right">0</td>
+                            <td class="rightmargin right"><a id="calculator.go_line19"></a><code>19</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;a&nbsp;*&nbsp;b</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line20"></a><code>20</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line21"></a><code>21</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line22"></a><code>22</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Divide&nbsp;performs&nbsp;integer&nbsp;division&nbsp;and&nbsp;returns&nbsp;the&nbsp;result&nbsp;and&nbsp;a&nbsp;remainder.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line23"></a><code>23</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;This&nbsp;function&nbsp;will&nbsp;be&nbsp;partially&nbsp;tested&nbsp;to&nbsp;demonstrate&nbsp;branch&nbsp;coverage.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line24"></a><code>24</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;Divide(a,&nbsp;b&nbsp;int)&nbsp;(int,&nbsp;int)&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line25"></a><code>25</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;b&nbsp;==&nbsp;0&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Covered (0 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;red&#34;,&#34;VC&#34;:&#34;0&#34;}}">
+                            <td class="red"> </td>
+                            <td class="leftmargin rightmargin right">0</td>
+                            <td class="rightmargin right"><a id="calculator.go_line26"></a><code>26</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;0,&nbsp;0&nbsp;//&nbsp;Avoid&nbsp;panic&nbsp;on&nbsp;division&nbsp;by&nbsp;zero</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line27"></a><code>27</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line28"></a><code>28</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;a&nbsp;/&nbsp;b,&nbsp;a&nbsp;%&nbsp;b</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line29"></a><code>29</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line30"></a><code>30</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line31"></a><code>31</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;GetGradeForScore&nbsp;calculates&nbsp;a&nbsp;letter&nbsp;grade&nbsp;based&nbsp;on&nbsp;a&nbsp;numeric&nbsp;score.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line32"></a><code>32</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;This&nbsp;function&nbsp;has&nbsp;a&nbsp;high&nbsp;cyclomatic&nbsp;complexity&nbsp;to&nbsp;stress&nbsp;test&nbsp;the&nbsp;metrics.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line33"></a><code>33</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Complexity&nbsp;is&nbsp;introduced&nbsp;by&nbsp;the&nbsp;initial&nbsp;check&nbsp;(with&nbsp;an&nbsp;OR)&nbsp;and&nbsp;the&nbsp;switch&nbsp;statement.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line34"></a><code>34</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;GetGradeForScore(score&nbsp;int)&nbsp;string&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line35"></a><code>35</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;Each&nbsp;condition&nbsp;adds&nbsp;to&nbsp;the&nbsp;complexity.&nbsp;The&nbsp;&#34;||&#34;&nbsp;operator&nbsp;is&nbsp;one&nbsp;decision&nbsp;point.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line36"></a><code>36</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;score&nbsp;&lt;&nbsp;0&nbsp;||&nbsp;score&nbsp;&gt;&nbsp;100&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line37"></a><code>37</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#34;Invalid&nbsp;Score&#34;</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line38"></a><code>38</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line39"></a><code>39</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line40"></a><code>40</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;A&nbsp;switch&nbsp;statement&nbsp;is&nbsp;a&nbsp;series&nbsp;of&nbsp;decision&nbsp;points.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line41"></a><code>41</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;switch&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line42"></a><code>42</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;score&nbsp;&gt;=&nbsp;90:</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line43"></a><code>43</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#34;A&#34;</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line44"></a><code>44</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;score&nbsp;&gt;=&nbsp;80:</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line45"></a><code>45</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#34;B&#34;</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Covered (0 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;red&#34;,&#34;VC&#34;:&#34;0&#34;}}">
+                            <td class="red"> </td>
+                            <td class="leftmargin rightmargin right">0</td>
+                            <td class="rightmargin right"><a id="calculator.go_line46"></a><code>46</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;score&nbsp;&gt;=&nbsp;70:</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Covered (0 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;red&#34;,&#34;VC&#34;:&#34;0&#34;}}">
+                            <td class="red"> </td>
+                            <td class="leftmargin rightmargin right">0</td>
+                            <td class="rightmargin right"><a id="calculator.go_line47"></a><code>47</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#34;C&#34;&nbsp;//&nbsp;This&nbsp;case&nbsp;will&nbsp;be&nbsp;intentionally&nbsp;untested.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line48"></a><code>48</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;score&nbsp;&gt;=&nbsp;60:</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line49"></a><code>49</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#34;D&#34;</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line50"></a><code>50</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;default:</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="calculator.go_line51"></a><code>51</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#34;F&#34;</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line52"></a><code>52</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="calculator.go_line53"></a><code>53</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                    </tbody>
+                </table>
+            </div>
+            
+            <h2 id="entities.go">Testprojects\Go\calculator\entities.go</h2>
+            <div class="table-responsive">
+                <table class="lineAnalysis">
+                    <thead><tr><th></th><th>#</th><th>Line</th><th></th><th>Line coverage</th></tr></thead>
+                    <tbody>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line1"></a><code>1</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>package&nbsp;calculator</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line2"></a><code>2</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line3"></a><code>3</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>import&nbsp;&#34;fmt&#34;</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line4"></a><code>4</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line5"></a><code>5</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Counter&nbsp;is&nbsp;a&nbsp;simple&nbsp;struct&nbsp;to&nbsp;demonstrate&nbsp;methods&nbsp;with&nbsp;receivers.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line6"></a><code>6</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>type&nbsp;Counter&nbsp;struct&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line7"></a><code>7</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;value&nbsp;int</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line8"></a><code>8</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line9"></a><code>9</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line10"></a><code>10</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Increment&nbsp;increases&nbsp;the&nbsp;counter&#39;s&nbsp;value&nbsp;by&nbsp;one&nbsp;(pointer&nbsp;receiver).</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line11"></a><code>11</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;(c&nbsp;*Counter)&nbsp;Increment()&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line12"></a><code>12</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;c.value++</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line13"></a><code>13</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line14"></a><code>14</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line15"></a><code>15</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Value&nbsp;returns&nbsp;the&nbsp;current&nbsp;value&nbsp;of&nbsp;the&nbsp;counter&nbsp;(value&nbsp;receiver).</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line16"></a><code>16</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;(c&nbsp;Counter)&nbsp;Value()&nbsp;int&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line17"></a><code>17</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;c.value</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line18"></a><code>18</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line19"></a><code>19</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line20"></a><code>20</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Add&nbsp;adds&nbsp;a&nbsp;given&nbsp;amount&nbsp;to&nbsp;the&nbsp;counter.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line21"></a><code>21</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;This&nbsp;method&nbsp;has&nbsp;a&nbsp;branch&nbsp;to&nbsp;test&nbsp;conditional&nbsp;coverage.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line22"></a><code>22</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;(c&nbsp;*Counter)&nbsp;Add(amount&nbsp;int)&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line23"></a><code>23</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;amount&nbsp;&lt;&nbsp;0&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line24"></a><code>24</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//&nbsp;Do&nbsp;not&nbsp;add&nbsp;negative&nbsp;numbers;&nbsp;this&nbsp;branch&nbsp;will&nbsp;be&nbsp;tested.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line25"></a><code>25</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line26"></a><code>26</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line27"></a><code>27</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;c.value&nbsp;+=&nbsp;amount</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line28"></a><code>28</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line29"></a><code>29</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line30"></a><code>30</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;MessageBuilder&nbsp;is&nbsp;another&nbsp;example&nbsp;struct&nbsp;for&nbsp;testing.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line31"></a><code>31</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>type&nbsp;MessageBuilder&nbsp;struct&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line32"></a><code>32</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;greeting&nbsp;string</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line33"></a><code>33</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line34"></a><code>34</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line35"></a><code>35</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;NewMessageBuilder&nbsp;creates&nbsp;a&nbsp;new&nbsp;MessageBuilder.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line36"></a><code>36</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;This&nbsp;function&nbsp;will&nbsp;not&nbsp;be&nbsp;covered&nbsp;by&nbsp;tests&nbsp;to&nbsp;show&nbsp;uncovered&nbsp;code.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Covered (0 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;red&#34;,&#34;VC&#34;:&#34;0&#34;}}">
+                            <td class="red"> </td>
+                            <td class="leftmargin rightmargin right">0</td>
+                            <td class="rightmargin right"><a id="entities.go_line37"></a><code>37</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightred"><code>func&nbsp;NewMessageBuilder(greeting&nbsp;string)&nbsp;*MessageBuilder&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Covered (0 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;red&#34;,&#34;VC&#34;:&#34;0&#34;}}">
+                            <td class="red"> </td>
+                            <td class="leftmargin rightmargin right">0</td>
+                            <td class="rightmargin right"><a id="entities.go_line38"></a><code>38</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;greeting&nbsp;==&nbsp;&#34;&#34;&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Covered (0 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;red&#34;,&#34;VC&#34;:&#34;0&#34;}}">
+                            <td class="red"> </td>
+                            <td class="leftmargin rightmargin right">0</td>
+                            <td class="rightmargin right"><a id="entities.go_line39"></a><code>39</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&amp;MessageBuilder{greeting:&nbsp;&#34;Hello&#34;}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line40"></a><code>40</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Covered (0 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;red&#34;,&#34;VC&#34;:&#34;0&#34;}}">
+                            <td class="red"> </td>
+                            <td class="leftmargin rightmargin right">0</td>
+                            <td class="rightmargin right"><a id="entities.go_line41"></a><code>41</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightred"><code>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&amp;MessageBuilder{greeting:&nbsp;greeting}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line42"></a><code>42</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line43"></a><code>43</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line44"></a><code>44</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;Greet&nbsp;returns&nbsp;a&nbsp;formatted&nbsp;greeting&nbsp;string.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line45"></a><code>45</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;(mb&nbsp;*MessageBuilder)&nbsp;Greet(name&nbsp;string)&nbsp;string&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line46"></a><code>46</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;name&nbsp;==&nbsp;&#34;&#34;&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line47"></a><code>47</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;fmt.Sprintf(&#34;%s,&nbsp;World!&#34;,&nbsp;mb.greeting)</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line48"></a><code>48</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>&nbsp;&nbsp;&nbsp;&nbsp;}</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line49"></a><code>49</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;fmt.Sprintf(&#34;%s,&nbsp;%s!&#34;,&nbsp;mb.greeting,&nbsp;name)</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line50"></a><code>50</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line51"></a><code>51</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code></code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line52"></a><code>52</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;unexportedHelper&nbsp;is&nbsp;an&nbsp;unexported&nbsp;function&nbsp;to&nbsp;see&nbsp;if&nbsp;it&nbsp;appears&nbsp;in&nbsp;coverage.</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line53"></a><code>53</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>//&nbsp;It&nbsp;should&nbsp;not&nbsp;be&nbsp;part&nbsp;of&nbsp;the&nbsp;public&nbsp;API&nbsp;but&nbsp;will&nbsp;be&nbsp;covered&nbsp;by&nbsp;tests.</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line54"></a><code>54</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>func&nbsp;unexportedHelper()&nbsp;string&nbsp;{</code></td>
+                        </tr>
+                    
+                        <tr class="coverableline" title="Partially covered (1 visits)" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;green&#34;,&#34;VC&#34;:&#34;1&#34;}}">
+                            <td class="green"> </td>
+                            <td class="leftmargin rightmargin right">1</td>
+                            <td class="rightmargin right"><a id="entities.go_line55"></a><code>55</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgreen"><code>&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;&#34;I&nbsp;am&nbsp;a&nbsp;helper&#34;</code></td>
+                        </tr>
+                    
+                        <tr class="" title="Not coverable" data-coverage="{&#34;AllTestMethods&#34;:{&#34;LVS&#34;:&#34;gray&#34;,&#34;VC&#34;:&#34;-1&#34;}}">
+                            <td class="gray"> </td>
+                            <td class="leftmargin rightmargin right"></td>
+                            <td class="rightmargin right"><a id="entities.go_line56"></a><code>56</code></td>
+                            
+                            <td></td>
+                            
+                            <td class="lightgray"><code>}</code></td>
+                        </tr>
+                    
+                    </tbody>
+                </table>
+            </div>
+            
+
+            <div class="footer">Generated by ReportGenerator 0.0.1<br />19/07/2025 - 20:18:31<br /><a href="https://github.com/danielpalme/ReportGenerator">GitHub</a> | <a href="https://reportgenerator.io">reportgenerator.io</a></div>
+        </div> 
+
+        
+        <div class="containerright">
+            <div class="containerrightfixed">
+                <h1>Methods/Properties</h1>
+                
+                <a href="#calculator.go_line4" class="navigatetohash percentagebar percentagebar100" title="File 1: Line coverage: 100.0% - Add - Add"><i class="icon-cube"></i>Add</a><br />
+                
+                <a href="#calculator.go_line9" class="navigatetohash percentagebar percentagebar100" title="File 1: Line coverage: 100.0% - Subtract - Subtract"><i class="icon-cube"></i>Subtract</a><br />
+                
+                <a href="#calculator.go_line15" class="navigatetohash percentagebar percentagebar70" title="File 1: Line coverage: 66.7% - Multiply - Multiply"><i class="icon-cube"></i>Multiply</a><br />
+                
+                <a href="#calculator.go_line24" class="navigatetohash percentagebar percentagebar70" title="File 1: Line coverage: 66.7% - Divide - Divide"><i class="icon-cube"></i>Divide</a><br />
+                
+                <a href="#calculator.go_line34" class="navigatetohash percentagebar percentagebar90" title="File 1: Line coverage: 87.5% - GetGradeForScore - GetGradeForScore"><i class="icon-cube"></i>GetGradeForScore</a><br />
+                
+                <a href="#entities.go_line11" class="navigatetohash percentagebar percentagebar100" title="File 2: Line coverage: 100.0% - (*Counter).Increment - (*Counter).Increment"><i class="icon-cube"></i>(*Counter).Increment</a><br />
+                
+                <a href="#entities.go_line16" class="navigatetohash percentagebar percentagebar100" title="File 2: Line coverage: 100.0% - (Counter).Value - (Counter).Value"><i class="icon-cube"></i>(Counter).Value</a><br />
+                
+                <a href="#entities.go_line22" class="navigatetohash percentagebar percentagebar100" title="File 2: Line coverage: 100.0% - (*Counter).Add - (*Counter).Add"><i class="icon-cube"></i>(*Counter).Add</a><br />
+                
+                <a href="#entities.go_line37" class="navigatetohash percentagebar percentagebar0" title="File 2: Line coverage: 0.0% - NewMessageBuilder - NewMessageBuilder"><i class="icon-cube"></i>NewMessageBuilder</a><br />
+                
+                <a href="#entities.go_line45" class="navigatetohash percentagebar percentagebar100" title="File 2: Line coverage: 100.0% - (*MessageBuilder).Greet - (*MessageBuilder).Greet"><i class="icon-cube"></i>(*MessageBuilder).Greet</a><br />
+                
+                <a href="#entities.go_line54" class="navigatetohash percentagebar percentagebar100" title="File 2: Line coverage: 100.0% - unexportedHelper - unexportedHelper"><i class="icon-cube"></i>unexportedHelper</a><br />
+                
+                <br/>
+            </div>
+        </div>
+        
+    </div> 
+
+    <script type="text/javascript" src="custom.js"></script> 
+    <script type="text/javascript" src="reportgenerator.combined.js"></script>
+</body>
+</html>

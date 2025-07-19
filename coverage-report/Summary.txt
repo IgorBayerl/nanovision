@@ -1,0 +1,20 @@
+Summary
+  Generated on: 19/07/2025 - 20:18:31
+  Parser: GoCover
+  Assemblies: 1
+  Classes: 2
+  Files: 4
+  Line coverage: 64%
+  Covered lines: 36
+  Uncovered lines: 20
+  Coverable lines: 56
+  Total lines: 218
+  Method coverage: 68% (15 of 22)
+  Full method coverage: 45% (10 of 22)
+  Covered methods: 15
+  Fully covered methods: 10
+  Total methods: 22
+
+test_project_go    64%
+  calculator       78%
+  calculator_2     50%

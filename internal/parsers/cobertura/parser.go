@@ -102,6 +102,7 @@ func (cp *CoberturaParser) Parse(filePath string, config parsers.ParserConfig) (
 		ParserName:             cp.Name(),
 		MinimumTimeStamp:       timestamp,
 		MaximumTimeStamp:       timestamp,
+		UnresolvedSourceFiles:  orchestrator.unresolvedSourceFiles,
 	}, nil
 }
 
