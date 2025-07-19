@@ -129,7 +129,7 @@ We will model the implementation closely on the original C# project, as its desi
 
         import (
             // ... imports ...
-            "github.com/IgorBayerl/ReportGenerator/go_report_generator/internal/model"
+            "github.com/IgorBayerl/AdlerCov/internal/model"
         )
 
         // HistoryParser reads history files and enriches the current analysis result.
