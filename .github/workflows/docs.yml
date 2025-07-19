@@ -1,5 +1,4 @@
 name: Docs
-
 on:
   push:
     branches: [main]
@@ -7,15 +6,6 @@ on:
       - 'docs/**'
       - '.github/workflows/docs.yml'
   workflow_dispatch: {}
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write          
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -29,18 +19,13 @@ jobs:
           python-version: '3.12'
 
       - name: Install MkDocs toolchain
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r docs/requirements.txt  # installs mkdocs & theme
-
-      - name: Show MkDocs version (debug)
-        run: mkdocs --version    
+        run: python -m pip install -r docs/requirements.txt
 
       - name: Build site
-        run: mkdocs build --strict -f docs/mkdocs.yml     
+        run: mkdocs build --strict -f docs/mkdocs.yml
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3            
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: site/
 
@@ -50,7 +35,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
-
     steps:
-      - uses: actions/deploy-pages@v4                     
+      - uses: actions/deploy-pages@v4
         id: deploy
