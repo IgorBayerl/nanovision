@@ -1,9 +1,33 @@
 site_name: AdlerCov Docs
 site_url: https://igorbayerl.github.io/AdlerCov/
 theme:
-  name: material           
+  logo: imgs/icon.png
+  favicon: imgs/icon.ico
+  name: material
+  features:
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline 
+        name: Switch to dark mode
+      primary: blue
+      accent: purple 
+    - scheme: slate 
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode    
+      primary: blue
+      accent: lime
+
 plugins:
   - search
+
 markdown_extensions:
   - admonition
   - pymdownx.superfences
