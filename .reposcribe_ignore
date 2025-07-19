@@ -11,6 +11,7 @@ AzureDevopsTask/
 AzureDevopsTaskTest/
 Deployment/
 coverage-report/
+vendor/
 
 
 .github/*
@@ -30,6 +31,5 @@ coverage-report/
 **compare_test_reports.ps1
 **output.txt 
 **.reposcribe_ignore 
-
 
 **.ps1

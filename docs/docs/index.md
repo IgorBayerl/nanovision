@@ -5,7 +5,6 @@
 AdlerCov
 </h1>
 
-
 <div align="center">
     
 <b>Powerful code coverage visualization</b>
