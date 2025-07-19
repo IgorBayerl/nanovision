@@ -57,21 +57,22 @@ While AdlerCov began by mirroring ReportGenerator’s capabilities, it is now di
 
 AdlerCov mirrors the familiar command-line interface of ReportGenerator while following idiomatic Go CLI patterns.
 
-| Argument                           | ReportGenerator | AdlerCov | Flag Name                    | Description              |
-| :--------------------------------- | :-------------: | :------: | :--------------------------- | :----------------------- |
-| `reports`                          |        ✅        |     ✅    | `report`                     | Input coverage reports.  |
-| `targetdir`                        |        ✅        |     ✅    | `output`                     | Output directory.        |
-| `sourcedirs`                       |        ✅        |     ✅    | `sourcedirs`                 | Optional source paths.   |
-| `reporttypes`                      |        ✅        |     ✅    | `reporttypes`                | Output formats.          |
-| `assemblyfilters`                  |        ✅        |     ✅    | `assemblyfilters`            | Include/exclude filters. |
-| `classfilters`                     |        ✅        |     ✅    | `classfilters`               | Include/exclude filters. |
-| `filefilters`                      |        ✅        |     ✅    | `filefilters`                | Include/exclude filters. |
-| `verbosity`                        |        ✅        |     ✅    | `verbosity`                  | Log level.               |
-| `tag`                              |        ✅        |     ✅    | `tag`                        | Optional label.          |
-| `title`                            |        ✅        |     ✅    | `title`                      | Custom report title.     |
-| `riskhotspotassemblyfilters`       |        ✅        |     ✅    | `riskhotspotassemblyfilters` | Filters for hotspots.    |
-| `riskhotspotclassfilters`          |        ✅        |     ✅    | `riskhotspotclassfilters`    | Filters for hotspots.    |
-| `historydir`, `plugins`, `license` |        ✅        |     ❌    | -                            | Not implemented yet.     |
+| Argument                           | ReportGenerator | AdlerCov | Description              |
+| :--------------------------------- | :-------------: | :------: |  :----------------------- |
+| `report`                          |        ✅        |     ✅                         | Input coverage reports.  |
+| `output`                        |        ✅        |     ✅                         | Output directory.        |
+| `sourcedirs`                       |        ✅        |     ✅                     | Optional source paths.   |
+| `reporttypes`                      |        ✅        |     ✅                    | Output formats.          |
+| `assemblyfilters`                  |        ✅        |     ✅                | Include/exclude filters. |
+| `classfilters`                     |        ✅        |     ✅                   | Include/exclude filters. |
+| `filefilters`                      |        ✅        |     ✅                    | Include/exclude filters. |
+| `verbosity`                        |        ✅        |     ✅                      | Log level.               |
+| `tag`                              |        ✅        |     ✅                            | Optional label.          |
+| `title`                            |        ✅        |     ✅                          | Custom report title.     |
+| `riskhotspotassemblyfilters`       |        ✅        |     ✅     | Filters for hotspots.    |
+| `riskhotspotclassfilters`          |        ✅        |     ✅        | Filters for hotspots.    |
+| `historydir` |        ✅        |     ❌    |  TODO     |
+|  `plugins` |        ✅        |     ❌    |  TODO     |
 
 ## Why "AdlerCov"?
 
@@ -104,7 +105,7 @@ AdlerCov is built around modular design principles, enabling easy expansion and 
 
 ### Feature Requests
 
-If you're missing a feature from the original ReportGenerator or have new ideas, please [open an issue](https://github.com/your-repo/issues) and include:
+If you're missing a feature from the original ReportGenerator or have new ideas, please [open an issue](https://github.com/IgorBayerl/AdlerCov/issues) and include:
 
 1. Feature description
 2. Reference (link or example from ReportGenerator)
