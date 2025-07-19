@@ -20,10 +20,11 @@ import (
 
 // processingOrchestrator holds dependencies and state for a single parsing operation.
 type processingOrchestrator struct {
-	fileReader   filereader.Reader
-	config       parsers.ParserConfig
-	assemblyName string
-	logger       *slog.Logger
+	fileReader            filereader.Reader
+	config                parsers.ParserConfig
+	assemblyName          string
+	logger                *slog.Logger
+	unresolvedSourceFiles []string
 }
 
 // parsedMethod is a temporary struct to hold data from AST (Abstract System Tree) parsing.
@@ -36,9 +37,10 @@ type parsedMethod struct {
 
 func newProcessingOrchestrator(fileReader filereader.Reader, config parsers.ParserConfig, logger *slog.Logger) *processingOrchestrator {
 	return &processingOrchestrator{
-		fileReader: fileReader,
-		config:     config,
-		logger:     logger,
+		fileReader:            fileReader,
+		config:                config,
+		logger:                logger,
+		unresolvedSourceFiles: make([]string, 0),
 	}
 }
 
@@ -179,7 +181,8 @@ func (o *processingOrchestrator) processPackage(pkgPath string, fileBlocks map[s
 func (o *processingOrchestrator) processFile(filePath string, blocks []GoCoverProfileBlock) (*model.CodeFile, []model.Method) {
 	resolvedPath, err := utils.FindFileInSourceDirs(filePath, o.config.SourceDirectories(), o.fileReader)
 	if err != nil {
-		o.logger.Warn("Source file not found, line content will be missing.", "file", filePath, "error", err)
+		o.logger.Error("Source file not found.", "file", filePath, "error", err)
+		o.unresolvedSourceFiles = append(o.unresolvedSourceFiles, filePath)
 		resolvedPath = filePath
 	}
 

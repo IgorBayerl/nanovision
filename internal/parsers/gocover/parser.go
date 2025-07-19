@@ -92,6 +92,7 @@ func (p *GoCoverParser) Parse(filePath string, config parsers.ParserConfig) (*pa
 		ParserName:             p.Name(),
 		MinimumTimeStamp:       nil,
 		MaximumTimeStamp:       nil,
+		UnresolvedSourceFiles:  orchestrator.unresolvedSourceFiles,
 	}, nil
 }
 
