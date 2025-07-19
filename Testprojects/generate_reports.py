@@ -98,6 +98,35 @@ def generate_go_coverage():
     cmd_str = f'gocover-cobertura < "{GO_COVERAGE_FILE.name}" > "{GO_COBERTURA_XML.name}"'
     subprocess.run(cmd_str, cwd=GO_PROJECT_DIR, shell=True, check=True)
 
+def generate_report(name, report_file, output_dir, report_types, source_dirs=None):
+    """Generate a single report using the report tool."""
+    # Handle merged report case (report_file is actually the combined input string)
+    if name == "merged":
+        # For merged reports, report_file is actually the combined input string
+        report_input = str(report_file)
+    else:
+        # For individual reports, check if file exists
+        if not report_file.exists():
+            print(f"{name} coverage file not found, skipping {name} report")
+            return
+        report_input = str(report_file.resolve())
+    
+    print(f"Generating {name} report...")
+    ensure_dir(output_dir)
+    
+    cmd = [
+        "go", "run", ".",
+        f"--report={report_input}",
+        f"--output={output_dir.resolve()}",
+        "--verbose",
+        f"--reporttypes={report_types}"
+    ]
+    
+    if source_dirs:
+        cmd.append(f"--sourcedirs={source_dirs.resolve()}")
+    
+    run_command(cmd, working_dir=GO_TOOL_CMD_DIR, show_output=True)
+
 def run_report_tool(report_types="Html,TextSummary,Lcov"):
     """Run the main report generation tool."""
     print("Running report tool...")
@@ -108,55 +137,19 @@ def run_report_tool(report_types="Html,TextSummary,Lcov"):
     
     # Reports output directories
     reports_base = SCRIPT_ROOT.parent / "reports"
-    csharp_reports = reports_base / "csharp_reports"
-    go_reports = reports_base / "go_reports" 
-    merged_reports = reports_base / "merged_reports"
+    csharp_reports = reports_base / "cobertura_csharp_report"
+    go_reports = reports_base / "gocover_reports" 
+    merged_reports = reports_base / "merged_all_reports"
     
-    for report_dir in [csharp_reports, go_reports, merged_reports]:
-        ensure_dir(report_dir)
+    # Generate individual reports
+    generate_report("C#", CSHARP_COBERTURA_XML, csharp_reports, report_types)
+    generate_report("Go", GO_COVERAGE_FILE, go_reports, report_types, GO_PROJECT_DIR)
     
-    # Generate C# report
-    if CSHARP_COBERTURA_XML.exists():
-        print("Generating C# report...")
-        cmd = [
-            "go", "run", ".",
-            f"--report={CSHARP_COBERTURA_XML.resolve()}",
-            f"--output={csharp_reports.resolve()}",
-            f"--reporttypes={report_types}"
-            f"--verbose"
-        ]
-        run_command(cmd, working_dir=GO_TOOL_CMD_DIR, show_output=True)
-    else:
-        print("C# coverage file not found, skipping C# report")
-    
-    # Generate Go report
-    if GO_COVERAGE_FILE.exists():
-        print("Generating Go report...")
-        cmd = [
-            "go", "run", ".",
-            f"--report={GO_COVERAGE_FILE.resolve()}",
-            f"--output={go_reports.resolve()}",
-            f"--reporttypes={report_types}",
-            f"--sourcedirs={GO_PROJECT_DIR.resolve()}"
-            f"--verbose"
-        ]
-        run_command(cmd, working_dir=GO_TOOL_CMD_DIR, show_output=True)
-    else:
-        print("Go coverage file not found, skipping Go report")
-    
-    # Generate merged report
+    # Generate merged report (if both coverage files exist)
     if CSHARP_COBERTURA_XML.exists() and GO_COVERAGE_FILE.exists():
-        print("Generating merged report...")
+        # Create a temporary "merged input" representation
         merged_input = f"{CSHARP_COBERTURA_XML.resolve()};{GO_COVERAGE_FILE.resolve()}"
-        cmd = [
-            "go", "run", ".",
-            f"--report={merged_input}",
-            f"--output={merged_reports.resolve()}",
-            f"--reporttypes={report_types}",
-            f"--sourcedirs={GO_PROJECT_DIR.resolve()}"
-            f"--verbose"
-        ]
-        run_command(cmd, working_dir=GO_TOOL_CMD_DIR, show_output=True)
+        generate_report("merged", pathlib.Path(merged_input), merged_reports, report_types, GO_PROJECT_DIR)
     else:
         print("Missing coverage files, skipping merged report")
 
