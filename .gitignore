@@ -16,3 +16,4 @@ reports
 .vscode/settings.json
 Testprojects/Go/coverage.cobertura.xml
 Testprojects/Go/coverage.out
+coverage-report
