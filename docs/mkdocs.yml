@@ -1,0 +1,9 @@
+site_name: My Project Docs
+site_url: https://igorbayerl.github.io/AdlerCov/
+theme:
+  name: material           
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
