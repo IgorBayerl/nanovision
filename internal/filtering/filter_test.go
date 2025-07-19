@@ -2,6 +2,9 @@ package filtering
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestIsElementIncludedInReport tests the core filtering logic of the DefaultFilter.
@@ -129,17 +132,13 @@ func TestIsElementIncludedInReport(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Arrange
 			filter, err := NewDefaultFilter(tc.filters, tc.pathSeparator)
-			if err != nil {
-				t.Fatalf("Test setup failed. NewDefaultFilter returned an unexpected error: %v", err)
-			}
+			require.NoError(t, err, "Test setup failed. NewDefaultFilter returned an unexpected error.")
 
 			// Act
 			isIncluded := filter.IsElementIncludedInReport(tc.elementName)
 
 			// Assert
-			if isIncluded != tc.expectedIsIncluded {
-				t.Errorf("Expected IsElementIncludedInReport to be %v, but got %v", tc.expectedIsIncluded, isIncluded)
-			}
+			assert.Equal(t, tc.expectedIsIncluded, isIncluded)
 		})
 	}
 }
@@ -191,19 +190,12 @@ func TestNewDefaultFilter(t *testing.T) {
 
 			// Assert
 			if tc.expectError {
-				if err == nil {
-					t.Errorf("Expected an error for filters %v, but got none", tc.filters)
-				}
+				assert.Error(t, err, "Expected an error for filters %v, but got none", tc.filters)
+				assert.Nil(t, filter, "Expected filter to be nil on error")
 			} else {
-				if err != nil {
-					t.Errorf("Expected no error for filters %v, but got: %v", tc.filters, err)
-				}
-				if filter == nil {
-					t.Fatal("Expected filter to be non-nil on success")
-				}
-				if filter.HasCustomFilters() != tc.expectedHasCustom {
-					t.Errorf("Expected HasCustomFilters() to be %v, but got %v", tc.expectedHasCustom, filter.HasCustomFilters())
-				}
+				assert.NoError(t, err, "Expected no error for filters %v, but got: %v", tc.filters, err)
+				require.NotNil(t, filter, "Expected filter to be non-nil on success")
+				assert.Equal(t, tc.expectedHasCustom, filter.HasCustomFilters())
 			}
 		})
 	}

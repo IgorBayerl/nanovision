@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 // MockFileInfo implements fs.FileInfo for testing
@@ -572,6 +574,7 @@ func TestRegexOrStringFunctionality(t *testing.T) {
 			glob.IgnoreCase = tc.ignoreCase
 
 			ros, err := glob.createRegexOrString(tc.pattern)
+			require.NoError(t, err)
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}
