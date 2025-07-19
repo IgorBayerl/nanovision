@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/IgorBayerl/AdlerCov/internal/glob"
-	assert "github.com/IgorBayerl/AdlerCov/testutil/asserts"
+	"github.com/IgorBayerl/AdlerCov/internal/testutil"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Cross-platform execution helper
@@ -312,14 +314,12 @@ func TestExpandNames_BasicPatterns_ReturnExpected(t *testing.T) {
 				got, err := g.ExpandNames()
 
 				// Assert
-				if err != nil {
-					t.Fatalf("unexpected err: %v", err)
-				}
+				require.NoError(t, err)
 				want := tc.wantUnix
 				if fs.platform == "windows" {
 					want = tc.wantWin
 				}
-				assert.Equal(t, want, got, assert.CmpPaths...)
+				testutil.PathsMatch(t, want, got)
 			})
 		})
 	}
@@ -365,14 +365,12 @@ func TestExpandNames_AbsolutePaths_CorrectPerPlatform(t *testing.T) {
 				got, err := g.ExpandNames()
 
 				// Assert
-				if err != nil {
-					t.Fatalf("unexpected err: %v", err)
-				}
+				require.NoError(t, err)
 				want := tc.wantUnix
 				if fs.platform == "windows" {
 					want = tc.wantWin
 				}
-				assert.Equal(t, want, got, assert.CmpPaths...)
+				testutil.PathsMatch(t, want, got)
 			})
 		})
 	}
@@ -438,14 +436,12 @@ func TestExpandNames_RecursivePatterns_ReturnExpected(t *testing.T) {
 				got, err := g.ExpandNames()
 
 				// Assert
-				if err != nil {
-					t.Fatalf("unexpected err: %v", err)
-				}
+				require.NoError(t, err)
 				want := tc.wantUnix
 				if fs.platform == "windows" {
 					want = tc.wantWin
 				}
-				assert.Equal(t, want, got, assert.CmpPaths...)
+				testutil.PathsMatch(t, want, got)
 			})
 		})
 	}
@@ -479,12 +475,8 @@ func TestExpandNames_InvalidGlob_ReturnsError(t *testing.T) {
 				got, err := g.ExpandNames()
 
 				// Assert
-				if err == nil {
-					t.Errorf("expected error for malformed pattern %q", tc.pattern)
-				}
-				if len(got) != 0 {
-					t.Errorf("expected empty results for malformed pattern, got %d", len(got))
-				}
+				assert.Error(t, err, "Expected an error for malformed pattern %q", tc.pattern)
+				assert.Empty(t, got, "Expected empty results for malformed pattern")
 			})
 		})
 	}
@@ -534,20 +526,18 @@ func TestExpandNames_NonGlobInputs_ReturnsPathOrEmpty(t *testing.T) {
 				got, err := g.ExpandNames()
 
 				// Assert
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
+				require.NoError(t, err)
 				want := tc.wantUnix
 				if fs.platform == "windows" {
 					want = tc.wantWin
 				}
-				assert.Equal(t, want, got, assert.CmpPaths...)
+				testutil.PathsMatch(t, want, got)
 			})
 		})
 	}
 }
 
-func TestExpandNames_FilesystemError_ReturnsEmptySlice(t *testing.T) {
+func TestExpandNames_NoMatch_ReturnsEmptySlice(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -564,12 +554,8 @@ func TestExpandNames_FilesystemError_ReturnsEmptySlice(t *testing.T) {
 	got, err := g.ExpandNames()
 
 	// Assert
-	if err != nil {
-		t.Errorf("expected no error, got %v", err)
-	}
-	if len(got) != 0 {
-		t.Errorf("expected empty results, got %d", len(got))
-	}
+	assert.NoError(t, err)
+	assert.Empty(t, got, "Expected empty results for non-matching pattern")
 }
 
 func TestExpandNames_LargeTree_FindsAllTxtFiles(t *testing.T) {
@@ -602,12 +588,8 @@ func TestExpandNames_LargeTree_FindsAllTxtFiles(t *testing.T) {
 	got, err := g.ExpandNames()
 
 	// Assert
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(got) != expectedCount {
-		t.Errorf("expected %d results, got %d", expectedCount, len(got))
-	}
+	require.NoError(t, err)
+	assert.Len(t, got, expectedCount, "Expected to find all .txt files in the large tree")
 }
 
 func TestExpandNames_CaseSensitivity_VariousFlags(t *testing.T) {
@@ -648,16 +630,12 @@ func TestExpandNames_CaseSensitivity_VariousFlags(t *testing.T) {
 				got, err := g.ExpandNames()
 
 				// Assert
-				if err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, err)
 				want := tc.wantUnix
 				if fs.platform == "windows" {
 					want = tc.wantWin
 				}
-				if len(got) != want {
-					t.Fatalf("want %d got %d", want, len(got))
-				}
+				assert.Len(t, got, want)
 			})
 		})
 	}
@@ -713,14 +691,12 @@ func TestExpandNames_ComplexBraceExpansion_ReturnsExpected(t *testing.T) {
 				got, err := g.ExpandNames()
 
 				// Assert
-				if err != nil {
-					t.Fatalf("unexpected err: %v", err)
-				}
+				require.NoError(t, err)
 				want := tc.wantUnix
 				if fs.platform == "windows" {
 					want = tc.wantWin
 				}
-				assert.Equal(t, want, got, assert.CmpPaths...)
+				testutil.PathsMatch(t, want, got)
 			})
 		})
 	}
@@ -739,15 +715,12 @@ func TestExpandNames_DotAndDotDot_Patterns(t *testing.T) {
 			got, err := g.ExpandNames()
 
 			// Assert
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
+			require.NoError(t, err)
 			expectedCwd := "/home/user"
 			if fs.platform == "windows" {
 				expectedCwd = "C:/Users/User"
 			}
-			assert.Equal(t, []string{expectedCwd}, got, assert.CmpPaths...)
+			testutil.PathsMatch(t, []string{expectedCwd}, got)
 		})
 	})
 
@@ -761,15 +734,12 @@ func TestExpandNames_DotAndDotDot_Patterns(t *testing.T) {
 			got, err := g.ExpandNames()
 
 			// Assert
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
+			require.NoError(t, err)
 			expectedParent := "/home"
 			if fs.platform == "windows" {
 				expectedParent = "C:/Users"
 			}
-			assert.Equal(t, []string{expectedParent}, got, assert.CmpPaths...)
+			testutil.PathsMatch(t, []string{expectedParent}, got)
 		})
 	})
 }
@@ -779,29 +749,23 @@ func TestGetFilesPublicAPI(t *testing.T) {
 
 	// Arrange
 	dir := t.TempDir()
-	cwd, _ := os.Getwd()
+	cwd, err := os.Getwd()
+	require.NoError(t, err) // Use require for test setup
 	defer os.Chdir(cwd)
-	os.Chdir(dir)
+	err = os.Chdir(dir)
+	require.NoError(t, err)
 
 	// Act
 	results, err := glob.GetFiles("*.nonexistent")
 
 	// Assert
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(results) != 0 {
-		t.Errorf("expected empty results for non-matching pattern, got %d results", len(results))
-	}
+	require.NoError(t, err)
+	assert.Empty(t, results, "expected empty results for non-matching pattern")
 
 	// Act
 	results, err = glob.GetFiles("")
 
 	// Assert
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(results) != 0 {
-		t.Errorf("expected empty results for empty pattern, got %d results", len(results))
-	}
+	require.NoError(t, err)
+	assert.Empty(t, results, "expected empty results for empty pattern")
 }
