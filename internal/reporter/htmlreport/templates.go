@@ -37,8 +37,7 @@ const summaryPageLayoutTemplate = `<!DOCTYPE html>
         <div class="containerleft">
             <h1>{{.ReportTitle}}
                 <!-- GitHub Buttons (from C# original) -->
-                <a class="button" href="https://github.com/danielpalme/ReportGenerator" title="{{.Translations.StarTooltip}}"><i class="icon-star"></i>{{.Translations.Star}}</a>
-                <a class="button" href="https://github.com/sponsors/danielpalme" title="{{.Translations.SponsorTooltip}}"><i class="icon-sponsor"></i>{{.Translations.Sponsor}}</a>
+                <a class="button" href="https://github.com/IgorBayerl/AdlerCov" title="{{.Translations.StarTooltip}}"><i class="icon-star"></i>{{.Translations.Star}}</a>
             </h1>
             
             <!-- Summary Cards -->
@@ -50,7 +49,6 @@ const summaryPageLayoutTemplate = `<!DOCTYPE html>
                         {{if .ProRequired}}
                         <div class="center">
                             <p>{{$.Translations.MethodCoverageProVersion}}</p>
-                            <a class="pro-button" href="https://reportgenerator.io/pro" target="_blank">{{$.Translations.MethodCoverageProButton}}</a>
                         </div>
                         {{else}}
                             {{if .SubTitle}}
