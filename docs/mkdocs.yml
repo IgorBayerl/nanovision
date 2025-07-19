@@ -1,4 +1,4 @@
-site_name: My Project Docs
+site_name: AdlerCov Docs
 site_url: https://igorbayerl.github.io/AdlerCov/
 theme:
   name: material           
@@ -7,3 +7,14 @@ plugins:
 markdown_extensions:
   - admonition
   - pymdownx.superfences
+
+nav:
+  - 'Home': 'index.md'
+  - 'Getting Started': 'getting-started.md'
+  - 'Project Roadmap':
+    - 'Overview': 'roadmap/index.md'
+    - 'Hierarchical Components': 'roadmap/components.md'
+    - 'History and Delta Coverage': 'roadmap/history-coverage.md'
+    - 'Traceable Reports': 'roadmap/trace-reports.md'
+    - 'Live Reload (Watch Mode)': 'roadmap/watch-mode.md'
+  - 'Contributing': 'contributing.md'
