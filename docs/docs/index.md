@@ -1,6 +1,6 @@
 <h1 align="center">
 
-<img src="../../docs/imgs/adlercov.png" alt="ReportGenerator" width="200"/>
+<img src="imgs/adlercov.png" alt="ReportGenerator" width="200"/>
 <br/>
 AdlerCov
 </h1>
@@ -21,7 +21,7 @@ The reports show the coverage quotas and also visualize which lines of your sour
 
 Originally a Go port of the excellent [ReportGenerator](https://github.com/danielpalme/ReportGenerator) by Daniel Palme, **AdlerCov** has grown into a standalone, forward-looking tool. Built in Go, it focuses on performance, simplicity - tailored for today’s development workflows.
 
-![alt text](../../docs/imgs/adlercov_input_output.png)
+![alt text](imgs/adlercov_input_output.png)
 
 ## Motivation
 
