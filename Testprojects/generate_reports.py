@@ -6,6 +6,8 @@ import subprocess
 import sys
 import pathlib
 import argparse
+import platform
+import os
 
 # Paths
 SCRIPT_ROOT = pathlib.Path(__file__).resolve().parent
@@ -16,6 +18,18 @@ GO_PROJECT_DIR = SCRIPT_ROOT / "Go"
 GO_COVERAGE_FILE = GO_PROJECT_DIR / "coverage.out"
 GO_COBERTURA_XML = GO_PROJECT_DIR / "coverage.cobertura.xml"
 GO_TOOL_CMD_DIR = SCRIPT_ROOT.parent / "cmd"
+
+# Binary paths
+def get_binary_name():
+    """Get the appropriate binary name for the current platform."""
+    system = platform.system().lower()
+    if system == "windows":
+        return "adlercov.exe"
+    else:
+        return "adlercov"
+
+BINARY_NAME = get_binary_name()
+BINARY_PATH = SCRIPT_ROOT.parent / BINARY_NAME
 
 def run_command(cmd, working_dir=None, show_output=False):
     """Run command and exit on failure."""
@@ -60,6 +74,33 @@ def check_existing_data():
     
     return csharp_exists, go_exists
 
+def build_adlercov_binary():
+    """Build the AdlerCov binary for better performance."""
+    print("Building AdlerCov binary...")
+    
+    # Remove existing binary if it exists
+    if BINARY_PATH.exists():
+        BINARY_PATH.unlink()
+    
+    # Build command based on platform
+    build_cmd = ["go", "build", "-o", str(BINARY_PATH), "./main.go"]
+    
+    try:
+        run_command(build_cmd, working_dir=GO_TOOL_CMD_DIR)
+        print(f"Successfully built {BINARY_NAME}")
+    except Exception as e:
+        print(f"Failed to build AdlerCov binary: {e}")
+        sys.exit(1)
+    
+    # Verify the binary was created and is executable
+    if not BINARY_PATH.exists():
+        print(f"Binary {BINARY_PATH} was not created")
+        sys.exit(1)
+    
+    # Make executable on Unix-like systems
+    if platform.system() != "Windows":
+        os.chmod(BINARY_PATH, 0o755)
+
 def generate_csharp_coverage():
     """Generate C# coverage data."""
     print("Generating C# coverage...")
@@ -99,7 +140,7 @@ def generate_go_coverage():
     subprocess.run(cmd_str, cwd=GO_PROJECT_DIR, shell=True, check=True)
 
 def generate_report(name, report_file, output_dir, report_types, source_dirs=None):
-    """Generate a single report using the report tool."""
+    """Generate a single report using the pre-built AdlerCov binary."""
     # Handle merged report case (report_file is actually the combined input string)
     if name == "merged":
         # For merged reports, report_file is actually the combined input string
@@ -115,7 +156,7 @@ def generate_report(name, report_file, output_dir, report_types, source_dirs=Non
     ensure_dir(output_dir)
     
     cmd = [
-        "go", "run", ".",
+        str(BINARY_PATH),
         f"--report={report_input}",
         f"--output={output_dir.resolve()}",
         "--verbose",
@@ -125,15 +166,16 @@ def generate_report(name, report_file, output_dir, report_types, source_dirs=Non
     if source_dirs:
         cmd.append(f"--sourcedirs={source_dirs.resolve()}")
     
-    run_command(cmd, working_dir=GO_TOOL_CMD_DIR, show_output=True)
+    run_command(cmd, show_output=True)
 
 def run_report_tool(report_types="Html,TextSummary,Lcov"):
-    """Run the main report generation tool."""
+    """Run the main report generation tool using the pre-built binary."""
     print("Running report tool...")
     
-    if not GO_TOOL_CMD_DIR.exists():
-        print(f"Report tool not found at {GO_TOOL_CMD_DIR}")
-        sys.exit(1)
+    if not BINARY_PATH.exists():
+        print(f"AdlerCov binary not found at {BINARY_PATH}")
+        print("Building binary first...")
+        build_adlercov_binary()
     
     # Reports output directories
     reports_base = SCRIPT_ROOT.parent / "reports"
@@ -153,6 +195,12 @@ def run_report_tool(report_types="Html,TextSummary,Lcov"):
     else:
         print("Missing coverage files, skipping merged report")
 
+def clean_binary():
+    """Remove the built binary."""
+    if BINARY_PATH.exists():
+        print(f"Removing binary {BINARY_PATH}")
+        BINARY_PATH.unlink()
+
 def main():
     """Main function with force flag support."""
     parser = argparse.ArgumentParser(description="Generate coverage reports")
@@ -160,32 +208,46 @@ def main():
                        help="Force regeneration of all coverage data")
     parser.add_argument("--report-types", default="Html,TextSummary,Lcov",
                        help="Comma-separated list of report types")
+    parser.add_argument("--rebuild-binary", action="store_true",
+                       help="Force rebuild of the AdlerCov binary")
+    parser.add_argument("--clean", action="store_true",
+                       help="Clean up the built binary after execution")
     
     args = parser.parse_args()
     
-    if args.force:
-        print("Force mode: regenerating all coverage data")
-        generate_csharp_coverage()
-        generate_go_coverage()
-    else:
-        # Check existing data
-        csharp_exists, go_exists = check_existing_data()
-        
-        if not csharp_exists and not go_exists:
-            print("No existing coverage data found, generating all...")
+    # Build or rebuild the binary if needed
+    if args.rebuild_binary or not BINARY_PATH.exists():
+        build_adlercov_binary()
+    
+    try:
+        if args.force:
+            print("Force mode: regenerating all coverage data")
             generate_csharp_coverage()
-            generate_go_coverage()
-        elif not csharp_exists:
-            print("Missing C# coverage, generating...")
-            generate_csharp_coverage()
-        elif not go_exists:
-            print("Missing Go coverage, generating...")
             generate_go_coverage()
         else:
-            print("Using existing coverage data")
-    
-    run_report_tool(args.report_types)
-    print("Report generation complete")
+            # Check existing data
+            csharp_exists, go_exists = check_existing_data()
+            
+            if not csharp_exists and not go_exists:
+                print("No existing coverage data found, generating all...")
+                generate_csharp_coverage()
+                generate_go_coverage()
+            elif not csharp_exists:
+                print("Missing C# coverage, generating...")
+                generate_csharp_coverage()
+            elif not go_exists:
+                print("Missing Go coverage, generating...")
+                generate_go_coverage()
+            else:
+                print("Using existing coverage data")
+        
+        run_report_tool(args.report_types)
+        print("Report generation complete")
+        
+    finally:
+        # Clean up binary if requested
+        if args.clean:
+            clean_binary()
 
 if __name__ == "__main__":
     main()
