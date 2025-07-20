@@ -86,7 +86,7 @@ The name **AdlerCov** combines **“Adler”** (German for **eagle**) with **cov
 
 This project is actively evolving - your contributions are highly valued! Whether you're:
 
-* Porting features from ReportGenerator
+* Porting features you need from ReportGenerator
 * Adding new input/output formats
 * Optimizing
 * Writing tests
