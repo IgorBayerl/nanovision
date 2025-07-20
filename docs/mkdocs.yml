@@ -37,6 +37,11 @@ nav:
   - 'Getting Started': 'getting-started.md'
   - 'Project Roadmap':
     - 'Overview': 'roadmap/index.md'
+    - 'New HTML Reporter (React)':
+      - 'Motivation & Architecture': 'roadmap/new-react-reporter/feature-plan-ssr-react-islands.md'
+      - 'File Page Refactor Plan': 'roadmap/new-react-reporter/feature-plan-file-page-refactor.md'
+      - 'Summary Page Refactor Plan': 'roadmap/new-react-reporter/feature-plan-summary-page-refactor.md'
+      - 'UI Development Guide': 'roadmap/new-react-reporter/ui-development-guide.md'
     - 'Hierarchical Components': 'roadmap/components.md'
     - 'History and Delta Coverage': 'roadmap/history-coverage.md'
     - 'Traceable Reports': 'roadmap/trace-reports.md'
