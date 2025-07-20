@@ -38,6 +38,8 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/gocover"
 )
 
+var ErrMissingReportFlag = errors.New("missing required -report flag")
+
 type cliFlags struct {
 	// domain
 	reportsPatterns   *string
@@ -113,7 +115,7 @@ func buildLogger(f *cliFlags) (logging.VerbosityLevel, io.Closer, error) {
 
 func resolveAndValidateInputs(logger *slog.Logger, flags *cliFlags) ([]string, []string, error) {
 	if *flags.reportsPatterns == "" {
-		return nil, nil, fmt.Errorf("missing required -report flag")
+		return nil, nil, ErrMissingReportFlag
 	}
 
 	reportFilePatterns := strings.Split(*flags.reportsPatterns, ";")
@@ -312,24 +314,15 @@ func generateReports(reportCtx reporter.IBuilderContext, summaryResult *model.Su
 	return nil
 }
 
-func run() error {
-	flags, err := parseFlags()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "flag error:", err)
-		os.Exit(1)
-	}
-
-	verbosity, closer, err := buildLogger(flags)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "logger init error:", err)
-		os.Exit(1)
-	}
-
-	if closer != nil {
-		defer closer.Close()
-	}
-
+func run(flags *cliFlags) error {
 	logger := slog.Default()
+
+	// Re-get the verbosity level from the flags, as it's needed for ReportConfiguration.
+	verbosityStr := strings.TrimSpace(*flags.verbosity)
+	verbosity, _ := logging.ParseVerbosity(verbosityStr)
+	if *flags.verbose {
+		verbosity = logging.Verbose
+	}
 
 	// Create all desired language processors and the factory that holds them.
 	langFactory := language.NewProcessorFactory(
@@ -372,8 +365,29 @@ func run() error {
 func main() {
 	start := time.Now()
 
-	if err := run(); err != nil {
+	flags, err := parseFlags()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "flag error:", err)
+		os.Exit(1)
+	}
+
+	_, closer, err := buildLogger(flags)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "logger init error:", err)
+		os.Exit(1)
+	}
+	if closer != nil {
+		defer closer.Close()
+	}
+
+	if err := run(flags); err != nil {
 		slog.Error("An error occurred during report generation", "error", err)
+
+		if errors.Is(err, ErrMissingReportFlag) {
+			fmt.Fprintln(os.Stderr, "")
+			flag.Usage()
+		}
+
 		os.Exit(1)
 	}
 

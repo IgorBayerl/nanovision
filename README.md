@@ -37,18 +37,22 @@ The motivations for creating **AdlerCov**:
 
 While AdlerCov began by mirroring ReportGenerator’s capabilities, it is now diverging with Go-native enhancements and a growing list of planned features.
 
-| Feature Category   | Feature                         | ReportGenerator | AdlerCov | Notes                         |
-| :----------------- | :------------------------------ | :-------------: | :------: | :---------------------------- |
+| Feature Category   | Feature                         | ReportGenerator   | AdlerCov  | Notes                         |
+| :----------------- | :------------------------------ | :---------------: | :-------: | :---------------------------- |
 | **Input Formats**  | Cobertura                       |        ✅        |     ✅    | Core support.                 |
 |                    | Go Cover                        |        ❌        |     ✅    | Native `coverage.out` parser. |
-|                    | OpenCover, JaCoCo, etc.         |        ✅        |     ❌    | Planned.                      |
+|                    | OpenCover                       |        ✅        |     ❌    | Planned.                      |
+|                    | LCov                            |        ✅        |     ❌    | Planned.                      |
+|                    | JaCoCo                          |        ✅        |     ❌    | Planned.                      |
 |                    | Multiple/Merged Reports         |        ✅        |     ✅    | Supports unified summaries.   |
 | **Output Formats** | HTML (SPA)                      |        ✅        |     ✅    | Angular frontend.             |
 |                    | TextSummary, lcov               |        ✅        |     ✅    | Fully supported.              |
-|                    | Others (Badge, JSON, XML, etc.) |        ✅        |     ❌    | Coming soon.                  |
+|                    | Badge                           |        ✅        |     ❌    | Coming soon.                  |
+|                    | JSON                            |        ✅        |     ❌    | Coming soon.                  |
+|                    | XML                             |        ✅        |     ❌    | Coming soon.                  |
 | **Core Features**  | Assembly/Class/File Filtering   |        ✅        |     ✅    | Implemented.                  |
 |                    | Branch & Method Coverage        |        ✅        |     ✅    |                               |
-|                    | Cyclomatic Complexity           |        ✅        |     ✅    | Go-native; C# WIP.            |
+|                    | Cyclomatic Complexity           |        ✅        |     ✅    | Gocover/Cobertura             |
 |                    | History / Trend Charts          |        ✅        |     ❌    | Not yet implemented.          |
 |                    | Risk Hotspots                   |        ✅        |     ❌    | Not yet implemented.          |
 |                    | Raw Mode (no merging)           |        ✅        |     ❌    | Planned.                      |
@@ -58,21 +62,21 @@ While AdlerCov began by mirroring ReportGenerator’s capabilities, it is now di
 AdlerCov mirrors the familiar command-line interface of ReportGenerator while following idiomatic Go CLI patterns.
 
 | Argument                           | ReportGenerator | AdlerCov | Description              |
-| :--------------------------------- | :-------------: | :------: |  :----------------------- |
-| `report`                          |        ✅        |     ✅                         | Input coverage reports.  |
-| `output`                        |        ✅        |     ✅                         | Output directory.        |
-| `sourcedirs`                       |        ✅        |     ✅                     | Optional source paths.   |
-| `reporttypes`                      |        ✅        |     ✅                    | Output formats.          |
-| `assemblyfilters`                  |        ✅        |     ✅                | Include/exclude filters. |
-| `classfilters`                     |        ✅        |     ✅                   | Include/exclude filters. |
-| `filefilters`                      |        ✅        |     ✅                    | Include/exclude filters. |
-| `verbosity`                        |        ✅        |     ✅                      | Log level.               |
-| `tag`                              |        ✅        |     ✅                            | Optional label.          |
-| `title`                            |        ✅        |     ✅                          | Custom report title.     |
-| `riskhotspotassemblyfilters`       |        ✅        |     ✅     | Filters for hotspots.    |
-| `riskhotspotclassfilters`          |        ✅        |     ✅        | Filters for hotspots.    |
-| `historydir` |        ✅        |     ❌    |  TODO     |
-|  `plugins` |        ✅        |     ❌    |  TODO     |
+| :--------------------------------- | :-------------: | :------: | :----------------------- |
+| `report`                           |        ✅      |     ✅   | Input coverage reports.  |
+| `output`                           |        ✅      |     ✅   | Output directory.        |
+| `sourcedirs`                       |        ✅      |     ✅   | Optional source paths.   |
+| `reporttypes`                      |        ✅      |     ✅   | Output formats.          |
+| `assemblyfilters`                  |        ✅      |     ✅   | Include/exclude filters. |
+| `classfilters`                     |        ✅      |     ✅   | Include/exclude filters. |
+| `filefilters`                      |        ✅      |     ✅   | Include/exclude filters. |
+| `verbosity`                        |        ✅      |     ✅   | Log level.               |
+| `tag`                              |        ✅      |     ✅   | Optional label.          |
+| `title`                            |        ✅      |     ✅   | Custom report title.     |
+| `riskhotspotassemblyfilters`       |        ✅      |     ✅   | Filters for hotspots.    |
+| `riskhotspotclassfilters`          |        ✅      |     ✅   | Filters for hotspots.    |
+| `historydir`                       |        ✅      |     ❌   |  TODO                    |
+|  `plugins`                         |        ✅      |     ❌   |  TODO                    |
 
 ## Why "AdlerCov"?
 
@@ -102,6 +106,61 @@ AdlerCov is built around modular design principles, enabling easy expansion and 
 * **Analyzer (`internal/analyzer`):** Merges parsed reports into a unified summary, allowing for combined views across test runs or languages.
 * **Reporters (`internal/reporter`):** Converts processed data into human-readable outputs like HTML or text summaries.
 * **Angular SPA (`angular_frontend_spa`):** A full-featured, dynamic frontend for exploring results with filtering, sorting, and collapsible sections.
+
+## Getting Started & Development
+
+This section guides you through setting up the project for local development and contribution.
+
+### Development Environment Prerequisites
+
+To work on this project, you will need certain tools installed depending on what you want to do.
+
+*   **Go (Required):** You must have Go version 1.23 or higher installed to build and run the core AdlerCov application.
+*   **Python (Optional):** Needed to run the `generate_reports.py` script located in the `Testprojects` directory. This script is used to generate sample coverage reports for testing.
+*   **Node.js & Angular CLI (Optional):** If you plan to modify the frontend of the HTML report, you will need Node.js and the Angular CLI to build the Angular single-page application located in the `internal/assets/angular_frontend_spa` directory.
+*   **.NET SDK (Optional):** Required by the `generate_reports.py` script to build the C# test project and generate its coverage data.
+
+### 1. Clone the Repository
+
+First, clone the project to your local machine using git:
+
+```bash
+git clone https://github.com/IgorBayerl/AdlerCov.git
+cd AdlerCov
+```
+
+### 2. Run Locally
+
+You can run the application directly without building a binary using `go run`. This is the recommended approach for development and quick testing.
+
+To see all available command-line flags:
+```bash
+go run ./cmd/main.go --help
+```
+
+To run with a sample report (you may need to generate it first using the `generate_reports.py` script):
+```bash
+go run ./cmd/main.go --report="Testprojects/Go/coverage.cobertura.xml" --output="reports/go_report"
+```
+
+### 3. Build the Binary
+
+To compile the project into a single executable binary, use the `go build` command:
+
+Linux / Mac
+```bash
+go build -o adlercov ./cmd/main.go
+```
+
+Windows
+```powershell
+go build -o adlercov.exe ./cmd/main.go
+```
+This will create an executable file named `adlercov` (or `adlercov.exe` on Windows) in the root directory. You can then run it directly:
+
+```bash
+./adlercov --report="path/to/your/coverage.xml" --output="your_report_directory"
+```
 
 ### Feature Requests
 

@@ -17,3 +17,7 @@ reports
 Testprojects/Go/coverage.cobertura.xml
 Testprojects/Go/coverage.out
 coverage-report
+
+aldercov.exe 
+adlercov
+adlercov.log
