@@ -15,6 +15,7 @@
 package logging
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -72,6 +73,61 @@ type Config struct {
 	FS        filesystem.Filesystem // if nil, uses filesystem.DefaultFS{}
 }
 
+// --- NEW: Multi-destination slog.Handler ---
+// MultiDestHandler sends log records to multiple underlying handlers.
+type MultiDestHandler struct {
+	handlers []slog.Handler
+}
+
+// NewMultiDestHandler creates a new handler that delegates to the provided handlers.
+func NewMultiDestHandler(handlers ...slog.Handler) *MultiDestHandler {
+	return &MultiDestHandler{
+		handlers: handlers,
+	}
+}
+
+// Enabled reports whether the handler handles records at the given level.
+// The handler is enabled if any of its sub-handlers is enabled.
+func (h *MultiDestHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	for _, handler := range h.handlers {
+		if handler.Enabled(ctx, level) {
+			return true
+		}
+	}
+	return false
+}
+
+// Handle handles the log record by passing it to all its sub-handlers.
+func (h *MultiDestHandler) Handle(ctx context.Context, r slog.Record) error {
+	// In a production system, you might want to aggregate errors.
+	// For this use case, handling the record on each handler is sufficient.
+	for _, handler := range h.handlers {
+		// We ignore the error from sub-handlers for simplicity.
+		_ = handler.Handle(ctx, r)
+	}
+	return nil
+}
+
+// WithAttrs returns a new MultiDestHandler whose sub-handlers have the given attributes.
+func (h *MultiDestHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	newHandlers := make([]slog.Handler, len(h.handlers))
+	for i, handler := range h.handlers {
+		newHandlers[i] = handler.WithAttrs(attrs)
+	}
+	return NewMultiDestHandler(newHandlers...)
+}
+
+// WithGroup returns a new MultiDestHandler whose sub-handlers have the given group.
+func (h *MultiDestHandler) WithGroup(name string) slog.Handler {
+	newHandlers := make([]slog.Handler, len(h.handlers))
+	for i, handler := range h.handlers {
+		newHandlers[i] = handler.WithGroup(name)
+	}
+	return NewMultiDestHandler(newHandlers...)
+}
+
+// --- MODIFIED: Init function ---
+// Init initializes the global logger with separate configurations for console and file.
 func Init(cfg *Config) (io.Closer, error) {
 	if cfg == nil {
 		cfg = &Config{Verbosity: Info, Format: "text"}
@@ -82,11 +138,25 @@ func Init(cfg *Config) (io.Closer, error) {
 		fs = filesystem.DefaultFS{}
 	}
 
-	// Collect writers
-	var writers []io.Writer
-	writers = append(writers, os.Stderr)
+	var handlers []slog.Handler
+	var closer io.Closer // This will hold the file handle to be closed on exit
 
-	var closer io.Closer
+	// 1. Configure the "clean" console handler for os.Stderr.
+	// We use ReplaceAttr to remove the timestamp.
+	consoleOpts := &slog.HandlerOptions{
+		Level: cfg.Verbosity.SlogLevel(),
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			// Remove the timestamp from console logs
+			if a.Key == slog.TimeKey {
+				return slog.Attr{}
+			}
+			return a
+		},
+	}
+	// The console output is always text for better readability.
+	handlers = append(handlers, slog.NewTextHandler(os.Stderr, consoleOpts))
+
+	// 2. Configure the "complete" file handler if a log file is specified.
 	if cfg.File != "" {
 		// Create directory if it doesn't exist
 		if err := fs.MkdirAll(filepath.Dir(cfg.File), 0o755); err != nil {
@@ -98,26 +168,23 @@ func Init(cfg *Config) (io.Closer, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create log file: %w", err)
 		}
-		writers = append(writers, f)
-		closer = f
+		closer = f // Assign the file to the closer
+
+		// This handler does NOT have ReplaceAttr, so it will be complete.
+		fileOpts := &slog.HandlerOptions{Level: cfg.Verbosity.SlogLevel()}
+		var fileHandler slog.Handler
+		if strings.ToLower(cfg.Format) == "json" {
+			fileHandler = slog.NewJSONHandler(f, fileOpts)
+		} else {
+			fileHandler = slog.NewTextHandler(f, fileOpts)
+		}
+		handlers = append(handlers, fileHandler)
 	}
 
-	var out io.Writer
-	if len(writers) == 1 {
-		out = writers[0]
-	} else {
-		out = io.MultiWriter(writers...)
-	}
+	// 3. Create the multi-destination handler and set it as the default.
+	combinedHandler := NewMultiDestHandler(handlers...)
+	slog.SetDefault(slog.New(combinedHandler))
 
-	opts := &slog.HandlerOptions{Level: cfg.Verbosity.SlogLevel()}
-	var handler slog.Handler
-	if strings.ToLower(cfg.Format) == "json" {
-		handler = slog.NewJSONHandler(out, opts)
-	} else {
-		handler = slog.NewTextHandler(out, opts)
-	}
-
-	slog.SetDefault(slog.New(handler))
 	return closer, nil
 }
 
