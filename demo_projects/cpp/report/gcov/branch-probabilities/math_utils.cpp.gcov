@@ -1,0 +1,57 @@
+        -:    0:Source:C:/www/AdlerCov/demo_projects/cpp/project/src/utils/math_utils.cpp
+        -:    0:Graph:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\utils\math_utils.cpp.gcno
+        -:    0:Data:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\utils\math_utils.cpp.gcda
+        -:    0:Runs:2
+        -:    1:
+        -:    2:#include "math_utils.h"
+        -:    3:
+        -:    4:namespace MathUtils {
+        -:    5:
+function _ZN9MathUtils8is_primeEi called 5 returned 100% blocks executed 89%
+        5:    6:bool is_prime(int n) {
+        5:    7:    if (n <= 1) {
+branch  0 taken 0% (fallthrough)
+branch  1 taken 100%
+    #####:    8:        return false;  // This branch will be deliberately missed.
+        -:    9:    }
+        8:   10:    for (int i = 2; i * i <= n; ++i) {
+branch  0 taken 62%
+branch  1 taken 38% (fallthrough)
+        5:   11:        if (n % i == 0) {
+branch  0 taken 40% (fallthrough)
+branch  1 taken 60%
+        2:   12:            return false;
+        -:   13:        }
+        -:   14:    }
+        3:   15:    return true;
+        -:   16:}
+        -:   17:
+function _ZN9MathUtils9factorialEi called 2 returned 100% blocks executed 62%
+        2:   18:long long factorial(int n) {
+        2:   19:    if (n < 0) {
+branch  0 taken 0% (fallthrough)
+branch  1 taken 100%
+        -:   20:        // This exception path will be missed by tests.
+    #####:   21:        throw std::invalid_argument("Factorial is not defined for negative numbers.");
+call    0 never executed
+call    1 never executed
+branch  2 never executed (fallthrough)
+branch  3 never executed (throw)
+call    4 never executed
+call    5 never executed
+        -:   22:    }
+        2:   23:    if (n == 0) {
+branch  0 taken 0% (fallthrough)
+branch  1 taken 100%
+    #####:   24:        return 1;  // This path will also be missed.
+        -:   25:    }
+        2:   26:    long long result = 1;
+        8:   27:    for (int i = 1; i <= n; ++i) {
+branch  0 taken 75%
+branch  1 taken 25% (fallthrough)
+        6:   28:        result *= i;
+        -:   29:    }
+        2:   30:    return result;
+        -:   31:}
+        -:   32:
+        -:   33:}  // namespace MathUtils
