@@ -21,3 +21,5 @@ coverage-report
 aldercov.exe 
 adlercov
 adlercov.log
+
+report_generator_dotnet
