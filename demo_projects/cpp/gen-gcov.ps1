@@ -74,4 +74,3 @@ foreach ($entry in $reportTypes.GetEnumerator()) {
 Pop-Location
 
 Write-Host "`nAll C++ gcov reports generated successfully in '$GcovReportDir'." -ForegroundColor Green
-Read-Host "Press Enter to exit"

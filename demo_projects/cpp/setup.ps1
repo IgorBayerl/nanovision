@@ -44,4 +44,3 @@ pip install --upgrade gcovr
 Write-Host "`nEnvironment is ready!" -ForegroundColor Green
 Write-Host "You may need to open a new PowerShell window for PATH changes to take effect."
 Write-Host "Next, run one of the report generation scripts, like 'gen-gcov.ps1' or 'gen-lcov.ps1'."
-Read-Host "Press Enter to exit"
