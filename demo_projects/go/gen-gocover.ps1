@@ -42,5 +42,3 @@ Pop-Location
 Write-Host "`nGo coverage profile generated successfully!" -ForegroundColor Green
 Write-Host "Raw coverage data saved to:"
 Write-Host $CoverageProfile
-
-Read-Host "Press Enter to exit"
