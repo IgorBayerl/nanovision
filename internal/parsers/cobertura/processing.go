@@ -151,6 +151,11 @@ func (o *processingOrchestrator) processClassGroup(logicalClassName string, clas
 	}
 
 	o.aggregateClassMetrics(classModel, classProcessedFilePaths)
+
+	if len(classModel.Files) == 0 {
+		return nil, nil
+	}
+
 	return classModel, nil
 }
 
@@ -159,7 +164,7 @@ func (o *processingOrchestrator) processFileForClass(filePath string, classModel
 	if err != nil {
 		o.logger.Error("Source file not found.", "file", filePath, "class", classModel.DisplayName)
 		o.unresolvedSourceFiles = append(o.unresolvedSourceFiles, filePath)
-		resolvedPath = filePath
+		return nil, nil, err
 	}
 
 	complexityMetrics, err := fileFormatter.CalculateCyclomaticComplexity(resolvedPath)
@@ -614,11 +619,7 @@ func (o *processingOrchestrator) mergeLineAndBranchData(fragments []ClassXML) (m
 	branchDetails := make(map[int][]model.BranchCoverageDetail)
 
 	for _, fragment := range fragments {
-		allLines := make([]LineXML, len(fragment.Lines.Line))
-		copy(allLines, fragment.Lines.Line)
-		for _, method := range fragment.Methods.Method {
-			allLines = append(allLines, method.Lines.Line...)
-		}
+		allLines := fragment.Lines.Line
 
 		for _, lineXML := range allLines {
 			lineNumber, err := strconv.Atoi(lineXML.Number)

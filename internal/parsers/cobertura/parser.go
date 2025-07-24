@@ -50,25 +50,41 @@ func (cp *CoberturaParser) SupportsFile(filePath string) bool {
 	if !strings.HasSuffix(strings.ToLower(filePath), ".xml") {
 		return false
 	}
+
 	f, err := os.Open(filePath)
 	if err != nil {
 		return false
 	}
 	defer f.Close()
+
 	decoder := xml.NewDecoder(f)
+	firstElementChecked := false
+	isCoverageFile := false
+
 	for {
 		token, err := decoder.Token()
 		if err == io.EOF {
-			break
+			// Return true only if we found a <coverage> root and no errors occurred.
+			return isCoverageFile
 		}
 		if err != nil {
+			// Any XML parsing error (like a malformed tag) means the file is not supported.
 			return false
 		}
+
 		if se, ok := token.(xml.StartElement); ok {
-			return se.Name.Local == "coverage"
+			if !firstElementChecked {
+				// This is the first element tag we have encountered.
+				firstElementChecked = true
+				if se.Name.Local == "coverage" {
+					isCoverageFile = true
+				} else {
+					// The root element is not <coverage>, so this is not a supported file
+					return false
+				}
+			}
 		}
 	}
-	return false
 }
 
 // Parse is the main entry point for the Cobertura parsers. It unmarshals the XML
