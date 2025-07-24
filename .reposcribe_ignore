@@ -49,3 +49,5 @@ Testprojects/C++/Reports/Cobertura_CPPCoverage.xml
 Testprojects/FSharp/**
 Testprojects/Java/**
 docs/docs/roadmap/new-react-reporter
+
+demo_projects/**
