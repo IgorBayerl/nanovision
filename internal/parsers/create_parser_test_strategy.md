@@ -233,12 +233,12 @@ func Subtract(a, b int) int {
 
 				// Method assertions
 				require.Len(t, class.Methods, 2)
-				addMethod := findMethod(t, class.Methods, "Add")
+				addMethod := testutil.FindMethod(t, class.Methods, "Add")
 				assert.Equal(t, 3, addMethod.FirstLine)
 				assert.Equal(t, 5, addMethod.LastLine)
 				assert.InDelta(t, 1.0, addMethod.LineRate, 0.001)
 
-				subtractMethod := findMethod(t, class.Methods, "Subtract")
+				subtractMethod := testutil.FindMethod(t, class.Methods, "Subtract")
 				assert.Equal(t, 7, subtractMethod.FirstLine)
 				assert.Equal(t, 9, subtractMethod.LastLine)
 				assert.InDelta(t, 0.0, subtractMethod.LineRate, 0.001)
@@ -290,29 +290,6 @@ func Subtract(a, b int) int {
 			tc.asserter(t, result, err)
 		})
 	}
-}
-
-// --- Test Helper Functions ---
-func findMethod(t *testing.T, methods []model.Method, name string) model.Method {
-	t.Helper()
-	for _, m := range methods {
-		if m.Name == name {
-			return m
-		}
-	}
-	t.Fatalf("method with name '%s' not found", name)
-	return model.Method{}
-}
-
-func findLine(t *testing.T, lines []model.Line, number int) model.Line {
-	t.Helper()
-	for _, l := range lines {
-		if l.Number == number {
-			return l
-		}
-	}
-	t.Fatalf("line with number '%d' not found", number)
-	return model.Line{}
 }
 ```
 
