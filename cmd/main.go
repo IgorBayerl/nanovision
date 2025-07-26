@@ -31,11 +31,13 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/language"
 	"github.com/IgorBayerl/AdlerCov/internal/language/csharp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/defaultformatter"
+	"github.com/IgorBayerl/AdlerCov/internal/language/gcc"
 	"github.com/IgorBayerl/AdlerCov/internal/language/golang"
 
 	// parsers
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/cobertura"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/gcov"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/gocover"
 )
 
@@ -348,6 +350,7 @@ func run(flags *cliFlags) error {
 		defaultformatter.NewDefaultProcessor(),
 		csharp.NewCSharpProcessor(),
 		golang.NewGoProcessor(),
+		gcc.NewGccProcessor(),
 	)
 
 	// The fileReader dependency is created here once from the central package.
@@ -355,6 +358,7 @@ func run(flags *cliFlags) error {
 	parserFactory := parsers.NewParserFactory(
 		cobertura.NewCoberturaParser(prodFileReader),
 		gocover.NewGoCoverParser(prodFileReader),
+		gcov.NewGCovParser(prodFileReader),
 	)
 
 	actualReportFiles, invalidPatterns, err := resolveAndValidateInputs(logger, flags)
