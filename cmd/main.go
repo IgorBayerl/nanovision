@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/IgorBayerl/fsglob"
+
 	"github.com/IgorBayerl/AdlerCov/internal/analyzer"
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/glob"
 	"github.com/IgorBayerl/AdlerCov/internal/logging"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/reportconfig"
@@ -128,7 +129,7 @@ func resolveAndValidateInputs(logger *slog.Logger, flags *cliFlags) ([]string, [
 		if trimmedPattern == "" {
 			continue
 		}
-		expandedFiles, err := glob.GetFiles(trimmedPattern)
+		expandedFiles, err := fsglob.GetFiles(trimmedPattern)
 		if err != nil {
 			logger.Warn("Error expanding report file pattern", "pattern", trimmedPattern, "error", err)
 			invalidPatterns = append(invalidPatterns, trimmedPattern)

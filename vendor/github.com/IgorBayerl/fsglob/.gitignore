@@ -1,0 +1,11 @@
+# Compiled binaries
+fsglob
+fsglob.exe
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor folders
+.vscode/
+.idea/

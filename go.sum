@@ -1,3 +1,5 @@
+github.com/IgorBayerl/fsglob v0.1.2 h1:71aXvlZtFb/43MnVZ/ael/npnopg4toLO/HD1PCzkI0=
+github.com/IgorBayerl/fsglob v0.1.2/go.mod h1:02vHZrk/BMwgi9jFNHG9yUkeg64ao+MvVOfpwZww94I=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fzipp/gocyclo v0.6.0 h1:lsblElZG7d3ALtGMx9fmxeTKZaLLpU8mET09yN4BBLo=
