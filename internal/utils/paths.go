@@ -63,8 +63,6 @@ func (ds DefaultStater) Stat(name string) (fs.FileInfo, error) {
 //
 //	// The function will find the file by directly joining the paths:
 //	// "C:\\dev\\my-api\\src\\MyProject.Api\\Services\\UserService.cs"
-// In: internal/utils/paths.go
-
 func FindFileInSourceDirs(relativePath string, sourceDirs []string, stater Stater) (string, error) {
 	// Clean the incoming relative path using the host OS's rules.
 	// This will correctly handle both '/' and '\' on Windows.

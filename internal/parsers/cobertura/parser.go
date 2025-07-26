@@ -4,7 +4,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"io/fs"
 	"log/slog"
 	"os"
 	"strconv"
@@ -19,21 +18,6 @@ import (
 // CoberturaParser implements the parsers.IParser interface for Cobertura XML reports.
 type CoberturaParser struct {
 	fileReader filereader.Reader
-}
-
-// DefaultFileReader is the production implementation of the FileReader interface.
-type DefaultFileReader struct{}
-
-func (dfr *DefaultFileReader) ReadFile(path string) ([]string, error) {
-	return filereader.ReadLinesInFile(path)
-}
-
-func (dfr *DefaultFileReader) CountLines(path string) (int, error) {
-	return filereader.CountLinesInFile(path)
-}
-
-func (dfr *DefaultFileReader) Stat(name string) (fs.FileInfo, error) {
-	return os.Stat(name)
 }
 
 func NewCoberturaParser(fileReader filereader.Reader) parsers.IParser {
