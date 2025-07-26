@@ -192,15 +192,6 @@ func WithInvalidPatterns(patterns []string) Option {
 	}
 }
 
-func WithSettings(s *settings.Settings) Option {
-	return func(c *ReportConfiguration) error {
-		if s != nil {
-			c.App = s
-		}
-		return nil
-	}
-}
-
 func WithFilters(
 	assemblyFilters []string,
 	classFilters []string,
