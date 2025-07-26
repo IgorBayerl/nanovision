@@ -64,14 +64,14 @@ REPORT_TASKS = [
         "name": "C# Project Only (from Cobertura)",
         "inputs": [CSHARP_COBERTURA_XML],
         "source_dirs": [CSHARP_PROJECT_DIR],
-        "output_dir_suffix": "csharp_only",
+        "output_dir_suffix": "csharp_cobertura_only",
         "enabled": True,
     },
     {
         "name": "Go Project Only (from gocover)",
         "inputs": [GO_COVERAGE_OUT],
         "source_dirs": [GO_PROJECT_DIR],
-        "output_dir_suffix": "go_only",
+        "output_dir_suffix": "go_gocover_only",
         "enabled": True,
     },
     {

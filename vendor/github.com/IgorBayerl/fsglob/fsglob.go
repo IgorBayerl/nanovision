@@ -1,14 +1,57 @@
-// Package glob provides functionality for finding files and directories
-// by matching their path names against a pattern.
-// Aim to support:
-//   - `?`: Matches any single character in a file or directory name.
-//   - `*`: Matches zero or more characters in a file or directory name.
-//   - `**`: Matches zero or more recursive directories.
-//   - `[...]`: Matches a set of characters in a name (e.g., `[abc]`, `[a-z]`).
-//   - `{group1,group2,...}`: Matches any of the pattern groups.
-//
-// Case-insensitivity is the default behavior for matching.
-package glob
+// Package fsglob provides a powerful and extensible library for globbing, finding file
+// paths that match standard Unix-style glob patterns.
+
+// The main entrypoint is the GetFiles function, which provides a simple interface for
+// common use cases. The package is designed to be cross-platform, automatically
+// handling both forward and backslashes in patterns, and can be extended to work
+// with any virtual filesystem.
+
+// Features:
+//   - Standard Glob Syntax: Supports `*`, `?`, `**`, `[]`, and `{}`.
+//   - Cross-Platform: Correctly handles path separators on both Windows and Unix.
+//   - Extensible: Operates on any filesystem that implements the filesystem.Filesystem
+//     interface, perfect for testing or use with virtual filesystems like afero.
+//   - Case-Insensitive Option: Provides an option for case-insensitive matching.
+
+// Quick Start
+
+// To find all Go files recursively from the current directory:
+//     goFiles, err := fsglob.GetFiles("**/*.go")
+//     if err != nil {
+//         // Handle error
+//     }
+//     for _, file := range goFiles {
+//         fmt.Println(file)
+//     }
+
+// Pattern Matching
+
+// The following pattern syntax is supported:
+
+// | Pattern | Description                                                               | Example                  |
+// | :------ | :------------------------------------------------------------------------ | :----------------------- |
+// | `*`     | Matches any sequence of characters, except for path separators.           | `*.log`                  |
+// | `?`     | Matches any single character.                                             | `file?.txt`              |
+// | `**`    | Matches zero or more directories recursively.                             | `reports/**/*.xml`       |
+// | `[]`    | Matches any single character within the brackets (e.g., [abc], [a-z]).    | `[a-c].go`               |
+// | `{}`    | Brace expansion matches any of the comma-separated patterns.              | `image.{jpg,png,gif}`    |
+
+// Advanced Usage: Custom Filesystem and Options
+
+// For more control, such as using a custom filesystem for testing or enabling
+// case-insensitive matching, use NewGlob.
+
+//     // Create a new globber with case-insensitivity enabled.
+//     // On Windows, matching is case-insensitive by default for non-wildcard patterns.
+//     g := fsglob.NewGlob("reports/*.{XML,json}", fs, fsglob.WithIgnoreCase(true))
+
+//     matches, err := g.Expand()
+//     if err != nil {
+//         // Handle error
+//     }
+//     fmt.Println("Found matches:", matches)
+
+package fsglob
 
 import (
 	"fmt"
@@ -20,7 +63,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filesystem"
+	"github.com/IgorBayerl/fsglob/filesystem"
 )
 
 var (
@@ -42,6 +85,9 @@ var (
 	cacheMutex = &sync.Mutex{}
 )
 
+// RegexOrString is a helper struct that holds either a compiled regular expression
+// or a literal string for efficient pattern matching. It is used internally to
+// optimize matching by avoiding regex compilation for simple patterns.
 type RegexOrString struct {
 	// CompiledRegex is the compiled regular expression if the pattern segment contains wildcards.
 	CompiledRegex *regexp.Regexp
@@ -68,6 +114,11 @@ func (ros *RegexOrString) IsMatch(input string) bool {
 	return ros.LiteralPattern == input
 }
 
+// Glob is the main globbing engine. It holds the original pattern and configuration
+// for a globbing operation.
+//
+// An instance is created with NewGlob, which allows for advanced configuration,
+// such as setting a custom filesystem or enabling case-insensitive matching.
 type Glob struct {
 	OriginalPattern string
 	IgnoreCase      bool
@@ -77,14 +128,19 @@ type Glob struct {
 
 func (g *Glob) joinPath(elem1, elem2 string) string {
 	if g.platform == "windows" {
-		return filepath.Join(elem1, elem2)
+		e1s := strings.ReplaceAll(elem1, "\\", "/")
+		e2s := strings.ReplaceAll(elem2, "\\", "/")
+		joined := path.Join(e1s, e2s)
+		return strings.ReplaceAll(joined, "/", "\\")
 	}
-	return path.Join(elem1, elem2) // always “/”
+	return path.Join(elem1, elem2)
 }
 
 func (g *Glob) parentDir(p string) string {
 	if g.platform == "windows" {
-		return filepath.Dir(p)
+		pWithSlashes := strings.ReplaceAll(p, "\\", "/")
+		dirWithSlashes := path.Dir(pWithSlashes)
+		return strings.ReplaceAll(dirWithSlashes, "/", "\\")
 	}
 	return path.Dir(p)
 }
@@ -101,16 +157,27 @@ func (g *Glob) absForPlatform(p string) (string, error) {
 		return "", err
 	}
 	if g.platform == "windows" {
-		return filepath.Join(cwd, g.normalizePathForFS(p)), nil
+		return g.joinPath(cwd, g.normalizePathForFS(p)), nil
 	}
-	// unix use the slash variant only
 	return path.Clean(path.Join(g.normalizePathForPattern(cwd), p)), nil
 }
 
+// A GlobOption configures a Glob instance. It's a functional option type
+// used with NewGlob.
 type GlobOption func(*Glob)
 
+// WithIgnoreCase returns a GlobOption that sets the globber to perform
+// case-insensitive matching. On Windows, literal (non-wildcard) path
+// segments are case-insensitive by default. This option forces wildcards
+// and all other patterns to also ignore case.
 func WithIgnoreCase(v bool) GlobOption { return func(g *Glob) { g.IgnoreCase = v } }
 
+// NewGlob creates and returns a new Glob engine for the given pattern.
+// It uses the provided filesystem `fs` for all file operations. If `fs` is nil,
+// it defaults to the host operating system's filesystem.
+//
+// Functional options (GlobOption) can be provided to customize the globber's
+// behavior, such as enabling case-insensitive matching with WithIgnoreCase.
 func NewGlob(pattern string, fs filesystem.Filesystem, opts ...GlobOption) *Glob {
 	if fs == nil {
 		fs = filesystem.DefaultFS{}
@@ -139,18 +206,12 @@ func NewGlob(pattern string, fs filesystem.Filesystem, opts ...GlobOption) *Glob
 	return g
 }
 
+// String returns the original, unmodified pattern that was used to create the Glob instance.
 func (g *Glob) String() string { return g.OriginalPattern }
 
-func (g *Glob) ExpandNames() ([]string, error) {
-	res, err := g.expandInternal(g.OriginalPattern, false)
-	if err != nil && g.IgnoreCase { // tolerant mode
-		slog.Warn("Ignoring malformed glob pattern",
-			"pattern", g.OriginalPattern, "error", err)
-		return []string{}, nil
-	}
-	return res, err
-}
-
+// Expand executes the glob pattern and returns all matching file paths.
+// It is the primary method for retrieving results from a configured Glob instance.
+// The function returns an empty, non-nil slice if no matches are found.
 func (g *Glob) Expand() ([]string, error) {
 	res, err := g.expandInternal(g.OriginalPattern, false)
 	if err != nil && g.IgnoreCase {
@@ -161,32 +222,72 @@ func (g *Glob) Expand() ([]string, error) {
 	return res, err
 }
 
-func (g *Glob) tryWindowsCaseFold(absPath string, dirOnly bool) ([]string, error) {
-	clean := filepath.Clean(absPath)
-	vol := ""
-	rest := clean
-	if len(clean) >= 2 && clean[1] == ':' {
-		vol = clean[:2]  // "C:"
-		rest = clean[2:] // everything after the drive
+// ExpandNames executes the glob pattern and returns all matching file paths.
+//
+// Deprecated: This function is an alias for Expand. Please use Expand instead.
+func (g *Glob) ExpandNames() ([]string, error) {
+	res, err := g.expandInternal(g.OriginalPattern, false)
+	if err != nil && g.IgnoreCase { // tolerant mode
+		slog.Warn("Ignoring malformed glob pattern",
+			"pattern", g.OriginalPattern, "error", err)
+		return []string{}, nil
 	}
-	rest = strings.TrimPrefix(rest, `\`)
-	parts := strings.Split(rest, `\`)
+	return res, err
+}
 
-	// Start at the root directory (e.g. "C:\").
+func (g *Glob) tryWindowsCaseFold(absPath string, dirOnly bool) ([]string, error) {
+	// Normalize to forward slashes for processing with `path` package
+	normalizedPath := g.normalizePathForPattern(absPath)
+	cleanPath := path.Clean(normalizedPath)
+
+	// Handle root case `C:\` which clean might change to `C:`
+	if len(cleanPath) == 2 && cleanPath[1] == ':' {
+		cleanPath += "/"
+	}
+
+	vol := ""
+	rest := cleanPath
+	if len(cleanPath) > 1 && cleanPath[1] == ':' {
+		vol = cleanPath[:2]
+		rest = cleanPath[2:]
+	}
+
+	// path.Clean might remove the leading slash. Put it back.
+	if vol != "" && !strings.HasPrefix(rest, "/") {
+		rest = "/" + rest
+	}
+
+	// Split path components
+	parts := strings.Split(strings.Trim(rest, "/"), "/")
+
 	cur := vol + `\`
+	if vol == "" {
+		// Handle UNC paths if necessary, for now assume drive letters
+		if strings.HasPrefix(cleanPath, "//") {
+			// very basic UNC handling
+			parts = strings.Split(strings.TrimPrefix(cleanPath, "//"), "/")
+			if len(parts) < 2 {
+				return nil, nil
+			}
+			cur = `\\` + parts[0] + `\` + parts[1]
+			parts = parts[2:]
+		} else {
+			cur = `\`
+		}
+	}
 
 	// Walk every segment and pick the real-cased name.
 	for _, p := range parts {
 		if p == "" {
-			continue // guard against "C:\"
+			continue
 		}
-		entries, err := g.FS.ReadDir(cur) // list the directory we are in
+		entries, err := g.FS.ReadDir(cur)
 		if err != nil {
 			return nil, nil // unreadable -> give up
 		}
 		var matched string
 		for _, de := range entries {
-			if strings.EqualFold(de.Name(), p) { // case-insensitive compare
+			if strings.EqualFold(de.Name(), p) {
 				matched = de.Name()
 				break
 			}
@@ -194,10 +295,9 @@ func (g *Glob) tryWindowsCaseFold(absPath string, dirOnly bool) ([]string, error
 		if matched == "" {
 			return nil, nil // path element not found
 		}
-		cur = g.joinPath(cur, matched) // advance with correct case
+		cur = g.joinPath(cur, matched)
 	}
 
-	// We have rebuilt the canonical cased path in cur.
 	info, err := g.FS.Stat(cur)
 	if err != nil || (dirOnly && !info.IsDir()) {
 		return nil, nil
@@ -262,12 +362,10 @@ func (g *Glob) createRegexOrString(patternSegment string) (*RegexOrString, error
 
 func (g *Glob) isAbsolutePath(path string) bool {
 	if g.platform == "windows" {
-		// Windows absolute paths: C:\... or \\... (UNC) or /... (converted from Unix-style)
 		return (len(path) >= 3 && path[1] == ':' && (path[2] == '\\' || path[2] == '/')) ||
 			strings.HasPrefix(path, "\\\\") ||
 			strings.HasPrefix(path, "/")
 	}
-	// Unix absolute paths start with /
 	return strings.HasPrefix(path, "/")
 }
 
@@ -284,43 +382,37 @@ func (g *Glob) normalizePathForPattern(p string) string {
 }
 
 // expandInternal is the core recursive matching function.
-// It returns a slice of absolute paths for matched files or directories.
-// `pattern` is the current glob pattern being processed.
-// `dirOnly` specifies if only directories should be matched.
 func (g *Glob) expandInternal(pattern string, dirOnly bool) ([]string, error) {
 	if pattern == "" {
 		return []string{}, nil
 	}
 
-	// Normalize pattern for internal processing (always use forward slashes)
 	normalizedPattern := g.normalizePathForPattern(pattern)
 
-	// Handle literal paths (no glob characters)
 	if !strings.ContainsAny(normalizedPattern, string(globCharacters)) {
 		absPath, err := g.absForPlatform(pattern)
 		if err != nil {
 			return nil, err
 		}
 
+		if g.platform == "windows" {
+			paths, _ := g.tryWindowsCaseFold(absPath, dirOnly)
+			if paths == nil {
+				return []string{}, nil
+			}
+			return paths, nil
+		}
+
 		info, err := g.FS.Stat(absPath)
 		if err == nil && (!dirOnly || info.IsDir()) {
 			return []string{absPath}, nil
 		}
-
-		// Windows: retry with case-insensitive scan of the parent dir
-		if g.platform == "windows" {
-			if paths, _ := g.tryWindowsCaseFold(absPath, dirOnly); len(paths) > 0 {
-				return paths, nil
-			}
-		}
 		return []string{}, nil
 	}
 
-	// Split path into parent and child components
 	parent := path.Dir(normalizedPattern)
 	child := path.Base(normalizedPattern)
 
-	// Handle root directory case
 	if parent == "." && !g.isAbsolutePath(normalizedPattern) {
 		cwd, err := g.FS.Getwd()
 		if err != nil {
@@ -329,12 +421,10 @@ func (g *Glob) expandInternal(pattern string, dirOnly bool) ([]string, error) {
 		parent = g.normalizePathForPattern(cwd)
 	}
 
-	// Handle cross-separator brace expansion
 	if strings.Count(child, "}") > strings.Count(child, "{") {
 		return g.handleCrossSeparatorBrace(normalizedPattern, dirOnly)
 	}
 
-	// Handle recursive wildcard `**` as the final segment
 	if child == "**" {
 		parentDirs, err := g.expandInternal(g.normalizePathForFS(parent), true)
 		if err != nil {
@@ -343,29 +433,28 @@ func (g *Glob) expandInternal(pattern string, dirOnly bool) ([]string, error) {
 		var allResults []string
 		seenPaths := make(map[string]bool)
 		for _, pDir := range parentDirs {
-			// Get ALL descendants, including the parent dir itself
 			descendants, err := g.getRecursiveDirectoriesAndFiles(pDir, dirOnly)
 			if err != nil {
 				continue
 			}
-			// Include parent directory itself
-			if !dirOnly {
-				_, err := g.FS.Stat(pDir)
-				if err == nil && !seenPaths[pDir] {
-					allResults = append(allResults, pDir)
-					seenPaths[pDir] = true
+			if !seenPaths[pDir] {
+				info, err := g.FS.Stat(pDir)
+				if err == nil {
+					if !dirOnly || info.IsDir() {
+						allResults = append(allResults, pDir)
+						seenPaths[pDir] = true
+					}
 				}
-			} else if !seenPaths[pDir] {
-				allResults = append(allResults, pDir)
-				seenPaths[pDir] = true
 			}
-			// Add descendants
 			for _, d := range descendants {
 				if !seenPaths[d] {
 					allResults = append(allResults, d)
 					seenPaths[d] = true
 				}
 			}
+		}
+		if allResults == nil {
+			return []string{}, nil
 		}
 		return allResults, nil
 	}
@@ -394,12 +483,15 @@ func (g *Glob) handleCrossSeparatorBrace(normalizedPattern string, dirOnly bool)
 			}
 		}
 	}
+	if allResults == nil {
+		return []string{}, nil
+	}
 	return allResults, nil
+
 }
 
 // processPathSegment is the main workhorse for a standard `parent/child` pattern.
 func (g *Glob) processPathSegment(parentPattern, childPattern string, dirOnly bool) ([]string, error) {
-	// Convert parent pattern back to filesystem format for expansion
 	parentForFS := g.normalizePathForFS(parentPattern)
 	expandedParentDirs, err := g.expandInternal(parentForFS, true)
 	if err != nil {
@@ -434,7 +526,8 @@ func (g *Glob) processPathSegment(parentPattern, childPattern string, dirOnly bo
 		}
 
 		for _, entry := range entries {
-			if !dirOnly || entry.IsDir() {
+			isDir := entry.IsDir()
+			if !dirOnly || isDir {
 				for _, ros := range childRegexes {
 					if ros.IsMatch(entry.Name()) {
 						absEntryPath := g.joinPath(parentDir, entry.Name())
@@ -450,15 +543,14 @@ func (g *Glob) processPathSegment(parentPattern, childPattern string, dirOnly bo
 
 		// Handle '.' and '..' matching
 		for _, ros := range childRegexes {
-			switch ros.OriginalRegexPattern {
-			case `^\.$`: // Matches "."
+			if ros.LiteralPattern == "." {
 				if !seenPaths[parentDir] {
 					allMatches = append(allMatches, parentDir)
 					seenPaths[parentDir] = true
 				}
-			case `^\.\.$`: // Matches ".."
+			} else if ros.LiteralPattern == ".." {
 				grandParentDir := g.parentDir(parentDir)
-				if grandParentDir != parentDir { // Avoids root's parent being itself
+				if grandParentDir != parentDir {
 					if !seenPaths[grandParentDir] {
 						allMatches = append(allMatches, grandParentDir)
 						seenPaths[grandParentDir] = true
@@ -482,14 +574,10 @@ func globToRegexPattern(globSegment string, ignoreCase bool) (string, error) {
 	}
 	regex.WriteRune('^')
 
-	// Handle `**` as a complete segment
 	if globSegment == "**" {
-		regex.WriteString(".*") // `**` as a segment should match anything (including nothing)
+		regex.WriteString(".*")
 	} else {
-		// Replace `**` with a regex that matches any character (including path separators)
-		// This is for patterns like `a**b.txt`
 		globSegment = strings.ReplaceAll(globSegment, "**", ".*")
-
 		inCharClass := false
 		for _, r := range globSegment {
 			if inCharClass {
@@ -499,10 +587,9 @@ func globToRegexPattern(globSegment string, ignoreCase bool) (string, error) {
 				regex.WriteRune(r)
 				continue
 			}
-
 			switch r {
 			case '*':
-				regex.WriteString("[^/\\\\]*") // * matches anything except path separators (both / and \)
+				regex.WriteString("[^/\\\\]*")
 			case '?':
 				regex.WriteRune('.')
 			case '[':
@@ -525,16 +612,10 @@ func globToRegexPattern(globSegment string, ignoreCase bool) (string, error) {
 }
 
 // ungroup handles brace expansion, e.g., "{a,b}c" -> ["ac", "bc"].
-// It supports nested braces and multiple groups.
 func ungroup(path string) ([]string, error) {
 	if !strings.Contains(path, "{") {
 		return []string{path}, nil
 	}
-
-	// This is a common algorithm for brace expansion:
-	// Find the first top-level {...} group.
-	// Expand this group.
-	// For each expansion, prepend the prefix and recursively call ungroup on the (expansion + suffix).
 
 	var results []string
 	level := 0
@@ -549,7 +630,7 @@ func ungroup(path string) ([]string, error) {
 			level++
 		case '}':
 			level--
-			if level == 0 && firstOpenBrace != -1 { // Found a top-level group
+			if level == 0 && firstOpenBrace != -1 {
 				prefix := path[:firstOpenBrace]
 				groupContent := path[firstOpenBrace+1 : i]
 				suffix := path[i+1:]
@@ -571,17 +652,14 @@ func ungroup(path string) ([]string, error) {
 						partBuilder.WriteRune(gc)
 					}
 				}
-				groupParts = append(groupParts, partBuilder.String()) // Add the last part
+				groupParts = append(groupParts, partBuilder.String())
 
-				// Recursively expand suffix first, as it applies to all parts of the current group.
 				expandedSuffixes, err := ungroup(suffix)
 				if err != nil {
 					return nil, err
 				}
 
 				for _, gp := range groupParts {
-					// Each part of the current group might itself contain groups or be literal.
-					// So, we form `prefix + gp` and then expand that, then combine with expandedSuffixes.
 					currentCombinedPrefixPart := prefix + gp
 					expandedPrefixParts, err := ungroup(currentCombinedPrefixPart)
 					if err != nil {
@@ -594,38 +672,20 @@ func ungroup(path string) ([]string, error) {
 						}
 					}
 				}
-				return results, nil // Processed the first top-level group
+				return results, nil
 			}
 		}
 	}
 
-	if level != 0 { // Unbalanced braces
+	if level != 0 {
 		return nil, fmt.Errorf("unbalanced braces in pattern: %s", path)
 	}
-
-	// No top-level group found (e.g. "abc" or "a{b}c" where {b} was handled by inner recursion)
 	return []string{path}, nil
 }
 
-// getRecursiveDirectoriesAndFiles is a helper for `**` when it's the last segment.
-// It lists all files/directories under the root directory recursively.
-// If dirOnly is true, only directories are returned.
-// Returns absolute paths.
+// getRecursiveDirectoriesAndFiles is a helper for `**`.
 func (g *Glob) getRecursiveDirectoriesAndFiles(root string, dirOnly bool) ([]string, error) {
 	var paths []string
-
-	rootInfo, err := g.FS.Stat(root)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return []string{}, nil
-		}
-		return nil, err
-	}
-
-	if !rootInfo.IsDir() {
-		return []string{}, nil
-	}
-
 	queue := []string{root}
 	visited := make(map[string]struct{})
 
@@ -646,13 +706,11 @@ func (g *Glob) getRecursiveDirectoriesAndFiles(root string, dirOnly bool) ([]str
 
 		for _, entry := range entries {
 			nextPath := g.joinPath(currentPath, entry.Name())
-
-			entryInfo, err := g.FS.Stat(nextPath)
+			entryInfo, err := entry.Info()
 			if err != nil {
-				slog.Warn("Could not stat entry", "path", nextPath, "error", err)
+				slog.Warn("Could not get info for entry", "path", nextPath, "error", err)
 				continue
 			}
-
 			if !dirOnly || entryInfo.IsDir() {
 				paths = append(paths, nextPath)
 			}
@@ -665,17 +723,10 @@ func (g *Glob) getRecursiveDirectoriesAndFiles(root string, dirOnly bool) ([]str
 }
 
 // GetFiles is the public entry point for globbing.
-// It takes a glob pattern and returns a slice of absolute paths to matching files and directories.
-// Errors encountered during parts of the expansion (e.g., unreadable directory) are logged as warnings,
-// and the function attempts to return successfully found matches.
-// A fundamental error (e.g., invalid pattern syntax) will be returned as an error.
 func GetFiles(pattern string) ([]string, error) {
 	if pattern == "" {
 		return []string{}, nil
 	}
-
 	g := NewGlob(pattern, nil)
-	// Call ExpandNames which uses expandInternal.
-	// expandInternal is designed to return errors for fundamental issues.
 	return g.ExpandNames()
 }
