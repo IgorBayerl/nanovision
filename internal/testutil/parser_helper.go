@@ -6,9 +6,9 @@ import (
 
 	"github.com/IgorBayerl/AdlerCov/internal/filtering"
 	"github.com/IgorBayerl/AdlerCov/internal/language"
+	"github.com/IgorBayerl/AdlerCov/internal/language/cpp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/csharp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/defaultformatter"
-	"github.com/IgorBayerl/AdlerCov/internal/language/gcc"
 	"github.com/IgorBayerl/AdlerCov/internal/language/golang"
 	"github.com/IgorBayerl/AdlerCov/internal/settings"
 )
@@ -40,7 +40,7 @@ func NewTestConfig(sourceDirs []string) *MockParserConfig {
 		defaultformatter.NewDefaultProcessor(),
 		golang.NewGoProcessor(),
 		csharp.NewCSharpProcessor(),
-		gcc.NewGccProcessor(),
+		cpp.NewCppProcessor(),
 	)
 
 	return &MockParserConfig{
