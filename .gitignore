@@ -13,7 +13,6 @@ obj
 *node_modules
 
 reports
-.vscode/settings.json
 Testprojects/Go/coverage.cobertura.xml
 Testprojects/Go/coverage.out
 coverage-report
@@ -21,3 +20,5 @@ coverage-report
 aldercov.exe 
 adlercov
 adlercov.log
+
+report_generator_dotnet
