@@ -1,0 +1,61 @@
+        -:    0:Source:C:/www/AdlerCov/demo_projects/cpp/project/src/calculator.cpp
+        -:    0:Graph:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\calculator.cpp.gcno
+        -:    0:Data:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\calculator.cpp.gcda
+        -:    0:Runs:2
+        -:    1:#include "calculator.h"
+        -:    2:
+function _ZN10Calculator3addEii called 2 returned 100% blocks executed 100%
+        2:    3:int Calculator::add(int a, int b) {
+        2:    4:    return a + b;
+unconditional  0 taken 2
+        -:    5:}
+        -:    6:
+function _ZN10Calculator8subtractEii called 1 returned 100% blocks executed 100%
+        1:    7:int Calculator::subtract(int a, int b) {
+        1:    8:    return a - b;
+unconditional  0 taken 1
+        -:    9:}
+        -:   10:
+function _ZN10Calculator8multiplyEii called 0 returned 0% blocks executed 0%
+    #####:   11:int Calculator::multiply(int a, int b) {
+        -:   12:    // This function is not called by any test.
+    #####:   13:    return a * b;
+unconditional  0 never executed
+        -:   14:}
+        -:   15:
+function _ZN10Calculator6divideEdd called 3 returned 67% blocks executed 88%
+        3:   16:double Calculator::divide(double a, double b) {
+        3:   17:    if (b == 0.0) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 2
+        1:   18:        throw std::invalid_argument("Division by zero is not allowed.");
+call    0 returned 1
+call    1 returned 1
+branch  2 taken 1 (fallthrough)
+branch  3 taken 0 (throw)
+call    4 returned 0
+call    5 never executed
+        -:   19:    }
+        2:   20:    return a / b;
+unconditional  0 taken 2
+unconditional  1 taken 2
+        -:   21:}
+        -:   22:
+function _ZN10Calculator4signEi called 2 returned 100% blocks executed 83%
+        2:   23:int Calculator::sign(int x) {
+        2:   24:    if (x > 0) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 1
+        1:   25:        return 1;
+unconditional  0 taken 1
+        1:   26:    } else if (x < 0) {
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:   27:        return -1;
+unconditional  0 taken 1
+        -:   28:    } else {
+        -:   29:        // This branch will be deliberately missed by the tests.
+    #####:   30:        return 0;
+unconditional  0 never executed
+        -:   31:    }
+        -:   32:}

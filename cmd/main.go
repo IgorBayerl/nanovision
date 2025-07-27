@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/IgorBayerl/fsglob"
+
 	"github.com/IgorBayerl/AdlerCov/internal/analyzer"
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/glob"
 	"github.com/IgorBayerl/AdlerCov/internal/logging"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/reportconfig"
@@ -28,6 +29,7 @@ import (
 
 	// language specific behaviours
 	"github.com/IgorBayerl/AdlerCov/internal/language"
+	"github.com/IgorBayerl/AdlerCov/internal/language/cpp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/csharp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/defaultformatter"
 	"github.com/IgorBayerl/AdlerCov/internal/language/golang"
@@ -35,6 +37,7 @@ import (
 	// parsers
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/cobertura"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/gcov"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/gocover"
 )
 
@@ -128,7 +131,7 @@ func resolveAndValidateInputs(logger *slog.Logger, flags *cliFlags) ([]string, [
 		if trimmedPattern == "" {
 			continue
 		}
-		expandedFiles, err := glob.GetFiles(trimmedPattern)
+		expandedFiles, err := fsglob.GetFiles(trimmedPattern)
 		if err != nil {
 			logger.Warn("Error expanding report file pattern", "pattern", trimmedPattern, "error", err)
 			invalidPatterns = append(invalidPatterns, trimmedPattern)
@@ -317,6 +320,24 @@ func generateReports(reportCtx reporter.IBuilderContext, summaryResult *model.Su
 func run(flags *cliFlags) error {
 	logger := slog.Default()
 
+	// Log the received parameters
+	logger.Info("Starting report generation with the following parameters:")
+	logger.Info("  -report", "value", *flags.reportsPatterns)
+	logger.Info("  -output", "value", *flags.outputDir)
+	logger.Info("  -reporttypes", "value", *flags.reportTypes)
+	logger.Info("  -sourcedirs", "value", *flags.sourceDirs)
+	logger.Info("  -tag", "value", *flags.tag)
+	logger.Info("  -title", "value", *flags.title)
+	logger.Info("  -assemblyfilters", "value", *flags.assemblyFilters)
+	logger.Info("  -classfilters", "value", *flags.classFilters)
+	logger.Info("  -filefilters", "value", *flags.fileFilters)
+	logger.Info("  -riskhotspotassemblyfilters", "value", *flags.rhAssemblyFilters)
+	logger.Info("  -riskhotspotclassfilters", "value", *flags.rhClassFilters)
+	logger.Info("  -verbose", "value", *flags.verbose)
+	logger.Info("  -verbosity", "value", *flags.verbosity)
+	logger.Info("  -logfile", "value", *flags.logFile)
+	logger.Info("  -logformat", "value", *flags.logFormat)
+
 	// Re-get the verbosity level from the flags, as it's needed for ReportConfiguration.
 	verbosityStr := strings.TrimSpace(*flags.verbosity)
 	verbosity, _ := logging.ParseVerbosity(verbosityStr)
@@ -329,6 +350,7 @@ func run(flags *cliFlags) error {
 		defaultformatter.NewDefaultProcessor(),
 		csharp.NewCSharpProcessor(),
 		golang.NewGoProcessor(),
+		cpp.NewCppProcessor(),
 	)
 
 	// The fileReader dependency is created here once from the central package.
@@ -336,6 +358,7 @@ func run(flags *cliFlags) error {
 	parserFactory := parsers.NewParserFactory(
 		cobertura.NewCoberturaParser(prodFileReader),
 		gocover.NewGoCoverParser(prodFileReader),
+		gcov.NewGCovParser(prodFileReader),
 	)
 
 	actualReportFiles, invalidPatterns, err := resolveAndValidateInputs(logger, flags)

@@ -1,0 +1,36 @@
+        -:    0:Source:C:/www/AdlerCov/demo_projects/cpp/project/src/advanced_calculator.cpp
+        -:    0:Graph:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\advanced_calculator.cpp.gcno
+        -:    0:Data:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\advanced_calculator.cpp.gcda
+        -:    0:Runs:2
+        -:    1:#include "advanced_calculator.h"
+        -:    2:#include <stdexcept>
+        -:    3:
+        2:    4:double AdvancedCalculator::power(double base, int exp) {
+        2:    5:    if (exp == 0) {
+        1:    6:        return 1.0;
+        -:    7:    }
+        -:    8:
+        1:    9:    double result = 1.0;
+        1:   10:    int positive_exp = exp > 0 ? exp : -exp;
+        4:   11:    for (int i = 0; i < positive_exp; ++i) {
+        3:   12:        result *= base;
+        -:   13:    }
+        -:   14:
+        1:   15:    if (exp < 0) {
+        -:   16:        // This branch for negative exponents is deliberately left untested.
+    #####:   17:        if (result == 0.0) {
+    #####:   18:            throw std::runtime_error("Division by zero in power calculation.");
+        -:   19:        }
+    #####:   20:        return 1.0 / result;
+        -:   21:    }
+        1:   22:    return result;
+        -:   23:}
+        -:   24:
+        1:   25:double AdvancedCalculator::average(const std::vector<double>& numbers) {
+        1:   26:    if (numbers.empty()) {
+        -:   27:        // This branch is deliberately left untested.
+    #####:   28:        return 0.0;
+        -:   29:    }
+        1:   30:    double sum = basic_calc_.sum(numbers);
+        1:   31:    return basic_calc_.divide(sum, static_cast<double>(numbers.size()));
+        -:   32:}
