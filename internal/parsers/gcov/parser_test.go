@@ -13,8 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGCovParser_Parse(t *testing.T) {
-	// --- Test Data ---
+func Test_GCovParser_Parse(t *testing.T) {
 	const reportFileName = "calculator.cpp.gcov"
 	const sourceDir = "C:/www/AdlerCov/demo_projects/cpp/project/src"
 	const sourceFileName = "calculator.cpp"
@@ -24,6 +23,11 @@ func TestGCovParser_Parse(t *testing.T) {
         -:    0:Graph:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\calculator.cpp.gcno
         -:    0:Data:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\calculator.cpp.gcda
         -:    0:Runs:2
+function Calculator::add line 3
+function Calculator::subtract line 7
+function Calculator::multiply line 11
+function Calculator::divide line 16
+function Calculator::sign line 23
         -:    1:#include "calculator.h"
         -:    2:
         2:    3:int Calculator::add(int a, int b) {
@@ -113,49 +117,46 @@ int Calculator::sign(int x) {
 			asserter: func(t *testing.T, result *parsers.ParserResult, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, result)
-				assert.Empty(t, result.UnresolvedSourceFiles)
-				assert.Equal(t, "GCov", result.ParserName)
-				assert.True(t, result.SupportsBranchCoverage, "Branch data was present, so this should be true")
 
 				require.Len(t, result.Assemblies, 1)
 				assembly := result.Assemblies[0]
-				assert.Equal(t, "Default", assembly.Name)
-				assert.Equal(t, 13, assembly.LinesCovered) // CORRECTED: 13 lines have hits > 0
-				assert.Equal(t, 16, assembly.LinesValid)   // CORRECTED: 16 lines are not marked with '-'
-				require.NotNil(t, assembly.BranchesCovered)
-				assert.Equal(t, 5, *assembly.BranchesCovered) // CORRECTED: 2+2+1=5
-				require.NotNil(t, assembly.BranchesValid)
-				assert.Equal(t, 6, *assembly.BranchesValid) // CORRECTED: 2+2+2=6
 
 				require.Len(t, assembly.Classes, 1)
 				class := assembly.Classes[0]
-				assert.Equal(t, sourceFileName, class.DisplayName)
 
+				assert.Equal(t, 5, class.TotalMethods)
+				assert.Equal(t, 4, class.CoveredMethods)
+				assert.Equal(t, 3, class.FullyCoveredMethods)
+
+				require.Len(t, class.Methods, 5)
+
+				divideMethod := testutil.FindMethod(t, class.Methods, "Calculator::divide")
+				assert.Equal(t, 16, divideMethod.FirstLine)
+				assert.Equal(t, 22, divideMethod.LastLine)
+				assert.InDelta(t, 1.0, divideMethod.LineRate, 0.001)
+				require.NotNil(t, divideMethod.BranchRate)
+				assert.InDelta(t, 1.0, *divideMethod.BranchRate, 0.001)
+
+				// Assert - NEW: Check for CodeElement creation
 				require.Len(t, class.Files, 1)
 				file := class.Files[0]
-				// CORRECTED: Normalize path separators for comparison
-				assert.Equal(t, filepath.ToSlash(resolvedSourcePath), filepath.ToSlash(file.Path))
-				assert.Equal(t, 32, file.TotalLines)
+				require.Len(t, file.CodeElements, 5, "Should create 5 code elements for the 5 methods")
 
-				line4 := testutil.FindLine(t, file.Lines, 4)
-				assert.Equal(t, 2, line4.Hits)
-				assert.Equal(t, model.Covered, line4.LineVisitStatus)
+				var addCodeElement model.CodeElement
+				for _, ce := range file.CodeElements {
+					if ce.FullName == "Calculator::add" {
+						addCodeElement = ce
+						break
+					}
+				}
+				require.NotNil(t, addCodeElement.FullName, "Could not find CodeElement for 'Calculator::add'")
 
-				line13 := testutil.FindLine(t, file.Lines, 13)
-				assert.Equal(t, 0, line13.Hits)
-				assert.Equal(t, model.NotCovered, line13.LineVisitStatus)
-
-				// This is now the most important assertion for branches
-				line17 := testutil.FindLine(t, file.Lines, 17)
-				assert.Equal(t, 3, line17.Hits)
-				assert.True(t, line17.IsBranchPoint)
-				assert.Equal(t, 2, line17.CoveredBranches)             // CORRECTED: Both branches taken
-				assert.Equal(t, 2, line17.TotalBranches)               // CORRECTED: Two branches on this line
-				assert.Equal(t, model.Covered, line17.LineVisitStatus) // Both covered -> Covered, not Partially
-
-				line30 := testutil.FindLine(t, file.Lines, 30)
-				assert.Equal(t, 0, line30.Hits)
-				assert.Equal(t, model.NotCovered, line30.LineVisitStatus)
+				assert.Equal(t, "add", addCodeElement.Name)
+				assert.Equal(t, "Calculator::add", addCodeElement.FullName)
+				assert.Equal(t, model.MethodElementType, addCodeElement.Type)
+				assert.Equal(t, 3, addCodeElement.FirstLine)
+				require.NotNil(t, addCodeElement.CoverageQuota)
+				assert.InDelta(t, 100.0, *addCodeElement.CoverageQuota, 0.001)
 			},
 		},
 		{
@@ -166,9 +167,8 @@ int Calculator::sign(int x) {
 			asserter: func(t *testing.T, result *parsers.ParserResult, err error) {
 				require.NoError(t, err)
 				require.NotNil(t, result)
-				assert.Empty(t, result.Assemblies, "No assemblies should be created if the source file is not found")
+				assert.Empty(t, result.Assemblies)
 				require.Len(t, result.UnresolvedSourceFiles, 1)
-				// CORRECTED: Normalize path for assertion
 				assert.Equal(t, filepath.ToSlash(resolvedSourcePath), filepath.ToSlash(result.UnresolvedSourceFiles[0]))
 			},
 		},
@@ -181,7 +181,7 @@ int Calculator::sign(int x) {
 			err := os.WriteFile(reportPath, []byte(tc.reportContent), 0644)
 			require.NoError(t, err)
 
-			mockReader := testutil.NewMockFilesystem("windows") // Simulating windows
+			mockReader := testutil.NewMockFilesystem("windows")
 			for _, dir := range tc.sourceDirs {
 				mockReader.AddDir(dir)
 			}

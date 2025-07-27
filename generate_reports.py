@@ -41,7 +41,7 @@ BINARY_PATH = SCRIPT_ROOT / BINARY_NAME
 CPP_DIR = DEMO_PROJECTS_ROOT / "cpp"
 CPP_PROJECT_DIR = CPP_DIR / "project"
 CPP_COBERTURA_XML = CPP_DIR / "report" / "cobertura" / "cobertura.xml"
-CPP_GCOV_DIR = CPP_DIR / "report" / "gcov" / "basic"
+CPP_GCOV_DIR = CPP_DIR / "report" / "gcov" / "branch-probabilities"
 CPP_GCOV_PATTERN = str(CPP_GCOV_DIR.resolve() / "*.gcov")
 
 # C# Project Paths (inside demo_projects) 
