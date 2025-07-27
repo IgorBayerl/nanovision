@@ -41,14 +41,16 @@ While AdlerCov began by mirroring ReportGenerator’s capabilities, it is now di
 
 | Feature Category   | Feature                         | ReportGenerator   | AdlerCov  | Notes                         |
 | :----------------- | :------------------------------ | :---------------: | :-------: | :---------------------------- |
-| **Input Formats**  | Cobertura                       |        ✅        |     ✅    | Core support.                 |
-|                    | Go Cover                        |        ❌        |     ✅    | Native `coverage.out` parser. |
+| **Input Formats**  | Cobertura                       |        ✅        |     ✅    | Any Cobertura XML             |
+|                    | Go Cover                        |        ❌        |     ✅    | For Go projects               |
+|                    | GCov                            |        ✅        |     ✅    | For C++ projects              |
 |                    | OpenCover                       |        ✅        |     ❌    | Planned.                      |
 |                    | LCov                            |        ✅        |     ❌    | Planned.                      |
 |                    | JaCoCo                          |        ✅        |     ❌    | Planned.                      |
 |                    | Multiple/Merged Reports         |        ✅        |     ✅    | Supports unified summaries.   |
 | **Output Formats** | HTML (SPA)                      |        ✅        |     ✅    | Angular frontend.             |
-|                    | TextSummary, lcov               |        ✅        |     ✅    | Fully supported.              |
+|                    | TextSummary                     |        ✅        |     ✅    | Fully supported.              |
+|                    | lcov                            |        ✅        |     ✅    | Fully supported.              |
 |                    | Badge                           |        ✅        |     ❌    | Coming soon.                  |
 |                    | JSON                            |        ✅        |     ❌    | Coming soon.                  |
 |                    | XML                             |        ✅        |     ❌    | Coming soon.                  |
