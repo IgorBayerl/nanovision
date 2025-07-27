@@ -48,7 +48,7 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/language"
 	"github.com/IgorBayerl/AdlerCov/internal/language/csharp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/defaultformatter"
-	"github.com/IgorBayerl/AdlerCov/internal/language/gcc"
+	"github.com/IgorBayerl/AdlerCov/internal/language/cpp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/golang"
 	"github.com/IgorBayerl/AdlerCov/internal/settings"
 )

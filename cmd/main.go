@@ -29,9 +29,9 @@ import (
 
 	// language specific behaviours
 	"github.com/IgorBayerl/AdlerCov/internal/language"
+	"github.com/IgorBayerl/AdlerCov/internal/language/cpp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/csharp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/defaultformatter"
-	"github.com/IgorBayerl/AdlerCov/internal/language/gcc"
 	"github.com/IgorBayerl/AdlerCov/internal/language/golang"
 
 	// parsers
@@ -350,7 +350,7 @@ func run(flags *cliFlags) error {
 		defaultformatter.NewDefaultProcessor(),
 		csharp.NewCSharpProcessor(),
 		golang.NewGoProcessor(),
-		gcc.NewGccProcessor(),
+		cpp.NewCppProcessor(),
 	)
 
 	// The fileReader dependency is created here once from the central package.
