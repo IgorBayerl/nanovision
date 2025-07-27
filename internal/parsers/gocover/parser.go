@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/fs"
 	"log/slog"
 	"os"
 	"regexp"
@@ -23,20 +22,6 @@ var (
 // GoCoverParser implements the parsers.IParserinterface for Go coverage reports.
 type GoCoverParser struct {
 	fileReader filereader.Reader // Injected dependency
-}
-
-type DefaultFileReader struct{}
-
-func (dfr *DefaultFileReader) ReadFile(path string) ([]string, error) {
-	return filereader.ReadLinesInFile(path)
-}
-
-func (dfr *DefaultFileReader) CountLines(path string) (int, error) {
-	return filereader.CountLinesInFile(path)
-}
-
-func (dfr *DefaultFileReader) Stat(name string) (fs.FileInfo, error) {
-	return os.Stat(name)
 }
 
 // NewGoCoverParser creates a new parser instance.

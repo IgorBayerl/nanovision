@@ -88,6 +88,10 @@ func (o *processingOrchestrator) processBlocks(blocks []GoCoverProfileBlock) ([]
 		}
 	}
 
+	if len(assembly.Classes) == 0 {
+		return []model.Assembly{}, nil
+	}
+
 	o.aggregateAssemblyMetrics(assembly)
 	return []model.Assembly{*assembly}, nil
 }

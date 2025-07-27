@@ -1,0 +1,36 @@
+        -:    0:Source:C:/www/AdlerCov/demo_projects/cpp/project/src/calculator.cpp
+        -:    0:Graph:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\calculator.cpp.gcno
+        -:    0:Data:C:\www\AdlerCov\demo_projects\cpp\project\build\CMakeFiles\app_lib.dir\src\calculator.cpp.gcda
+        -:    0:Runs:2
+        -:    1:#include "calculator.h"
+        -:    2:
+        2:    3:int Calculator::add(int a, int b) {
+        2:    4:    return a + b;
+        -:    5:}
+        -:    6:
+        1:    7:int Calculator::subtract(int a, int b) {
+        1:    8:    return a - b;
+        -:    9:}
+        -:   10:
+    #####:   11:int Calculator::multiply(int a, int b) {
+        -:   12:    // This function is not called by any test.
+    #####:   13:    return a * b;
+        -:   14:}
+        -:   15:
+        3:   16:double Calculator::divide(double a, double b) {
+        3:   17:    if (b == 0.0) {
+        1:   18:        throw std::invalid_argument("Division by zero is not allowed.");
+        -:   19:    }
+        2:   20:    return a / b;
+        -:   21:}
+        -:   22:
+        2:   23:int Calculator::sign(int x) {
+        2:   24:    if (x > 0) {
+        1:   25:        return 1;
+        1:   26:    } else if (x < 0) {
+        1:   27:        return -1;
+        -:   28:    } else {
+        -:   29:        // This branch will be deliberately missed by the tests.
+    #####:   30:        return 0;
+        -:   31:    }
+        -:   32:}
