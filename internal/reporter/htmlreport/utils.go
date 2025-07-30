@@ -5,7 +5,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
 )
 
@@ -18,7 +17,7 @@ const (
 
 const maxFilenameLengthBase = 95
 
-func countTotalClasses(assemblies []model.Assembly) int {
+func countTotalClasses(assemblies []Assembly) int {
 	count := 0
 	for _, asm := range assemblies {
 		count += len(asm.Classes)
@@ -26,56 +25,56 @@ func countTotalClasses(assemblies []model.Assembly) int {
 	return count
 }
 
-func countUniqueFiles(assemblies []model.Assembly) int {
+func countUniqueFiles(assemblies []Assembly) int {
 	if len(assemblies) == 0 {
 		return 0
 	}
 
-	var allFiles []model.CodeFile
+	var allFiles []CodeFile
 	for _, asm := range assemblies {
 		for _, cls := range asm.Classes {
 			allFiles = append(allFiles, cls.Files...)
 		}
 	}
 
-	distinctFiles := utils.DistinctBy(allFiles, func(file model.CodeFile) string {
+	distinctFiles := utils.DistinctBy(allFiles, func(file CodeFile) string {
 		return file.Path // Assuming Path is the unique key
 	})
 
 	return len(distinctFiles)
 }
 
-func determineLineVisitStatus(hits int, isBranchPoint bool, coveredBranches int, totalBranches int) model.LineVisitStatus { // Changed return type
+func determineLineVisitStatus(hits int, isBranchPoint bool, coveredBranches int, totalBranches int) LineVisitStatus { // Changed return type
 	if hits < 0 {
-		return model.NotCoverable
+		return NotCoverable
 	}
 	if isBranchPoint {
 		if totalBranches == 0 {
-			return model.NotCoverable
+			return NotCoverable
 		}
 		if coveredBranches == totalBranches {
-			return model.Covered
+			return Covered
 		}
 		if coveredBranches > 0 {
-			return model.PartiallyCovered
+			return PartiallyCovered
 		}
-		return model.NotCovered
+		return NotCovered
 	}
 	if hits > 0 {
-		return model.Covered
+		return Covered
 	}
-	return model.NotCovered
+	return NotCovered
 }
 
-func lineVisitStatusToString(status model.LineVisitStatus) string { // Changed parameter type
+func lineVisitStatusToString(status LineVisitStatus) string { // Changed parameter type
 	switch status {
-	case model.Covered: // Use model.Covered
+	case Covered: // Use Covered
 		return "green"
-	case model.NotCovered: // Use model.NotCovered
+	case NotCovered: // Use NotCovered
 		return "red"
-	case model.PartiallyCovered: // Use model.PartiallyCovered
+	case PartiallyCovered: // Use PartiallyCovered
 		return "orange"
-	default: // model.NotCoverable
+	default: // NotCoverable
 		return "gray"
 	}
 }

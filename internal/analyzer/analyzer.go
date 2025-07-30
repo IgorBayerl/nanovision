@@ -24,7 +24,7 @@ type MergerConfig interface {
 
 // MergeParserResults orchestrates the process of merging multiple ParserResult objects
 // into a single, unified model.SummaryResult.
-func MergeParserResults(results []*parsers.ParserResult, config MergerConfig) (*model.SummaryResult, error) {
+func MergeParserResults(results []*parsers.ParserResultOld, config MergerConfig) (*model.SummaryResult, error) {
 	if len(results) == 0 {
 		return nil, fmt.Errorf("no parser results to merge")
 	}
@@ -79,7 +79,7 @@ func MergeParserResults(results []*parsers.ParserResult, config MergerConfig) (*
 
 // pickParserName inspects the parser results and returns a single representative name.
 // It returns "Unknown", the single unique name, or "MultiReport" if multiple parsers were used.
-func pickParserName(results []*parsers.ParserResult) string {
+func pickParserName(results []*parsers.ParserResultOld) string {
 	parserNames := make(map[string]struct{})
 	for _, res := range results {
 		if res.ParserName != "" {
@@ -98,7 +98,7 @@ func pickParserName(results []*parsers.ParserResult) string {
 }
 
 // earliestTimestamp finds and returns the minimum non-nil MinimumTimeStamp from all parser results.
-func earliestTimestamp(results []*parsers.ParserResult) *time.Time {
+func earliestTimestamp(results []*parsers.ParserResultOld) *time.Time {
 	var minTs *time.Time
 	for _, res := range results {
 		if res.MinimumTimeStamp != nil {
@@ -111,7 +111,7 @@ func earliestTimestamp(results []*parsers.ParserResult) *time.Time {
 }
 
 // builds and returns a de-duplicated slice of all SourceDirectories from the parser results.
-func unionSourceDirs(results []*parsers.ParserResult) []string {
+func unionSourceDirs(results []*parsers.ParserResultOld) []string {
 	allSourceDirsSet := make(map[string]struct{})
 	for _, res := range results {
 		for _, dir := range res.SourceDirectories {
@@ -128,7 +128,7 @@ func unionSourceDirs(results []*parsers.ParserResult) []string {
 // combines assemblies from all parser results into a single map using a deep merge strategy.
 // If an assembly is found in multiple results, its statistics are summed.
 // Its classes are also merged by name, summing their individual statistics and creating a union of their file lists.
-func mergeAssemblies(results []*parsers.ParserResult, logger *slog.Logger) map[string]*model.Assembly {
+func mergeAssemblies(results []*parsers.ParserResultOld, logger *slog.Logger) map[string]*model.Assembly {
 	// Pre-allocate map capacity, guessing an average of 2 assemblies per result.
 	mergedAssembliesMap := make(map[string]*model.Assembly, len(results)*2)
 

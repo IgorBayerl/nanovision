@@ -11,12 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
 )
 
-func (b *HtmlReportBuilder) generateClassDetailHTML(classModel *model.Class, classReportFilename string, tag string) error {
+func (b *HtmlReportBuilder) generateClassDetailHTML(classModel *Class, classReportFilename string, tag string) error {
 	// 1. Build the main ClassViewModelForDetail (server-side rendering focus)
 	classVM := b.buildClassViewModelForDetailServer(classModel, tag)
 
@@ -38,7 +36,7 @@ func (b *HtmlReportBuilder) generateClassDetailHTML(classModel *model.Class, cla
 
 }
 
-func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *model.Class, tag string) ClassViewModelForDetail {
+func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *Class, tag string) ClassViewModelForDetail {
 	cvm := ClassViewModelForDetail{
 		Name:         classModel.DisplayName,
 		AssemblyName: classModel.Name,
@@ -59,9 +57,9 @@ func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *model
 	b.populateHistoricCoveragesForClassVM(&cvm, classModel)
 	b.populateAggregatedMetricsForClassVM(&cvm, classModel)
 
-	var allMethodMetricsForClass []*model.MethodMetric
+	var allMethodMetricsForClass []*MethodMetric
 
-	sortedFiles := make([]model.CodeFile, len(classModel.Files))
+	sortedFiles := make([]CodeFile, len(classModel.Files))
 	copy(sortedFiles, classModel.Files)
 	sort.Slice(sortedFiles, func(i, j int) bool {
 		return sortedFiles[i].Path < sortedFiles[j].Path
@@ -95,7 +93,7 @@ func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *model
 	return cvm
 }
 
-func (b *HtmlReportBuilder) populateLineCoverageMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *model.Class) {
+func (b *HtmlReportBuilder) populateLineCoverageMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *Class) {
 	lineCoverage := utils.CalculatePercentage(cvm.CoveredLines, cvm.CoverableLines, b.maximumDecimalPlacesForCoverageQuotas)
 	cvm.CoveragePercentageForDisplay = utils.FormatPercentage(lineCoverage, b.maximumDecimalPlacesForPercentageDisplay)
 
@@ -109,7 +107,7 @@ func (b *HtmlReportBuilder) populateLineCoverageMetricsForClassVM(cvm *ClassView
 	}
 }
 
-func (b *HtmlReportBuilder) populateBranchCoverageMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *model.Class) {
+func (b *HtmlReportBuilder) populateBranchCoverageMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *Class) {
 	if b.branchCoverageAvailable && classModel.BranchesValid != nil && *classModel.BranchesValid > 0 && classModel.BranchesCovered != nil {
 		cvm.CoveredBranches = *classModel.BranchesCovered
 		cvm.TotalBranches = *classModel.BranchesValid
@@ -131,7 +129,7 @@ func (b *HtmlReportBuilder) populateBranchCoverageMetricsForClassVM(cvm *ClassVi
 	}
 }
 
-func (b *HtmlReportBuilder) populateMethodCoverageMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *model.Class) {
+func (b *HtmlReportBuilder) populateMethodCoverageMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *Class) {
 	cvm.TotalMethods = classModel.TotalMethods
 	cvm.CoveredMethods = classModel.CoveredMethods
 	cvm.FullyCoveredMethods = classModel.FullyCoveredMethods
@@ -157,7 +155,7 @@ func (b *HtmlReportBuilder) populateMethodCoverageMetricsForClassVM(cvm *ClassVi
 	}
 }
 
-func (b *HtmlReportBuilder) populateHistoricCoveragesForClassVM(cvm *ClassViewModelForDetail, classModel *model.Class) {
+func (b *HtmlReportBuilder) populateHistoricCoveragesForClassVM(cvm *ClassViewModelForDetail, classModel *Class) {
 	if classModel.HistoricCoverages == nil {
 		return
 	}
@@ -173,25 +171,34 @@ func (b *HtmlReportBuilder) populateHistoricCoveragesForClassVM(cvm *ClassViewMo
 	}
 }
 
-func (b *HtmlReportBuilder) populateAggregatedMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *model.Class) {
+func (b *HtmlReportBuilder) populateAggregatedMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *Class) {
 	cvm.Metrics = make(map[string]float64)
 	for name, val := range classModel.Metrics {
 		cvm.Metrics[name] = val
 	}
 }
 
-func (b *HtmlReportBuilder) buildFileViewModelForServerRender(fileInClass *model.CodeFile) (FileViewModelForDetail, []string, error) {
+func (b *HtmlReportBuilder) buildFileViewModelForServerRender(fileInClass *CodeFile) (FileViewModelForDetail, []string, error) {
 	fileVM := FileViewModelForDetail{
 		Path:      fileInClass.Path,
 		ShortPath: utils.ReplaceInvalidPathChars(filepath.Base(fileInClass.Path)),
 	}
-	sourceLines, err := filereader.ReadLinesInFile(fileInClass.Path)
+
+	sourceDirs := b.ReportContext.ReportConfiguration().SourceDirectories()
+	resolvedPath, err := utils.FindFileInSourceDirs(fileInClass.Path, sourceDirs, b.fileReader)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: could not read source file %s: %v\n", fileInClass.Path, err)
-		sourceLines = []string{}
+		// This is a non-fatal warning for the reporter. The report will generate, but this file will lack code.
+		fmt.Fprintf(os.Stderr, "Warning: could not resolve source file %s for HTML rendering: %v\n", fileInClass.Path, err)
+		return fileVM, []string{}, nil // Return a partially built VM
 	}
 
-	coverageLinesMap := make(map[int]*model.Line)
+	sourceLines, err := b.fileReader.ReadFile(resolvedPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not read source file %s: %v\n", resolvedPath, err)
+		sourceLines = []string{} // Continue with empty content
+	}
+
+	coverageLinesMap := make(map[int]*Line)
 	for i := range fileInClass.Lines {
 		covLine := &fileInClass.Lines[i]
 		coverageLinesMap[covLine.Number] = covLine
@@ -206,7 +213,7 @@ func (b *HtmlReportBuilder) buildFileViewModelForServerRender(fileInClass *model
 	return fileVM, sourceLines, nil
 }
 
-func (b *HtmlReportBuilder) buildLineViewModelForServerRender(lineContent string, actualLineNumber int, modelCovLine *model.Line, hasCoverageData bool) LineViewModelForDetail {
+func (b *HtmlReportBuilder) buildLineViewModelForServerRender(lineContent string, actualLineNumber int, modelCovLine *Line, hasCoverageData bool) LineViewModelForDetail {
 	lineVM := LineViewModelForDetail{LineNumber: actualLineNumber, LineContent: lineContent}
 	dataCoverageMap := map[string]map[string]string{"AllTestMethods": {"VC": "", "LVS": "gray"}}
 
@@ -246,7 +253,7 @@ func (b *HtmlReportBuilder) buildLineViewModelForServerRender(lineContent string
 
 }
 
-func (b *HtmlReportBuilder) buildSidebarElementViewModel(codeElem *model.CodeElement, fileShortPath string, fileIndexPlus1 int, isMultiFile bool) SidebarElementViewModel {
+func (b *HtmlReportBuilder) buildSidebarElementViewModel(codeElem *CodeElement, fileShortPath string, fileIndexPlus1 int, isMultiFile bool) SidebarElementViewModel {
 	sidebarElem := SidebarElementViewModel{
 		Name:          codeElem.Name,
 		FullName:      codeElem.FullName,
@@ -257,7 +264,7 @@ func (b *HtmlReportBuilder) buildSidebarElementViewModel(codeElem *model.CodeEle
 	if isMultiFile {
 		sidebarElem.FileIndexPlus1 = fileIndexPlus1
 	}
-	if codeElem.Type == model.PropertyElementType {
+	if codeElem.Type == PropertyElementType {
 		sidebarElem.Icon = "wrench"
 	}
 
@@ -295,8 +302,8 @@ func (b *HtmlReportBuilder) getStandardMetricHeaders() []AngularMetricDefinition
 }
 
 func (b *HtmlReportBuilder) buildSingleMetricRow(
-	method *model.Method,
-	correspondingCE *model.CodeElement,
+	method *Method,
+	correspondingCE *CodeElement,
 	fileShortPath string,
 	fileIndexPlus1 int,
 	headers []AngularMetricDefinitionViewModel,
@@ -309,7 +316,7 @@ func (b *HtmlReportBuilder) buildSingleMetricRow(
 	fullNameForTitle = cleanedFullName
 	if correspondingCE != nil {
 		lineToLink = correspondingCE.FirstLine
-		isProperty = (correspondingCE.Type == model.PropertyElementType)
+		isProperty = (correspondingCE.Type == PropertyElementType)
 		coverageQuota = correspondingCE.CoverageQuota
 	} else {
 		lineToLink = method.FirstLine
@@ -333,7 +340,7 @@ func (b *HtmlReportBuilder) buildSingleMetricRow(
 	}
 
 	// Create a map for easy lookup of existing metrics for the method
-	methodMetricsMap := make(map[string]model.Metric)
+	methodMetricsMap := make(map[string]Metric)
 	for _, mm := range method.MethodMetrics {
 		for _, m := range mm.Metrics {
 			methodMetricsMap[m.Name] = m
@@ -342,9 +349,9 @@ func (b *HtmlReportBuilder) buildSingleMetricRow(
 
 	// Manually add Line Coverage and Branch Coverage from the method model
 	// to ensure they are available for formatting.
-	methodMetricsMap["Line coverage"] = model.Metric{Value: method.LineRate * 100.0}
+	methodMetricsMap["Line coverage"] = Metric{Value: method.LineRate * 100.0}
 	if method.BranchRate != nil {
-		methodMetricsMap["Branch coverage"] = model.Metric{Value: *method.BranchRate * 100.0}
+		methodMetricsMap["Branch coverage"] = Metric{Value: *method.BranchRate * 100.0}
 	}
 	// Note: Complexity and CrapScore are already in method.MethodMetrics, so they'll be in the map.
 
@@ -379,7 +386,7 @@ func (b *HtmlReportBuilder) buildSingleMetricRow(
 // buildMetricsTableForClassVM constructs the view model for the metrics table.
 // It collects all methods from all files within the class and sorts them
 // primarily by file path, then by line number, then by short method name.
-func (b *HtmlReportBuilder) buildMetricsTableForClassVM(classModel *model.Class) MetricsTableViewModel {
+func (b *HtmlReportBuilder) buildMetricsTableForClassVM(classModel *Class) MetricsTableViewModel {
 	metricsTable := MetricsTableViewModel{}
 	metricsTable.Headers = b.getStandardMetricHeaders()
 
@@ -389,7 +396,7 @@ func (b *HtmlReportBuilder) buildMetricsTableForClassVM(classModel *model.Class)
 
 	// Create a temporary struct to hold methods along with their file context for sorting
 	type methodWithFileContext struct {
-		method         *model.Method
+		method         *Method
 		filePath       string // Full path for primary sort
 		fileShortPath  string // For linking
 		fileIndexPlus1 int    // For display in multi-file scenarios
@@ -397,7 +404,7 @@ func (b *HtmlReportBuilder) buildMetricsTableForClassVM(classModel *model.Class)
 	var allMethodsWithContext []methodWithFileContext
 
 	// Sort files first to ensure consistent file indexing and path usage
-	sortedFiles := make([]model.CodeFile, len(classModel.Files))
+	sortedFiles := make([]CodeFile, len(classModel.Files))
 	copy(sortedFiles, classModel.Files)
 	sort.Slice(sortedFiles, func(i, j int) bool {
 		return sortedFiles[i].Path < sortedFiles[j].Path
@@ -409,10 +416,10 @@ func (b *HtmlReportBuilder) buildMetricsTableForClassVM(classModel *model.Class)
 		// We need to iterate through model.Method objects that are part of the classModel.Methods,
 		// and then find which file they belong to for sorting.
 		// A better way: iterate classModel.Methods, and for each method, find its file.
-		// However, model.Method doesn't directly link back to a specific model.CodeFile.
+		// However, model.Method doesn't directly link back to a specific CodeFile.
 		// We need to find the methods that are defined within this specific file.
 		// The model.Method.FirstLine and model.Method.DisplayName are key.
-		// model.CodeFile.CodeElements helps link method display names to file lines.
+		// CodeFile.CodeElements helps link method display names to file lines.
 
 		// Let's find methods that are defined in *this* specific file (file)
 		// by checking if their first line is within this file's scope
@@ -464,7 +471,7 @@ func (b *HtmlReportBuilder) buildMetricsTableForClassVM(classModel *model.Class)
 	for _, mCtx := range allMethodsWithContext {
 		// Find the CodeElement again, this time specifically for the method in its context
 		// (or pass it if already available from a more direct link)
-		var correspondingCE *model.CodeElement
+		var correspondingCE *CodeElement
 		for _, f := range classModel.Files { // Iterate original files to find the CE
 			if f.Path == mCtx.filePath {
 				for ceIdx := range f.CodeElements {
@@ -490,10 +497,10 @@ func (b *HtmlReportBuilder) buildMetricsTableForClassVM(classModel *model.Class)
 				lrq := mCtx.method.LineRate * 100.0
 				methCovQuota = &lrq
 			}
-			correspondingCE = &model.CodeElement{
+			correspondingCE = &CodeElement{
 				Name:          mCtx.method.DisplayName, // Use display name as short name for this fallback
 				FullName:      mCtx.method.DisplayName,
-				Type:          model.MethodElementType,
+				Type:          MethodElementType,
 				FirstLine:     mCtx.method.FirstLine,
 				LastLine:      mCtx.method.LastLine, // Approx
 				CoverageQuota: methCovQuota,
@@ -522,7 +529,7 @@ func (b *HtmlReportBuilder) getMetricExplanationURL(metricKey string) string {
 	}
 }
 
-func (b *HtmlReportBuilder) formatMetricValue(metric model.Metric) string {
+func (b *HtmlReportBuilder) formatMetricValue(metric Metric) string {
 	if metric.Value == nil {
 		return "-"
 	}
@@ -551,7 +558,7 @@ func (b *HtmlReportBuilder) formatMetricValue(metric model.Metric) string {
 	}
 }
 
-func (b *HtmlReportBuilder) buildAngularClassDetailForJS(classModel *model.Class, classVMServer *ClassViewModelForDetail) (AngularClassDetailViewModel, error) {
+func (b *HtmlReportBuilder) buildAngularClassDetailForJS(classModel *Class, classVMServer *ClassViewModelForDetail) (AngularClassDetailViewModel, error) {
 	angularClassVMForJS := AngularClassViewModel{
 		Name:                  classModel.DisplayName,
 		CoveredLines:          classModel.LinesCovered,
@@ -587,7 +594,7 @@ func (b *HtmlReportBuilder) buildAngularClassDetailForJS(classModel *model.Class
 	return detailVM, nil
 }
 
-func (b *HtmlReportBuilder) buildAngularFileViewModelForJS(fileInClass *model.CodeFile) (AngularCodeFileViewModel, error) {
+func (b *HtmlReportBuilder) buildAngularFileViewModelForJS(fileInClass *CodeFile) (AngularCodeFileViewModel, error) {
 	angularFile := AngularCodeFileViewModel{
 		Path:           fileInClass.Path,
 		CoveredLines:   fileInClass.CoveredLines,
@@ -595,12 +602,22 @@ func (b *HtmlReportBuilder) buildAngularFileViewModelForJS(fileInClass *model.Co
 		TotalLines:     fileInClass.TotalLines,
 		Lines:          []AngularLineAnalysisViewModel{},
 	}
-	sourceLines, err := filereader.ReadLinesInFile(fileInClass.Path)
+
+	// Resolve the file path using source directories before reading
+	sourceDirs := b.ReportContext.ReportConfiguration().SourceDirectories()
+	resolvedPath, err := utils.FindFileInSourceDirs(fileInClass.Path, sourceDirs, b.fileReader)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: could not read source file %s for JS Angular VM: %v\n", fileInClass.Path, err)
-		return angularFile, nil
+		fmt.Fprintf(os.Stderr, "Warning: could not resolve source file %s for JS view model: %v\n", fileInClass.Path, err)
+		return angularFile, nil // Return what we have, the file will just be empty in the UI.
 	}
-	coverageLinesMap := make(map[int]*model.Line)
+
+	sourceLines, err := b.fileReader.ReadFile(resolvedPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: could not read source file %s for JS Angular VM: %v\n", resolvedPath, err)
+		sourceLines = []string{}
+	}
+
+	coverageLinesMap := make(map[int]*Line)
 	if fileInClass.Lines != nil {
 		for i := range fileInClass.Lines {
 			covLine := &fileInClass.Lines[i]
@@ -616,7 +633,7 @@ func (b *HtmlReportBuilder) buildAngularFileViewModelForJS(fileInClass *model.Co
 	return angularFile, nil
 }
 
-func (b *HtmlReportBuilder) buildAngularLineViewModelForJS(content string, actualLineNumber int, modelCovLine *model.Line, hasCoverageData bool) AngularLineAnalysisViewModel {
+func (b *HtmlReportBuilder) buildAngularLineViewModelForJS(content string, actualLineNumber int, modelCovLine *Line, hasCoverageData bool) AngularLineAnalysisViewModel {
 	lineVM := AngularLineAnalysisViewModel{
 		LineNumber:  actualLineNumber,
 		LineContent: content,
@@ -627,7 +644,7 @@ func (b *HtmlReportBuilder) buildAngularLineViewModelForJS(content string, actua
 		lineVM.TotalBranches = modelCovLine.TotalBranches
 		lineVM.LineVisitStatus = lineVisitStatusToString(modelCovLine.LineVisitStatus) // Use the field here
 	} else {
-		lineVM.LineVisitStatus = lineVisitStatusToString(model.NotCoverable) // Use model.NotCoverable
+		lineVM.LineVisitStatus = lineVisitStatusToString(NotCoverable) // Use model.NotCoverable
 	}
 	return lineVM
 }

@@ -1,3 +1,4 @@
+// Path: internal/parsers/gocover/parser.go
 package gocover
 
 import (
@@ -19,9 +20,9 @@ var (
 	goCoverLineRegex = regexp.MustCompile(`^(.+):(\d+)\.(\d+),(\d+)\.(\d+)\s(\d+)\s(\d+)$`)
 )
 
-// GoCoverParser implements the parsers.IParserinterface for Go coverage reports.
+// GoCoverParser implements the parsers.IParser interface for Go coverage reports.
 type GoCoverParser struct {
-	fileReader filereader.Reader // Injected dependency
+	fileReader filereader.Reader
 }
 
 // NewGoCoverParser creates a new parser instance.
@@ -31,7 +32,7 @@ func NewGoCoverParser(fileReader filereader.Reader) parsers.IParser {
 	}
 }
 
-// Name returns the unique, human-readable name of the parsers.
+// Name returns the unique, human-readable name of the parser.
 func (p *GoCoverParser) Name() string {
 	return "GoCover"
 }
@@ -53,8 +54,8 @@ func (p *GoCoverParser) SupportsFile(filePath string) bool {
 	return strings.HasPrefix(firstLine, "mode:")
 }
 
-// Parse reads the entire Go coverage report, transforms it into `GoCoverProfileBlock`s,
-// and then delegates the complex processing to the processingOrchestrator.
+// Parse now reads the Go coverage report and transforms it into a flat list of
+// FileCoverage objects, without performing any aggregation.
 func (p *GoCoverParser) Parse(filePath string, config parsers.ParserConfig) (*parsers.ParserResult, error) {
 	logger := config.Logger().With(slog.String("parser", p.Name()), slog.String("file", filePath))
 
@@ -65,19 +66,13 @@ func (p *GoCoverParser) Parse(filePath string, config parsers.ParserConfig) (*pa
 
 	orchestrator := newProcessingOrchestrator(p.fileReader, config, logger)
 
-	assemblies, err := orchestrator.processBlocks(profileBlocks)
-	if err != nil {
-		return nil, fmt.Errorf("failed to process Go coverage blocks: %w", err)
-	}
+	// The orchestrator now returns a simple slice of FileCoverage objects.
+	fileCoverage, unresolvedFiles := orchestrator.processBlocks(profileBlocks)
 
 	return &parsers.ParserResult{
-		Assemblies:             assemblies,
-		SourceDirectories:      []string{}, // Go cover files don't list source directories
-		SupportsBranchCoverage: false,
-		ParserName:             p.Name(),
-		MinimumTimeStamp:       nil,
-		MaximumTimeStamp:       nil,
-		UnresolvedSourceFiles:  orchestrator.unresolvedSourceFiles,
+		FileCoverage:          fileCoverage,
+		ParserName:            p.Name(),
+		UnresolvedSourceFiles: unresolvedFiles,
 	}, nil
 }
 
