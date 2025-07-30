@@ -8,5 +8,5 @@ type ReportBuilder interface {
 	ReportType() string
 
 	// CreateReport generates the report from the coverage data
-	CreateReport(report *model.SummaryResult) error
+	CreateReport(report *model.SummaryTree) error
 }

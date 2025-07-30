@@ -1,3 +1,4 @@
+// Path: internal/parsers/gcov/parser.go
 package gcov
 
 import (
@@ -9,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 )
 
@@ -30,7 +30,8 @@ func (p *GCovParser) Name() string {
 	return "GCov"
 }
 
-// SupportsFile checks if the file is a gcov report by reading its first line.
+// SupportsFile checks if the file is a gcov report by reading its first line
+// for the characteristic "0:Source:" marker.
 func (p *GCovParser) SupportsFile(filePath string) bool {
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -47,11 +48,11 @@ func (p *GCovParser) SupportsFile(filePath string) bool {
 	return strings.Contains(firstLine, "0:Source:")
 }
 
-// Parse reads the gcov report from disk and processes it.
+// Parse reads the gcov report from disk and delegates processing to the orchestrator.
+// It then returns the resulting flat list of file coverage data.
 func (p *GCovParser) Parse(filePath string, config parsers.ParserConfig) (*parsers.ParserResult, error) {
 	logger := config.Logger().With(slog.String("parser", p.Name()), slog.String("file", filePath))
 
-	// Read the actual report file from the filesystem, NOT from the mock filereader.
 	lines, err := filereader.ReadLinesInFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read gcov file %s: %w", filePath, err)
@@ -59,20 +60,21 @@ func (p *GCovParser) Parse(filePath string, config parsers.ParserConfig) (*parse
 
 	orchestrator := newProcessingOrchestrator(p.fileReader, config, logger)
 
-	assembly, err := orchestrator.processLines(lines)
+	// Since a gcov file maps to a single source file, the orchestrator returns
+	// a single FileCoverage object or nil if the file is invalid/unresolved.
+	fileCoverage, unresolvedFiles, err := orchestrator.processLines(lines)
 	if err != nil {
 		return nil, err
 	}
 
-	assemblies := []model.Assembly{}
-	if assembly != nil {
-		assemblies = append(assemblies, *assembly)
+	var coverageData []parsers.FileCoverage
+	if fileCoverage != nil {
+		coverageData = append(coverageData, *fileCoverage)
 	}
 
 	return &parsers.ParserResult{
-		Assemblies:             assemblies,
-		SupportsBranchCoverage: orchestrator.detectedBranchCoverage,
-		ParserName:             p.Name(),
-		UnresolvedSourceFiles:  orchestrator.unresolvedSourceFiles,
+		FileCoverage:          coverageData,
+		ParserName:            p.Name(),
+		UnresolvedSourceFiles: unresolvedFiles,
 	}, nil
 }

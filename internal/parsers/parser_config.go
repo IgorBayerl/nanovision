@@ -10,8 +10,20 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/settings"
 )
 
-// holds the processed data from a single coverage report.
 type ParserResult struct {
+	FileCoverage          []FileCoverage
+	ParserName            string
+	UnresolvedSourceFiles []string
+	SourceDirectories     []string
+	Timestamp             *time.Time
+	// Other report-level metadata can go here.
+}
+
+type FileCoverage struct {
+	Path  string                    // Project-relative path (e.g., "internal/analyzer/analyzer.go")
+	Lines map[int]model.LineMetrics // Raw line data from the report
+}
+type ParserResultOld struct {
 	Assemblies             []model.Assembly
 	SourceDirectories      []string
 	SupportsBranchCoverage bool
