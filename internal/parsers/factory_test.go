@@ -7,7 +7,6 @@ import (
 
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/cobertura"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/gocover"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +28,7 @@ func Test_ParserFactory_FindParserForFile(t *testing.T) {
 	// Setup factory with all parsers
 	fileReader := filereader.NewDefaultReader()
 	factory := parsers.NewParserFactory(
-		cobertura.NewCoberturaParser(fileReader),
+		// cobertura.NewCoberturaParser(fileReader),
 		gocover.NewGoCoverParser(fileReader),
 	)
 

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -17,6 +18,8 @@ type DefaultStater struct{}
 func (ds DefaultStater) Stat(name string) (fs.FileInfo, error) {
 	return os.Stat(name)
 }
+
+var errFileFound = errors.New("file found")
 
 // FindFileInSourceDirs resolves the often-inconsistent file paths found in
 // coverage reports against a list of local source code directories.
@@ -64,11 +67,12 @@ func (ds DefaultStater) Stat(name string) (fs.FileInfo, error) {
 //	// The function will find the file by directly joining the paths:
 //	// "C:\\dev\\my-api\\src\\MyProject.Api\\Services\\UserService.cs"
 func FindFileInSourceDirs(relativePath string, sourceDirs []string, stater Stater) (string, error) {
-	// Clean the incoming relative path using the host OS's rules.
-	// This will correctly handle both '/' and '\' on Windows.
+	// Use the base name of the path for recursive searching.
+	// This handles cases like "Services/UserService.cs" where we just need to find "UserService.cs".
+	fileNameToFind := filepath.Base(relativePath)
 	cleanedRelativePath := filepath.Clean(relativePath)
 
-	// First, check if the cleaned path is absolute and exists.
+	// First, check if the provided path is absolute and exists.
 	if filepath.IsAbs(cleanedRelativePath) {
 		if _, err := stater.Stat(cleanedRelativePath); err == nil {
 			return cleanedRelativePath, nil
@@ -77,26 +81,39 @@ func FindFileInSourceDirs(relativePath string, sourceDirs []string, stater State
 
 	// Iterate through the user-provided source directories.
 	for _, dir := range sourceDirs {
-		// Clean the source directory path.
 		cleanedDir := filepath.Clean(dir)
 
-		// Attempt to join the source directory with the full relative path.
-		// filepath.Join will use the correct OS-specific separator.
+		// Attempt 1: A direct join of the source dir and the relative path.
 		potentialPath := filepath.Join(cleanedDir, cleanedRelativePath)
 		if _, err := stater.Stat(potentialPath); err == nil {
 			return potentialPath, nil
 		}
 
-		// If that fails, try to find a match by using suffixes of the relative path.
-		// This handles cases where the report path includes extra parent directories
-		// (e.g., /build/src/my/project/file.go) and the source dir is my/project.
+		// Attempt 2: Use suffixes of the relative path (handles CI paths).
 		pathParts := strings.Split(cleanedRelativePath, string(filepath.Separator))
-		for i := 1; i < len(pathParts); i++ { // Start at 1 to skip the first part
+		for i := 1; i < len(pathParts); i++ {
 			suffixToTry := filepath.Join(pathParts[i:]...)
 			potentialPathWithSuffix := filepath.Join(cleanedDir, suffixToTry)
 			if _, err := stater.Stat(potentialPathWithSuffix); err == nil {
 				return potentialPathWithSuffix, nil
 			}
+		}
+
+		// Attempt 3 (Fallback): Perform a recursive walk within the source directory.
+		var foundPath string
+		walkErr := filepath.WalkDir(cleanedDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if !d.IsDir() && d.Name() == fileNameToFind {
+				foundPath = path
+				return errFileFound // Signal to stop walking.
+			}
+			return nil
+		})
+
+		if walkErr == errFileFound {
+			return foundPath, nil // Successfully found the file.
 		}
 	}
 

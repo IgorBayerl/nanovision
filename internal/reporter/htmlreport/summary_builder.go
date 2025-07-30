@@ -10,11 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
 )
 
-func (b *HtmlReportBuilder) prepareGlobalJSONData(report *model.SummaryResult) error {
+func (b *HtmlReportBuilder) prepareGlobalJSONData(report *SummaryResult) error {
 	translationsJSONBytes, err := json.Marshal(b.translations)
 	if err != nil {
 		b.translationsJSON = template.JS("({})") // Fallback
@@ -55,8 +54,8 @@ func (b *HtmlReportBuilder) prepareGlobalJSONData(report *model.SummaryResult) e
 	return nil
 }
 
-func (b *HtmlReportBuilder) collectHistoricExecutionTimes(report *model.SummaryResult) []string {
-	var allHistoricCoverages []model.HistoricCoverage
+func (b *HtmlReportBuilder) collectHistoricExecutionTimes(report *SummaryResult) []string {
+	var allHistoricCoverages []HistoricCoverage
 	if report.Assemblies != nil {
 		for _, assembly := range report.Assemblies {
 			for _, class := range assembly.Classes {
@@ -69,7 +68,7 @@ func (b *HtmlReportBuilder) collectHistoricExecutionTimes(report *model.SummaryR
 		return []string{}
 	}
 
-	distinctHistoricCoverages := utils.DistinctBy(allHistoricCoverages, func(hc model.HistoricCoverage) int64 {
+	distinctHistoricCoverages := utils.DistinctBy(allHistoricCoverages, func(hc HistoricCoverage) int64 {
 		return hc.ExecutionTime
 	})
 
@@ -81,7 +80,7 @@ func (b *HtmlReportBuilder) collectHistoricExecutionTimes(report *model.SummaryR
 	return executionTimes
 }
 
-func (b *HtmlReportBuilder) buildAngularAssemblyViewModelsForSummary(report *model.SummaryResult) ([]AngularAssemblyViewModel, error) {
+func (b *HtmlReportBuilder) buildAngularAssemblyViewModelsForSummary(report *SummaryResult) ([]AngularAssemblyViewModel, error) {
 	var angularAssemblies []AngularAssemblyViewModel
 	if len(report.Assemblies) == 0 {
 		log.Println("buildAngularAssemblyViewModelsForSummary: No assemblies in the report or report.Assemblies is nil.")
@@ -141,7 +140,7 @@ func (b *HtmlReportBuilder) buildAngularAssemblyViewModelsForSummary(report *mod
 	return angularAssemblies, nil
 }
 
-func (b *HtmlReportBuilder) buildAngularClassViewModelForSummary(class *model.Class, reportPath string) AngularClassViewModel {
+func (b *HtmlReportBuilder) buildAngularClassViewModelForSummary(class *Class, reportPath string) AngularClassViewModel {
 	angularClass := AngularClassViewModel{
 		Name:                      class.DisplayName,
 		ReportPath:                reportPath,
@@ -197,7 +196,7 @@ func (b *HtmlReportBuilder) buildAngularClassViewModelForSummary(class *model.Cl
 	return angularClass
 }
 
-func (b *HtmlReportBuilder) buildAngularHistoricCoverageViewModel(hist *model.HistoricCoverage) AngularHistoricCoverageViewModel {
+func (b *HtmlReportBuilder) buildAngularHistoricCoverageViewModel(hist *HistoricCoverage) AngularHistoricCoverageViewModel {
 	angularHist := AngularHistoricCoverageViewModel{
 		ExecutionTime:   time.Unix(hist.ExecutionTime, 0).Format("2006-01-02"), // Simplified
 		CoveredLines:    hist.CoveredLines,
@@ -205,7 +204,7 @@ func (b *HtmlReportBuilder) buildAngularHistoricCoverageViewModel(hist *model.Hi
 		TotalLines:      hist.TotalLines,
 		CoveredBranches: hist.CoveredBranches,
 		TotalBranches:   hist.TotalBranches,
-		// FIXME: Populate these from your model.HistoricCoverage if it has method coverage history
+		// FIXME: Populate these from your HistoricCoverage if it has method coverage history
 		// CoveredMethods: hist.CoveredMethods,
 		// FullyCoveredMethods: hist.FullyCoveredMethods,
 		// TotalMethods: hist.TotalMethods,
@@ -221,7 +220,7 @@ func (b *HtmlReportBuilder) buildAngularHistoricCoverageViewModel(hist *model.Hi
 		angularHist.BranchCoverageQuota = (float64(hist.CoveredBranches) / float64(hist.TotalBranches)) * 100.0
 	}
 
-	// FIXME: Update these based on fields in your model.HistoricCoverage
+	// FIXME: Update these based on fields in your HistoricCoverage
 	angularHist.MethodCoverageQuota = -1.0
 	angularHist.FullMethodCoverageQuota = -1.0
 	// if hist.TotalMethods > 0 {
@@ -264,7 +263,7 @@ func (b *HtmlReportBuilder) setRiskHotspotsJSON(angularRiskHotspots []AngularRis
 	return nil
 }
 
-func (b *HtmlReportBuilder) buildSummaryPageData(report *model.SummaryResult, angularAssembliesForSummary []AngularAssemblyViewModel, angularRiskHotspots []AngularRiskHotspotViewModel) (SummaryPageData, error) {
+func (b *HtmlReportBuilder) buildSummaryPageData(report *SummaryResult, angularAssembliesForSummary []AngularAssemblyViewModel, angularRiskHotspots []AngularRiskHotspotViewModel) (SummaryPageData, error) {
 	log.Printf("buildSummaryPageData: b.assembliesJSON before assigning to SummaryPageData: %s\n", b.assembliesJSON) // Log
 
 	data := SummaryPageData{
@@ -295,7 +294,7 @@ func (b *HtmlReportBuilder) buildSummaryPageData(report *model.SummaryResult, an
 	return data, nil
 }
 
-func (b *HtmlReportBuilder) buildSummaryCards(report *model.SummaryResult) []CardViewModel {
+func (b *HtmlReportBuilder) buildSummaryCards(report *SummaryResult) []CardViewModel {
 	var cards []CardViewModel
 	decimalPlaces := b.maximumDecimalPlacesForCoverageQuotas
 	decimalPlacesForPercentageDisplay := b.maximumDecimalPlacesForPercentageDisplay

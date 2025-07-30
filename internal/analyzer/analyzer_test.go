@@ -32,7 +32,7 @@ func (m *mockMergerConfig) Logger() *slog.Logger               { return m.logger
 
 func TestMergeParserResults_WhenNoResults_ShouldReturnError(t *testing.T) {
 	// Arrange
-	var results []*parsers.ParserResult
+	var results []*parsers.ParserResultOld
 	config := &mockMergerConfig{logger: slog.Default()}
 
 	// Act
@@ -45,7 +45,7 @@ func TestMergeParserResults_WhenNoResults_ShouldReturnError(t *testing.T) {
 
 func TestMergeParserResults_WhenEmptySlice_ShouldReturnError(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{}
+	results := []*parsers.ParserResultOld{}
 	config := &mockMergerConfig{logger: slog.Default()}
 
 	// Act
@@ -66,7 +66,7 @@ func TestMergeParserResults_WhenSingleResult_ShouldPreserveAllData(t *testing.T)
 	branchesCovered := 10
 	branchesValid := 20
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName:        "TestParser",
 			MinimumTimeStamp:  &timestamp,
@@ -110,7 +110,7 @@ func TestMergeParserResults_WhenSingleResult_ShouldPreserveAllData(t *testing.T)
 
 func TestMergeParserResults_WhenSingleResultWithoutBranches_ShouldNotIncludeBranchData(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "NoBranchParser",
 			Assemblies: []model.Assembly{
@@ -140,7 +140,7 @@ func TestMergeParserResults_WhenSingleResultWithoutBranches_ShouldNotIncludeBran
 
 func TestMergeParserResults_WhenMultipleResultsWithSameName_ShouldUseSingleParserName(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{ParserName: "SameParser"},
 		{ParserName: "SameParser"},
 		{ParserName: "SameParser"},
@@ -157,7 +157,7 @@ func TestMergeParserResults_WhenMultipleResultsWithSameName_ShouldUseSingleParse
 
 func TestMergeParserResults_WhenMultipleResultsWithDifferentNames_ShouldUseMultiReport(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{ParserName: "Parser1"},
 		{ParserName: "Parser2"},
 		{ParserName: "Parser3"},
@@ -174,7 +174,7 @@ func TestMergeParserResults_WhenMultipleResultsWithDifferentNames_ShouldUseMulti
 
 func TestMergeParserResults_WhenMultipleResultsWithEmptyNames_ShouldUseUnknown(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{ParserName: ""},
 		{ParserName: ""},
 	}
@@ -198,7 +198,7 @@ func TestMergeParserResults_WhenMultipleTimestamps_ShouldUseEarliest(t *testing.
 	middle := time.Date(2023, 2, 1, 0, 0, 0, 0, time.UTC)
 	late := time.Date(2023, 3, 1, 0, 0, 0, 0, time.UTC)
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{ParserName: "Test", MinimumTimeStamp: &late},
 		{ParserName: "Test", MinimumTimeStamp: &early},
 		{ParserName: "Test", MinimumTimeStamp: &middle},
@@ -215,7 +215,7 @@ func TestMergeParserResults_WhenMultipleTimestamps_ShouldUseEarliest(t *testing.
 
 func TestMergeParserResults_WhenNoTimestamps_ShouldHaveZeroTimestamp(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{ParserName: "Test"},
 		{ParserName: "Test"},
 	}
@@ -233,7 +233,7 @@ func TestMergeParserResults_WhenMixedTimestamps_ShouldIgnoreNilTimestamps(t *tes
 	// Arrange
 	validTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{ParserName: "Test", MinimumTimeStamp: nil},
 		{ParserName: "Test", MinimumTimeStamp: &validTime},
 		{ParserName: "Test", MinimumTimeStamp: nil},
@@ -254,7 +254,7 @@ func TestMergeParserResults_WhenMixedTimestamps_ShouldIgnoreNilTimestamps(t *tes
 
 func TestMergeParserResults_WhenDuplicateSourceDirs_ShouldDeduplicateDirectories(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{ParserName: "Test", SourceDirectories: []string{"/src/app", "/src/lib"}},
 		{ParserName: "Test", SourceDirectories: []string{"/src/app", "/src/test"}},
 		{ParserName: "Test", SourceDirectories: []string{"/src/lib", "/src/docs"}},
@@ -277,7 +277,7 @@ func TestMergeParserResults_WhenDuplicateSourceDirs_ShouldDeduplicateDirectories
 
 func TestMergeParserResults_WhenEmptySourceDirs_ShouldHandleGracefully(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{ParserName: "Test", SourceDirectories: []string{}},
 		{ParserName: "Test", SourceDirectories: nil},
 	}
@@ -298,7 +298,7 @@ func TestMergeParserResults_WhenEmptySourceDirs_ShouldHandleGracefully(t *testin
 
 func TestMergeParserResults_WhenDifferentAssemblies_ShouldCombineAllAssemblies(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -336,7 +336,7 @@ func TestMergeParserResults_WhenSameAssemblyInMultipleResults_ShouldMergeStatist
 	branches2 := 8
 	branchesValid2 := 12
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -392,7 +392,7 @@ func TestMergeParserResults_WhenMixedBranchData_ShouldHandlePartialBranchInfo(t 
 	branches := 10
 	branchesValid := 15
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -443,7 +443,7 @@ func TestMergeParserResults_WhenCalculatingGlobalStats_ShouldSumAllAssemblyStats
 	branches2 := 8
 	branchesValid2 := 12
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -481,7 +481,7 @@ func TestMergeParserResults_WhenCalculatingGlobalStats_ShouldSumAllAssemblyStats
 
 func TestMergeParserResults_WhenCalculatingTotalLines_ShouldCountUniqueFilesOnly(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -525,7 +525,7 @@ func TestMergeParserResults_WhenCalculatingTotalLines_ShouldCountUniqueFilesOnly
 
 func TestMergeParserResults_WhenFilesHaveZeroLines_ShouldIgnoreZeroLineFiles(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -561,7 +561,7 @@ func TestMergeParserResults_WhenFilesHaveZeroLines_ShouldIgnoreZeroLineFiles(t *
 
 func TestMergeParserResults_WhenAssembliesHaveNoClasses_ShouldHandleGracefully(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -587,7 +587,7 @@ func TestMergeParserResults_WhenAssembliesHaveNoClasses_ShouldHandleGracefully(t
 
 func TestMergeParserResults_WhenClassesHaveNoFiles_ShouldHandleGracefully(t *testing.T) {
 	// Arrange
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -618,7 +618,7 @@ func TestMergeParserResults_WhenLargeNumbers_ShouldHandleIntegerOverflow(t *test
 	largeNumber := 1000000000 // 1 billion
 	hugeBranches := largeNumber
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -666,7 +666,7 @@ func TestMergeParserResults_WhenComplexScenario_ShouldProduceConsistentResults(t
 	branches2 := 15
 	branchesValid2 := 25
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName:        "Parser1",
 			MinimumTimeStamp:  &time2,
@@ -800,7 +800,7 @@ func TestMergeParserResults_WhenComplexScenario_ShouldProduceConsistentResults(t
 
 func TestMergeParserResults_WhenManyAssemblies_ShouldPerformEfficiently(t *testing.T) {
 	// Arrange - Create many assemblies to test performance
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: make([]model.Assembly, 1000), // 1000 assemblies
@@ -834,13 +834,13 @@ func TestMergeParserResults_WhenManyAssemblies_ShouldPerformEfficiently(t *testi
 
 func TestMergeParserResults_WhenManySourceDirectories_ShouldDeduplicateEfficiently(t *testing.T) {
 	// Arrange - Create many overlapping source directories
-	results := make([]*parsers.ParserResult, 10)
+	results := make([]*parsers.ParserResultOld, 10)
 	for i := 0; i < 10; i++ {
 		dirs := make([]string, 100)
 		for j := 0; j < 100; j++ {
 			dirs[j] = fmt.Sprintf("/src%d", j%50) // Create overlap
 		}
-		results[i] = &parsers.ParserResult{
+		results[i] = &parsers.ParserResultOld{
 			ParserName:        "Test",
 			SourceDirectories: dirs,
 		}
@@ -862,7 +862,7 @@ func TestMergeParserResults_WhenManySourceDirectories_ShouldDeduplicateEfficient
 
 func TestMergeParserResults_WhenAssembliesAreSorted_ShouldMaintainConsistentOrder(t *testing.T) {
 	// Arrange - Create assemblies in random order
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -895,7 +895,7 @@ func TestMergeParserResults_WhenMultipleCallsWithSameData_ShouldProduceIdentical
 	branches := 5
 	branchesValid := 10
 
-	results := []*parsers.ParserResult{
+	results := []*parsers.ParserResultOld{
 		{
 			ParserName: "Test",
 			Assemblies: []model.Assembly{
@@ -939,7 +939,7 @@ func TestMergeParserResults_WhenMultipleCallsWithSameData_ShouldProduceIdentical
 func TestMergeParserResults_WhenDeepMerging_ShouldAggregateCorrectly(t *testing.T) {
 	// Arrange
 	// Report 1: Contains a shared assembly with a shared class and a unique class.
-	result1 := &parsers.ParserResult{
+	result1 := &parsers.ParserResultOld{
 		ParserName: "Test",
 		Assemblies: []model.Assembly{
 			{
@@ -967,7 +967,7 @@ func TestMergeParserResults_WhenDeepMerging_ShouldAggregateCorrectly(t *testing.
 	}
 
 	// Report 2: Also contains the shared assembly with new data for the shared class and another unique class.
-	result2 := &parsers.ParserResult{
+	result2 := &parsers.ParserResultOld{
 		ParserName: "Test",
 		Assemblies: []model.Assembly{
 			{
@@ -997,7 +997,7 @@ func TestMergeParserResults_WhenDeepMerging_ShouldAggregateCorrectly(t *testing.
 	config := &mockMergerConfig{logger: slog.Default()}
 
 	// Act
-	summary, err := analyzer.MergeParserResults([]*parsers.ParserResult{result1, result2}, config)
+	summary, err := analyzer.MergeParserResults([]*parsers.ParserResultOld{result1, result2}, config)
 
 	// Assert
 	require.NoError(t, err, "Merging should not produce an error")
@@ -1046,7 +1046,7 @@ func TestMergeParserResults_WhenDeepMerging_ShouldAggregateCorrectly(t *testing.
 // the deep merge logic handles classes without any associated files gracefully.
 func TestMergeParserResults_WhenClassHasNoFiles_ShouldMergeCorrectly(t *testing.T) {
 	// Arrange
-	result1 := &parsers.ParserResult{
+	result1 := &parsers.ParserResultOld{
 		Assemblies: []model.Assembly{
 			{
 				Name: "AssemblyA",
@@ -1056,7 +1056,7 @@ func TestMergeParserResults_WhenClassHasNoFiles_ShouldMergeCorrectly(t *testing.
 			},
 		},
 	}
-	result2 := &parsers.ParserResult{
+	result2 := &parsers.ParserResultOld{
 		Assemblies: []model.Assembly{
 			{
 				Name: "AssemblyA",
@@ -1070,7 +1070,7 @@ func TestMergeParserResults_WhenClassHasNoFiles_ShouldMergeCorrectly(t *testing.
 	config := &mockMergerConfig{logger: slog.Default()}
 
 	// Act
-	summary, err := analyzer.MergeParserResults([]*parsers.ParserResult{result1, result2}, config)
+	summary, err := analyzer.MergeParserResults([]*parsers.ParserResultOld{result1, result2}, config)
 
 	// Assert
 	require.NoError(t, err)

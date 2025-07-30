@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter"
 )
@@ -13,6 +14,7 @@ import (
 type HtmlReportBuilder struct {
 	OutputDir     string
 	ReportContext reporter.IBuilderContext
+	fileReader    filereader.Reader
 
 	// Cached data for reuse across page generations
 	angularCssFile                     string
@@ -44,10 +46,11 @@ type HtmlReportBuilder struct {
 	combinedAngularJsFile string // To store "reportgenerator.combined.js"
 }
 
-func NewHtmlReportBuilder(outputDir string, reportCtx reporter.IBuilderContext) *HtmlReportBuilder {
+func NewHtmlReportBuilder(outputDir string, reportCtx reporter.IBuilderContext, fileReader filereader.Reader) *HtmlReportBuilder {
 	return &HtmlReportBuilder{
 		OutputDir:                  outputDir,
 		ReportContext:              reportCtx,
+		fileReader:                 fileReader, // Store the dependency
 		classReportFilenames:       make(map[string]string),
 		tempExistingLowerFilenames: make(map[string]struct{}),
 	}
@@ -57,38 +60,37 @@ func (b *HtmlReportBuilder) ReportType() string {
 	return "Html"
 }
 
-func (b *HtmlReportBuilder) CreateReport(report *model.SummaryResult) error {
+func (b *HtmlReportBuilder) CreateReport(tree *model.SummaryTree) error {
+	// ADAPTER CALL: Convert the new tree model to the legacy structure.
+	reportConfig := b.ReportContext.ReportConfiguration()
+	report := ToLegacySummaryResult(tree, b.fileReader, reportConfig.SourceDirectories(), b.ReportContext.Logger())
+
+	// The rest of the function proceeds exactly as before, using the `report` variable.
 	if err := b.validateContext(); err != nil {
 		return err
 	}
 	if err := b.prepareOutputDirectory(); err != nil {
 		return err
 	}
-	if err := b.initializeAssets(); err != nil { // Copies static assets and parses Angular index.html
+	if err := b.initializeAssets(); err != nil {
 		return err
 	}
 
-	b.initializeBuilderProperties(report)                   // Sets up common properties like title, translations etc.
-	if err := b.prepareGlobalJSONData(report); err != nil { // Prepares metricsJSON, riskHotspotMetricsJSON etc.
+	b.initializeBuilderProperties(report)
+	if err := b.prepareGlobalJSONData(report); err != nil {
 		return err
 	}
 
-	// This call will populate b.classReportFilenames and b.assembliesJSON
-	// The returned 'angularAssemblies' is not strictly needed here if all subsequent
-	// operations use the builder's stored JSON or maps.
-	// However, buildSummaryPageData might still conceptually want the processed view models.
-	// Let's keep it for buildSummaryPageData if that function's logic benefits from it.
 	angularAssembliesForSummary, err := b.buildAngularAssemblyViewModelsForSummary(report)
 	if err != nil {
 		return fmt.Errorf("failed to build angular assembly view models for summary: %w", err)
 	}
 
-	var angularRiskHotspots []AngularRiskHotspotViewModel              // Placeholder
-	if err := b.setRiskHotspotsJSON(angularRiskHotspots); err != nil { // Prepares b.riskHotspotsJSON
+	var angularRiskHotspots []AngularRiskHotspotViewModel
+	if err := b.setRiskHotspotsJSON(angularRiskHotspots); err != nil {
 		return err
 	}
 
-	// Pass angularAssembliesForSummary to buildSummaryPageData
 	summaryData, err := b.buildSummaryPageData(report, angularAssembliesForSummary, angularRiskHotspots)
 	if err != nil {
 		return fmt.Errorf("failed to build summary page data: %w", err)
@@ -98,7 +100,6 @@ func (b *HtmlReportBuilder) CreateReport(report *model.SummaryResult) error {
 	}
 
 	if !b.onlySummary {
-		// renderClassDetailPages uses b.classReportFilenames, so it doesn't need angularAssembliesForSummary
 		if err := b.renderClassDetailPages(report); err != nil {
 			return fmt.Errorf("failed to render class detail pages: %w", err)
 		}
@@ -119,7 +120,7 @@ func (b *HtmlReportBuilder) prepareOutputDirectory() error {
 	return os.MkdirAll(b.OutputDir, 0755)
 }
 
-func (b *HtmlReportBuilder) initializeBuilderProperties(report *model.SummaryResult) {
+func (b *HtmlReportBuilder) initializeBuilderProperties(report *SummaryResult) {
 	reportConfig := b.ReportContext.ReportConfiguration()
 	settings := b.ReportContext.Settings()
 
@@ -130,7 +131,9 @@ func (b *HtmlReportBuilder) initializeBuilderProperties(report *model.SummaryRes
 	b.parserName = report.ParserName
 	b.reportTimestamp = report.Timestamp
 	b.tag = reportConfig.Tag()
+
 	b.branchCoverageAvailable = report.BranchesValid != nil && *report.BranchesValid > 0
+
 	b.methodCoverageAvailable = true
 	b.maximumDecimalPlacesForCoverageQuotas = settings.MaximumDecimalPlacesForCoverageQuotas
 	b.maximumDecimalPlacesForPercentageDisplay = settings.MaximumDecimalPlacesForPercentageDisplay
@@ -147,7 +150,7 @@ func (b *HtmlReportBuilder) renderSummaryPage(data SummaryPageData) error {
 	return summaryPageTpl.Execute(summaryFile, data)
 }
 
-func (b *HtmlReportBuilder) renderClassDetailPages(report *model.SummaryResult) error { // Removed angularAssembliesForSummary
+func (b *HtmlReportBuilder) renderClassDetailPages(report *SummaryResult) error { // Removed angularAssembliesForSummary
 	if b.onlySummary {
 		return nil
 	}
