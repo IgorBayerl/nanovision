@@ -15,11 +15,16 @@ import (
 )
 
 func (b *HtmlReportBuilder) generateClassDetailHTML(classModel *Class, classReportFilename string, tag string) error {
-	// 1. Build the main ClassViewModelForDetail (server-side rendering focus)
+	// The `classModel` we receive here from the adapter is the complete legacy model,
+	// already containing all the resolved source code in its `Files[...].Lines[...].Content` fields.
+	// We no longer need to perform any file I/O from this point on.
+
+	// 1. Build the server-side view model directly from the complete legacy model.
 	classVM := b.buildClassViewModelForDetailServer(classModel, tag)
 
-	// 2. Build the AngularClassDetailViewModel (for client-side window.classDetails JSON)
-	angularClassDetailForJS, err := b.buildAngularClassDetailForJS(classModel, &classVM)
+	// 2. Build the client-side JSON view model, passing the complete legacy model to it
+	//    so it can reuse the already-read source code.
+	angularClassDetailForJS, err := b.buildAngularClassDetailForJS(classModel)
 	if err != nil {
 		return fmt.Errorf("failed to build Angular class detail JSON for %s: %w", classModel.DisplayName, err)
 	}
@@ -28,12 +33,11 @@ func (b *HtmlReportBuilder) generateClassDetailHTML(classModel *Class, classRepo
 		return fmt.Errorf("failed to marshal Angular class detail JSON for %s: %w", classModel.DisplayName, err)
 	}
 
-	// 3. Prepare overall data for the template
+	// 3. Prepare the final data for the template.
 	templateData := b.buildClassDetailPageData(classVM, tag, template.JS(classDetailJSONBytes))
 
-	// 4. Render the template
+	// 4. Render the template.
 	return b.renderClassDetailPage(templateData, classReportFilename)
-
 }
 
 func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *Class, tag string) ClassViewModelForDetail {
@@ -185,7 +189,7 @@ func (b *HtmlReportBuilder) buildFileViewModelForServerRender(fileInClass *CodeF
 	}
 
 	sourceDirs := b.ReportContext.ReportConfiguration().SourceDirectories()
-	resolvedPath, err := utils.FindFileInSourceDirs(fileInClass.Path, sourceDirs, b.fileReader)
+	resolvedPath, err := utils.FindFileInSourceDirs(fileInClass.Path, sourceDirs, b.fileReader, b.ReportContext.Logger())
 	if err != nil {
 		// This is a non-fatal warning for the reporter. The report will generate, but this file will lack code.
 		fmt.Fprintf(os.Stderr, "Warning: could not resolve source file %s for HTML rendering: %v\n", fileInClass.Path, err)
@@ -558,7 +562,10 @@ func (b *HtmlReportBuilder) formatMetricValue(metric Metric) string {
 	}
 }
 
-func (b *HtmlReportBuilder) buildAngularClassDetailForJS(classModel *Class, classVMServer *ClassViewModelForDetail) (AngularClassDetailViewModel, error) {
+func (b *HtmlReportBuilder) buildAngularClassDetailForJS(classModel *Class) (AngularClassDetailViewModel, error) {
+	// This function now takes the complete legacy model as its source of truth.
+	classVMServer := b.buildClassViewModelForDetailServer(classModel, "") // We only need a subset of fields
+
 	angularClassVMForJS := AngularClassViewModel{
 		Name:                  classModel.DisplayName,
 		CoveredLines:          classModel.LinesCovered,
@@ -579,22 +586,23 @@ func (b *HtmlReportBuilder) buildAngularClassDetailForJS(classModel *Class, clas
 	if classModel.BranchesValid != nil {
 		angularClassVMForJS.TotalBranches = *classModel.BranchesValid
 	}
+
 	detailVM := AngularClassDetailViewModel{Class: angularClassVMForJS, Files: []AngularCodeFileViewModel{}}
 	if classModel.Files == nil {
 		return detailVM, nil
 	}
+
 	for _, fileInClass := range classModel.Files {
-		angularFileForJS, err := b.buildAngularFileViewModelForJS(&fileInClass)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error building Angular file view model for JS (%s): %v\n", fileInClass.Path, err)
-			continue
-		}
+		// Pass the legacy file model, which now contains all necessary data.
+		angularFileForJS := b.buildAngularFileViewModelForJS(&fileInClass)
 		detailVM.Files = append(detailVM.Files, angularFileForJS)
 	}
 	return detailVM, nil
 }
 
-func (b *HtmlReportBuilder) buildAngularFileViewModelForJS(fileInClass *CodeFile) (AngularCodeFileViewModel, error) {
+func (b *HtmlReportBuilder) buildAngularFileViewModelForJS(fileInClass *CodeFile) AngularCodeFileViewModel {
+	// This function NO LONGER performs any file I/O.
+	// It relies on the Content field already populated in fileInClass.Lines.
 	angularFile := AngularCodeFileViewModel{
 		Path:           fileInClass.Path,
 		CoveredLines:   fileInClass.CoveredLines,
@@ -603,48 +611,26 @@ func (b *HtmlReportBuilder) buildAngularFileViewModelForJS(fileInClass *CodeFile
 		Lines:          []AngularLineAnalysisViewModel{},
 	}
 
-	// Resolve the file path using source directories before reading
-	sourceDirs := b.ReportContext.ReportConfiguration().SourceDirectories()
-	resolvedPath, err := utils.FindFileInSourceDirs(fileInClass.Path, sourceDirs, b.fileReader)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: could not resolve source file %s for JS view model: %v\n", fileInClass.Path, err)
-		return angularFile, nil // Return what we have, the file will just be empty in the UI.
-	}
-
-	sourceLines, err := b.fileReader.ReadFile(resolvedPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: could not read source file %s for JS Angular VM: %v\n", resolvedPath, err)
-		sourceLines = []string{}
-	}
-
-	coverageLinesMap := make(map[int]*Line)
 	if fileInClass.Lines != nil {
-		for i := range fileInClass.Lines {
-			covLine := &fileInClass.Lines[i]
-			coverageLinesMap[covLine.Number] = covLine
+		for _, modelCovLine := range fileInClass.Lines {
+			// Pass the legacy line model directly.
+			angularLine := b.buildAngularLineViewModelForJS(&modelCovLine)
+			angularFile.Lines = append(angularFile.Lines, angularLine)
 		}
 	}
-	for i, content := range sourceLines {
-		actualLineNumber := i + 1
-		modelCovLine, hasCoverageData := coverageLinesMap[actualLineNumber]
-		angularLine := b.buildAngularLineViewModelForJS(content, actualLineNumber, modelCovLine, hasCoverageData)
-		angularFile.Lines = append(angularFile.Lines, angularLine)
-	}
-	return angularFile, nil
+
+	return angularFile
 }
 
-func (b *HtmlReportBuilder) buildAngularLineViewModelForJS(content string, actualLineNumber int, modelCovLine *Line, hasCoverageData bool) AngularLineAnalysisViewModel {
+func (b *HtmlReportBuilder) buildAngularLineViewModelForJS(modelCovLine *Line) AngularLineAnalysisViewModel {
+	// This function is now much simpler. It just translates the legacy model to the Angular view model.
 	lineVM := AngularLineAnalysisViewModel{
-		LineNumber:  actualLineNumber,
-		LineContent: content,
-	}
-	if hasCoverageData {
-		lineVM.Hits = modelCovLine.Hits
-		lineVM.CoveredBranches = modelCovLine.CoveredBranches
-		lineVM.TotalBranches = modelCovLine.TotalBranches
-		lineVM.LineVisitStatus = lineVisitStatusToString(modelCovLine.LineVisitStatus) // Use the field here
-	} else {
-		lineVM.LineVisitStatus = lineVisitStatusToString(NotCoverable) // Use model.NotCoverable
+		LineNumber:      modelCovLine.Number,
+		LineContent:     modelCovLine.Content, // Use the content that was already read.
+		Hits:            modelCovLine.Hits,
+		CoveredBranches: modelCovLine.CoveredBranches,
+		TotalBranches:   modelCovLine.TotalBranches,
+		LineVisitStatus: lineVisitStatusToString(modelCovLine.LineVisitStatus),
 	}
 	return lineVM
 }

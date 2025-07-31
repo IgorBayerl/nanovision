@@ -61,11 +61,13 @@ func (b *HtmlReportBuilder) ReportType() string {
 }
 
 func (b *HtmlReportBuilder) CreateReport(tree *model.SummaryTree) error {
-	// ADAPTER CALL: Convert the new tree model to the legacy structure.
-	reportConfig := b.ReportContext.ReportConfiguration()
-	report := ToLegacySummaryResult(tree, b.fileReader, reportConfig.SourceDirectories(), b.ReportContext.Logger())
+	// --- THE FIX ---
+	// We no longer need the global reportConfig.SourceDirectories().
+	// The tree itself contains all the source directory context we need on a per-file basis.
+	// We pass nil here, and the adapter will handle it.
+	report := ToLegacySummaryResult(tree, b.fileReader, nil, b.ReportContext.Logger())
+	// --- END FIX ---
 
-	// The rest of the function proceeds exactly as before, using the `report` variable.
 	if err := b.validateContext(); err != nil {
 		return err
 	}

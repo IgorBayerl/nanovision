@@ -41,42 +41,35 @@ func newProcessingOrchestrator(
 // processPackages is the main entry point for the orchestrator. It iterates through
 // the XML packages and classes to build a map of coverage data keyed by file path.
 func (o *processingOrchestrator) processPackages(packages []PackageXML) ([]parsers.FileCoverage, []string) {
-	// fileData is an intermediate map to hold the merged line metrics for each file.
 	fileData := make(map[string]map[int]model.LineMetrics)
 	var unresolvedFiles []string
 
 	for _, pkgXML := range packages {
-		// *** THIS IS THE FIX ***
-		// We must iterate over the 'Class' slice within the 'Classes' struct.
 		for _, classXML := range pkgXML.Classes.Class {
-			// Normalize path to use forward slashes for consistent map keys.
 			filePath := filepath.ToSlash(classXML.Filename)
-
 			if filePath == "" || !o.config.FileFilters().IsElementIncludedInReport(filePath) {
 				continue
 			}
-
-			// Ensure the map for this file is initialized.
 			if _, ok := fileData[filePath]; !ok {
 				fileData[filePath] = make(map[int]model.LineMetrics)
 			}
-
-			// Cobertura reports can have line data at the class level and at the method level.
-			// We process all of them and merge them into our fileData map.
 			allLinesInClass := classXML.Lines.Line
 			for _, methodXML := range classXML.Methods.Method {
 				allLinesInClass = append(allLinesInClass, methodXML.Lines.Line...)
 			}
-
 			o.mergeLinesIntoFile(fileData[filePath], allLinesInClass)
 		}
 	}
 
-	// Convert the intermediate map into the final slice of FileCoverage objects.
 	var finalFileCoverage []parsers.FileCoverage
+	sourceDir := ""
+	if len(o.config.SourceDirectories()) > 0 {
+		sourceDir = o.config.SourceDirectories()[0]
+	}
+
 	for path, lines := range fileData {
-		// Check if the source file actually exists. If not, mark it as unresolved.
-		if _, err := utils.FindFileInSourceDirs(path, o.config.SourceDirectories(), o.fileReader); err != nil {
+		// Pass the logger from the orchestrator into the find utility
+		if _, err := utils.FindFileInSourceDirs(path, []string{sourceDir}, o.fileReader, o.logger); err != nil {
 			o.logger.Warn("Source file not found, it will be marked as unresolved.", "file", path, "error", err)
 			unresolvedFiles = append(unresolvedFiles, path)
 		}
