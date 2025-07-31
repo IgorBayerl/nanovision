@@ -1,121 +1,109 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
-	"io/fs"
-	"os"
+	"io"
+	"log/slog"
 	"path/filepath"
 	"strings"
+
+	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 )
 
-type Stater interface {
-	Stat(name string) (fs.FileInfo, error)
-}
+// walk is a local, recursive helper that mimics filepath.WalkDir but uses our mockable filereader.Reader interface.
+func walk(reader filereader.Reader, root string, fileNameToFind string, logger *slog.Logger) (string, error) {
+	logger.Debug("Recursive search: walking directory", "dir", root)
+	entries, err := reader.ReadDir(root)
+	if err != nil {
+		logger.Debug("Recursive search: cannot read directory, stopping this path.", "dir", root, "error", err)
+		return "", nil // Not a fatal error, just a path that can't be explored.
+	}
 
-type DefaultStater struct{}
-
-func (ds DefaultStater) Stat(name string) (fs.FileInfo, error) {
-	return os.Stat(name)
-}
-
-var errFileFound = errors.New("file found")
-
-// FindFileInSourceDirs resolves the often-inconsistent file paths found in
-// coverage reports against a list of local source code directories.
-//
-// # Why this function is necessary
-//
-// Coverage reports are frequently generated in one environment (e.g., a CI/CD pipeline)
-// but viewed in another (e.g., a developer's local machine). This leads to several
-// common problems that this function is designed to solve:
-//
-//	Absolute Path Mismatch: A report from a Linux CI server might contain the path
-//	`/home/runner/work/my-project/src/app.go`. This path is meaningless on a developers
-//	Windows machine where the code lives at `C:\Users\dev\my-project`.
-//
-//	Partial Path Suffixes: Some coverage tools only record paths relative to the
-//	project root (e.g., `services/user.go`), not the full repository path. The function
-//	must be able to find the file even if the report path is just a suffix of the real path.
-//
-// By providing the local `sourceDirs`, a user tells the tool where to start searching.
-// This function then intelligently combines the reports path with the local directories
-// to robustly locate the correct source file on the current filesystem.
-//
-// # Examples
-//
-// Example: Resolving a CI path on a local machine
-//
-//	// Path from a report generated on a Linux CI server
-//	relativePath := "/home/runner/work/adler-cov/internal/analyzer/analyzer.go"
-//
-//	// The user's local source code directory on Windows
-//	sourceDirs := []string{"C:\\Users\\igor\\dev\\adler-cov"}
-//
-//	// The function will correctly find the file at:
-//	// "C:\\Users\\igor\\dev\\adler-cov\\internal\\analyzer\\analyzer.go"
-//	// by trying various suffixes of the relativePath within the source directory.
-//
-// Example : Resolving a partial path from a .NET report
-//
-//	// Path from a Cobertura report, relative to the .csproj file
-//	relativePath := "Services/UserService.cs"
-//
-//	// The local source directory is the root of the API project
-//	sourceDirs := []string{"C:\\dev\\my-api\\src\\MyProject.Api"}
-//
-//	// The function will find the file by directly joining the paths:
-//	// "C:\\dev\\my-api\\src\\MyProject.Api\\Services\\UserService.cs"
-func FindFileInSourceDirs(relativePath string, sourceDirs []string, stater Stater) (string, error) {
-	// Use the base name of the path for recursive searching.
-	// This handles cases like "Services/UserService.cs" where we just need to find "UserService.cs".
-	fileNameToFind := filepath.Base(relativePath)
-	cleanedRelativePath := filepath.Clean(relativePath)
-
-	// First, check if the provided path is absolute and exists.
-	if filepath.IsAbs(cleanedRelativePath) {
-		if _, err := stater.Stat(cleanedRelativePath); err == nil {
-			return cleanedRelativePath, nil
+	for _, entry := range entries {
+		if !entry.IsDir() && entry.Name() == fileNameToFind {
+			foundPath := filepath.Join(root, entry.Name())
+			logger.Debug("Recursive search: MATCH FOUND!", "path", foundPath)
+			return foundPath, nil
 		}
 	}
 
-	// Iterate through the user-provided source directories.
-	for _, dir := range sourceDirs {
-		cleanedDir := filepath.Clean(dir)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			path := filepath.Join(root, entry.Name())
+			foundPath, err := walk(reader, path, fileNameToFind, logger)
+			if err != nil {
+				return "", err // Propagate a fatal error.
+			}
+			if foundPath != "" {
+				return foundPath, nil // Propagate the successful result immediately.
+			}
+		}
+	}
 
-		// Attempt 1: A direct join of the source dir and the relative path.
-		potentialPath := filepath.Join(cleanedDir, cleanedRelativePath)
-		if _, err := stater.Stat(potentialPath); err == nil {
+	return "", nil
+}
+
+// FindFileInSourceDirs resolves a file path from a report against a list of source directories.
+func FindFileInSourceDirs(relativePath string, sourceDirs []string, reader filereader.Reader, logger *slog.Logger) (string, error) {
+	// If a nil logger is passed, default to a discarded one to prevent panics.
+	if logger == nil {
+		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+
+	normalizedRelativePath := filepath.ToSlash(relativePath)
+	fileNameToFind := filepath.Base(normalizedRelativePath)
+	logger.Debug("FindFileInSourceDirs starting", "relativePath", relativePath, "sourceDirs", sourceDirs)
+
+	// Strategy 1: Absolute Path Check
+	if filepath.IsAbs(relativePath) {
+		logger.Debug("Strategy 1: Path is absolute, checking existence.", "path", relativePath)
+		if _, err := reader.Stat(relativePath); err == nil {
+			logger.Debug("Strategy 1: Success.", "foundPath", relativePath)
+			return relativePath, nil
+		}
+	}
+
+	// Strategy 2: Direct Join
+	osRelativePath := filepath.FromSlash(normalizedRelativePath)
+	for _, dir := range sourceDirs {
+		potentialPath := filepath.Join(filepath.Clean(dir), osRelativePath)
+		logger.Debug("Strategy 2: Trying direct join.", "path", potentialPath)
+		if _, err := reader.Stat(potentialPath); err == nil {
+			logger.Debug("Strategy 2: Success.", "foundPath", potentialPath)
 			return potentialPath, nil
 		}
+	}
 
-		// Attempt 2: Use suffixes of the relative path (handles CI paths).
-		pathParts := strings.Split(cleanedRelativePath, string(filepath.Separator))
+	// Strategy 3: Suffix Matching
+	pathParts := strings.Split(normalizedRelativePath, "/")
+	if len(pathParts) > 1 {
 		for i := 1; i < len(pathParts); i++ {
-			suffixToTry := filepath.Join(pathParts[i:]...)
-			potentialPathWithSuffix := filepath.Join(cleanedDir, suffixToTry)
-			if _, err := stater.Stat(potentialPathWithSuffix); err == nil {
-				return potentialPathWithSuffix, nil
+			suffix := strings.Join(pathParts[i:], "/")
+			osSuffix := filepath.FromSlash(suffix)
+			for _, dir := range sourceDirs {
+				potentialPath := filepath.Join(filepath.Clean(dir), osSuffix)
+				logger.Debug("Strategy 3: Trying suffix join.", "path", potentialPath)
+				if _, err := reader.Stat(potentialPath); err == nil {
+					logger.Debug("Strategy 3: Success.", "foundPath", potentialPath)
+					return potentialPath, nil
+				}
 			}
-		}
-
-		// Attempt 3 (Fallback): Perform a recursive walk within the source directory.
-		var foundPath string
-		walkErr := filepath.WalkDir(cleanedDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if !d.IsDir() && d.Name() == fileNameToFind {
-				foundPath = path
-				return errFileFound // Signal to stop walking.
-			}
-			return nil
-		})
-
-		if walkErr == errFileFound {
-			return foundPath, nil // Successfully found the file.
 		}
 	}
 
-	return "", fmt.Errorf("file %q not found in any source directory", relativePath)
+	// Strategy 4: Recursive Fallback Search
+	logger.Debug("Strategy 4: Starting recursive search.", "filename", fileNameToFind)
+	for _, dir := range sourceDirs {
+		foundPath, err := walk(reader, filepath.Clean(dir), fileNameToFind, logger)
+		if err != nil {
+			return "", fmt.Errorf("error during recursive search in '%s': %w", dir, err)
+		}
+		if foundPath != "" {
+			logger.Debug("Strategy 4: Success.", "foundPath", foundPath)
+			return foundPath, nil
+		}
+	}
+
+	logger.Warn("All strategies failed to find file.", "relativePath", relativePath)
+	return "", fmt.Errorf("file %q not found in any of the provided source directories", relativePath)
 }

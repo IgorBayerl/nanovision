@@ -38,11 +38,14 @@ func (o *processingOrchestrator) processBlocks(blocks []GoCoverProfileBlock) ([]
 	var allFileCoverage []parsers.FileCoverage
 	var allUnresolvedFiles []string
 
+	sourceDir := ""
+	if len(o.config.SourceDirectories()) > 0 {
+		sourceDir = o.config.SourceDirectories()[0]
+	}
+
 	for filePath, fileBlocks := range blocksByFile {
-		// Attempt to resolve the file path. If it fails, we still create a
-		// FileCoverage object but mark the file as unresolved. The analyzer
-		// will then handle this case.
-		_, err := utils.FindFileInSourceDirs(filePath, o.config.SourceDirectories(), o.fileReader)
+		// Pass the logger from the orchestrator into the find utility
+		_, err := utils.FindFileInSourceDirs(filePath, []string{sourceDir}, o.fileReader, o.logger)
 		if err != nil {
 			o.logger.Warn("Source file not found, it will be marked as unresolved.", "file", filePath, "error", err)
 			allUnresolvedFiles = append(allUnresolvedFiles, filePath)

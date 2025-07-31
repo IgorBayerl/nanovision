@@ -19,7 +19,9 @@ import (
 // STRATEGY: To enable the frontend's "Group by" feature and provide a flat-file view,
 // this adapter treats EACH source file as its OWN "Class". The frontend then receives
 // a granular list that it can group by namespace (directory path).
-func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader, sourceDirs []string, logger *slog.Logger) *SummaryResult {
+// The 'allSourceDirs' parameter is now ignored, but kept for signature stability if needed elsewhere.
+// The real source of truth is the fileNode.SourceDir.
+func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader, allSourceDirs []string, logger *slog.Logger) *SummaryResult {
 	if tree == nil {
 		return &SummaryResult{}
 	}
@@ -29,7 +31,6 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 		Timestamp:  tree.Timestamp,
 	}
 
-	// Step 1: Collect all file nodes from the tree into a flat list.
 	var fileNodes []*model.FileNode
 	var collectFiles func(*model.DirNode)
 	collectFiles = func(dir *model.DirNode) {
@@ -42,40 +43,35 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 	}
 	collectFiles(tree.Root)
 
-	// Step 2: Determine a common base path to create cleaner display names.
 	var filePaths []string
 	for _, fileNode := range fileNodes {
 		filePaths = append(filePaths, fileNode.Path)
 	}
 	displayBasePath := findDisplayBasePath(filePaths)
 
-	// Step 3: Group files by a synthetic "Assembly" name (typically the first directory).
 	filesByAssembly := make(map[string][]*model.FileNode)
 	for _, fileNode := range fileNodes {
 		parts := strings.Split(fileNode.Path, "/")
-		assemblyName := "Default" // Fallback for files in the root.
+		assemblyName := "Default"
 		if len(parts) > 1 {
 			assemblyName = parts[0]
 		}
 		filesByAssembly[assemblyName] = append(filesByAssembly[assemblyName], fileNode)
 	}
 
-	// Step 4: For each assembly, create a "Class" for every single file.
 	for assemblyName, filesInAssembly := range filesByAssembly {
 		legacyAssembly := Assembly{Name: assemblyName}
 
-		// Iterate through each file and create a unique Class object for it.
 		for _, fileNode := range filesInAssembly {
-			// The legacy file model is still needed, as a class contains files.
-			legacyFile := buildLegacyCodeFile(fileNode, fileReader, sourceDirs, logger)
+			// THIS IS THE KEY CHANGE:
+			// We pass a list containing ONLY the file's true source directory, which is stored on the node itself.
+			// This completely removes the ambiguity of searching in multiple directories.
+			legacyFile := buildLegacyCodeFile(fileNode, fileReader, []string{fileNode.SourceDir}, logger)
 
-			// Create a new Class, treating the file itself as the class.
 			legacyClass := Class{
-				Name:        fileNode.Path, // The full path is the unique identifier for the "class".
-				DisplayName: strings.TrimPrefix(strings.TrimPrefix(fileNode.Path, displayBasePath), "/"),
-				Files:       []CodeFile{legacyFile}, // A class now contains exactly one file.
-
-				// The class metrics are identical to the file's metrics.
+				Name:         fileNode.Path,
+				DisplayName:  strings.TrimPrefix(strings.TrimPrefix(fileNode.Path, displayBasePath), "/"),
+				Files:        []CodeFile{legacyFile},
 				LinesCovered: legacyFile.CoveredLines,
 				LinesValid:   legacyFile.CoverableLines,
 				TotalLines:   legacyFile.TotalLines,
@@ -91,7 +87,6 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 			legacyAssembly.Classes = append(legacyAssembly.Classes, legacyClass)
 		}
 
-		// Aggregate assembly metrics by summing the metrics of all its file-based "classes".
 		for _, cls := range legacyAssembly.Classes {
 			legacyAssembly.LinesCovered += cls.LinesCovered
 			legacyAssembly.LinesValid += cls.LinesValid
@@ -101,7 +96,6 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 		legacyResult.Assemblies = append(legacyResult.Assemblies, legacyAssembly)
 	}
 
-	// Final Step: Copy root metrics to the legacy result.
 	legacyResult.LinesCovered = tree.Metrics.LinesCovered
 	legacyResult.LinesValid = tree.Metrics.LinesValid
 	if tree.Metrics.BranchesValid > 0 || tree.Metrics.BranchesCovered > 0 {
@@ -115,54 +109,6 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 	return legacyResult
 }
 
-// findDisplayBasePath finds the common parent directory of a list of file paths.
-func findDisplayBasePath(paths []string) string {
-	if len(paths) < 2 {
-		if len(paths) == 1 {
-			dir := path.Dir(paths[0])
-			if dir == "." {
-				return ""
-			}
-			return dir
-		}
-		return ""
-	}
-
-	pathComponents := make([][]string, len(paths))
-	for i, p := range paths {
-		pathComponents[i] = strings.Split(path.Dir(p), "/")
-	}
-
-	shortestPathLen := len(pathComponents[0])
-	for _, components := range pathComponents[1:] {
-		if len(components) < shortestPathLen {
-			shortestPathLen = len(components)
-		}
-	}
-
-	var commonPrefix []string
-	for i := 0; i < shortestPathLen; i++ {
-		firstPathComponent := pathComponents[0][i]
-		isCommon := true
-		for _, otherComponents := range pathComponents[1:] {
-			if otherComponents[i] != firstPathComponent {
-				isCommon = false
-				break
-			}
-		}
-		if !isCommon {
-			break
-		}
-		commonPrefix = append(commonPrefix, firstPathComponent)
-	}
-
-	if len(commonPrefix) == 0 {
-		return ""
-	}
-	return strings.Join(commonPrefix, "/")
-}
-
-// buildLegacyCodeFile converts a new model.FileNode into the legacy CodeFile struct.
 func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, sourceDirs []string, logger *slog.Logger) CodeFile {
 	legacyFile := CodeFile{
 		Path:           node.Path,
@@ -171,10 +117,12 @@ func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, sou
 	}
 
 	var sourceLines []string
-	resolvedPath, err := utils.FindFileInSourceDirs(node.Path, sourceDirs, fileReader)
+	// The sourceDirs slice is now guaranteed to contain exactly one, correct directory for this file.
+	resolvedPath, err := utils.FindFileInSourceDirs(node.Path, sourceDirs, fileReader, logger)
 	if err != nil {
 		logger.Warn("Could not resolve source file for HTML adapter", "file", node.Path, "error", err)
 	} else {
+		logger.Info("Successfully resolved source file for HTML report", "file", node.Path, "resolved_path", resolvedPath)
 		sourceLines, err = fileReader.ReadFile(resolvedPath)
 		if err != nil {
 			logger.Warn("Could not read source file for HTML adapter", "file", resolvedPath, "error", err)
@@ -224,6 +172,53 @@ func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, sou
 
 	legacyFile.Lines = legacyLines
 	return legacyFile
+}
+
+// findDisplayBasePath finds the common parent directory of a list of file paths.
+func findDisplayBasePath(paths []string) string {
+	if len(paths) < 2 {
+		if len(paths) == 1 {
+			dir := path.Dir(paths[0])
+			if dir == "." {
+				return ""
+			}
+			return dir
+		}
+		return ""
+	}
+
+	pathComponents := make([][]string, len(paths))
+	for i, p := range paths {
+		pathComponents[i] = strings.Split(path.Dir(p), "/")
+	}
+
+	shortestPathLen := len(pathComponents[0])
+	for _, components := range pathComponents[1:] {
+		if len(components) < shortestPathLen {
+			shortestPathLen = len(components)
+		}
+	}
+
+	var commonPrefix []string
+	for i := 0; i < shortestPathLen; i++ {
+		firstPathComponent := pathComponents[0][i]
+		isCommon := true
+		for _, otherComponents := range pathComponents[1:] {
+			if otherComponents[i] != firstPathComponent {
+				isCommon = false
+				break
+			}
+		}
+		if !isCommon {
+			break
+		}
+		commonPrefix = append(commonPrefix, firstPathComponent)
+	}
+
+	if len(commonPrefix) == 0 {
+		return ""
+	}
+	return strings.Join(commonPrefix, "/")
 }
 
 // calculateTotalLines sums the actual line counts from all unique source files.

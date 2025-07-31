@@ -45,9 +45,8 @@ func (b *TreeBuilder) BuildTree(results []*parsers.ParserResult) (*model.Summary
 
 	for _, result := range results {
 		for _, fileCov := range result.FileCoverage {
-			// Find or create the node for this file in the tree. This builds out the
-			// directory structure as a side effect.
-			fileNode := b.findOrCreateFileNode(tree.Root, fileCov.Path)
+			// Pass the SourceDirectory from the result into the findOrCreate function
+			fileNode := b.findOrCreateFileNode(tree.Root, fileCov.Path, result.SourceDirectory)
 
 			// Merge the line-level metrics from the current report into the file node.
 			// This additively combines hits and branch data if a file is covered
@@ -72,7 +71,7 @@ func (b *TreeBuilder) BuildTree(results []*parsers.ParserResult) (*model.Summary
 // components of filePath. It creates any missing directory nodes along the way.
 // This design ensures that the file system hierarchy is accurately represented
 // in the tree structure without needing to know the structure in advance.
-func (b *TreeBuilder) findOrCreateFileNode(startNode *model.DirNode, filePath string) *model.FileNode {
+func (b *TreeBuilder) findOrCreateFileNode(startNode *model.DirNode, filePath string, sourceDir string) *model.FileNode {
 	// We assume paths use forward slashes as a normalized separator.
 	// The parsers are responsible for this normalization.
 	parts := strings.Split(filePath, "/")
@@ -98,10 +97,11 @@ func (b *TreeBuilder) findOrCreateFileNode(startNode *model.DirNode, filePath st
 	// If a file node for the final path component does not exist, create it.
 	if _, ok := currentNode.Files[fileName]; !ok {
 		newFile := &model.FileNode{
-			Name:   fileName,
-			Path:   filePath,
-			Lines:  make(map[int]model.LineMetrics),
-			Parent: currentNode,
+			Name:      fileName,
+			Path:      filePath,
+			Lines:     make(map[int]model.LineMetrics),
+			Parent:    currentNode,
+			SourceDir: sourceDir, // POPULATE THE NEW FIELD
 		}
 		currentNode.Files[fileName] = newFile
 	}

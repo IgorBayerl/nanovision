@@ -14,23 +14,13 @@ type ParserResult struct {
 	FileCoverage          []FileCoverage
 	ParserName            string
 	UnresolvedSourceFiles []string
-	SourceDirectories     []string
+	SourceDirectory       string // <-- CORRECTED: Changed from plural to singular
 	Timestamp             *time.Time
-	// Other report-level metadata can go here.
 }
 
 type FileCoverage struct {
-	Path  string                    // Project-relative path (e.g., "internal/analyzer/analyzer.go")
-	Lines map[int]model.LineMetrics // Raw line data from the report
-}
-type ParserResultOld struct {
-	Assemblies             []model.Assembly
-	SourceDirectories      []string
-	SupportsBranchCoverage bool
-	ParserName             string
-	MinimumTimeStamp       *time.Time
-	MaximumTimeStamp       *time.Time
-	UnresolvedSourceFiles  []string
+	Path  string
+	Lines map[int]model.LineMetrics
 }
 
 type ParserConfig interface {
