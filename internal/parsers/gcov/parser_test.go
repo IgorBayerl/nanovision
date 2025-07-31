@@ -15,7 +15,7 @@ import (
 func TestGCovParser_Parse(t *testing.T) {
 	const reportFileName = "calculator.cpp.gcov"
 	const sourceDir = "C:/project/src"
-	const normalizedSourcePath = "C:/project/src/calculator.cpp" // Path is absolute in this gcov report
+	const absoluteSourcePath = "C:/project/src/calculator.cpp" // Path as it appears in the gcov report
 
 	const gcovReportContent = `        -:    0:Source:C:/project/src/calculator.cpp
         -:    0:Runs:1
@@ -46,7 +46,7 @@ branch  1 never executed
 	testCases := []struct {
 		name          string
 		reportContent string
-		sourceFiles   map[string]string // For mock filesystem to check existence
+		sourceFiles   map[string]string
 		sourceDirs    []string
 		asserter      func(t *testing.T, result *parsers.ParserResult, err error)
 	}{
@@ -54,7 +54,7 @@ branch  1 never executed
 			name:          "Golden Path - Valid report with branch coverage",
 			reportContent: gcovReportContent,
 			sourceFiles: map[string]string{
-				normalizedSourcePath: "// C++ source content",
+				absoluteSourcePath: "// C++ source content",
 			},
 			sourceDirs: []string{sourceDir},
 			asserter: func(t *testing.T, result *parsers.ParserResult, err error) {
@@ -66,7 +66,8 @@ branch  1 never executed
 				require.Len(t, result.FileCoverage, 1)
 				fileCov := result.FileCoverage[0]
 
-				assert.Equal(t, normalizedSourcePath, fileCov.Path)
+				// *** FIX: Assert the new, correct RELATIVE path ***
+				assert.Equal(t, "calculator.cpp", fileCov.Path)
 				require.NotNil(t, fileCov.Lines)
 
 				// Assert line hits
@@ -99,13 +100,13 @@ branch  1 never executed
 				require.NoError(t, err)
 				require.NotNil(t, result)
 
-				// The parser should still produce coverage data
 				require.Len(t, result.FileCoverage, 1)
-				assert.Equal(t, normalizedSourcePath, result.FileCoverage[0].Path)
+				// Even if unresolved, the path should be the normalized relative one
+				assert.Equal(t, "calculator.cpp", result.FileCoverage[0].Path)
 
-				// But it should also report the file as unresolved
 				require.Len(t, result.UnresolvedSourceFiles, 1)
-				assert.Equal(t, normalizedSourcePath, result.UnresolvedSourceFiles[0])
+				// The unresolved file list should contain the original path from the report
+				assert.Equal(t, absoluteSourcePath, result.UnresolvedSourceFiles[0])
 			},
 		},
 		{
@@ -129,7 +130,7 @@ branch  1 never executed
 			err := os.WriteFile(reportPath, []byte(tc.reportContent), 0644)
 			require.NoError(t, err)
 
-			mockFS := testutil.NewMockFilesystem("windows") // Test with windows-like paths
+			mockFS := testutil.NewMockFilesystem("windows")
 			for path, content := range tc.sourceFiles {
 				mockFS.AddFile(path, content)
 			}

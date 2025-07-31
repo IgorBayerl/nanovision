@@ -72,21 +72,21 @@ REPORT_TASKS = [
         "inputs": [GO_COVERAGE_OUT],
         "source_dirs": [GO_PROJECT_DIR],
         "output_dir_suffix": "go_gocover_only",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "name": "C++ Project Only (from gcov)",
         "inputs": [CPP_GCOV_PATTERN],
         "source_dirs": [CPP_PROJECT_DIR],
         "output_dir_suffix": "cpp_gcov_only",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "name": "C++ Project Only (from Cobertura)",
         "inputs": [CPP_COBERTURA_XML],
         "source_dirs": [CPP_PROJECT_DIR],
         "output_dir_suffix": "cpp_cobertura_only",
-        "enabled": True,
+        "enabled": False,
     },
     # Merged Reports 
     {
@@ -94,7 +94,7 @@ REPORT_TASKS = [
         "inputs": [CSHARP_COBERTURA_XML, CPP_COBERTURA_XML],
         "source_dirs": [CSHARP_PROJECT_DIR, CPP_PROJECT_DIR],
         "output_dir_suffix": "merged_all_cobertura",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "name": "Merged - All Projects (Mixed Input Types)",
@@ -177,28 +177,25 @@ def generate_reports(tasks_to_run, report_types):
 
         print(f"\n Processing Task: {task_name} ")
 
-        # Resolve and validate input files/patterns
-        input_files = []
-        has_missing_files = False
-        for pattern in task["inputs"]:
-            # Use glob to expand wildcard patterns
-            expanded = glob.glob(str(pattern))
-            if not expanded:
-                print(f"⚠️ Warning: No files found for pattern '{pattern}'.")
-                has_missing_files = True
-            input_files.extend(expanded)
+        # ======================================================================
+        #  START OF FIX: Do NOT expand globs here. Pass raw patterns to Go.
+        # ======================================================================
 
-        if not input_files or has_missing_files:
-            results.append({"name": task_name, "status": "🟡 SKIPPED", "details": "One or more input files/patterns did not match any files."})
-            continue
+        # Convert pathlib objects to strings, but do not expand wildcard patterns.
+        # The Go application is responsible for glob expansion.
+        report_patterns = [str(p) for p in task["inputs"]]
+
+        # ======================================================================
+        #  END OF FIX
+        # ======================================================================
 
         # Prepare and run the adlercov command
         output_dir = REPORTS_OUTPUT_BASE / task["output_dir_suffix"]
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         cmd = [
             str(BINARY_PATH),
-            f"--report={';'.join(input_files)}",
+            f"--report={';'.join(report_patterns)}",
             f"--output={str(output_dir.resolve())}",
             f"--reporttypes={report_types}",
             "--verbose"
