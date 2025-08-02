@@ -1,4 +1,4 @@
-package gcov
+package parser_gcov
 
 import (
 	"fmt"

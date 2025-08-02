@@ -7,8 +7,8 @@ import (
 
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/cobertura"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/gocover"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_cobertura"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gocover"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,9 +27,8 @@ func Test_ParserFactory_FindParserForFile(t *testing.T) {
 
 	fileReader := filereader.NewDefaultReader()
 	factory := parsers.NewParserFactory(
-		// *** FIX: This line was commented out, causing the test to fail. ***
-		cobertura.NewCoberturaParser(fileReader),
-		gocover.NewGoCoverParser(fileReader),
+		parser_cobertura.NewCoberturaParser(fileReader),
+		parser_gocover.NewGoCoverParser(fileReader),
 	)
 
 	testCases := []struct {

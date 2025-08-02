@@ -1,4 +1,4 @@
-package cobertura
+package parser_cobertura
 
 import "encoding/xml"
 

@@ -1,4 +1,4 @@
-package gocover
+package parser_gocover
 
 import (
 	"bufio"

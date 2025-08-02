@@ -22,9 +22,9 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/logging"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/cobertura"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/gcov"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/gocover"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_cobertura"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gcov"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gocover"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/htmlreport"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/lcov"
@@ -191,9 +191,9 @@ func executePipeline(appConfig *config.AppConfig) error {
 	// --- Component Initialization ---
 	prodFileReader := filereader.NewDefaultReader()
 	parserFactory := parsers.NewParserFactory(
-		cobertura.NewCoberturaParser(prodFileReader),
-		gocover.NewGoCoverParser(prodFileReader),
-		gcov.NewGCovParser(prodFileReader),
+		parser_cobertura.NewCoberturaParser(prodFileReader),
+		parser_gocover.NewGoCoverParser(prodFileReader),
+		parser_gcov.NewGCovParser(prodFileReader),
 	)
 	treeBuilder := tree.NewBuilder()
 	hydrator := hydrator.NewHydrator(prodFileReader, appConfig.LangFactory, logger)
