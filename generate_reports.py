@@ -251,7 +251,7 @@ def main():
     """Main execution function."""
     parser = argparse.ArgumentParser(description="Generate coverage reports using the AdlerCov tool.")
     parser.add_argument("--rebuild-binary", action="store_true", help="Force a rebuild of the AdlerCov binary.")
-    parser.add_argument("--report-types", default="Html,TextSummary,Lcov", help="Comma-separated report types.")
+    parser.add_argument("--report-types", default="Html,TextSummary,Lcov,RawJson", help="Comma-separated report types.")
     args = parser.parse_args()
 
     if args.rebuild_binary or not BINARY_PATH.exists():

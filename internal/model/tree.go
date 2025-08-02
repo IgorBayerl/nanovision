@@ -12,21 +12,21 @@ type SummaryTree struct {
 
 // DirNode represents a directory in the file system tree.
 type DirNode struct {
-	Name    string               // The name of the directory (e.g., "analyzer").
-	Path    string               // The full path from the project root.
-	Metrics CoverageMetrics      // Aggregated metrics for this directory and all its children.
-	Subdirs map[string]*DirNode  // Child directories, keyed by name.
-	Files   map[string]*FileNode // Child files, keyed by name.
-	Parent  *DirNode             // Reference to the parent directory.
+	Name    string               `json:"name"`
+	Path    string               `json:"path"`
+	Metrics CoverageMetrics      `json:"metrics"`
+	Subdirs map[string]*DirNode  `json:"subdirs,omitempty"`
+	Files   map[string]*FileNode `json:"files,omitempty"`
+	Parent  *DirNode             `json:"-"` // Ignore this field during JSON serialization to prevent cycles
 }
 
 // FileNode represents a single source code file in the tree.
 type FileNode struct {
-	Name      string              // The name of the file (e.g., "analyzer.go").
-	Path      string              // The full path from the project root.
-	Metrics   CoverageMetrics     // Metrics for this specific file.
-	Lines     map[int]LineMetrics // Coverage data per line number.
-	Methods   []MethodMetrics     // Metrics for methods/functions within this file.
-	Parent    *DirNode            // Reference to the parent directory.
-	SourceDir string              // The original source directory for this file.
+	Name      string              `json:"name"`
+	Path      string              `json:"path"`
+	Metrics   CoverageMetrics     `json:"metrics"`
+	Lines     map[int]LineMetrics `json:"lines,omitempty"`
+	Methods   []MethodMetrics     `json:"methods,omitempty"`
+	Parent    *DirNode            `json:"-"` // Ignore this field during JSON serialization to prevent cycles
+	SourceDir string              `json:"sourceDir"`
 }

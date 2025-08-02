@@ -59,14 +59,19 @@ func (h *Hydrator) hydrateFile(node *model.FileNode) {
 		return
 	}
 
-	// The sourceLines are now in memory temporarily for this function's scope.
-	_ = h.langFactory.FindProcessorForFile(node.Path)
+	processor := h.langFactory.FindProcessorForFile(node.Path)
 
-	// --- Placeholder for Future Static Analysis ---
-	// Here you would use `sourceLines` to find methods, etc.
-	// e.g., node.Methods, _ = processor.FindFunctions(resolvedPath, sourceLines)
+	methods, err := processor.AnalyzeFile(resolvedPath, sourceLines)
+	if err != nil {
+		h.logger.Warn(
+			"Static analysis failed for file, method metrics will be incomplete.",
+			"file", resolvedPath,
+			"processor", processor.Name(),
+			"error", err,
+		)
+	}
+	node.Methods = methods
 
-	// Apply normalization rule for closing braces before calculating metrics.
 	h.normalizeClosingBraces(node, sourceLines)
 }
 
