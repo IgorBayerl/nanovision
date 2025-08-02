@@ -88,20 +88,16 @@ var destructor = regexp.MustCompile(
 		`\{`, // Must have opening brace
 )
 
-// CppProcessor implements the language.Processor interface for C/C++.
 type CppProcessor struct{}
 
-// NewCppProcessor creates a new CppProcessor.
 func NewCppProcessor() language.Processor {
 	return &CppProcessor{}
 }
 
-// Name returns the name of the processor.
 func (p *CppProcessor) Name() string {
 	return "C/C++"
 }
 
-// Detect checks for common C/C++ file extensions.
 func (p *CppProcessor) Detect(filePath string) bool {
 	lowerPath := strings.ToLower(filePath)
 	extensions := []string{".c", ".cpp", ".h", ".hpp", ".cxx", ".hxx", ".cc"}
@@ -113,13 +109,11 @@ func (p *CppProcessor) Detect(filePath string) bool {
 	return false
 }
 
-// RegexMatcher holds a regex and its name for debugging
 type RegexMatcher struct {
 	regex *regexp.Regexp
 	name  string
 }
 
-// AnalyzeFile performs static analysis on C++ source code.
 func (p *CppProcessor) AnalyzeFile(filePath string, sourceLines []string) ([]model.MethodMetrics, error) {
 	methods := make([]model.MethodMetrics, 0) // Always initialize as empty slice, never nil
 	if len(sourceLines) == 0 {
@@ -203,7 +197,6 @@ func (p *CppProcessor) AnalyzeFile(filePath string, sourceLines []string) ([]mod
 	return methods, nil
 }
 
-// findFunctionStartLine finds the actual start line of a function
 func (p *CppProcessor) findFunctionStartLine(sourceLines []string, currentIndex int, combinedLine string) int {
 	// Check if the current line contains a template declaration
 	currentLine := strings.TrimSpace(sourceLines[currentIndex])

@@ -11,6 +11,7 @@ import (
 )
 
 func TestCSharpProcessor_Detect(t *testing.T) {
+	t.Parallel()
 	p := lang_csharp.NewCSharpProcessor()
 
 	assert.True(t, p.Detect("C:/Users/Test/MyProject/File.cs"))
@@ -21,6 +22,7 @@ func TestCSharpProcessor_Detect(t *testing.T) {
 }
 
 func TestCSharpProcessor_AnalyzeFile(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name            string
 		sourceCode      string
@@ -40,8 +42,6 @@ namespace MyNamespace
         }
     }
 }`,
-			// Line 7 is where "public void MyMethod()" appears (counting from 1, including empty first line)
-			// Line 10 is where the closing brace "}" appears
 			expectedMetrics: []model.MethodMetrics{
 				{Name: "MyMethod", StartLine: 7, EndLine: 10},
 			},
@@ -78,8 +78,6 @@ public class User
         get { return _id; }
     }
 }`,
-			// Only the "Name" property should be detected since it has braces on the same line
-			// The "Id" property might not be detected due to the regex logic for properties
 			expectedMetrics: []model.MethodMetrics{
 				{Name: "Name", StartLine: 4, EndLine: 4},
 			},
@@ -94,7 +92,6 @@ public class Processor
         // logic here
     }
 }`,
-			// The regex actually captures the generic part, so we expect "ProcessAsync<T>"
 			expectedMetrics: []model.MethodMetrics{
 				{Name: "ProcessAsync<T>", StartLine: 4, EndLine: 7},
 			},
@@ -158,9 +155,8 @@ public class ControlFlow
 			},
 		},
 		{
-			name:       "NoMethods_ShouldReturnEmpty",
-			sourceCode: `public class EmptyClass { private string _field; }`,
-			// Should return an empty slice, not nil
+			name:            "NoMethods_ShouldReturnEmpty",
+			sourceCode:      `public class EmptyClass { private string _field; }`,
 			expectedMetrics: []model.MethodMetrics{},
 		},
 		{
@@ -172,7 +168,6 @@ public class Malformed
     {
         // No closing brace
 `,
-			// Should return an empty slice when no matching brace is found
 			expectedMetrics: []model.MethodMetrics{},
 		},
 	}
@@ -188,28 +183,12 @@ public class Malformed
 
 			// Assert
 			require.NoError(t, err)
-			// Note: The processor may return nil slice when no methods are found
-			// This is acceptable Go behavior for empty slices
-
-			// Debug output to help with troubleshooting
-			if len(methods) != len(tc.expectedMetrics) {
-				t.Logf("Expected %d methods, got %d", len(tc.expectedMetrics), len(methods))
-				for i, method := range methods {
-					t.Logf("Actual method %d: Name=%s, StartLine=%d, EndLine=%d",
-						i, method.Name, method.StartLine, method.EndLine)
-				}
-				for i, expected := range tc.expectedMetrics {
-					t.Logf("Expected method %d: Name=%s, StartLine=%d, EndLine=%d",
-						i, expected.Name, expected.StartLine, expected.EndLine)
-				}
-			}
 
 			// Handle comparison with potentially nil slice
 			if len(tc.expectedMetrics) == 0 {
 				assert.Empty(t, methods, "Expected no methods to be found")
 			} else {
-				assert.ElementsMatch(t, tc.expectedMetrics, methods,
-					"The discovered methods did not match the expected metrics.")
+				assert.ElementsMatch(t, tc.expectedMetrics, methods, "The discovered methods did not match the expected metrics.")
 			}
 		})
 	}
@@ -217,6 +196,7 @@ public class Malformed
 
 // Additional focused tests for edge cases
 func TestCSharpProcessor_AnalyzeFile_EdgeCases(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name            string
 		sourceCode      string
