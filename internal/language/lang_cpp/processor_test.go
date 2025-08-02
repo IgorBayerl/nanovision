@@ -37,6 +37,7 @@ func TestCppProcessor_Detect(t *testing.T) {
 }
 
 func TestCppProcessor_AnalyzeFile(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name            string
 		sourceCode      string
@@ -268,7 +269,6 @@ void implemented_function() {
     // this should be detected
 }`,
 			expectedMetrics: []model.MethodMetrics{
-				// Corrected StartLine from 8->9 and EndLine from 10->11
 				{Name: "implemented_function", StartLine: 9, EndLine: 11},
 			},
 		},
