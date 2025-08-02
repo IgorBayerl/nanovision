@@ -1,4 +1,3 @@
-// In: internal/model/tree.go
 package model
 
 // SummaryTree is the new root of the entire analyzed coverage result.

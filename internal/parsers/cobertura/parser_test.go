@@ -1,4 +1,3 @@
-// Path: internal/parsers/cobertura/parser_test.go
 package cobertura_test
 
 import (

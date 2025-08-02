@@ -82,11 +82,6 @@ func (b *HtmlReportBuilder) initializeAssets() error {
 		return fmt.Errorf("failed to write combined Angular JS file %s: %w", combinedJsPath, err)
 	}
 
-	// Clear out the individual JS file names as they are no longer needed for the template.
-	b.angularRuntimeJsFile = ""
-	b.angularPolyfillsJsFile = ""
-	b.angularMainJsFile = ""
-
 	return nil
 }
 

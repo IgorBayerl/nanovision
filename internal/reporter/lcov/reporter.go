@@ -1,4 +1,3 @@
-// Path: internal/reporter/lcov/reporter.go
 package lcov
 
 import (

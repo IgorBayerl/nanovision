@@ -72,21 +72,21 @@ REPORT_TASKS = [
         "inputs": [GO_COVERAGE_OUT],
         "source_dirs": [GO_PROJECT_DIR],
         "output_dir_suffix": "go_gocover_only",
-        "enabled": False,
+        "enabled": True,
     },
     {
         "name": "C++ Project Only (from gcov)",
         "inputs": [CPP_GCOV_PATTERN],
         "source_dirs": [CPP_PROJECT_DIR],
         "output_dir_suffix": "cpp_gcov_only",
-        "enabled": False,
+        "enabled": True,
     },
     {
         "name": "C++ Project Only (from Cobertura)",
         "inputs": [CPP_COBERTURA_XML],
         "source_dirs": [CPP_PROJECT_DIR],
         "output_dir_suffix": "cpp_cobertura_only",
-        "enabled": False,
+        "enabled": True,
     },
     # Merged Reports 
     {
@@ -94,7 +94,14 @@ REPORT_TASKS = [
         "inputs": [CSHARP_COBERTURA_XML, CPP_COBERTURA_XML],
         "source_dirs": [CSHARP_PROJECT_DIR, CPP_PROJECT_DIR],
         "output_dir_suffix": "merged_all_cobertura",
-        "enabled": False,
+        "enabled": True,
+    },
+    {
+        "name": "Merged - All C++ Reports",
+        "inputs": [CPP_GCOV_PATTERN, CPP_COBERTURA_XML],
+        "source_dirs": [CPP_PROJECT_DIR, CPP_PROJECT_DIR],
+        "output_dir_suffix": "merged_all_cpp",
+        "enabled": True,
     },
     {
         "name": "Merged - All Projects (Mixed Input Types)",

@@ -281,23 +281,19 @@ func (b *HtmlReportBuilder) buildSummaryPageData(report *SummaryResult, angularA
 		TranslationsJSON:                   b.translationsJSON,
 		AngularCssFile:                     b.angularCssFile,
 		CombinedAngularJsFile:              b.combinedAngularJsFile,
-		AngularRuntimeJsFile:               b.angularRuntimeJsFile,
-		AngularPolyfillsJsFile:             b.angularPolyfillsJsFile,
-		AngularMainJsFile:                  b.angularMainJsFile,
 
-		BranchCoverageAvailable:               b.branchCoverageAvailable,
-		MethodCoverageAvailable:               b.methodCoverageAvailable,
-		MaximumDecimalPlacesForCoverageQuotas: b.maximumDecimalPlacesForCoverageQuotas,
-		SummaryCards:                          b.buildSummaryCards(report),
-		OverallHistoryChartData:               HistoryChartDataViewModel{Series: false},
+		BranchCoverageAvailable: b.branchCoverageAvailable,
+		MethodCoverageAvailable: b.methodCoverageAvailable,
+		SummaryCards:            b.buildSummaryCards(report),
+		OverallHistoryChartData: HistoryChartDataViewModel{Series: false},
 	}
 	return data, nil
 }
 
 func (b *HtmlReportBuilder) buildSummaryCards(report *SummaryResult) []CardViewModel {
 	var cards []CardViewModel
-	decimalPlaces := b.maximumDecimalPlacesForCoverageQuotas
-	decimalPlacesForPercentageDisplay := b.maximumDecimalPlacesForPercentageDisplay
+	decimalPlaces := 2
+	decimalPlacesForPercentageDisplay := 0
 
 	// Information Card
 	infoCardRows := []CardRowViewModel{

@@ -1,4 +1,3 @@
-// Path: internal/parsers/gcov/parser.go
 package gcov
 
 import (
