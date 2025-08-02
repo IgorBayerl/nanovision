@@ -18,7 +18,10 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/hydrator"
 	"github.com/IgorBayerl/AdlerCov/internal/language"
+	"github.com/IgorBayerl/AdlerCov/internal/language/lang_cpp"
+	"github.com/IgorBayerl/AdlerCov/internal/language/lang_csharp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/lang_default"
+	"github.com/IgorBayerl/AdlerCov/internal/language/lang_go"
 	"github.com/IgorBayerl/AdlerCov/internal/logging"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
@@ -28,6 +31,7 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/reporter"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/htmlreport"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/lcov"
+	"github.com/IgorBayerl/AdlerCov/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/textsummary"
 	"github.com/IgorBayerl/AdlerCov/internal/tree"
 )
@@ -179,7 +183,12 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 			if err := lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree); err != nil {
 				return fmt.Errorf("failed to generate lcov report: %w", err)
 			}
+		case "RawJson":
+			if err := reporter_rawjson.NewRawJsonReportBuilder(outputDir).CreateReport(summaryTree); err != nil {
+				return fmt.Errorf("failed to generate json summary report: %w", err)
+			}
 		}
+
 	}
 	return nil
 }
@@ -246,9 +255,9 @@ func main() {
 
 	langFactory := language.NewProcessorFactory(
 		lang_default.NewDefaultProcessor(),
-		// lang_csharp.NewCSharpProcessor(),
-		// lang_go.NewGoProcessor(),
-		// lang_cpp.NewCppProcessor(),
+		lang_csharp.NewCSharpProcessor(),
+		lang_go.NewGoProcessor(),
+		lang_cpp.NewCppProcessor(),
 	)
 
 	verbosity, _ := logging.ParseVerbosity(*rawFlags.verbosity)
