@@ -1,41 +1,35 @@
-// Path: internal/reporter/context.go
 package reporter
 
 import (
 	"io"
 	"log/slog"
 
-	"github.com/IgorBayerl/AdlerCov/internal/reportconfig"
-	"github.com/IgorBayerl/AdlerCov/internal/settings"
+	"github.com/IgorBayerl/AdlerCov/internal/config"
 )
 
+// IBuilderContext defines the contract for the context passed to report builders.
 type IBuilderContext interface {
-	ReportConfiguration() *reportconfig.ReportConfiguration
-	Settings() *settings.Settings
+	Config() *config.AppConfig
 	Logger() *slog.Logger
 }
 
+// BuilderContext is the concrete implementation of IBuilderContext.
 type BuilderContext struct {
-	Cfg   *reportconfig.ReportConfiguration
-	Stngs *settings.Settings
-	L     *slog.Logger
+	AppCfg *config.AppConfig
+	L      *slog.Logger
 }
 
-func (bc *BuilderContext) ReportConfiguration() *reportconfig.ReportConfiguration { return bc.Cfg }
+func (bc *BuilderContext) Config() *config.AppConfig { return bc.AppCfg }
+func (bc *BuilderContext) Logger() *slog.Logger      { return bc.L }
 
-func (bc *BuilderContext) Settings() *settings.Settings { return bc.Stngs }
-
-func (bc *BuilderContext) Logger() *slog.Logger { return bc.L }
-
-func NewBuilderContext(config *reportconfig.ReportConfiguration, settings *settings.Settings, logger *slog.Logger) *BuilderContext {
+// NewBuilderContext creates a new context for report builders.
+func NewBuilderContext(appConfig *config.AppConfig, logger *slog.Logger) IBuilderContext {
 	if logger == nil {
-		// Default to a discarded logger if none is provided to prevent nil pointer panics.
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
 
 	return &BuilderContext{
-		Cfg:   config,
-		Stngs: settings,
-		L:     logger,
+		AppCfg: appConfig,
+		L:      logger,
 	}
 }

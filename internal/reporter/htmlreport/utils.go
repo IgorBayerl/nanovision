@@ -44,28 +44,6 @@ func countUniqueFiles(assemblies []Assembly) int {
 	return len(distinctFiles)
 }
 
-func determineLineVisitStatus(hits int, isBranchPoint bool, coveredBranches int, totalBranches int) LineVisitStatus { // Changed return type
-	if hits < 0 {
-		return NotCoverable
-	}
-	if isBranchPoint {
-		if totalBranches == 0 {
-			return NotCoverable
-		}
-		if coveredBranches == totalBranches {
-			return Covered
-		}
-		if coveredBranches > 0 {
-			return PartiallyCovered
-		}
-		return NotCovered
-	}
-	if hits > 0 {
-		return Covered
-	}
-	return NotCovered
-}
-
 func lineVisitStatusToString(status LineVisitStatus) string { // Changed parameter type
 	switch status {
 	case Covered: // Use Covered

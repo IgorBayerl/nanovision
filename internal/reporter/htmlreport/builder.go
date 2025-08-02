@@ -1,7 +1,7 @@
 package htmlreport
 
 import (
-	"fmt" // fmt is still needed for fmt.Errorf
+	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -16,11 +16,9 @@ type HtmlReportBuilder struct {
 	ReportContext reporter.IBuilderContext
 	fileReader    filereader.Reader
 
-	// Cached data for reuse across page generations
+	// Cached data
 	angularCssFile                     string
-	angularRuntimeJsFile               string
-	angularPolyfillsJsFile             string
-	angularMainJsFile                  string
+	combinedAngularJsFile              string
 	assembliesJSON                     template.JS
 	riskHotspotsJSON                   template.JS
 	metricsJSON                        template.JS
@@ -29,28 +27,24 @@ type HtmlReportBuilder struct {
 	translationsJSON                   template.JS
 
 	// Settings derived from context
-	branchCoverageAvailable                  bool
-	methodCoverageAvailable                  bool
-	maximumDecimalPlacesForCoverageQuotas    int
-	maximumDecimalPlacesForPercentageDisplay int
-	parserName                               string
-	reportTimestamp                          int64
-	reportTitle                              string
-	tag                                      string
-	translations                             map[string]string
-	onlySummary                              bool
+	branchCoverageAvailable bool
+	methodCoverageAvailable bool
+	parserName              string
+	reportTimestamp         int64
+	reportTitle             string
+	tag                     string
+	translations            map[string]string
+	onlySummary             bool
 
 	classReportFilenames       map[string]string
 	tempExistingLowerFilenames map[string]struct{}
-
-	combinedAngularJsFile string // To store "reportgenerator.combined.js"
 }
 
 func NewHtmlReportBuilder(outputDir string, reportCtx reporter.IBuilderContext, fileReader filereader.Reader) *HtmlReportBuilder {
 	return &HtmlReportBuilder{
 		OutputDir:                  outputDir,
 		ReportContext:              reportCtx,
-		fileReader:                 fileReader, // Store the dependency
+		fileReader:                 fileReader,
 		classReportFilenames:       make(map[string]string),
 		tempExistingLowerFilenames: make(map[string]struct{}),
 	}
@@ -61,12 +55,7 @@ func (b *HtmlReportBuilder) ReportType() string {
 }
 
 func (b *HtmlReportBuilder) CreateReport(tree *model.SummaryTree) error {
-	// --- THE FIX ---
-	// We no longer need the global reportConfig.SourceDirectories().
-	// The tree itself contains all the source directory context we need on a per-file basis.
-	// We pass nil here, and the adapter will handle it.
-	report := ToLegacySummaryResult(tree, b.fileReader, nil, b.ReportContext.Logger())
-	// --- END FIX ---
+	report := ToLegacySummaryResult(tree, b.fileReader, b.ReportContext.Logger())
 
 	if err := b.validateContext(); err != nil {
 		return err
@@ -109,11 +98,9 @@ func (b *HtmlReportBuilder) CreateReport(tree *model.SummaryTree) error {
 	return nil
 }
 
-// --- CreateReport helper methods ---
-
 func (b *HtmlReportBuilder) validateContext() error {
 	if b.ReportContext == nil {
-		return fmt.Errorf("HtmlReportBuilder.ReportContext is not set; it's required for configuration and settings")
+		return fmt.Errorf("HtmlReportBuilder.ReportContext is not set")
 	}
 	return nil
 }
@@ -123,22 +110,17 @@ func (b *HtmlReportBuilder) prepareOutputDirectory() error {
 }
 
 func (b *HtmlReportBuilder) initializeBuilderProperties(report *SummaryResult) {
-	reportConfig := b.ReportContext.ReportConfiguration()
-	settings := b.ReportContext.Settings()
+	appConfig := b.ReportContext.Config()
 
-	b.reportTitle = reportConfig.Title()
+	b.reportTitle = appConfig.Title
 	if b.reportTitle == "" {
-		b.reportTitle = "Summary" // Default for summary page
+		b.reportTitle = "Summary"
 	}
 	b.parserName = report.ParserName
 	b.reportTimestamp = report.Timestamp
-	b.tag = reportConfig.Tag()
-
+	b.tag = appConfig.Tag
 	b.branchCoverageAvailable = report.BranchesValid != nil && *report.BranchesValid > 0
-
 	b.methodCoverageAvailable = true
-	b.maximumDecimalPlacesForCoverageQuotas = settings.MaximumDecimalPlacesForCoverageQuotas
-	b.maximumDecimalPlacesForPercentageDisplay = settings.MaximumDecimalPlacesForPercentageDisplay
 	b.translations = GetTranslations()
 }
 
@@ -152,7 +134,7 @@ func (b *HtmlReportBuilder) renderSummaryPage(data SummaryPageData) error {
 	return summaryPageTpl.Execute(summaryFile, data)
 }
 
-func (b *HtmlReportBuilder) renderClassDetailPages(report *SummaryResult) error { // Removed angularAssembliesForSummary
+func (b *HtmlReportBuilder) renderClassDetailPages(report *SummaryResult) error {
 	if b.onlySummary {
 		return nil
 	}
@@ -160,7 +142,6 @@ func (b *HtmlReportBuilder) renderClassDetailPages(report *SummaryResult) error 
 	for _, assemblyModel := range report.Assemblies {
 		for _, classModel := range assemblyModel.Classes {
 			classKey := assemblyModel.Name + "_" + classModel.Name
-
 			classReportFilename, ok := b.classReportFilenames[classKey]
 
 			if !ok || classReportFilename == "" {
@@ -186,30 +167,15 @@ func (b *HtmlReportBuilder) renderClassDetailPages(report *SummaryResult) error 
 	return nil
 }
 
-// determineClassReportFilename gets or generates a unique HTML filename for a class report.
-// It uses and updates the builder's internal maps for filename tracking.
-// assemblyName is the full assembly name, className is the model's raw/unique name.
 func (b *HtmlReportBuilder) determineClassReportFilename(assemblyName string, className string, assemblyShortNameForFile string) string {
-	// Create a unique key for the class within its assembly.
-	// Using the full assembly name and raw class name for the key ensures uniqueness.
 	classKey := assemblyName + "_" + className
 
 	if filename, ok := b.classReportFilenames[classKey]; ok {
-		return filename // Return already generated filename
+		return filename
 	}
 
-	// Filename not yet generated for this class. Generate a new one.
-	// generateUniqueFilename expects a map of existing *lowercase* filenames.
-	// b.tempExistingLowerFilenames serves this purpose.
-	// assemblyShortNameForFile is used for constructing the base of the filename.
 	newFilename := generateUniqueFilename(assemblyShortNameForFile, className, b.tempExistingLowerFilenames)
-
-	// Store the actual generated filename (preserving case) in classReportFilenames.
 	b.classReportFilenames[classKey] = newFilename
-	// Also, add its lowercase version to tempExistingLowerFilenames for future uniqueness checks by generateUniqueFilename.
-	// Note: generateUniqueFilename itself adds to the map it's passed, so this is already handled if it modifies its input map.
-	// The current generateUniqueFilename modifies the map passed to it.
-
 	return newFilename
 }
 

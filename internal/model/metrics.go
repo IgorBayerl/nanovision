@@ -1,4 +1,3 @@
-// In: internal/model/metrics.go
 package model
 
 // CoverageMetrics holds the aggregated coverage data for a node (project, dir, or file).
