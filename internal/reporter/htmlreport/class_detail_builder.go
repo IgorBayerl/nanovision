@@ -53,6 +53,10 @@ func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *Class
 	b.populateHistoricCoveragesForClassVM(&cvm, classModel)
 	b.populateAggregatedMetricsForClassVM(&cvm, classModel)
 
+	metricsTable := b.buildMetricsTableForClassVM(classModel)
+	cvm.MetricsTable = metricsTable
+	cvm.FilesWithMetrics = len(metricsTable.Rows) > 0
+
 	sortedFiles := make([]CodeFile, len(classModel.Files))
 	copy(sortedFiles, classModel.Files)
 	sort.Slice(sortedFiles, func(i, j int) bool { return sortedFiles[i].Path < sortedFiles[j].Path })
@@ -68,9 +72,6 @@ func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *Class
 			cvm.SidebarElements = append(cvm.SidebarElements, sidebarElem)
 		}
 	}
-
-	// Placeholder for metrics table logic
-	// ...
 
 	return cvm
 }
