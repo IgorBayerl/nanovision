@@ -1,4 +1,4 @@
-package cobertura_test
+package parser_cobertura_test
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/cobertura"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_cobertura"
 	"github.com/IgorBayerl/AdlerCov/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -142,7 +142,7 @@ func TestCoberturaParser_Parse(t *testing.T) {
 			}
 
 			mockConfig := testutil.NewTestConfig(tc.sourceDirs)
-			parser := cobertura.NewCoberturaParser(mockFS)
+			parser := parser_cobertura.NewCoberturaParser(mockFS)
 
 			// Act
 			result, err := parser.Parse(reportPath, mockConfig)

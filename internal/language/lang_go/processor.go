@@ -1,65 +1,82 @@
 package lang_go
 
-// import (
-// 	"strings"
+import (
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"strings"
 
-// 	"github.com/IgorBayerl/AdlerCov/internal/language"
-// 	"github.com/IgorBayerl/AdlerCov/internal/model"
-// 	"github.com/fzipp/gocyclo"
-// )
+	"github.com/IgorBayerl/AdlerCov/internal/language"
+	"github.com/IgorBayerl/AdlerCov/internal/model"
+	"github.com/fzipp/gocyclo"
+)
 
-// type GoProcessor struct{}
+type GoProcessor struct{}
 
-// func NewGoProcessor() language.Processor {
-// 	return &GoProcessor{}
-// }
+func NewGoProcessor() language.Processor {
+	return &GoProcessor{}
+}
 
-// func (p *GoProcessor) Name() string {
-// 	return "Go"
-// }
+func (p *GoProcessor) Name() string {
+	return "Go"
+}
 
-// func (p *GoProcessor) Detect(filePath string) bool {
-// 	return strings.HasSuffix(strings.ToLower(filePath), ".go")
-// }
+func (p *GoProcessor) Detect(filePath string) bool {
+	return strings.HasSuffix(strings.ToLower(filePath), ".go")
+}
 
-// func (p *GoProcessor) GetLogicalClassName(rawClassName string) string {
-// 	return rawClassName
-// }
+func (p *GoProcessor) AnalyzeFile(filePath string, sourceLines []string) ([]model.MethodMetrics, error) {
+	// First, parse the file to ensure it's syntactically correct.
+	fset := token.NewFileSet()
+	src := strings.Join(sourceLines, "\n")
+	node, err := parser.ParseFile(fset, filePath, src, parser.ParseComments)
+	if err != nil {
+		return nil, err
+	}
 
-// func (p *GoProcessor) FormatClassName(class *model.Class) string {
-// 	return class.Name
-// }
+	// Only if parsing succeeds, run the cyclomatic complexity analysis.
+	cycloStats := gocyclo.Analyze([]string{filePath}, nil)
+	complexityMap := make(map[string]int)
+	for _, stat := range cycloStats {
+		complexityMap[stat.FuncName] = stat.Complexity
+	}
 
-// func (p *GoProcessor) FormatMethodName(method *model.Method, class *model.Class) string {
-// 	return method.Name + method.Signature
-// }
+	methods := make([]model.MethodMetrics, 0)
+	ast.Inspect(node, func(n ast.Node) bool {
+		fn, ok := n.(*ast.FuncDecl)
+		if !ok {
+			return true // Continue traversing
+		}
 
-// func (p *GoProcessor) CategorizeCodeElement(method *model.Method) model.CodeElementType {
-// 	return model.MethodElementType
-// }
+		startPos := fset.Position(fn.Pos())
+		endPos := fset.Position(fn.End())
 
-// func (p *GoProcessor) IsCompilerGeneratedClass(class *model.Class) bool {
-// 	return false
-// }
+		funcName := fn.Name.Name
+		if fn.Recv != nil && len(fn.Recv.List) > 0 {
+			var typeName string
+			switch T := fn.Recv.List[0].Type.(type) {
+			case *ast.StarExpr: // Pointer receiver: func (s *MyStruct)
+				if ident, ok := T.X.(*ast.Ident); ok {
+					typeName = "(*" + ident.Name + ")"
+				}
+			case *ast.Ident: // Value receiver: func (s MyStruct)
+				// FIX: Correctly handle *ast.Ident. T is the identifier itself.
+				typeName = "(" + T.Name + ")"
+			}
+			if typeName != "" {
+				funcName = typeName + "." + funcName
+			}
+		}
 
-// func (p *GoProcessor) CalculateCyclomaticComplexity(filePath string) ([]model.MethodMetric, error) {
-// 	stats := gocyclo.Analyze([]string{filePath}, nil)
+		methods = append(methods, model.MethodMetrics{
+			Name:                 funcName,
+			StartLine:            startPos.Line,
+			EndLine:              endPos.Line,
+			CyclomaticComplexity: complexityMap[funcName],
+		})
 
-// 	metrics := make([]model.MethodMetric, 0, len(stats))
-// 	for _, s := range stats {
-// 		metric := model.MethodMetric{
-// 			Name: s.FuncName, // e.g., "(MyType).myFunc" or "myFunc"
-// 			Line: s.Pos.Line,
-// 			Metrics: []model.Metric{
-// 				{
-// 					Name:   "Cyclomatic complexity",
-// 					Value:  float64(s.Complexity),
-// 					Status: model.StatusOk,
-// 				},
-// 			},
-// 		}
-// 		metrics = append(metrics, metric)
-// 	}
+		return false
+	})
 
-// 	return metrics, nil
-// }
+	return methods, nil
+}

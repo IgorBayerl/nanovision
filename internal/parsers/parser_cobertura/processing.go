@@ -1,5 +1,4 @@
-// Path: internal/parsers/cobertura/processing.go
-package cobertura
+package parser_cobertura
 
 import (
 	"log/slog"
