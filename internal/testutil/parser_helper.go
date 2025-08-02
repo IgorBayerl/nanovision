@@ -6,7 +6,10 @@ import (
 
 	"github.com/IgorBayerl/AdlerCov/internal/filtering"
 	"github.com/IgorBayerl/AdlerCov/internal/language"
+	"github.com/IgorBayerl/AdlerCov/internal/language/lang_cpp"
+	"github.com/IgorBayerl/AdlerCov/internal/language/lang_csharp"
 	"github.com/IgorBayerl/AdlerCov/internal/language/lang_default"
+	"github.com/IgorBayerl/AdlerCov/internal/language/lang_go"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 )
 
@@ -30,9 +33,9 @@ func NewTestConfig(sourceDirs []string) parsers.ParserConfig {
 	noFilter, _ := filtering.NewDefaultFilter(nil, true)
 	langFactory := language.NewProcessorFactory(
 		lang_default.NewDefaultProcessor(),
-		// lang_go.NewGoProcessor(),
-		// lang_csharp.NewCSharpProcessor(),
-		// lang_cpp.NewCppProcessor(),
+		lang_go.NewGoProcessor(),
+		lang_csharp.NewCSharpProcessor(),
+		lang_cpp.NewCppProcessor(),
 	)
 
 	return &MockParserConfig{
