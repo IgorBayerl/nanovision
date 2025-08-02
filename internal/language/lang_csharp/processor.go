@@ -1,122 +1,136 @@
 package lang_csharp
 
-// import (
-// 	"regexp"
-// 	"strconv"
-// 	"strings"
+import (
+	"regexp"
+	"strings"
 
-// 	"github.com/IgorBayerl/AdlerCov/internal/language"
-// 	"github.com/IgorBayerl/AdlerCov/internal/model"
-// )
+	"github.com/IgorBayerl/AdlerCov/internal/language"
+	"github.com/IgorBayerl/AdlerCov/internal/model"
+	"github.com/IgorBayerl/AdlerCov/internal/utils"
+)
 
-// // C#-specific Regexes.
-// var (
-// 	compilerGeneratedMethodNameRegex = regexp.MustCompile(`^(?P<ClassName>.+)\+<(?P<CompilerGeneratedName>.+)>d__\d+\/MoveNext\(\)$`)
-// 	localFunctionMethodNameRegex     = regexp.MustCompile(`^(?:.*>g__)?(?P<NestedMethodName>[^|]+)\|`)
-// 	genericClassRegex                = regexp.MustCompile("^(?P<Name>.+)`(?P<Number>\\d+)$")
-// 	nestedTypeSeparatorRegex         = regexp.MustCompile(`[+/]`)
-// )
+var (
+	// Matches methods with a return type. Catches name in group 1.
+	// Now handles generic method names like `MyMethod<T>`.
+	csharpMethodRegex = regexp.MustCompile(
+		`^\s*(?:[\w\s\.<>\[\]\?]+)\s+([\w_]+(?:<[\w\s,]+>)?)\s*\([^)]*\)`,
+	)
+	// Matches constructors (no return type). Catches name in group 1.
+	csharpConstructorRegex = regexp.MustCompile(
+		`^\s*(?:public|private|protected|internal|static)?\s*([\w_]+)\s*\([^)]*\)`,
+	)
+	// Matches properties. Catches name in group 1. Makes the opening brace optional on the same line.
+	csharpPropertyRegex = regexp.MustCompile(
+		`^\s*(?:[\w\s\.<>\[\]\?]+)\s+([\w_]+)\s*`,
+	)
+	// GUARD REGEX: Matches class/struct/interface/enum definitions to EXCLUDE them from method processing.
+	typeDefinitionRegex = regexp.MustCompile(`^\s*(?:public|private|internal|protected|internal)?\s*(?:static|sealed|abstract)?\s*\b(class|struct|interface|enum)\s+`)
+)
 
-// type CSharpProcessor struct{}
+type CSharpProcessor struct{}
 
-// func NewCSharpProcessor() language.Processor {
-// 	return &CSharpProcessor{}
-// }
+func NewCSharpProcessor() language.Processor {
+	return &CSharpProcessor{}
+}
 
-// func (p *CSharpProcessor) Name() string {
-// 	return "C#"
-// }
+func (p *CSharpProcessor) Name() string {
+	return "C#"
+}
 
-// func (p *CSharpProcessor) Detect(filePath string) bool {
-// 	lowerPath := strings.ToLower(filePath)
-// 	return strings.HasSuffix(lowerPath, ".cs") || strings.HasSuffix(lowerPath, ".fs")
-// }
+func (p *CSharpProcessor) Detect(filePath string) bool {
+	return strings.HasSuffix(strings.ToLower(filePath), ".cs")
+}
 
-// func (p *CSharpProcessor) GetLogicalClassName(rawClassName string) string {
-// 	if i := strings.IndexAny(rawClassName, "/$+"); i != -1 {
-// 		return rawClassName[:i]
-// 	}
-// 	return rawClassName
-// }
+func (p *CSharpProcessor) AnalyzeFile(filePath string, sourceLines []string) ([]model.MethodMetrics, error) {
+	var methods []model.MethodMetrics
+	processedLines := make(map[int]bool)
+	inBlockComment := false
 
-// func (p *CSharpProcessor) FormatClassName(class *model.Class) string {
-// 	nameForDisplay := nestedTypeSeparatorRegex.ReplaceAllString(class.Name, ".")
-// 	match := genericClassRegex.FindStringSubmatch(nameForDisplay)
-// 	if match == nil {
-// 		return nameForDisplay
-// 	}
+	for i, line := range sourceLines {
+		if processedLines[i+1] {
+			continue
+		}
 
-// 	baseDisplayName := findNamedGroup(genericClassRegex, match, "Name")
-// 	numberStr := findNamedGroup(genericClassRegex, match, "Number")
-// 	argCount, _ := strconv.Atoi(numberStr)
+		// Handle block comment state transitions at the start of the line
+		originalLine := line
+		if inBlockComment {
+			if endIdx := strings.Index(originalLine, "*/"); endIdx != -1 {
+				inBlockComment = false
+				line = originalLine[endIdx+2:] // Process the rest of the line
+			} else {
+				continue // Still in a block comment, skip the whole line
+			}
+		}
 
-// 	if argCount > 0 {
-// 		var sb strings.Builder
-// 		sb.WriteString("<")
-// 		for i := 1; i <= argCount; i++ {
-// 			if i > 1 {
-// 				sb.WriteString(", ")
-// 			}
-// 			sb.WriteString("T")
-// 			if argCount > 1 {
-// 				sb.WriteString(strconv.Itoa(i))
-// 			}
-// 		}
-// 		sb.WriteString(">")
-// 		return baseDisplayName + sb.String()
-// 	}
-// 	return baseDisplayName
-// }
+		// Remove comments for cleaner regex matching
+		if startIdx := strings.Index(line, "/*"); startIdx != -1 {
+			if endIdx := strings.Index(line[startIdx:], "*/"); endIdx == -1 {
+				inBlockComment = true
+			}
+			// This part is complex; for now, we simplify by just ignoring lines with unclosed block comments.
+			// A full parser would handle this better, but for regex this is a safe compromise.
+		}
+		if startIdx := strings.Index(line, "//"); startIdx != -1 {
+			line = line[:startIdx]
+		}
 
-// func (p *CSharpProcessor) FormatMethodName(method *model.Method, class *model.Class) string {
-// 	methodNamePlusSignature := method.Name + method.Signature
-// 	combinedNameForContext := class.Name + "/" + methodNamePlusSignature
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" {
+			continue
+		}
 
-// 	if strings.Contains(methodNamePlusSignature, "|") {
-// 		if match := localFunctionMethodNameRegex.FindStringSubmatch(methodNamePlusSignature); match != nil {
-// 			if nestedName := findNamedGroup(localFunctionMethodNameRegex, match, "NestedMethodName"); nestedName != "" {
-// 				return nestedName + "()"
-// 			}
-// 		}
-// 	}
+		// --- The crucial guard clause ---
+		// If the line is a type definition, skip it entirely.
+		if typeDefinitionRegex.MatchString(trimmedLine) {
+			continue
+		}
 
-// 	if strings.HasSuffix(methodNamePlusSignature, "MoveNext()") {
-// 		if match := compilerGeneratedMethodNameRegex.FindStringSubmatch(combinedNameForContext); match != nil {
-// 			if compilerGenName := findNamedGroup(compilerGeneratedMethodNameRegex, match, "CompilerGeneratedName"); compilerGenName != "" {
-// 				return compilerGenName + "()"
-// 			}
-// 		}
-// 	}
+		var methodName string
+		// Try matching in order of specificity to avoid ambiguity
+		if csharpMethodRegex.MatchString(trimmedLine) && strings.Contains(trimmedLine, "(") {
+			match := csharpMethodRegex.FindStringSubmatch(trimmedLine)
+			if len(match) > 1 {
+				methodName = match[1]
+			}
+		} else if csharpConstructorRegex.MatchString(trimmedLine) && strings.Contains(trimmedLine, "(") {
+			match := csharpConstructorRegex.FindStringSubmatch(trimmedLine)
+			if len(match) > 1 {
+				methodName = match[1]
+			}
+		} else if csharpPropertyRegex.MatchString(trimmedLine) && strings.Contains(originalLine, "{") {
+			match := csharpPropertyRegex.FindStringSubmatch(trimmedLine)
+			if len(match) > 1 {
+				methodName = match[1]
+			}
+		}
 
-// 	return methodNamePlusSignature
-// }
+		if methodName != "" {
+			startLine := i + 1
 
-// func (p *CSharpProcessor) CategorizeCodeElement(method *model.Method) model.CodeElementType {
-// 	if strings.HasPrefix(method.DisplayName, "get_") || strings.HasPrefix(method.DisplayName, "set_") {
-// 		return model.PropertyElementType
-// 	}
-// 	return model.MethodElementType
-// }
+			// Find the line containing the opening brace, which might be the current line or a subsequent one.
+			braceLineIndex := -1
+			for j := i; j < len(sourceLines); j++ {
+				if strings.Contains(sourceLines[j], "{") {
+					braceLineIndex = j
+					break
+				}
+			}
 
-// func (p *CSharpProcessor) IsCompilerGeneratedClass(class *model.Class) bool {
-// 	rawName := class.Name
-// 	if strings.Contains(rawName, "+<>c") || strings.Contains(rawName, "/<>c") || strings.HasPrefix(rawName, "<>c") || strings.Contains(rawName, ">d__") {
-// 		return true
-// 	}
-// 	return false
-// }
-
-// // Sometimes, even if we do not support on our side, the report may come with this info, for example cobertura.
-// // In those cases we will return not supported but the information from the original report will be used.
-// func (p *CSharpProcessor) CalculateCyclomaticComplexity(filePath string) ([]model.MethodMetric, error) {
-// 	return nil, language.ErrNotSupported
-// }
-
-// func findNamedGroup(re *regexp.Regexp, match []string, groupName string) string {
-// 	for i, name := range re.SubexpNames() {
-// 		if i > 0 && i < len(match) && name == groupName {
-// 			return match[i]
-// 		}
-// 	}
-// 	return ""
-// }
+			if braceLineIndex != -1 {
+				endLine, found := utils.FindMatchingBrace(sourceLines, braceLineIndex)
+				if found {
+					methods = append(methods, model.MethodMetrics{
+						Name:      methodName,
+						StartLine: startLine, // The line with the signature
+						EndLine:   endLine,   // The line with the closing brace
+					})
+					// Mark the entire block as processed to prevent inner members from being re-matched.
+					for k := startLine; k <= endLine; k++ {
+						processedLines[k] = true
+					}
+				}
+			}
+		}
+	}
+	return methods, nil
+}

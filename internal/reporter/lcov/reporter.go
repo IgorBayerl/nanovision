@@ -25,7 +25,6 @@ func (b *LcovReportBuilder) ReportType() string {
 	return "Lcov"
 }
 
-// CreateReport now accepts the new model.SummaryTree.
 func (b *LcovReportBuilder) CreateReport(tree *model.SummaryTree) error {
 	fileName := "lcov.info"
 	targetPath := filepath.Join(b.outputDir, fileName)
@@ -54,24 +53,24 @@ func (b *LcovReportBuilder) CreateReport(tree *model.SummaryTree) error {
 	return nil
 }
 
-// writeLcovFileSection now takes a *model.FileNode.
 func writeLcovFileSection(writer *bufio.Writer, file *model.FileNode) error {
 	if _, err := writer.WriteString(fmt.Sprintf("SF:%s\n", file.Path)); err != nil {
 		return err
 	}
 
 	// FN/FNDA: Function data.
+	// Sort methods by their starting line number for consistent output.
 	sort.SliceStable(file.Methods, func(i, j int) bool {
-		return file.Methods[i].Line < file.Methods[j].Line
+		return file.Methods[i].StartLine < file.Methods[j].StartLine
 	})
 	fnf := len(file.Methods)
 	fnh := 0
 	for _, method := range file.Methods {
-		if _, err := writer.WriteString(fmt.Sprintf("FN:%d,%s\n", method.Line, method.Name)); err != nil {
+		if _, err := writer.WriteString(fmt.Sprintf("FN:%d,%s\n", method.StartLine, method.Name)); err != nil {
 			return err
 		}
 		hitCount := 0
-		if method.LineRate > 0 {
+		if method.LineCoverage > 0 {
 			hitCount = 1 // LCOV treats any coverage as 1 hit.
 			fnh++
 		}
@@ -111,7 +110,6 @@ func writeLcovFileSection(writer *bufio.Writer, file *model.FileNode) error {
 			if lineMetrics.TotalBranches > 0 {
 				// This is a simplification. LCOV needs per-branch data, which our
 				// new model currently aggregates. For now, we report the line-level aggregate.
-				// A more detailed implementation would require storing per-branch hits in LineMetrics.
 				// Format: BRDA:<line>,<block>,<branch>,<hits>
 				// We can represent covered branches as hit and uncovered as not hit.
 				for i := 0; i < lineMetrics.TotalBranches; i++ {
