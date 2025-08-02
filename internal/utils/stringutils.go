@@ -61,7 +61,7 @@ func SplitThatEnsuresGlobsAreSafe(s string, separators []rune) []string {
 }
 
 // FilterToRegex converts a simple filter pattern (+/- prefix, * wildcard) to a regex.
-// E.g., "+MyAssembly.*" becomes "^MyAssembly\..*$" (case-insensitive).
+// E.g., "+MyFilePath.*" becomes "^MyFilePath\..*$" (case-insensitive).
 // Returns the regex and a boolean indicating if it's an inclusion (true) or exclusion (false) filter.
 // Based on: Palmmedia.ReportGenerator.Core.Parser.Filtering.DefaultFilter.cs (CreateFilterRegex method)
 // Original C# logic involves Regex.Escape and specific replacements for '*'

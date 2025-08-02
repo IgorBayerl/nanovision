@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
@@ -18,8 +19,7 @@ var (
 )
 
 // processingOrchestrator is responsible for converting the raw XML data into
-// a flat list of per-file coverage metrics. It handles the logic of grouping
-// line data by filename as it appears across different classes in the report.
+// a flat list of per-file coverage metrics.
 type processingOrchestrator struct {
 	fileReader filereader.Reader
 	config     parsers.ParserConfig
@@ -38,8 +38,7 @@ func newProcessingOrchestrator(
 	}
 }
 
-// processPackages is the main entry point for the orchestrator. It iterates through
-// the XML packages and classes to build a map of coverage data keyed by file path.
+// processPackages is the main entry point for the orchestrator.
 func (o *processingOrchestrator) processPackages(packages []PackageXML) ([]parsers.FileCoverage, []string) {
 	fileData := make(map[string]map[int]model.LineMetrics)
 	var unresolvedFiles []string
@@ -68,7 +67,6 @@ func (o *processingOrchestrator) processPackages(packages []PackageXML) ([]parse
 	}
 
 	for path, lines := range fileData {
-		// Pass the logger from the orchestrator into the find utility
 		if _, err := utils.FindFileInSourceDirs(path, []string{sourceDir}, o.fileReader, o.logger); err != nil {
 			o.logger.Warn("Source file not found, it will be marked as unresolved.", "file", path, "error", err)
 			unresolvedFiles = append(unresolvedFiles, path)
@@ -84,8 +82,7 @@ func (o *processingOrchestrator) processPackages(packages []PackageXML) ([]parse
 }
 
 // mergeLinesIntoFile processes a list of XML line elements and merges their
-// data into a map of line metrics for a specific file. This handles cases
-// where the same line might appear multiple times in a report.
+// data into a map of line metrics for a specific file.
 func (o *processingOrchestrator) mergeLinesIntoFile(lineMetrics map[int]model.LineMetrics, linesXML []LineXML) {
 	for _, lineXML := range linesXML {
 		lineNumber, err := strconv.Atoi(lineXML.Number)
@@ -95,14 +92,13 @@ func (o *processingOrchestrator) mergeLinesIntoFile(lineMetrics map[int]model.Li
 
 		hits, err := strconv.Atoi(lineXML.Hits)
 		if err != nil {
-			continue // Skip lines without a valid hit count.
+			continue
 		}
 
 		existingMetric := lineMetrics[lineNumber]
-		existingMetric.Hits += hits // Sum hits from different report sections.
+		existingMetric.Hits += hits
 
-		// Process branch coverage.
-		if lineXML.Branch == "true" {
+		if lineXML.Branch == "true" || strings.ToLower(lineXML.Branch) == "true" {
 			covered, total := o.parseBranchData(lineXML)
 			existingMetric.CoveredBranches += covered
 			existingMetric.TotalBranches += total
@@ -112,13 +108,35 @@ func (o *processingOrchestrator) mergeLinesIntoFile(lineMetrics map[int]model.Li
 	}
 }
 
-// parseBranchData extracts the number of covered and total branches from a single line's
-// `condition-coverage` attribute.
+// parseBranchData is the updated function that handles both Cobertura styles.
+// It prioritizes the explicit 'condition-coverage' attribute and falls back
+// to the nested '<conditions>' block only if necessary.
 func (o *processingOrchestrator) parseBranchData(lineXML LineXML) (covered, total int) {
+	// STRATEGY 1: Prioritize the 'condition-coverage' attribute.
+	// This format is explicit (e.g., "50% (1/2)") and used by both gcovr (C++) and coverlet (C#).
+	// It is the most reliable source for the line's overall branch statistics.
 	matches := conditionCoverageRegexCobertura.FindStringSubmatch(lineXML.ConditionCoverage)
 	if len(matches) == 3 {
 		covered, _ = strconv.Atoi(matches[1])
 		total, _ = strconv.Atoi(matches[2])
+		// If we successfully parsed this attribute, we trust it and are done.
+		return covered, total
 	}
-	return
+
+	// STRATEGY 2: Fallback to counting <condition> elements.
+	// Some tools might omit the 'condition-coverage' attribute and only provide the detailed block.
+	if len(lineXML.Conditions.Condition) > 0 {
+		total = len(lineXML.Conditions.Condition)
+		covered = 0
+		for _, condition := range lineXML.Conditions.Condition {
+			// A condition is considered covered if its coverage is 100%.
+			if strings.HasPrefix(condition.Coverage, "100%") {
+				covered++
+			}
+		}
+		return covered, total
+	}
+
+	// If neither method yields data, return 0, 0.
+	return 0, 0
 }

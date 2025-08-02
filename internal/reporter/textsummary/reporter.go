@@ -1,4 +1,3 @@
-// Path: internal/reporter/textsummary/reporter.go
 package textsummary
 
 import (

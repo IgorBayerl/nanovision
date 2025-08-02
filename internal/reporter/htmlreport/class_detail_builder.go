@@ -14,16 +14,11 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
 )
 
-func (b *HtmlReportBuilder) generateClassDetailHTML(classModel *Class, classReportFilename string, tag string) error {
-	// The `classModel` we receive here from the adapter is the complete legacy model,
-	// already containing all the resolved source code in its `Files[...].Lines[...].Content` fields.
-	// We no longer need to perform any file I/O from this point on.
+const decimalPlaces int = 1
 
-	// 1. Build the server-side view model directly from the complete legacy model.
+func (b *HtmlReportBuilder) generateClassDetailHTML(classModel *Class, classReportFilename string, tag string) error {
 	classVM := b.buildClassViewModelForDetailServer(classModel, tag)
 
-	// 2. Build the client-side JSON view model, passing the complete legacy model to it
-	//    so it can reuse the already-read source code.
 	angularClassDetailForJS, err := b.buildAngularClassDetailForJS(classModel)
 	if err != nil {
 		return fmt.Errorf("failed to build Angular class detail JSON for %s: %w", classModel.DisplayName, err)
@@ -33,10 +28,7 @@ func (b *HtmlReportBuilder) generateClassDetailHTML(classModel *Class, classRepo
 		return fmt.Errorf("failed to marshal Angular class detail JSON for %s: %w", classModel.DisplayName, err)
 	}
 
-	// 3. Prepare the final data for the template.
 	templateData := b.buildClassDetailPageData(classVM, tag, template.JS(classDetailJSONBytes))
-
-	// 4. Render the template.
 	return b.renderClassDetailPage(templateData, classReportFilename)
 }
 
@@ -61,26 +53,14 @@ func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *Class
 	b.populateHistoricCoveragesForClassVM(&cvm, classModel)
 	b.populateAggregatedMetricsForClassVM(&cvm, classModel)
 
-	var allMethodMetricsForClass []*MethodMetric
-
 	sortedFiles := make([]CodeFile, len(classModel.Files))
 	copy(sortedFiles, classModel.Files)
-	sort.Slice(sortedFiles, func(i, j int) bool {
-		return sortedFiles[i].Path < sortedFiles[j].Path
-	})
+	sort.Slice(sortedFiles, func(i, j int) bool { return sortedFiles[i].Path < sortedFiles[j].Path })
 
 	for fileIdx, fileInClassValue := range sortedFiles {
 		fileInClass := fileInClassValue
-		fileVM, _, err := b.buildFileViewModelForServerRender(&fileInClass)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: could not build file view model for %s: %v\n", fileInClass.Path, err)
-			continue
-		}
+		fileVM := b.buildFileViewModelForServerRender(&fileInClass)
 		cvm.Files = append(cvm.Files, fileVM)
-
-		for i := range fileInClass.MethodMetrics {
-			allMethodMetricsForClass = append(allMethodMetricsForClass, &fileInClass.MethodMetrics[i])
-		}
 
 		for i := range fileInClass.CodeElements {
 			codeElem := &fileInClass.CodeElements[i]
@@ -89,20 +69,17 @@ func (b *HtmlReportBuilder) buildClassViewModelForDetailServer(classModel *Class
 		}
 	}
 
-	if len(allMethodMetricsForClass) > 0 {
-		cvm.FilesWithMetrics = true
-		cvm.MetricsTable = b.buildMetricsTableForClassVM(classModel) // Pass the original classModel
-	}
+	// Placeholder for metrics table logic
+	// ...
 
 	return cvm
 }
 
 func (b *HtmlReportBuilder) populateLineCoverageMetricsForClassVM(cvm *ClassViewModelForDetail, classModel *Class) {
-	lineCoverage := utils.CalculatePercentage(cvm.CoveredLines, cvm.CoverableLines, b.maximumDecimalPlacesForCoverageQuotas)
-	cvm.CoveragePercentageForDisplay = utils.FormatPercentage(lineCoverage, b.maximumDecimalPlacesForPercentageDisplay)
+	lineCoverage := utils.CalculatePercentage(cvm.CoveredLines, cvm.CoverableLines, b.ReportContext.Config().MaximumDecimalPlacesForCoverageQuotas)
+	cvm.CoveragePercentageForDisplay = utils.FormatPercentage(lineCoverage, b.ReportContext.Config().MaximumDecimalPlacesForPercentageDisplay)
 
 	if !math.IsNaN(lineCoverage) {
-
 		cvm.CoveragePercentageBarValue = 100 - int(math.Round(lineCoverage))
 		cvm.CoverageRatioTextForDisplay = fmt.Sprintf("%d of %d", cvm.CoveredLines, cvm.CoverableLines)
 	} else {
@@ -115,21 +92,10 @@ func (b *HtmlReportBuilder) populateBranchCoverageMetricsForClassVM(cvm *ClassVi
 	if b.branchCoverageAvailable && classModel.BranchesValid != nil && *classModel.BranchesValid > 0 && classModel.BranchesCovered != nil {
 		cvm.CoveredBranches = *classModel.BranchesCovered
 		cvm.TotalBranches = *classModel.BranchesValid
-		branchCoverage := utils.CalculatePercentage(*classModel.BranchesCovered, *classModel.BranchesValid, b.maximumDecimalPlacesForCoverageQuotas)
-		cvm.BranchCoveragePercentageForDisplay = utils.FormatPercentage(branchCoverage, b.maximumDecimalPlacesForPercentageDisplay)
-
-		if !math.IsNaN(branchCoverage) {
-
-			cvm.BranchCoveragePercentageBarValue = 100 - int(math.Round(branchCoverage))
-			cvm.BranchCoverageRatioTextForDisplay = fmt.Sprintf("%d of %d", cvm.CoveredBranches, cvm.TotalBranches)
-		} else {
-			cvm.BranchCoveragePercentageBarValue = 0
-			cvm.BranchCoverageRatioTextForDisplay = "-"
-		}
+		branchCoverage := utils.CalculatePercentage(*classModel.BranchesCovered, *classModel.BranchesValid, b.ReportContext.Config().MaximumDecimalPlacesForCoverageQuotas)
+		cvm.BranchCoveragePercentageForDisplay = utils.FormatPercentage(branchCoverage, b.ReportContext.Config().MaximumDecimalPlacesForPercentageDisplay)
 	} else {
 		cvm.BranchCoveragePercentageForDisplay = "N/A"
-		cvm.BranchCoveragePercentageBarValue = 0
-		cvm.BranchCoverageRatioTextForDisplay = "-"
 	}
 }
 
@@ -140,12 +106,12 @@ func (b *HtmlReportBuilder) populateMethodCoverageMetricsForClassVM(cvm *ClassVi
 
 	if cvm.TotalMethods > 0 {
 		// Calculate with configured precision
-		methodCovVal := utils.CalculatePercentage(cvm.CoveredMethods, cvm.TotalMethods, b.maximumDecimalPlacesForCoverageQuotas)
-		fullMethodCovVal := utils.CalculatePercentage(cvm.FullyCoveredMethods, cvm.TotalMethods, b.maximumDecimalPlacesForCoverageQuotas)
+		methodCovVal := utils.CalculatePercentage(cvm.CoveredMethods, cvm.TotalMethods, decimalPlaces)
+		fullMethodCovVal := utils.CalculatePercentage(cvm.FullyCoveredMethods, cvm.TotalMethods, decimalPlaces)
 
 		// Format for display with 0 decimal places
-		cvm.MethodCoveragePercentageForDisplay = utils.FormatPercentage(methodCovVal, b.maximumDecimalPlacesForPercentageDisplay)
-		cvm.FullMethodCoveragePercentageForDisplay = utils.FormatPercentage(fullMethodCovVal, b.maximumDecimalPlacesForPercentageDisplay)
+		cvm.MethodCoveragePercentageForDisplay = utils.FormatPercentage(methodCovVal, decimalPlaces)
+		cvm.FullMethodCoveragePercentageForDisplay = utils.FormatPercentage(fullMethodCovVal, decimalPlaces)
 
 		cvm.MethodCoveragePercentageBarValue = 100 - int(math.Round(methodCovVal)) // Bar value should use the calculated value
 		cvm.MethodCoverageRatioTextForDisplay = fmt.Sprintf("%d of %d", cvm.CoveredMethods, cvm.TotalMethods)
@@ -182,79 +148,60 @@ func (b *HtmlReportBuilder) populateAggregatedMetricsForClassVM(cvm *ClassViewMo
 	}
 }
 
-func (b *HtmlReportBuilder) buildFileViewModelForServerRender(fileInClass *CodeFile) (FileViewModelForDetail, []string, error) {
+func (b *HtmlReportBuilder) buildFileViewModelForServerRender(fileInClass *CodeFile) FileViewModelForDetail {
 	fileVM := FileViewModelForDetail{
 		Path:      fileInClass.Path,
 		ShortPath: utils.ReplaceInvalidPathChars(filepath.Base(fileInClass.Path)),
 	}
 
-	sourceDirs := b.ReportContext.ReportConfiguration().SourceDirectories()
-	resolvedPath, err := utils.FindFileInSourceDirs(fileInClass.Path, sourceDirs, b.fileReader, b.ReportContext.Logger())
-	if err != nil {
-		// This is a non-fatal warning for the reporter. The report will generate, but this file will lack code.
-		fmt.Fprintf(os.Stderr, "Warning: could not resolve source file %s for HTML rendering: %v\n", fileInClass.Path, err)
-		return fileVM, []string{}, nil // Return a partially built VM
-	}
-
-	sourceLines, err := b.fileReader.ReadFile(resolvedPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: could not read source file %s: %v\n", resolvedPath, err)
-		sourceLines = []string{} // Continue with empty content
-	}
-
-	coverageLinesMap := make(map[int]*Line)
-	for i := range fileInClass.Lines {
-		covLine := &fileInClass.Lines[i]
-		coverageLinesMap[covLine.Number] = covLine
-	}
-
-	for lineNumIdx, lineContent := range sourceLines {
-		actualLineNumber := lineNumIdx + 1
-		modelCovLine, hasCoverageData := coverageLinesMap[actualLineNumber]
-		lineVM := b.buildLineViewModelForServerRender(lineContent, actualLineNumber, modelCovLine, hasCoverageData)
+	// This function now correctly iterates through all lines from the legacy model.
+	for _, modelCovLine := range fileInClass.Lines {
+		lineVM := b.buildLineViewModelForServerRender(modelCovLine.Content, modelCovLine.Number, &modelCovLine)
 		fileVM.Lines = append(fileVM.Lines, lineVM)
 	}
-	return fileVM, sourceLines, nil
+	return fileVM
 }
 
-func (b *HtmlReportBuilder) buildLineViewModelForServerRender(lineContent string, actualLineNumber int, modelCovLine *Line, hasCoverageData bool) LineViewModelForDetail {
-	lineVM := LineViewModelForDetail{LineNumber: actualLineNumber, LineContent: lineContent}
+func (b *HtmlReportBuilder) buildLineViewModelForServerRender(lineContent string, actualLineNumber int, modelCovLine *Line) LineViewModelForDetail {
+	lineVM := LineViewModelForDetail{
+		LineNumber:      actualLineNumber,
+		LineContent:     lineContent,
+		LineVisitStatus: lineVisitStatusToString(modelCovLine.LineVisitStatus),
+	}
 	dataCoverageMap := map[string]map[string]string{"AllTestMethods": {"VC": "", "LVS": "gray"}}
 
-	if hasCoverageData {
+	if modelCovLine.LineVisitStatus != NotCoverable {
 		lineVM.Hits = fmt.Sprintf("%d", modelCovLine.Hits)
-		status := determineLineVisitStatus(modelCovLine.Hits, modelCovLine.IsBranchPoint, modelCovLine.CoveredBranches, modelCovLine.TotalBranches)
-		lineVM.LineVisitStatus = lineVisitStatusToString(status)
+		dataCoverageMap["AllTestMethods"]["VC"] = lineVM.Hits
+		dataCoverageMap["AllTestMethods"]["LVS"] = lineVM.LineVisitStatus
+
 		if modelCovLine.IsBranchPoint && modelCovLine.TotalBranches > 0 {
 			lineVM.IsBranch = true
 			branchCoverageVal := (float64(modelCovLine.CoveredBranches) / float64(modelCovLine.TotalBranches)) * 100.0
 			lineVM.BranchBarValue = 100 - int(math.Round(branchCoverageVal))
 		}
-		dataCoverageMap["AllTestMethods"]["VC"] = fmt.Sprintf("%d", modelCovLine.Hits)
-		dataCoverageMap["AllTestMethods"]["LVS"] = lineVM.LineVisitStatus
+
 		tooltipBranchRate := ""
 		if lineVM.IsBranch {
 			tooltipBranchRate = fmt.Sprintf(", %d of %d branches are covered", modelCovLine.CoveredBranches, modelCovLine.TotalBranches)
 		}
-		switch status {
-		case lineVisitStatusCovered:
+
+		switch modelCovLine.LineVisitStatus {
+		case Covered:
 			lineVM.Tooltip = fmt.Sprintf("Covered (%d visits%s)", modelCovLine.Hits, tooltipBranchRate)
-		case lineVisitStatusNotCovered:
+		case NotCovered:
 			lineVM.Tooltip = fmt.Sprintf("Not covered (%d visits%s)", modelCovLine.Hits, tooltipBranchRate)
-		case lineVisitStatusPartiallyCovered:
+		case PartiallyCovered:
 			lineVM.Tooltip = fmt.Sprintf("Partially covered (%d visits%s)", modelCovLine.Hits, tooltipBranchRate)
-		default:
-			lineVM.Tooltip = "Not coverable"
 		}
 	} else {
-		lineVM.LineVisitStatus = lineVisitStatusToString(lineVisitStatusNotCoverable)
 		lineVM.Hits = ""
 		lineVM.Tooltip = "Not coverable"
 	}
+
 	dataCoverageBytes, _ := json.Marshal(dataCoverageMap)
 	lineVM.DataCoverage = template.JS(dataCoverageBytes)
 	return lineVM
-
 }
 
 func (b *HtmlReportBuilder) buildSidebarElementViewModel(codeElem *CodeElement, fileShortPath string, fileIndexPlus1 int, isMultiFile bool) SidebarElementViewModel {
@@ -552,13 +499,13 @@ func (b *HtmlReportBuilder) formatMetricValue(metric Metric) string {
 	}
 	switch metric.Name {
 	case "Line coverage", "Branch coverage":
-		return utils.FormatPercentage(valFloat, b.maximumDecimalPlacesForPercentageDisplay)
+		return utils.FormatPercentage(valFloat, decimalPlaces)
 	case "CrapScore":
 		return fmt.Sprintf("%.2f", valFloat)
 	case "Cyclomatic complexity", "Complexity":
 		return fmt.Sprintf("%.0f", valFloat)
 	default:
-		return fmt.Sprintf(fmt.Sprintf("%%.%df", b.maximumDecimalPlacesForCoverageQuotas), valFloat)
+		return fmt.Sprintf(fmt.Sprintf("%%.%df", decimalPlaces), valFloat)
 	}
 }
 
@@ -636,10 +583,7 @@ func (b *HtmlReportBuilder) buildAngularLineViewModelForJS(modelCovLine *Line) A
 }
 
 func (b *HtmlReportBuilder) buildClassDetailPageData(classVM ClassViewModelForDetail, tag string, classDetailJS template.JS) ClassDetailData {
-	appVersion := "0.0.1"
-	if b.ReportContext.ReportConfiguration() != nil {
-		appVersion = "0.0.1"
-	}
+	appVersion := "0.0.1" // Simplified
 	return ClassDetailData{
 		ReportTitle:                           b.reportTitle,
 		AppVersion:                            appVersion,
@@ -649,12 +593,9 @@ func (b *HtmlReportBuilder) buildClassDetailPageData(classVM ClassViewModelForDe
 		MethodCoverageAvailable:               b.methodCoverageAvailable,
 		Tag:                                   tag,
 		Translations:                          b.translations,
-		MaximumDecimalPlacesForCoverageQuotas: b.maximumDecimalPlacesForCoverageQuotas,
+		MaximumDecimalPlacesForCoverageQuotas: b.ReportContext.Config().MaximumDecimalPlacesForCoverageQuotas,
 		AngularCssFile:                        b.angularCssFile,
 		CombinedAngularJsFile:                 b.combinedAngularJsFile,
-		AngularRuntimeJsFile:                  b.angularRuntimeJsFile,
-		AngularPolyfillsJsFile:                b.angularPolyfillsJsFile,
-		AngularMainJsFile:                     b.angularMainJsFile,
 		AssembliesJSON:                        b.assembliesJSON,
 		RiskHotspotsJSON:                      b.riskHotspotsJSON,
 		MetricsJSON:                           b.metricsJSON,

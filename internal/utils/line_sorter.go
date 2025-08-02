@@ -1,4 +1,3 @@
-// Path: internal/utils/line_sorter.go (or your utils file)
 package utils
 
 import "sort"

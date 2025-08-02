@@ -2,8 +2,6 @@ package language
 
 import (
 	"errors"
-
-	"github.com/IgorBayerl/AdlerCov/internal/model"
 )
 
 // ErrNotSupported is a sentinel error returned by a Processor when a feature
@@ -17,25 +15,25 @@ type Processor interface {
 	// Detect checks if this processor should be used for a given source file path.
 	Detect(filePath string) bool
 
-	// GetLogicalClassName determines the grouping key for a class from a raw name.
-	GetLogicalClassName(rawClassName string) string
+	// // GetLogicalClassName determines the grouping key for a class from a raw name.
+	// GetLogicalClassName(rawClassName string) string
 
-	// FormatClassName transforms a raw class name into a display-friendly version.
-	FormatClassName(class *model.Class) string
+	// // FormatClassName transforms a raw class name into a display-friendly version.
+	// FormatClassName(class *model.Class) string
 
-	// FormatMethodName transforms a raw method name and signature into a display-friendly version.
-	FormatMethodName(method *model.Method, class *model.Class) string
+	// // FormatMethodName transforms a raw method name and signature into a display-friendly version.
+	// FormatMethodName(method *model.Method, class *model.Class) string
 
-	// CategorizeCodeElement determines if a method is a standard method, property, etc.
-	CategorizeCodeElement(method *model.Method) model.CodeElementType
+	// // CategorizeCodeElement determines if a method is a standard method, property, etc.
+	// CategorizeCodeElement(method *model.Method) model.CodeElementType
 
-	// IsCompilerGeneratedClass determines if a class is a compiler-generated artifact
-	// that should be filtered out from the final report.
-	IsCompilerGeneratedClass(class *model.Class) bool
+	// // IsCompilerGeneratedClass determines if a class is a compiler-generated artifact
+	// // that should be filtered out from the final report.
+	// IsCompilerGeneratedClass(class *model.Class) bool
 
-	// CalculateCyclomaticComplexity analyzes a file and returns the metric for each function.
-	// If the language does not support this metric, it must return language.ErrNotSupported.
-	CalculateCyclomaticComplexity(filePath string) ([]model.MethodMetric, error)
+	// // CalculateCyclomaticComplexity analyzes a file and returns the metric for each function.
+	// // If the language does not support this metric, it must return language.ErrNotSupported.
+	// CalculateCyclomaticComplexity(filePath string) ([]model.MethodMetric, error)
 }
 
 type ProcessorFactory struct {

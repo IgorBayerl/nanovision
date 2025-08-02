@@ -1,4 +1,3 @@
-// Path: internal/parsers/gocover/parser.go
 package gocover
 
 import (

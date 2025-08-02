@@ -1,10 +1,8 @@
-// Path: internal/reporter/htmlreport/adapter.go
 package htmlreport
 
 import (
 	"log/slog"
 	"path"
-	"sort"
 	"strings"
 
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
@@ -13,15 +11,8 @@ import (
 )
 
 // ToLegacySummaryResult converts the new file-system-tree-based model into the
-// old Assembly/Class-based model. This function acts as an anti-corruption layer,
-// allowing the refactored core application to support the legacy HTML reporter.
-//
-// STRATEGY: To enable the frontend's "Group by" feature and provide a flat-file view,
-// this adapter treats EACH source file as its OWN "Class". The frontend then receives
-// a granular list that it can group by namespace (directory path).
-// The 'allSourceDirs' parameter is now ignored, but kept for signature stability if needed elsewhere.
-// The real source of truth is the fileNode.SourceDir.
-func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader, allSourceDirs []string, logger *slog.Logger) *SummaryResult {
+// old Assembly/Class-based model for the legacy HTML reporter.
+func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader, logger *slog.Logger) *SummaryResult {
 	if tree == nil {
 		return &SummaryResult{}
 	}
@@ -63,10 +54,7 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 		legacyAssembly := Assembly{Name: assemblyName}
 
 		for _, fileNode := range filesInAssembly {
-			// THIS IS THE KEY CHANGE:
-			// We pass a list containing ONLY the file's true source directory, which is stored on the node itself.
-			// This completely removes the ambiguity of searching in multiple directories.
-			legacyFile := buildLegacyCodeFile(fileNode, fileReader, []string{fileNode.SourceDir}, logger)
+			legacyFile := buildLegacyCodeFile(fileNode, fileReader, logger)
 
 			legacyClass := Class{
 				Name:         fileNode.Path,
@@ -87,10 +75,23 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 			legacyAssembly.Classes = append(legacyAssembly.Classes, legacyClass)
 		}
 
+		// Aggregate assembly metrics from the newly created legacy classes
 		for _, cls := range legacyAssembly.Classes {
 			legacyAssembly.LinesCovered += cls.LinesCovered
 			legacyAssembly.LinesValid += cls.LinesValid
 			legacyAssembly.TotalLines += cls.TotalLines
+			if cls.BranchesCovered != nil {
+				if legacyAssembly.BranchesCovered == nil {
+					legacyAssembly.BranchesCovered = new(int)
+				}
+				*legacyAssembly.BranchesCovered += *cls.BranchesCovered
+			}
+			if cls.BranchesValid != nil {
+				if legacyAssembly.BranchesValid == nil {
+					legacyAssembly.BranchesValid = new(int)
+				}
+				*legacyAssembly.BranchesValid += *cls.BranchesValid
+			}
 		}
 
 		legacyResult.Assemblies = append(legacyResult.Assemblies, legacyAssembly)
@@ -104,12 +105,14 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 		legacyResult.BranchesCovered = &bc
 		legacyResult.BranchesValid = &bv
 	}
-	legacyResult.TotalLines = calculateTotalLines(fileNodes)
+	legacyResult.TotalLines = calculateTotalLines(fileNodes, fileReader)
 
 	return legacyResult
 }
 
-func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, sourceDirs []string, logger *slog.Logger) CodeFile {
+// buildLegacyCodeFile reads a source file and maps coverage data to each line.
+// This is the core fix: it iterates over source lines, not coverage lines.
+func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, logger *slog.Logger) CodeFile {
 	legacyFile := CodeFile{
 		Path:           node.Path,
 		CoveredLines:   node.Metrics.LinesCovered,
@@ -117,38 +120,46 @@ func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, sou
 	}
 
 	var sourceLines []string
-	// The sourceDirs slice is now guaranteed to contain exactly one, correct directory for this file.
-	resolvedPath, err := utils.FindFileInSourceDirs(node.Path, sourceDirs, fileReader, logger)
+	resolvedPath, err := utils.FindFileInSourceDirs(node.Path, []string{node.SourceDir}, fileReader, logger)
 	if err != nil {
 		logger.Warn("Could not resolve source file for HTML adapter", "file", node.Path, "error", err)
 	} else {
-		logger.Info("Successfully resolved source file for HTML report", "file", node.Path, "resolved_path", resolvedPath)
-		sourceLines, err = fileReader.ReadFile(resolvedPath)
-		if err != nil {
-			logger.Warn("Could not read source file for HTML adapter", "file", resolvedPath, "error", err)
-			sourceLines = []string{}
+		lines, readErr := fileReader.ReadFile(resolvedPath)
+		if readErr != nil {
+			logger.Warn("Could not read source file for HTML adapter", "file", resolvedPath, "error", readErr)
+		} else {
+			sourceLines = lines
 		}
 	}
 	legacyFile.TotalLines = len(sourceLines)
 
 	var legacyLines []Line
-	for lineNum, lineMetrics := range node.Lines {
-		var content string
-		if lineNum > 0 && lineNum <= len(sourceLines) {
-			content = sourceLines[lineNum-1]
-		}
+	for i, lineContent := range sourceLines {
+		lineNumber := i + 1
+		lineMetrics, hasCoverageData := node.Lines[lineNumber]
 
 		status := NotCoverable
-		if lineMetrics.Hits >= 0 {
-			if lineMetrics.TotalBranches > 0 {
-				if lineMetrics.CoveredBranches == lineMetrics.TotalBranches {
+		hits := 0
+		isBranch := false
+		coveredBranches := 0
+		totalBranches := 0
+
+		// Only apply coverage status if the line exists in the report and is coverable.
+		if hasCoverageData && lineMetrics.Hits >= 0 {
+			hits = lineMetrics.Hits
+			isBranch = lineMetrics.TotalBranches > 0
+			coveredBranches = lineMetrics.CoveredBranches
+			totalBranches = lineMetrics.TotalBranches
+
+			if totalBranches > 0 {
+				if coveredBranches == totalBranches {
 					status = Covered
-				} else if lineMetrics.CoveredBranches > 0 {
+				} else if coveredBranches > 0 {
 					status = PartiallyCovered
 				} else {
 					status = NotCovered
 				}
-			} else if lineMetrics.Hits > 0 {
+			} else if hits > 0 {
 				status = Covered
 			} else {
 				status = NotCovered
@@ -156,19 +167,15 @@ func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, sou
 		}
 
 		legacyLines = append(legacyLines, Line{
-			Number:          lineNum,
-			Hits:            lineMetrics.Hits,
-			Content:         content,
-			IsBranchPoint:   lineMetrics.TotalBranches > 0,
-			CoveredBranches: lineMetrics.CoveredBranches,
-			TotalBranches:   lineMetrics.TotalBranches,
+			Number:          lineNumber,
+			Hits:            hits,
+			Content:         lineContent,
+			IsBranchPoint:   isBranch,
+			CoveredBranches: coveredBranches,
+			TotalBranches:   totalBranches,
 			LineVisitStatus: status,
 		})
 	}
-
-	sort.Slice(legacyLines, func(i, j int) bool {
-		return legacyLines[i].Number < legacyLines[j].Number
-	})
 
 	legacyFile.Lines = legacyLines
 	return legacyFile
@@ -221,18 +228,19 @@ func findDisplayBasePath(paths []string) string {
 	return strings.Join(commonPrefix, "/")
 }
 
-// calculateTotalLines sums the actual line counts from all unique source files.
-func calculateTotalLines(fileNodes []*model.FileNode) int {
-	// This function remains an estimation based on available data.
-	// A more precise count would require passing the fully constructed legacy files,
-	// but this is sufficient for the summary card.
+// calculateTotalLines must now read each unique file to get its true line count.
+func calculateTotalLines(fileNodes []*model.FileNode, fileReader filereader.Reader) int {
 	total := 0
 	uniqueFiles := make(map[string]bool)
 	for _, file := range fileNodes {
 		if _, exists := uniqueFiles[file.Path]; !exists {
-			// Using file.Metrics.LinesValid as a proxy for lines of code,
-			// though the actual file line count might differ.
-			total += file.Metrics.LinesValid
+			resolvedPath, err := utils.FindFileInSourceDirs(file.Path, []string{file.SourceDir}, fileReader, nil)
+			if err == nil {
+				count, err := fileReader.CountLines(resolvedPath)
+				if err == nil {
+					total += count
+				}
+			}
 			uniqueFiles[file.Path] = true
 		}
 	}

@@ -1,4 +1,3 @@
-// Path: internal/reporter/htmlreport/legacy_model.go
 package htmlreport
 
 // This file contains a snapshot of the legacy data model. These types are
@@ -37,8 +36,8 @@ type Class struct {
 	Methods             []Method
 	LinesCovered        int
 	LinesValid          int
-	BranchesCovered     *int // Pointer
-	BranchesValid       *int // Pointer
+	BranchesCovered     *int
+	BranchesValid       *int
 	TotalLines          int
 	CoveredMethods      int
 	FullyCoveredMethods int
