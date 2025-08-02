@@ -56,14 +56,25 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 		for _, fileNode := range filesInAssembly {
 			legacyFile := buildLegacyCodeFile(fileNode, fileReader, logger)
 
+			// Convert methods and all their associated metrics to the various legacy formats.
+			legacyMethods, legacyCodeElements, legacyMethodMetrics, legacyClassMetrics, total, covered, fullyCovered := convertAndProcessMethods(fileNode)
+
+			// Assign the converted data to all required legacy fields.
+			legacyFile.CodeElements = legacyCodeElements
+			legacyFile.MethodMetrics = legacyMethodMetrics // Populates the metrics table data source.
+
 			legacyClass := Class{
-				Name:         fileNode.Path,
-				DisplayName:  strings.TrimPrefix(strings.TrimPrefix(fileNode.Path, displayBasePath), "/"),
-				Files:        []CodeFile{legacyFile},
-				LinesCovered: legacyFile.CoveredLines,
-				LinesValid:   legacyFile.CoverableLines,
-				TotalLines:   legacyFile.TotalLines,
-				TotalMethods: len(fileNode.Methods),
+				Name:                fileNode.Path,
+				DisplayName:         strings.TrimPrefix(strings.TrimPrefix(fileNode.Path, displayBasePath), "/"),
+				Files:               []CodeFile{legacyFile},
+				LinesCovered:        legacyFile.CoveredLines,
+				LinesValid:          legacyFile.CoverableLines,
+				TotalLines:          legacyFile.TotalLines,
+				Methods:             legacyMethods,
+				Metrics:             legacyClassMetrics, // Populates aggregated class metrics.
+				TotalMethods:        total,
+				CoveredMethods:      covered,
+				FullyCoveredMethods: fullyCovered,
 			}
 			if fileNode.Metrics.BranchesValid > 0 {
 				bc := fileNode.Metrics.BranchesCovered
@@ -110,8 +121,82 @@ func ToLegacySummaryResult(tree *model.SummaryTree, fileReader filereader.Reader
 	return legacyResult
 }
 
+// convertAndProcessMethods translates method data from the new model to the various
+// legacy formats required by the HTML report.
+func convertAndProcessMethods(fileNode *model.FileNode) (methods []Method, codeElements []CodeElement, methodMetrics []MethodMetric, classMetrics map[string]float64, total, covered, fullyCovered int) {
+	total = len(fileNode.Methods)
+	classMetrics = make(map[string]float64)
+
+	for _, methodMetric := range fileNode.Methods {
+		var linesCoveredInMethod, linesValidInMethod int
+		for i := methodMetric.StartLine; i <= methodMetric.EndLine; i++ {
+			if line, ok := fileNode.Lines[i]; ok && line.Hits >= 0 {
+				linesValidInMethod++
+				if line.Hits > 0 {
+					linesCoveredInMethod++
+				}
+			}
+		}
+
+		if linesValidInMethod > 0 {
+			if linesCoveredInMethod > 0 {
+				covered++
+			}
+			if linesCoveredInMethod == linesValidInMethod {
+				fullyCovered++
+			}
+		}
+
+		lineRate := 0.0
+		if linesValidInMethod > 0 {
+			lineRate = float64(linesCoveredInMethod) / float64(linesValidInMethod)
+		}
+
+		// Create a slice of legacy Metric structs for this method
+		var metricsForMethod []Metric
+		metricsForMethod = append(metricsForMethod, Metric{Name: "Line coverage", Value: lineRate * 100.0})
+		if methodMetric.CyclomaticComplexity > 0 {
+			metricsForMethod = append(metricsForMethod, Metric{Name: "Cyclomatic complexity", Value: float64(methodMetric.CyclomaticComplexity)})
+			classMetrics["Cyclomatic complexity"] += float64(methodMetric.CyclomaticComplexity)
+		}
+
+		// 1. Create the legacy MethodMetric struct (for the metrics table)
+		legacyMethodMetric := MethodMetric{
+			Name:    methodMetric.Name,
+			Line:    methodMetric.StartLine,
+			Metrics: metricsForMethod,
+		}
+		methodMetrics = append(methodMetrics, legacyMethodMetric)
+
+		// 2. Create the legacy Method struct
+		legacyMethod := Method{
+			Name:          methodMetric.Name,
+			DisplayName:   methodMetric.Name,
+			FirstLine:     methodMetric.StartLine,
+			LastLine:      methodMetric.EndLine,
+			LineRate:      lineRate,
+			Complexity:    float64(methodMetric.CyclomaticComplexity),
+			MethodMetrics: []MethodMetric{legacyMethodMetric}, // Duplicated data as per legacy model
+		}
+		methods = append(methods, legacyMethod)
+
+		// 3. Create the legacy CodeElement for the sidebar
+		coverageQuota := lineRate * 100
+		legacyCodeElement := CodeElement{
+			Name:          utils.GetShortMethodName(methodMetric.Name),
+			FullName:      methodMetric.Name,
+			Type:          MethodElementType,
+			FirstLine:     methodMetric.StartLine,
+			LastLine:      methodMetric.EndLine,
+			CoverageQuota: &coverageQuota,
+		}
+		codeElements = append(codeElements, legacyCodeElement)
+	}
+
+	return
+}
+
 // buildLegacyCodeFile reads a source file and maps coverage data to each line.
-// This is the core fix: it iterates over source lines, not coverage lines.
 func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, logger *slog.Logger) CodeFile {
 	legacyFile := CodeFile{
 		Path:           node.Path,
@@ -144,7 +229,6 @@ func buildLegacyCodeFile(node *model.FileNode, fileReader filereader.Reader, log
 		coveredBranches := 0
 		totalBranches := 0
 
-		// Only apply coverage status if the line exists in the report and is coverable.
 		if hasCoverageData && lineMetrics.Hits >= 0 {
 			hits = lineMetrics.Hits
 			isBranch = lineMetrics.TotalBranches > 0
