@@ -7,8 +7,8 @@ import (
 
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/cobertura"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/gocover"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_cobertura"
+	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gocover"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +16,6 @@ import (
 func Test_ParserFactory_FindParserForFile(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create sample report files
 	coberturaFile := filepath.Join(tmpDir, "cobertura.xml")
 	_ = os.WriteFile(coberturaFile, []byte(`<?xml version="1.0" ?><coverage/>`), 0644)
 
@@ -26,11 +25,10 @@ func Test_ParserFactory_FindParserForFile(t *testing.T) {
 	unknownFile := filepath.Join(tmpDir, "unknown.txt")
 	_ = os.WriteFile(unknownFile, []byte(`some data`), 0644)
 
-	// Setup factory with all parsers
 	fileReader := filereader.NewDefaultReader()
 	factory := parsers.NewParserFactory(
-		cobertura.NewCoberturaParser(fileReader),
-		gocover.NewGoCoverParser(fileReader),
+		parser_cobertura.NewCoberturaParser(fileReader),
+		parser_gocover.NewGoCoverParser(fileReader),
 	)
 
 	testCases := []struct {

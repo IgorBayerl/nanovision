@@ -1,4 +1,4 @@
-# github.com/IgorBayerl/fsglob v0.1.2
+# github.com/IgorBayerl/fsglob v0.1.3
 ## explicit; go 1.23.5
 github.com/IgorBayerl/fsglob
 github.com/IgorBayerl/fsglob/filesystem
