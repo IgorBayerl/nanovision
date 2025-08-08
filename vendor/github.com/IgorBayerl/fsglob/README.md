@@ -64,10 +64,10 @@ func main() {
 | Pattern | Description                                                               | Example                  |
 | :------ | :------------------------------------------------------------------------ | :----------------------- |
 | `*`     | Matches any sequence of characters, except for path separators (`/` or `\`). | `*.log`                  |
-| `?`     | Matches any single character.                                             | `file?.txt`              |
-| `**`    | Matches zero or more directories, files, and subdirectories recursively.  | `reports/**/*.xml`       |
+| `?`     | Matches any single character.                                              | `file?.txt`              |
+| `**`    | Matches zero or more directories, files, and subdirectories recursively.   | `reports/**/*.xml`       |
 | `[]`    | Matches any single character within the brackets. Can be a set or a range. | `[abc].go`, `[0-9].txt`  |
-| `{}`    | Matches any of the comma-separated patterns within the braces.            | `image.{jpg,png,gif}`    |
+| `{}`    | Matches any of the comma-separated patterns within the braces.             | `image.{jpg,png,gif}`    |
 
 ## Advanced Usage: Custom Filesystem
 

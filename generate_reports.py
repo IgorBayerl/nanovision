@@ -97,6 +97,13 @@ REPORT_TASKS = [
         "enabled": True,
     },
     {
+        "name": "Merged - All C++ Reports",
+        "inputs": [CPP_GCOV_PATTERN, CPP_COBERTURA_XML],
+        "source_dirs": [CPP_PROJECT_DIR, CPP_PROJECT_DIR],
+        "output_dir_suffix": "merged_all_cpp",
+        "enabled": True,
+    },
+    {
         "name": "Merged - All Projects (Mixed Input Types)",
         "inputs": [CSHARP_COBERTURA_XML, GO_COVERAGE_OUT, CPP_GCOV_PATTERN],
         "source_dirs": [CSHARP_PROJECT_DIR, GO_PROJECT_DIR, CPP_PROJECT_DIR],
@@ -177,28 +184,25 @@ def generate_reports(tasks_to_run, report_types):
 
         print(f"\n Processing Task: {task_name} ")
 
-        # Resolve and validate input files/patterns
-        input_files = []
-        has_missing_files = False
-        for pattern in task["inputs"]:
-            # Use glob to expand wildcard patterns
-            expanded = glob.glob(str(pattern))
-            if not expanded:
-                print(f"⚠️ Warning: No files found for pattern '{pattern}'.")
-                has_missing_files = True
-            input_files.extend(expanded)
+        # ======================================================================
+        #  START OF FIX: Do NOT expand globs here. Pass raw patterns to Go.
+        # ======================================================================
 
-        if not input_files or has_missing_files:
-            results.append({"name": task_name, "status": "🟡 SKIPPED", "details": "One or more input files/patterns did not match any files."})
-            continue
+        # Convert pathlib objects to strings, but do not expand wildcard patterns.
+        # The Go application is responsible for glob expansion.
+        report_patterns = [str(p) for p in task["inputs"]]
+
+        # ======================================================================
+        #  END OF FIX
+        # ======================================================================
 
         # Prepare and run the adlercov command
         output_dir = REPORTS_OUTPUT_BASE / task["output_dir_suffix"]
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         cmd = [
             str(BINARY_PATH),
-            f"--report={';'.join(input_files)}",
+            f"--report={';'.join(report_patterns)}",
             f"--output={str(output_dir.resolve())}",
             f"--reporttypes={report_types}",
             "--verbose"
@@ -247,7 +251,7 @@ def main():
     """Main execution function."""
     parser = argparse.ArgumentParser(description="Generate coverage reports using the AdlerCov tool.")
     parser.add_argument("--rebuild-binary", action="store_true", help="Force a rebuild of the AdlerCov binary.")
-    parser.add_argument("--report-types", default="Html,TextSummary,Lcov", help="Comma-separated report types.")
+    parser.add_argument("--report-types", default="Html,TextSummary,Lcov,RawJson", help="Comma-separated report types.")
     args = parser.parse_args()
 
     if args.rebuild_binary or not BINARY_PATH.exists():
