@@ -127,13 +127,29 @@ func convertAndProcessMethods(fileNode *model.FileNode) (methods []Method, codeE
 	total = len(fileNode.Methods)
 	classMetrics = make(map[string]float64)
 
+	// Iterate through each method identified by the static analysis.
 	for _, methodMetric := range fileNode.Methods {
+		// IMPORTANT: These counters are reset for EACH method, preventing data leakage.
 		var linesCoveredInMethod, linesValidInMethod int
+		var branchesCoveredInMethod, branchesValidInMethod int
+
+		// Loop ONLY from the specific method's start line to its end line.
+		// This is the critical step that scopes the calculation correctly.
 		for i := methodMetric.StartLine; i <= methodMetric.EndLine; i++ {
-			if line, ok := fileNode.Lines[i]; ok && line.Hits >= 0 {
-				linesValidInMethod++
-				if line.Hits > 0 {
-					linesCoveredInMethod++
+			// Check if the current line has coverage data.
+			if line, ok := fileNode.Lines[i]; ok {
+				// Calculate line coverage for this method.
+				if line.Hits >= 0 {
+					linesValidInMethod++
+					if line.Hits > 0 {
+						linesCoveredInMethod++
+					}
+				}
+				// Calculate branch coverage for this method.
+				// It only sums if the line is a branch point (TotalBranches > 0).
+				if line.TotalBranches > 0 {
+					branchesCoveredInMethod += line.CoveredBranches
+					branchesValidInMethod += line.TotalBranches
 				}
 			}
 		}
@@ -152,6 +168,12 @@ func convertAndProcessMethods(fileNode *model.FileNode) (methods []Method, codeE
 			lineRate = float64(linesCoveredInMethod) / float64(linesValidInMethod)
 		}
 
+		var branchRate *float64
+		if branchesValidInMethod > 0 {
+			br := float64(branchesCoveredInMethod) / float64(branchesValidInMethod)
+			branchRate = &br
+		}
+
 		// Create a slice of legacy Metric structs for this method
 		var metricsForMethod []Metric
 		metricsForMethod = append(metricsForMethod, Metric{Name: "Line coverage", Value: lineRate * 100.0})
@@ -168,15 +190,22 @@ func convertAndProcessMethods(fileNode *model.FileNode) (methods []Method, codeE
 		}
 		methodMetrics = append(methodMetrics, legacyMethodMetric)
 
-		// 2. Create the legacy Method struct
+		// 2. Create the legacy Method struct with the correctly scoped raw counts.
 		legacyMethod := Method{
 			Name:          methodMetric.Name,
 			DisplayName:   methodMetric.Name,
 			FirstLine:     methodMetric.StartLine,
 			LastLine:      methodMetric.EndLine,
 			LineRate:      lineRate,
+			BranchRate:    branchRate,
 			Complexity:    float64(methodMetric.CyclomaticComplexity),
 			MethodMetrics: []MethodMetric{legacyMethodMetric}, // Duplicated data as per legacy model
+
+			// Populate the new fields with the correctly calculated raw counts.
+			LinesCovered:    linesCoveredInMethod,
+			LinesValid:      linesValidInMethod,
+			BranchesCovered: branchesCoveredInMethod,
+			BranchesValid:   branchesValidInMethod,
 		}
 		methods = append(methods, legacyMethod)
 

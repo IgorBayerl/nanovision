@@ -299,14 +299,6 @@ func (b *HtmlReportBuilder) buildSingleMetricRow(
 		}
 	}
 
-	// Manually add Line Coverage and Branch Coverage from the method model
-	// to ensure they are available for formatting.
-	methodMetricsMap["Line coverage"] = Metric{Value: method.LineRate * 100.0}
-	if method.BranchRate != nil {
-		methodMetricsMap["Branch coverage"] = Metric{Value: *method.BranchRate * 100.0}
-	}
-	// Note: Complexity and CrapScore are already in method.MethodMetrics, so they'll be in the map.
-
 	for i, headerVM := range headers {
 		var originalMetricKey string
 
@@ -324,12 +316,30 @@ func (b *HtmlReportBuilder) buildSingleMetricRow(
 			originalMetricKey = headerVM.Name
 		}
 
-		if metric, ok := methodMetricsMap[originalMetricKey]; ok {
-			row.MetricValues[i] = b.formatMetricValue(metric)
+		// Use new ratio format for line and branch coverage
+		if originalMetricKey == "Line coverage" {
+			if method.LinesValid > 0 {
+				row.MetricValues[i] = fmt.Sprintf("%d/%d", method.LinesCovered, method.LinesValid)
+			} else {
+				row.MetricValues[i] = "-"
+			}
+		} else if originalMetricKey == "Branch coverage" {
+			if b.branchCoverageAvailable {
+				if method.BranchesValid > 0 {
+					row.MetricValues[i] = fmt.Sprintf("%d/%d", method.BranchesCovered, method.BranchesValid)
+				} else {
+					row.MetricValues[i] = "-" // Method has no branches
+				}
+			} else {
+				row.MetricValues[i] = "N/A"
+			}
 		} else {
-			// If the metric is not in the map (e.g., Branch coverage for a method where BranchRate was nil),
-			// explicitly set it to "N/A".
-			row.MetricValues[i] = "N/A"
+			// Use existing logic for other metrics like Cyclomatic Complexity
+			if metric, ok := methodMetricsMap[originalMetricKey]; ok {
+				row.MetricValues[i] = b.formatMetricValue(metric)
+			} else {
+				row.MetricValues[i] = "N/A"
+			}
 		}
 	}
 	return row
