@@ -48,8 +48,8 @@ While AdlerCov began by mirroring ReportGenerator’s capabilities, it is now di
 | **Output Formats** | HTML (SPA)            |        ✅        |    ✅     | Angular frontend.      |
 |                    | TextSummary           |        ✅        |    ✅     | Fully supported.       |
 |                    | lcov                  |        ✅        |    ✅     | Fully supported.       |
+|                    | RawJSON               |        ✅        |    ✅     | Coming soon.           |
 |                    | Badge                 |        ✅        |    ❌     | Coming soon.           |
-|                    | JSON                  |        ✅        |    ❌     | Coming soon.           |
 |                    | XML                   |        ✅        |    ❌     | Coming soon.           |
 | **Core Features**  | File Filtering        |        ✅        |    ✅     |                        |
 |                    | Branch Coverage       |        ✅        |    ✅     |                        |
