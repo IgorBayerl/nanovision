@@ -1,11 +1,12 @@
 package htmlreport
 
 import (
-	"fmt" // fmt is still needed for fmt.Errorf
+	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
 
+	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter"
 )
@@ -13,12 +14,11 @@ import (
 type HtmlReportBuilder struct {
 	OutputDir     string
 	ReportContext reporter.IBuilderContext
+	fileReader    filereader.Reader
 
-	// Cached data for reuse across page generations
+	// Cached data
 	angularCssFile                     string
-	angularRuntimeJsFile               string
-	angularPolyfillsJsFile             string
-	angularMainJsFile                  string
+	combinedAngularJsFile              string
 	assembliesJSON                     template.JS
 	riskHotspotsJSON                   template.JS
 	metricsJSON                        template.JS
@@ -27,27 +27,24 @@ type HtmlReportBuilder struct {
 	translationsJSON                   template.JS
 
 	// Settings derived from context
-	branchCoverageAvailable                  bool
-	methodCoverageAvailable                  bool
-	maximumDecimalPlacesForCoverageQuotas    int
-	maximumDecimalPlacesForPercentageDisplay int
-	parserName                               string
-	reportTimestamp                          int64
-	reportTitle                              string
-	tag                                      string
-	translations                             map[string]string
-	onlySummary                              bool
+	branchCoverageAvailable bool
+	methodCoverageAvailable bool
+	parserName              string
+	reportTimestamp         int64
+	reportTitle             string
+	tag                     string
+	translations            map[string]string
+	onlySummary             bool
 
 	classReportFilenames       map[string]string
 	tempExistingLowerFilenames map[string]struct{}
-
-	combinedAngularJsFile string // To store "reportgenerator.combined.js"
 }
 
-func NewHtmlReportBuilder(outputDir string, reportCtx reporter.IBuilderContext) *HtmlReportBuilder {
+func NewHtmlReportBuilder(outputDir string, reportCtx reporter.IBuilderContext, fileReader filereader.Reader) *HtmlReportBuilder {
 	return &HtmlReportBuilder{
 		OutputDir:                  outputDir,
 		ReportContext:              reportCtx,
+		fileReader:                 fileReader,
 		classReportFilenames:       make(map[string]string),
 		tempExistingLowerFilenames: make(map[string]struct{}),
 	}
@@ -57,38 +54,34 @@ func (b *HtmlReportBuilder) ReportType() string {
 	return "Html"
 }
 
-func (b *HtmlReportBuilder) CreateReport(report *model.SummaryResult) error {
+func (b *HtmlReportBuilder) CreateReport(tree *model.SummaryTree) error {
+	report := ToLegacySummaryResult(tree, b.fileReader, b.ReportContext.Logger())
+
 	if err := b.validateContext(); err != nil {
 		return err
 	}
 	if err := b.prepareOutputDirectory(); err != nil {
 		return err
 	}
-	if err := b.initializeAssets(); err != nil { // Copies static assets and parses Angular index.html
+	if err := b.initializeAssets(); err != nil {
 		return err
 	}
 
-	b.initializeBuilderProperties(report)                   // Sets up common properties like title, translations etc.
-	if err := b.prepareGlobalJSONData(report); err != nil { // Prepares metricsJSON, riskHotspotMetricsJSON etc.
+	b.initializeBuilderProperties(report)
+	if err := b.prepareGlobalJSONData(report); err != nil {
 		return err
 	}
 
-	// This call will populate b.classReportFilenames and b.assembliesJSON
-	// The returned 'angularAssemblies' is not strictly needed here if all subsequent
-	// operations use the builder's stored JSON or maps.
-	// However, buildSummaryPageData might still conceptually want the processed view models.
-	// Let's keep it for buildSummaryPageData if that function's logic benefits from it.
 	angularAssembliesForSummary, err := b.buildAngularAssemblyViewModelsForSummary(report)
 	if err != nil {
 		return fmt.Errorf("failed to build angular assembly view models for summary: %w", err)
 	}
 
-	var angularRiskHotspots []AngularRiskHotspotViewModel              // Placeholder
-	if err := b.setRiskHotspotsJSON(angularRiskHotspots); err != nil { // Prepares b.riskHotspotsJSON
+	var angularRiskHotspots []AngularRiskHotspotViewModel
+	if err := b.setRiskHotspotsJSON(angularRiskHotspots); err != nil {
 		return err
 	}
 
-	// Pass angularAssembliesForSummary to buildSummaryPageData
 	summaryData, err := b.buildSummaryPageData(report, angularAssembliesForSummary, angularRiskHotspots)
 	if err != nil {
 		return fmt.Errorf("failed to build summary page data: %w", err)
@@ -98,7 +91,6 @@ func (b *HtmlReportBuilder) CreateReport(report *model.SummaryResult) error {
 	}
 
 	if !b.onlySummary {
-		// renderClassDetailPages uses b.classReportFilenames, so it doesn't need angularAssembliesForSummary
 		if err := b.renderClassDetailPages(report); err != nil {
 			return fmt.Errorf("failed to render class detail pages: %w", err)
 		}
@@ -106,11 +98,9 @@ func (b *HtmlReportBuilder) CreateReport(report *model.SummaryResult) error {
 	return nil
 }
 
-// --- CreateReport helper methods ---
-
 func (b *HtmlReportBuilder) validateContext() error {
 	if b.ReportContext == nil {
-		return fmt.Errorf("HtmlReportBuilder.ReportContext is not set; it's required for configuration and settings")
+		return fmt.Errorf("HtmlReportBuilder.ReportContext is not set")
 	}
 	return nil
 }
@@ -119,21 +109,18 @@ func (b *HtmlReportBuilder) prepareOutputDirectory() error {
 	return os.MkdirAll(b.OutputDir, 0755)
 }
 
-func (b *HtmlReportBuilder) initializeBuilderProperties(report *model.SummaryResult) {
-	reportConfig := b.ReportContext.ReportConfiguration()
-	settings := b.ReportContext.Settings()
+func (b *HtmlReportBuilder) initializeBuilderProperties(report *SummaryResult) {
+	appConfig := b.ReportContext.Config()
 
-	b.reportTitle = reportConfig.Title()
+	b.reportTitle = appConfig.Title
 	if b.reportTitle == "" {
-		b.reportTitle = "Summary" // Default for summary page
+		b.reportTitle = "Summary"
 	}
 	b.parserName = report.ParserName
 	b.reportTimestamp = report.Timestamp
-	b.tag = reportConfig.Tag()
+	b.tag = appConfig.Tag
 	b.branchCoverageAvailable = report.BranchesValid != nil && *report.BranchesValid > 0
 	b.methodCoverageAvailable = true
-	b.maximumDecimalPlacesForCoverageQuotas = settings.MaximumDecimalPlacesForCoverageQuotas
-	b.maximumDecimalPlacesForPercentageDisplay = settings.MaximumDecimalPlacesForPercentageDisplay
 	b.translations = GetTranslations()
 }
 
@@ -147,7 +134,7 @@ func (b *HtmlReportBuilder) renderSummaryPage(data SummaryPageData) error {
 	return summaryPageTpl.Execute(summaryFile, data)
 }
 
-func (b *HtmlReportBuilder) renderClassDetailPages(report *model.SummaryResult) error { // Removed angularAssembliesForSummary
+func (b *HtmlReportBuilder) renderClassDetailPages(report *SummaryResult) error {
 	if b.onlySummary {
 		return nil
 	}
@@ -155,7 +142,6 @@ func (b *HtmlReportBuilder) renderClassDetailPages(report *model.SummaryResult) 
 	for _, assemblyModel := range report.Assemblies {
 		for _, classModel := range assemblyModel.Classes {
 			classKey := assemblyModel.Name + "_" + classModel.Name
-
 			classReportFilename, ok := b.classReportFilenames[classKey]
 
 			if !ok || classReportFilename == "" {
@@ -181,30 +167,15 @@ func (b *HtmlReportBuilder) renderClassDetailPages(report *model.SummaryResult) 
 	return nil
 }
 
-// determineClassReportFilename gets or generates a unique HTML filename for a class report.
-// It uses and updates the builder's internal maps for filename tracking.
-// assemblyName is the full assembly name, className is the model's raw/unique name.
 func (b *HtmlReportBuilder) determineClassReportFilename(assemblyName string, className string, assemblyShortNameForFile string) string {
-	// Create a unique key for the class within its assembly.
-	// Using the full assembly name and raw class name for the key ensures uniqueness.
 	classKey := assemblyName + "_" + className
 
 	if filename, ok := b.classReportFilenames[classKey]; ok {
-		return filename // Return already generated filename
+		return filename
 	}
 
-	// Filename not yet generated for this class. Generate a new one.
-	// generateUniqueFilename expects a map of existing *lowercase* filenames.
-	// b.tempExistingLowerFilenames serves this purpose.
-	// assemblyShortNameForFile is used for constructing the base of the filename.
-	newFilename := generateUniqueFilename(assemblyShortNameForFile, className, b.tempExistingLowerFilenames)
-
-	// Store the actual generated filename (preserving case) in classReportFilenames.
+	newFilename := generateUniqueFilename(className, b.tempExistingLowerFilenames)
 	b.classReportFilenames[classKey] = newFilename
-	// Also, add its lowercase version to tempExistingLowerFilenames for future uniqueness checks by generateUniqueFilename.
-	// Note: generateUniqueFilename itself adds to the map it's passed, so this is already handled if it modifies its input map.
-	// The current generateUniqueFilename modifies the map passed to it.
-
 	return newFilename
 }
 

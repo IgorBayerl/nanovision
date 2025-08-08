@@ -22,3 +22,7 @@ func (dr *DefaultReader) CountLines(path string) (int, error) {
 func (dr *DefaultReader) Stat(name string) (fs.FileInfo, error) {
 	return os.Stat(name)
 }
+
+func (dr *DefaultReader) ReadDir(name string) ([]fs.DirEntry, error) {
+	return os.ReadDir(name)
+}

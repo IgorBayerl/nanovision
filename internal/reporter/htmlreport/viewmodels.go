@@ -142,32 +142,24 @@ type AngularMethodMetricsViewModel struct {
 
 // ClassDetailData is the top-level struct for the class_detail_layout.gohtml template
 type ClassDetailData struct {
-	ReportTitle     string
-	AppVersion      string // e.g., "5.4.7.0"
-	CurrentDateTime string
-
-	Class                                 ClassViewModelForDetail // Specific view model for the class being detailed
+	ReportTitle                           string
+	AppVersion                            string
+	CurrentDateTime                       string
+	Class                                 ClassViewModelForDetail
 	BranchCoverageAvailable               bool
-	MethodCoverageAvailable               bool // To decide whether to show PRO version message
+	MethodCoverageAvailable               bool
 	Tag                                   string
 	Translations                          map[string]string
-	MaximumDecimalPlacesForCoverageQuotas int // Needed for JS if any Angular components on page use it
-
-	// For JS script includes
-	AngularCssFile         string
-	AngularRuntimeJsFile   string
-	AngularPolyfillsJsFile string
-	AngularMainJsFile      string
-	CombinedAngularJsFile  string
-
-	// For window.* JSON objects
-	ClassDetailJSON                    template.JS // This will contain AngularClassDetailViewModel
-	AssembliesJSON                     template.JS
-	RiskHotspotsJSON                   template.JS
-	MetricsJSON                        template.JS
-	RiskHotspotMetricsJSON             template.JS
-	HistoricCoverageExecutionTimesJSON template.JS
-	TranslationsJSON                   template.JS // The map itself, already marshaled
+	MaximumDecimalPlacesForCoverageQuotas int
+	AngularCssFile                        string
+	CombinedAngularJsFile                 string // Only the combined file is needed now
+	AssembliesJSON                        template.JS
+	RiskHotspotsJSON                      template.JS
+	MetricsJSON                           template.JS
+	RiskHotspotMetricsJSON                template.JS
+	HistoricCoverageExecutionTimesJSON    template.JS
+	TranslationsJSON                      template.JS
+	ClassDetailJSON                       template.JS
 }
 
 // ClassViewModelForDetail holds data for the main class being displayed
@@ -247,29 +239,20 @@ type SidebarElementViewModel struct {
 
 // SummaryPageData is the top-level struct for the summaryPageLayoutTemplate
 type SummaryPageData struct {
-	ReportTitle     string
-	AppVersion      string
-	CurrentDateTime string
-	Translations    map[string]string // For direct use in template
-
-	SummaryCards            []CardViewModel
-	OverallHistoryChartData HistoryChartDataViewModel
-
-	// For JS script includes
-	AngularCssFile         string
-	AngularRuntimeJsFile   string
-	AngularPolyfillsJsFile string
-	AngularMainJsFile      string
-	CombinedAngularJsFile  string
-
-	// For window.* JSON objects - These should be template.JS
-	AssembliesJSON                     template.JS
-	RiskHotspotsJSON                   template.JS
-	MetricsJSON                        template.JS
-	RiskHotspotMetricsJSON             template.JS
-	HistoricCoverageExecutionTimesJSON template.JS
-	TranslationsJSON                   template.JS
-
+	ReportTitle                           string
+	AppVersion                            string
+	CurrentDateTime                       string
+	Translations                          map[string]string
+	SummaryCards                          []CardViewModel
+	OverallHistoryChartData               HistoryChartDataViewModel
+	AngularCssFile                        string
+	CombinedAngularJsFile                 string // Only the combined file is needed now
+	AssembliesJSON                        template.JS
+	RiskHotspotsJSON                      template.JS
+	MetricsJSON                           template.JS
+	RiskHotspotMetricsJSON                template.JS
+	HistoricCoverageExecutionTimesJSON    template.JS
+	TranslationsJSON                      template.JS
 	BranchCoverageAvailable               bool
 	MethodCoverageAvailable               bool
 	MaximumDecimalPlacesForCoverageQuotas int

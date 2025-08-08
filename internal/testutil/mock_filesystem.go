@@ -13,7 +13,6 @@ import (
 )
 
 // MockFilesystem implements filesystem.Filesystem and filereader.Reader for testing.
-// It simulates a platform's file system in memory and is independent of the host OS.
 type MockFilesystem struct {
 	filesystem.Platformer
 	files    map[string]string // keys are always Unix-style ('/')
@@ -54,28 +53,59 @@ func (m *MockFilesystem) toPlatform(p string) string {
 	return p
 }
 
+// isAbs robustly checks if a path is absolute for the mock's simulated platform.
+func (m *MockFilesystem) isAbs(p string) bool {
+	p = m.fromPlatform(p) // ALWAYS normalize before checking
+	if m.platform == "windows" {
+		// A windows path is absolute if it's like "C:/..."
+		return len(p) > 2 && p[1] == ':' && p[2] == '/'
+	}
+	// A unix path is absolute if it starts with "/"
+	return strings.HasPrefix(p, "/")
+}
+
+// Abs correctly calculates the absolute path within the mock filesystem.
+func (m *MockFilesystem) Abs(p string) (string, error) {
+	if m.isAbs(p) {
+		// Clean the path to handle things like "C:/dev/../dev/project"
+		cleaned := path.Clean(m.fromPlatform(p))
+		return m.toPlatform(cleaned), nil
+	}
+	// Path is relative, join with CWD
+	joined := path.Join(m.cwd, m.fromPlatform(p))
+	return m.toPlatform(joined), nil
+}
+
 func (m *MockFilesystem) AddFile(p string, content string) {
 	abs, _ := m.Abs(p)
 	key := m.fromPlatform(abs)
 	m.files[key] = content
 
-	// This will recursively create all parent directories correctly.
 	m.AddDir(path.Dir(key))
 
-	// Add file entry to its parent directory
 	dirKey := path.Dir(key)
 	entry := &mockFileInfo{
 		name:  path.Base(key),
 		isDir: false,
 	}
-	m.dirs[dirKey] = append(m.dirs[dirKey], entry)
+
+	// Avoid adding duplicate entries
+	found := false
+	for _, e := range m.dirs[dirKey] {
+		if e.Name() == entry.Name() {
+			found = true
+			break
+		}
+	}
+	if !found {
+		m.dirs[dirKey] = append(m.dirs[dirKey], entry)
+	}
 }
 
 func (m *MockFilesystem) AddDir(p string) {
 	abs, _ := m.Abs(p)
 	key := m.fromPlatform(abs)
 
-	// Base case: If dir already exists, do nothing.
 	if _, exists := m.dirs[key]; exists {
 		return
 	}
@@ -83,18 +113,27 @@ func (m *MockFilesystem) AddDir(p string) {
 	m.dirs[key] = []fs.DirEntry{}
 	parentKey := path.Dir(key)
 
-	// Base case: Stop recursion at the root.
 	if parentKey != key {
-		m.AddDir(parentKey) // Recurse with the parent path
+		m.AddDir(parentKey)
 		entry := &mockFileInfo{
 			name:  path.Base(key),
 			isDir: true,
 		}
-		m.dirs[parentKey] = append(m.dirs[parentKey], entry)
+		// Avoid adding duplicate entries
+		found := false
+		for _, e := range m.dirs[parentKey] {
+			if e.Name() == entry.Name() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			m.dirs[parentKey] = append(m.dirs[parentKey], entry)
+		}
 	}
 }
 
-// --- filesystem.Filesystem implementation ---
+// --- filesystem.Filesystem AND filereader.Reader implementation ---
 
 func (m *MockFilesystem) Stat(name string) (fs.FileInfo, error) {
 	abs, _ := m.Abs(name)
@@ -108,6 +147,7 @@ func (m *MockFilesystem) Stat(name string) (fs.FileInfo, error) {
 	return nil, os.ErrNotExist
 }
 
+// ReadDir is required for both filesystem.Filesystem and filereader.Reader
 func (m *MockFilesystem) ReadDir(name string) ([]fs.DirEntry, error) {
 	abs, _ := m.Abs(name)
 	key := m.fromPlatform(abs)
@@ -121,23 +161,7 @@ func (m *MockFilesystem) Getwd() (string, error) {
 	return m.toPlatform(m.cwd), nil
 }
 
-func (m *MockFilesystem) isAbs(p string) bool {
-	p = m.fromPlatform(p)
-	if m.platform == "windows" {
-		return len(p) > 2 && p[1] == ':' && p[2] == '/'
-	}
-	return strings.HasPrefix(p, "/")
-}
-
-func (m *MockFilesystem) Abs(p string) (string, error) {
-	if m.isAbs(p) {
-		return m.toPlatform(p), nil
-	}
-	joined := path.Join(m.cwd, m.fromPlatform(p))
-	return m.toPlatform(joined), nil
-}
-
-// --- filereader.Reader implementation ---
+// --- filereader.Reader specific implementation ---
 
 func (m *MockFilesystem) ReadFile(p string) ([]string, error) {
 	abs, _ := m.Abs(p)
