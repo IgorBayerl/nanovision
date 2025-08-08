@@ -90,16 +90,20 @@ type CodeElement struct {
 
 // Method represents a function or method.
 type Method struct {
-	Name          string
-	Signature     string
-	DisplayName   string
-	LineRate      float64
-	BranchRate    *float64
-	Complexity    float64
-	Lines         []Line
-	FirstLine     int
-	LastLine      int
-	MethodMetrics []MethodMetric
+	Name            string
+	Signature       string
+	DisplayName     string
+	LineRate        float64
+	BranchRate      *float64
+	Complexity      float64
+	Lines           []Line
+	FirstLine       int
+	LastLine        int
+	MethodMetrics   []MethodMetric
+	LinesCovered    int
+	LinesValid      int
+	BranchesCovered int
+	BranchesValid   int
 }
 
 // MetricStatus represents the status of a metric.

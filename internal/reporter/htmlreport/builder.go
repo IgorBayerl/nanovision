@@ -174,7 +174,7 @@ func (b *HtmlReportBuilder) determineClassReportFilename(assemblyName string, cl
 		return filename
 	}
 
-	newFilename := generateUniqueFilename(assemblyShortNameForFile, className, b.tempExistingLowerFilenames)
+	newFilename := generateUniqueFilename(className, b.tempExistingLowerFilenames)
 	b.classReportFilenames[classKey] = newFilename
 	return newFilename
 }

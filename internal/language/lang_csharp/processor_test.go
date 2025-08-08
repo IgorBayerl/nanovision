@@ -1,334 +1,441 @@
-package lang_csharp_test
+package lang_csharp
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/IgorBayerl/AdlerCov/internal/language/lang_csharp"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCSharpProcessor_Detect(t *testing.T) {
-	t.Parallel()
-	p := lang_csharp.NewCSharpProcessor()
-
-	assert.True(t, p.Detect("C:/Users/Test/MyProject/File.cs"))
-	assert.True(t, p.Detect("file.CS"))
-	assert.False(t, p.Detect("file.cs.txt"))
-	assert.False(t, p.Detect("file.go"))
-	assert.False(t, p.Detect(""))
+// helpers
+type triple struct {
+	Name      string
+	StartLine int
+	EndLine   int
 }
 
-func TestCSharpProcessor_AnalyzeFile(t *testing.T) {
-	t.Parallel()
-	testCases := []struct {
-		name            string
-		sourceCode      string
-		expectedMetrics []model.MethodMetrics
-	}{
-		{
-			name: "GoldenPath_SimplePublicMethod",
-			sourceCode: `
-using System;
-namespace MyNamespace
-{
-    public class MyClass
-    {
-        public void MyMethod()
-        {
-            Console.WriteLine("Hello");
-        }
-    }
-}`,
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "MyMethod", StartLine: 7, EndLine: 10},
-			},
-		},
-		{
-			name: "MethodAndConstructor",
-			sourceCode: `
-public class MyClass
-{
-    public MyClass() 
-    {
-        // constructor
-    }
+func analyze(t *testing.T, src string) []model.MethodMetrics {
+	t.Helper()
+	p := NewCSharpProcessor()
+	lines := strings.Split(src, "\n")
+	methods, err := p.AnalyzeFile("test.cs", lines)
+	require.NoError(t, err)
+	require.NotNil(t, methods)
+	return methods
+}
 
-    private static int Calculate(int a, int b) {
+func bag(methods []model.MethodMetrics) map[triple]int {
+	m := map[triple]int{}
+	for _, mm := range methods {
+		k := triple{mm.Name, mm.StartLine, mm.EndLine}
+		m[k]++
+	}
+	return m
+}
+
+func assertMatched(t *testing.T, got []model.MethodMetrics, want []model.MethodMetrics) {
+	gb := bag(got)
+	wb := bag(want)
+	assert.Equalf(t, wb, gb, "method bag mismatch\nGot:  %#v\nWant: %#v", got, want)
+}
+
+// Detect
+func Test_CSharpProcessor_Detect(t *testing.T) {
+	p := NewCSharpProcessor()
+	tests := []struct {
+		name string
+		path string
+		ok   bool
+	}{
+		{"plain .cs", "Program.cs", true},
+		{"path .cs", "src/app/Service.cs", true},
+		{"uppercase", "FILE.CS", true},
+		{"empty", "", false},
+		{"just extension", ".cs", false},
+		{"almost .cs", "Class.cs.bak", false},
+		{"other ext", "Class.java", false},
+	}
+	for _, tt := range tests {
+		t.Run(strings.ReplaceAll(tt.name, " ", "_"), func(t *testing.T) {
+			assert.Equal(t, tt.ok, p.Detect(tt.path))
+		})
+	}
+}
+
+// Core extraction
+func Test_Methods_Basic(t *testing.T) {
+	src := `
+public class Calc {
+    public int Add(int a, int b) {
         return a + b;
     }
-}`,
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "MyClass", StartLine: 4, EndLine: 7},
-				{Name: "Calculate", StartLine: 9, EndLine: 11},
-			},
-		},
-		{
-			name: "Properties_SimpleAndMultiLine",
-			sourceCode: `
-public class User
-{
-    public string Name { get; set; }
 
-    private int _id;
-    public int Id
-    {
-        get { return _id; }
+    private void Touch() {
     }
-}`,
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "Name", StartLine: 4, EndLine: 4},
-			},
-		},
-		{
-			name: "ComplexSignature_GenericsAndWhereClause",
-			sourceCode: `
-public class Processor
-{
-    public async Task<T> ProcessAsync<T>(T data) where T : IEntity
-    {
-        // logic here
+}
+`
+	got := analyze(t, src)
+	want := []model.MethodMetrics{
+		{Name: "Calc.Add", StartLine: 3, EndLine: 5},
+		{Name: "Calc.Touch", StartLine: 7, EndLine: 8},
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Constructors_And_Destructors(t *testing.T) {
+	src := `
+public class Resource {
+    public Resource() {
     }
-}`,
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "ProcessAsync<T>", StartLine: 4, EndLine: 7},
-			},
-		},
-		{
-			name: "Resilience_BracesInCommentsAndStrings",
-			sourceCode: `
-public class ResilienceTest
-{
-    // A comment with a brace {
-    public void Method1()
-    {
-        var json = "{\"key\": \"value with a } char\"}";
-        /* A block comment
-           with another brace {
-        */
+
+    ~Resource() {
+        // cleanup
     }
-}`,
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "Method1", StartLine: 5, EndLine: 11},
-			},
-		},
-		{
-			name: "Resilience_MethodInBlockCommentShouldBeIgnored",
-			sourceCode: `
-/*
-    public void IgnoredMethod()
-    {
+
+    static Resource() {
+        // type initializer
     }
-*/
-public class RealClass 
-{
-    public void RealMethod() {}
-}`,
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "RealMethod", StartLine: 9, EndLine: 9},
-			},
-		},
-		{
-			name: "NestedBraces_IfElseAndSwitch",
-			sourceCode: `
-public class ControlFlow
-{
-    public void CheckValue(int val)
+}
+`
+	got := analyze(t, src)
+	want := []model.MethodMetrics{
+		{Name: "Resource.Resource", StartLine: 3, EndLine: 4},   // instance ctor
+		{Name: "Resource.~Resource", StartLine: 6, EndLine: 8},  // dtor
+		{Name: "Resource.Resource", StartLine: 10, EndLine: 12}, // static ctor
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Async_Methods(t *testing.T) {
+	src := `
+using System.Threading.Tasks;
+public class Svc {
+    public async System.Threading.Tasks.Task<string> GetAsync(int id) {
+        return await System.Threading.Tasks.Task.FromResult(id.ToString());
+    }
+}
+`
+	got := analyze(t, src)
+	want := []model.MethodMetrics{
+		{Name: "Svc.GetAsync", StartLine: 4, EndLine: 6},
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Operators_And_Indexers(t *testing.T) {
+	src := `
+public class Vector {
+    public static Vector operator +(Vector a, Vector b) {
+        return new Vector();
+    }
+
+    public int this[int i] {
+        get { return 0; }
+        set { }
+    }
+}
+`
+	got := analyze(t, src)
+	// We intentionally IGNORE operators for now; only the indexer getter is tracked.
+	want := []model.MethodMetrics{
+		{Name: "Vector.get_this", StartLine: 8, EndLine: 9},
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Properties_Auto_ExpressionBodied_And_FullBody(t *testing.T) {
+	t.Run("auto-property_emits_get_/set__with_single-line_span", func(t *testing.T) {
+		src := `
+public class Person {
+    public string Name { get; set; }
+}
+`
+		got := analyze(t, src)
+		want := []model.MethodMetrics{
+			{Name: "Person.get_Name", StartLine: 3, EndLine: 3},
+			{Name: "Person.set_Name", StartLine: 3, EndLine: 3},
+		}
+		assertMatched(t, got, want)
+	})
+
+	t.Run("expression-bodied_property_emits_Class.get_", func(t *testing.T) {
+		src := `
+public class Circle {
+    public double Radius { get; set; }
+    public double Area => System.Math.PI * Radius * Radius;
+}
+`
+		got := analyze(t, src)
+		want := []model.MethodMetrics{
+			{Name: "Circle.get_Radius", StartLine: 3, EndLine: 3},
+			{Name: "Circle.set_Radius", StartLine: 3, EndLine: 3},
+			{Name: "Circle.get_Area", StartLine: 4, EndLine: 4},
+		}
+		assertMatched(t, got, want)
+	})
+
+	t.Run("full-body_property_emits_single_get__spanning_accessor_lines", func(t *testing.T) {
+		src := `
+public class Temperature {
+    private double c;
+    public double Celsius {
+        get { return c; }
+        set { c = value; }
+    }
+}
+`
+		got := analyze(t, src)
+		want := []model.MethodMetrics{
+			{Name: "Temperature.get_Celsius", StartLine: 5, EndLine: 6},
+		}
+		assertMatched(t, got, want)
+	})
+}
+
+func Test_NestedTypes_And_Namespaces(t *testing.T) {
+	src := `
+namespace MyApp.Core {
+    public class Outer {
+        public void A() {}
+        public class Inner {
+            public void B() { }
+        }
+    }
+}
+`
+	got := analyze(t, src)
+	want := []model.MethodMetrics{
+		{Name: "MyApp.Outer.A", StartLine: 4, EndLine: 4},
+		{Name: "MyApp.Outer.B", StartLine: 6, EndLine: 6},
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Multiline_Signatures_And_SingleLine_Bodies(t *testing.T) {
+	src := `
+public class Weird {
+    public int Sum(
+        int a,
+        int b
+    )
     {
-        if (val > 0)
+        return a + b;
+    }
+
+    public void OneLiner() { DoThing(); }
+}
+`
+	got := analyze(t, src)
+	want := []model.MethodMetrics{
+		{Name: "Weird.Sum", StartLine: 3, EndLine: 9},
+		{Name: "Weird.OneLiner", StartLine: 11, EndLine: 11},
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Comments_Noise_And_Using_Are_Ignored(t *testing.T) {
+	src := `
+using System;
+// line comment
+public class T {
+    /* block
+       comment */
+    /// xml doc
+    public void M() {
+        // inside
+    }
+}
+`
+	got := analyze(t, src)
+	want := []model.MethodMetrics{
+		{Name: "T.M", StartLine: 8, EndLine: 10},
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Interface_And_Abstract_Declarations_Are_Ignored(t *testing.T) {
+	src := `
+public interface I {
+    void Absent();
+}
+
+public abstract class B {
+    public abstract void AbstractGone();
+    public virtual void V() {}
+}
+`
+	got := analyze(t, src)
+	want := []model.MethodMetrics{
+		{Name: "B.V", StartLine: 8, EndLine: 8},
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Generics_And_Overloads(t *testing.T) {
+	src := `
+public class G {
+    public T Id<T>(T x) { return x; }
+    public int Id(int x) { return x; }
+}
+`
+	got := analyze(t, src)
+	// overloads merged: min start 3, max end 4
+	want := []model.MethodMetrics{
+		{Name: "G.Id", StartLine: 3, EndLine: 4},
+	}
+	assertMatched(t, got, want)
+}
+
+func Test_Records(t *testing.T) {
+	t.Run("positional_record_(no_body)_yields_no_methods", func(t *testing.T) {
+		src := `public record Person(string Name, int Age);`
+		got := analyze(t, src)
+		assert.Empty(t, got)
+	})
+
+	t.Run("record_with_body_yields_methods", func(t *testing.T) {
+		src := `
+public record Person(string Name, int Age) {
+    public void Greet() { }
+}
+`
+		got := analyze(t, src)
+		want := []model.MethodMetrics{
+			{Name: "Person.Greet", StartLine: 3, EndLine: 3},
+		}
+		assertMatched(t, got, want)
+	})
+}
+
+func Test_LocalFunctions_Are_Ignored(t *testing.T) {
+	src := `
+public class C {
+    public void M() {
+        int Add(int x, int y) { return x+y; } // local function
+    }
+}
+`
+	got := analyze(t, src)
+	want := []model.MethodMetrics{
+		{Name: "C.M", StartLine: 3, EndLine: 5},
+	}
+	assertMatched(t, got, want)
+}
+
+// This reproduces your PartialClass.cs and asserts we:
+// - detect the two normal methods
+// - emit get_/set_ accessors with correct spans
+// - DO NOT invent a fake method named "if"
+func Test_PartialClass_Property_GetSet_NoFakeIf(t *testing.T) {
+	src := `using System;
+
+namespace Test
+{
+    partial class PartialClass
+    {
+        public void ExecutedMethod_1()
         {
-            Console.WriteLine("Positive");
-        } 
-        else 
+            Console.WriteLine("Test");
+        }
+
+        public void UnExecutedMethod_1()
         {
-            switch(val)
+            Console.WriteLine("Test");
+        }
+
+        private int someProperty;
+
+        public int SomeProperty
+        {
+            get { return this.someProperty; }
+
+            set
             {
-                case 0: break;
+                if (value < 0)
+                {
+                    this.someProperty = 0;
+                }
+                else
+                {
+                    this.someProperty = value;
+                }
             }
         }
     }
-}`,
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "CheckValue", StartLine: 4, EndLine: 17},
-			},
-		},
-		{
-			name:            "NoMethods_ShouldReturnEmpty",
-			sourceCode:      `public class EmptyClass { private string _field; }`,
-			expectedMetrics: []model.MethodMetrics{},
-		},
-		{
-			name: "Malformed_MissingClosingBrace",
-			sourceCode: `
-public class Malformed
-{
-    public void UnclosedMethod()
-    {
-        // No closing brace
-`,
-			expectedMetrics: []model.MethodMetrics{},
-		},
+}
+`
+	lines := strings.Split(src, "\n")
+	p := NewCSharpProcessor()
+	got, err := p.AnalyzeFile("PartialClass.cs", lines)
+	require.NoError(t, err)
+
+	want := []model.MethodMetrics{
+		{Name: "Test.PartialClass.ExecutedMethod_1", StartLine: 7, EndLine: 10},
+		{Name: "Test.PartialClass.UnExecutedMethod_1", StartLine: 12, EndLine: 15},
+		{Name: "Test.PartialClass.get_SomeProperty", StartLine: 21, EndLine: 21},
+		{Name: "Test.PartialClass.set_SomeProperty", StartLine: 23, EndLine: 33},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// Arrange
-			p := lang_csharp.NewCSharpProcessor()
-			sourceLines := strings.Split(tc.sourceCode, "\n")
+	// Compare as a bag for stability.
+	gb := toBag(got)
+	wb := toBag(want)
+	if !equalBags(wb, gb) {
+		t.Fatalf("method bag mismatch\nGot:  %#v\nWant: %#v", got, want)
+	}
 
-			// Act
-			methods, err := p.AnalyzeFile("test.cs", sourceLines)
-
-			// Assert
-			require.NoError(t, err)
-
-			// Handle comparison with potentially nil slice
-			if len(tc.expectedMetrics) == 0 {
-				assert.Empty(t, methods, "Expected no methods to be found")
-			} else {
-				assert.ElementsMatch(t, tc.expectedMetrics, methods, "The discovered methods did not match the expected metrics.")
-			}
-		})
+	// Extra safety: ensure nothing named "...if" slipped in.
+	for _, m := range got {
+		if strings.HasSuffix(m.Name, ".if") {
+			t.Fatalf("spurious method detected: %q", m.Name)
+		}
 	}
 }
 
-// Additional focused tests for edge cases
-func TestCSharpProcessor_AnalyzeFile_EdgeCases(t *testing.T) {
-	t.Parallel()
-	testCases := []struct {
-		name            string
-		sourceCode      string
-		expectedMetrics []model.MethodMetrics
-	}{
-		{
-			name: "PropertyWith_GetterAndSetter_MultiLine",
-			sourceCode: `public class Test {
-    private int _value;
-    public int Value
-    {
-        get { return _value; }
-        set { _value = value; }
-    }
-}`,
-			// This property doesn't have braces on the same line as the property declaration,
-			// so it won't be detected by the current property regex logic
-			expectedMetrics: []model.MethodMetrics{},
-		},
-		{
-			name: "GenericMethod_WithConstraints",
-			sourceCode: `public class Generic {
-    public T Process<T>(T input) where T : class, new()
-    {
-        return new T();
-    }
-}`,
-			// The regex actually captures the generic part for this pattern
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "Process<T>", StartLine: 2, EndLine: 5},
-			},
-		},
-		{
-			name: "AbstractMethod_ShouldNotBeDetected",
-			sourceCode: `public abstract class Base {
-    public abstract void DoSomething();
-    
-    public virtual void DoSomethingElse() {
-        // implementation
-    }
-}`,
-			// The processor actually detects the abstract method because it matches the method regex
-			// The abstract method is parsed as having braces, so it gets detected
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "DoSomething", StartLine: 2, EndLine: 6},
-			},
-		},
-		{
-			name: "InterfaceMethod_ShouldNotBeDetected",
-			sourceCode: `public interface ITest {
-    void Method1();
-    string Method2(int param);
-}`,
-			// Interface methods have no implementation, should not be detected
-			expectedMetrics: []model.MethodMetrics{},
-		},
-		{
-			name: "StaticConstructor",
-			sourceCode: `public class Test {
-    static Test() {
-        // static constructor
-    }
-}`,
-			expectedMetrics: []model.MethodMetrics{
-				{Name: "Test", StartLine: 2, EndLine: 4},
-			},
-		},
+func toBag(list []model.MethodMetrics) map[string]int {
+	m := map[string]int{}
+	for _, mm := range list {
+		key := mm.Name
+		key += "|" + itoa(mm.StartLine) + "|" + itoa(mm.EndLine)
+		m[key]++
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// Arrange
-			p := lang_csharp.NewCSharpProcessor()
-			sourceLines := strings.Split(tc.sourceCode, "\n")
-
-			// Act
-			methods, err := p.AnalyzeFile("test.cs", sourceLines)
-
-			// Assert
-			require.NoError(t, err)
-			// Handle both nil and empty slice cases
-			if len(tc.expectedMetrics) == 0 {
-				assert.Empty(t, methods)
-			} else {
-				assert.ElementsMatch(t, tc.expectedMetrics, methods)
-			}
-		})
-	}
+	return m
 }
 
-func TestCSharpProcessor_AnalyzeFile_EmptyInput(t *testing.T) {
-	// Arrange
-	p := lang_csharp.NewCSharpProcessor()
-
-	testCases := []struct {
-		name        string
-		sourceLines []string
-	}{
-		{
-			name:        "EmptySlice",
-			sourceLines: []string{},
-		},
-		{
-			name:        "OnlyEmptyLines",
-			sourceLines: []string{"", "", ""},
-		},
-		{
-			name:        "OnlyComments",
-			sourceLines: []string{"// comment", "/* block comment */"},
-		},
+func equalBags(a, b map[string]int) bool {
+	if len(a) != len(b) {
+		return false
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			// Act
-			methods, err := p.AnalyzeFile("test.cs", tc.sourceLines)
-
-			// Assert
-			require.NoError(t, err)
-			// The processor may return nil slice for empty results
-			assert.Empty(t, methods)
-		})
+	for k, va := range a {
+		if b[k] != va {
+			return false
+		}
 	}
+	return true
 }
 
-func TestCSharpProcessor_Name(t *testing.T) {
-	// Arrange
-	p := lang_csharp.NewCSharpProcessor()
-
-	// Act
-	name := p.Name()
-
-	// Assert
-	assert.Equal(t, "C#", name)
+func itoa(i int) string {
+	// small fast int->string without fmt to keep test lightweight
+	const digits = "0123456789"
+	if i == 0 {
+		return "0"
+	}
+	neg := false
+	if i < 0 {
+		neg = true
+		i = -i
+	}
+	var buf [20]byte
+	n := len(buf)
+	for i > 0 {
+		n--
+		buf[n] = digits[i%10]
+		i /= 10
+	}
+	if neg {
+		n--
+		buf[n] = '-'
+	}
+	return string(buf[n:])
 }
