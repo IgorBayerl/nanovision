@@ -1,0 +1,71 @@
+/* Keep your raw per-theme values as normal CSS variables */
+:root {
+    --background: hsl(147 80% 90%);
+    --foreground: hsl(147 48% 9%);
+    --card: hsl(147 81% 95%);
+    --card-foreground: hsl(147 48% 9%);
+    --popover: hsl(147 81% 95%);
+    --popover-foreground: hsl(147 48% 9%);
+    --primary: hsl(151 58% 50%);
+    --primary-foreground: hsl(151 81% 95%);
+    --secondary: hsl(217 59% 50%);
+    --secondary-foreground: hsl(217 81% 95%);
+    --muted: hsl(147 67% 86%);
+    --muted-foreground: hsl(147 61% 30%);
+    --accent: hsl(236 59% 50%);
+    --accent-foreground: hsl(236 81% 95%);
+    --destructive: hsl(0 84% 60%);
+    --border: hsl(147 68% 70%);
+    --input: hsl(147 68% 70%);
+    --ring: hsl(151 58% 50%);
+    --radius: 0.5rem;
+}
+
+.dark {
+    --background: hsl(147 48% 9%);
+    --foreground: hsl(147 81% 90%);
+    --card: hsl(147 60% 20%);
+    --card-foreground: hsl(147 81% 90%);
+    --popover: hsl(147 60% 20%);
+    --popover-foreground: hsl(147 81% 90%);
+    --primary: hsl(151 58% 50%);
+    --primary-foreground: hsl(151 48% 9%);
+    --secondary: hsl(217 59% 50%);
+    --secondary-foreground: hsl(217 81% 95%);
+    --muted: hsl(147 60% 30%);
+    --muted-foreground: hsl(147 55% 86%);
+    --accent: hsl(236 59% 50%);
+    --accent-foreground: hsl(236 81% 95%);
+    --destructive: hsl(0 63% 94%);
+    --border: hsl(147 60% 30%);
+    --input: hsl(147 60% 30%);
+    --ring: hsl(151 58% 60%);
+}
+
+/* Map those variables to Tailwind theme tokens so utilities exist.
+   `inline` makes utilities reference the current var value, so dark mode overrides work. */
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* Radius scale for rounded-* utilities */
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+}
