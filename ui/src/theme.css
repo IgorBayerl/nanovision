@@ -1,4 +1,3 @@
-/* Keep your raw per-theme values as normal CSS variables */
 :root {
     --background: hsl(147 80% 90%);
     --foreground: hsl(147 48% 9%);
@@ -20,8 +19,9 @@
     --ring: hsl(151 58% 50%);
     --radius: 0.5rem;
 
-    /* New color for subtle backgrounds like alternating rows */
     --subtle: hsl(147 72% 87%);
+    --covered: hsl(151 58% 50%);
+    --uncovered: hsl(4, 91%, 65%);
 }
 
 .dark {
@@ -44,8 +44,9 @@
     --input: hsl(147 60% 30%);
     --ring: hsl(151, 38%, 41%);
 
-    /* A subtle background that is just slightly lighter than the main dark background */
     --subtle: hsl(147 46% 11%);
+    --covered: hsl(151, 59%, 30%);
+    --uncovered: hsl(10, 100%, 89%);
 }
 
 /* :root {
@@ -139,8 +140,9 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
 
-    /* New subtle color mapping */
     --color-subtle: var(--subtle);
+    --color-covered: var(--covered);
+    --color-uncovered: var(--uncovered);
 
     /* Radius scale for rounded-* utilities */
     --radius-lg: var(--radius);

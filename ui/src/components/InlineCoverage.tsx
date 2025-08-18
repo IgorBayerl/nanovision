@@ -23,9 +23,9 @@ export default function InlineCoverage({
             <span className="pl-1 text-right text-foreground text-xs tabular-nums" style={{ width: 32 }}>
                 {Math.max(0, Math.min(100, percentage))}%
             </span>
-            <div className="relative h-2 flex-1 overflow-hidden rounded-xs bg-muted">
+            <div className="relative h-2 flex-1 overflow-hidden rounded-xs bg-uncovered">
                 <div
-                    className="absolute inset-y-0 left-0 bg-primary"
+                    className="absolute inset-y-0 left-0 rounded-xs bg-covered"
                     style={{ width: `${Math.max(0, Math.min(100, percentage))}%` }}
                 />
             </div>
