@@ -28,16 +28,12 @@ export interface FileNode {
     targetUrl?: string
 }
 
-export interface Totals {
+export interface Totals extends Metrics {
     files: number
     folders: number
-    linesCoveredPct: number
-    branchesCoveredPct: number
-    methodsCoveredPct: number
-    statementsCoveredPct: number
-    functionsCoveredPct: number
 }
 
+// UPDATED: Added new optional metadata fields.
 export interface SummaryV1 {
     schemaVersion: number
     generatedAt: string
@@ -45,6 +41,9 @@ export interface SummaryV1 {
     title: string
     totals: Totals
     tree: FileNode[]
+    parsers?: string[]
+    configFiles?: string[]
+    importedReports?: string[]
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'

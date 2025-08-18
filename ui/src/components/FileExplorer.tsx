@@ -7,7 +7,7 @@ import RiskSegment from '@/components/Toolbar.RiskSegment'
 import SearchBox from '@/components/Toolbar.SearchBox'
 import { TreeRow } from '@/components/Tree.Row'
 import { SUB_METRIC_COLS } from '@/lib/consts'
-import { calculateFolderMetrics, flattenFiles } from '@/lib/metrics'
+import { flattenFiles } from '@/lib/metrics'
 import { useKeyboardSearch } from '@/lib/useKeyboardSearch'
 import { cn } from '@/lib/utils'
 import type {
@@ -27,7 +27,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/t
 
 type RenderNode = FileNode & { depth: number }
 
-export default function FileExplorer({ tree, idMap }: { tree: FileNode[]; idMap: Map<string, FileNode> }) {
+export default function FileExplorer({ tree }: { tree: FileNode[] }) {
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
         () => new Set(tree.filter((n) => n.type === 'folder').map((n) => n.id)),
     )
@@ -140,20 +140,13 @@ export default function FileExplorer({ tree, idMap }: { tree: FileNode[]; idMap:
 
                 if (typeof sortKey === 'object') {
                     const { metric, subMetric } = sortKey
-                    const getValue = (n: FileNode) => {
-                        const originalNode = idMap.get(n.id)
-                        const m =
-                            n.type === 'folder' && originalNode?.children
-                                ? calculateFolderMetrics(originalNode.children)
-                                : n.metrics
-                        return m?.[metric]?.[subMetric] ?? -1
-                    }
+                    const getValue = (n: FileNode) => n.metrics?.[metric]?.[subMetric] ?? -1
                     return (getValue(a) - getValue(b)) * dir
                 }
                 return 0
             })
         },
-        [sortDir, sortKey, idMap, viewMode],
+        [sortDir, sortKey, viewMode],
     )
 
     const finalView: RenderNode[] = useMemo(() => {
@@ -183,10 +176,7 @@ export default function FileExplorer({ tree, idMap }: { tree: FileNode[]; idMap:
     }
 
     const metricsForNode = (node: FileNode): Partial<Metrics> | undefined => {
-        const originalNode = idMap.get(node.id)
-        return node.type === 'folder' && originalNode?.children
-            ? calculateFolderMetrics(originalNode.children)
-            : node.metrics
+        return node.metrics
     }
 
     const totalMetricsWidth = enabledMetrics.reduce((sum) => sum + SUB_METRIC_COLS.reduce((s, c) => s + c.width, 0), 0)

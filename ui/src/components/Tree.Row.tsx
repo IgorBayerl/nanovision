@@ -127,7 +127,7 @@ export function TreeRow({
                                     {metricData?.coverable ?? '-'}
                                 </div>
                                 <div className="px-2 text-right text-xs tabular-nums">{metricData?.total ?? '-'}</div>
-                                <div className="flex items-center px-2">
+                                <div className="px-2 text-right text-xs tabular-nums">
                                     {metricData !== undefined ? (
                                         <InlineCoverage
                                             percentage={metricData.percentage}
