@@ -63,7 +63,7 @@ export function TreeRow({
             >
                 <div
                     className={cn(
-                        'flex min-w-0 items-center gap-2 border-r border-border',
+                        'flex min-w-0 items-center gap-2 border-border border-r',
                         isPinned && 'sticky left-0 z-10',
                         isOdd ? 'bg-subtle' : 'bg-background',
                         'group-hover:bg-muted',
@@ -123,7 +123,7 @@ export function TreeRow({
                                 key={cfg.id}
                                 className={cn(
                                     'grid h-full items-center',
-                                    index < enabledMetrics.length - 1 && 'border-r border-border',
+                                    index < enabledMetrics.length - 1 && 'border-border border-r',
                                 )}
                                 style={{ gridTemplateColumns: SUB_METRIC_COLS.map((c) => `${c.width}px`).join(' ') }}
                             >
