@@ -2,6 +2,7 @@ import { Columns } from 'lucide-react'
 import type { MetricConfig } from '@/types/summary'
 import { Button } from '@/ui/button'
 import { Checkbox } from '@/ui/checkbox'
+import { Label } from '@/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/popover'
 
 export default function ColumnsMenu({
@@ -32,9 +33,9 @@ export default function ColumnsMenu({
                                         checked={cfg.enabled}
                                         onCheckedChange={() => onToggleMetric(cfg.id)}
                                     />
-                                    <label htmlFor={checkboxId} className="cursor-pointer text-sm">
+                                    <Label htmlFor={checkboxId} className="cursor-pointer text-sm">
                                         {cfg.label}
-                                    </label>
+                                    </Label>
                                 </div>
                             )
                         })}

@@ -1,12 +1,18 @@
 export type RiskLevel = 'safe' | 'warning' | 'danger'
 
-export interface Metrics {
-    lineCoverage: number
-    branchCoverage: number
-    methodCoverage: number
-    statementCoverage: number
-    functionCoverage: number
+export interface CoverageDetail {
+    covered: number
+    uncovered: number
+    coverable: number
+    total: number
+    percentage: number
 }
+
+export type Metrics = Record<
+    'lineCoverage' | 'branchCoverage' | 'methodCoverage' | 'statementCoverage' | 'functionCoverage',
+    CoverageDetail
+>
+
 export type Statuses = Partial<Record<keyof Metrics, RiskLevel>>
 
 export interface FileNode {
@@ -57,5 +63,7 @@ export type FilterRange = {
     max: number
 }
 
-export type SortKey = 'name' | MetricKey
+export type SortableSubMetricKey = keyof CoverageDetail
+
+export type SortKey = 'name' | { metric: MetricKey; subMetric: SortableSubMetricKey }
 export type SortDir = 'asc' | 'desc'

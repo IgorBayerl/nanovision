@@ -44,6 +44,7 @@ report_generator_dotnet/ReportGenerator.Core.Test/**
 report_generator_dotnet/ReportGenerator.DotnetCorePluginLoader/**
 report_generator_dotnet/ReportGenerator.DotnetGlobalTool/**
 report_generator_dotnet/ReportGenerator.MSBuild/**
+ui/**
 
 Testprojects/C++/Reports/Cobertura_CPPCoverage.xml
 Testprojects/FSharp/**

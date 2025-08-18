@@ -15,32 +15,37 @@ export const flattenFiles = (nodes: FileNode[]): FileNode[] => {
 export const averageMetrics = (files: FileNode[]): Metrics | undefined => {
     const f = files.filter((x) => x.metrics)
     if (f.length === 0) return undefined
-    const sum = f.reduce(
-        (acc, x) => {
-            if (!x.metrics) return acc
-            const m = x.metrics
-            acc.lineCoverage += m.lineCoverage
-            acc.branchCoverage += m.branchCoverage
-            acc.methodCoverage += m.methodCoverage
-            acc.statementCoverage += m.statementCoverage
-            acc.functionCoverage += m.functionCoverage
-            return acc
-        },
-        {
-            lineCoverage: 0,
-            branchCoverage: 0,
-            methodCoverage: 0,
-            statementCoverage: 0,
-            functionCoverage: 0,
-        },
-    )
-    return {
-        lineCoverage: Math.round(sum.lineCoverage / f.length),
-        branchCoverage: Math.round(sum.branchCoverage / f.length),
-        methodCoverage: Math.round(sum.methodCoverage / f.length),
-        statementCoverage: Math.round(sum.statementCoverage / f.length),
-        functionCoverage: Math.round(sum.functionCoverage / f.length),
+
+    const initial = {
+        lineCoverage: { covered: 0, uncovered: 0, coverable: 0, total: 0, percentage: 0 },
+        branchCoverage: { covered: 0, uncovered: 0, coverable: 0, total: 0, percentage: 0 },
+        methodCoverage: { covered: 0, uncovered: 0, coverable: 0, total: 0, percentage: 0 },
+        statementCoverage: { covered: 0, uncovered: 0, coverable: 0, total: 0, percentage: 0 },
+        functionCoverage: { covered: 0, uncovered: 0, coverable: 0, total: 0, percentage: 0 },
     }
+
+    const sum = f.reduce((acc, x) => {
+        if (!x.metrics) return acc
+        for (const key in x.metrics) {
+            const metricKey = key as keyof Metrics
+            const m = x.metrics[metricKey]
+            acc[metricKey].covered += m.covered
+            acc[metricKey].uncovered += m.uncovered
+            acc[metricKey].coverable += m.coverable
+            acc[metricKey].total += m.total
+        }
+        return acc
+    }, initial)
+
+    // Recalculate percentages based on the summed totals
+    for (const key in sum) {
+        const metricKey = key as keyof Metrics
+        const metricSum = sum[metricKey]
+        metricSum.percentage =
+            metricSum.coverable > 0 ? Math.round((metricSum.covered / metricSum.coverable) * 100) : 100
+    }
+
+    return sum
 }
 
 export const calculateFolderMetrics = (children: FileNode[]) => averageMetrics(flattenFiles(children))

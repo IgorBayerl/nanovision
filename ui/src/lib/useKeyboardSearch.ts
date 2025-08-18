@@ -1,6 +1,6 @@
 import { type RefObject, useEffect } from 'react'
 
-export function useKeyboardSearch(inputRef: RefObject<HTMLInputElement>) {
+export function useKeyboardSearch(inputRef: RefObject<HTMLInputElement | null>) {
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
