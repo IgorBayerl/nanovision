@@ -49,7 +49,7 @@ export function TreeRow({
     return (
         <div
             className={cn(
-                'group grid w-full items-center', // Removed direct hover from parent
+                'group grid w-full items-center',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                 isFolder ? 'cursor-pointer' : 'cursor-default',
             )}
@@ -102,16 +102,8 @@ export function TreeRow({
                     </span>
                 </div>
 
-                {/* Metric cells */}
                 <div
-                    className={cn(
-                        'grid items-center',
-                        // --- FIX ---
-                        // 1. Set the base color
-                        isOdd ? 'bg-subtle' : 'bg-background',
-                        // 2. Set the solid hover color for the entire group
-                        'group-hover:bg-muted',
-                    )}
+                    className={cn('grid items-center', isOdd ? 'bg-subtle' : 'bg-background', 'group-hover:bg-muted')}
                     style={{
                         gridTemplateColumns: `repeat(${enabledMetrics.length}, 1fr)`,
                     }}
