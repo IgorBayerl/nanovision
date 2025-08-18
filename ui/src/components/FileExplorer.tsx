@@ -57,7 +57,6 @@ export default function FileExplorer({ tree, idMap }: { tree: FileNode[]; idMap:
     const [sortKey, setSortKey] = useState<SortKey>('name')
     const [sortDir, setSortDir] = useState<SortDir>('asc')
 
-    // ... (toggleFolder, toggleMetric, updateFilterRange, etc. are unchanged)
     const toggleFolder = (id: string) => {
         setExpandedFolders((prev) => {
             const s = new Set(prev)
