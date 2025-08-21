@@ -8,12 +8,9 @@ export interface CoverageDetail {
     percentage: number
 }
 
-export type Metrics = Record<
-    'lineCoverage' | 'branchCoverage' | 'methodCoverage' | 'statementCoverage' | 'functionCoverage',
-    CoverageDetail
->
+export type Metrics = Record<string, CoverageDetail>
 
-export type Statuses = Partial<Record<keyof Metrics, RiskLevel>>
+export type Statuses = Partial<Record<string, RiskLevel>>
 
 export interface FileNode {
     id: string
@@ -28,12 +25,20 @@ export interface FileNode {
     targetUrl?: string
 }
 
-export interface Totals extends Metrics {
+export interface Totals {
     files: number
     folders: number
+    // This index signature allows for dynamic metric keys while keeping `files` and `folders` correctly typed.
+    [key: string]: CoverageDetail | number
 }
 
-// UPDATED: Added new optional metadata fields.
+export type MetadataItem = {
+    label: string
+    value: string | string[]
+    /** optional: override sizing */
+    sizeHint?: 'small' | 'medium' | 'large'
+}
+
 export interface SummaryV1 {
     schemaVersion: number
     generatedAt: string
@@ -44,11 +49,12 @@ export interface SummaryV1 {
     parsers?: string[]
     configFiles?: string[]
     importedReports?: string[]
+    metadata?: MetadataItem[]
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'
 
-export type MetricKey = keyof Metrics
+export type MetricKey = string
 
 export type MetricConfig = {
     id: MetricKey

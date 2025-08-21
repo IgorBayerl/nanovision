@@ -10,9 +10,37 @@ window.__ADLERCOV_SUMMARY__ = {
     generatedAt: '2025-08-15T10:00:00Z',
     reportId: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
     title: 'Project Phoenix Coverage Report',
-    parsers: ['Cobertura', 'LCOV'],
-    configFiles: ['/app/adlercov.json'],
-    importedReports: ['./coverage/cobertura.xml', './coverage/lcov.info'],
+
+    // --- THIS IS THE NEW METADATA ARRAY ---
+    // The InfoCard is now driven entirely by this data.
+    metadata: [
+        { label: 'Generated At', value: new Date('2025-08-15T10:00:00Z').toLocaleString() },
+        { label: 'Commit Hash', value: 'a1b2c3d4' },
+        { label: 'Total Files', value: 20 },
+        { label: 'Total Folders', value: 6 },
+        { label: 'Parser', value: 'Mixed' },
+        // {
+        //     label: 'Parsers Used',
+        //     value: ['Cobertura', 'LCOV', 'LCOV', 'LCOV', 'LCOV', 'LCOV', 'LCOV'],
+        // },
+        // {
+        //     label: 'Config Files',
+        //     value: ['/app/adlercov.json'],
+        // },
+        // {
+        //     label: 'Imported Reports',
+        //     value: [
+        //         './coverage/some_extreme_long_name_here_for_testing_porpuses.xml',
+        //         './coverage/cobertura.xml',
+        //         './coverage/lcov.info',
+        //         './coverage/lcov.info',
+        //         './coverage/lcov.info',
+        //         './coverage/lcov.info',
+        //         './coverage/lcov.info',
+        //     ],
+        // },
+    ],
+
     totals: {
         files: 20, // Increased file count
         folders: 6, // Increased folder count
@@ -21,6 +49,7 @@ window.__ADLERCOV_SUMMARY__ = {
         methodCoverage: { covered: 180, uncovered: 20, coverable: 200, total: 200, percentage: 90 },
         statementCoverage: { covered: 3000, uncovered: 1000, coverable: 4000, total: 4400, percentage: 75 },
         functionCoverage: { covered: 360, uncovered: 40, coverable: 400, total: 400, percentage: 90 },
+        aaaaaa: { covered: 360, uncovered: 40, coverable: 400, total: 400, percentage: 90 },
     },
     tree: [
         {
@@ -57,6 +86,7 @@ window.__ADLERCOV_SUMMARY__ = {
                             percentage: 65,
                         },
                         functionCoverage: { covered: 90, uncovered: 20, coverable: 110, total: 110, percentage: 81.8 },
+                        aaaaaa: { covered: 90, uncovered: 20, coverable: 110, total: 110, percentage: 81.8 },
                     },
                     statuses: {
                         lineCoverage: 'danger',
@@ -69,15 +99,22 @@ window.__ADLERCOV_SUMMARY__ = {
                             type: 'file',
                             path: 'src/components/Button.tsx',
                             metrics: {
-                                lineCoverage: {
-                                    covered: 90,
-                                    uncovered: 10,
-                                    coverable: 100,
-                                    total: 110,
-                                    percentage: 90,
-                                },
-                                branchCoverage: { covered: 20, uncovered: 5, coverable: 25, total: 25, percentage: 80 },
+                                // lineCoverage: {
+                                //     covered: 90,
+                                //     uncovered: 10,
+                                //     coverable: 100,
+                                //     total: 110,
+                                //     percentage: 90,
+                                // },
+                                // branchCoverage: { covered: 20, uncovered: 5, coverable: 25, total: 25, percentage: 80 },
                                 methodCoverage: {
+                                    covered: 10,
+                                    uncovered: 0,
+                                    coverable: 10,
+                                    total: 10,
+                                    percentage: 100,
+                                },
+                                myNewAwesomeCoverageMetric: {
                                     covered: 10,
                                     uncovered: 0,
                                     coverable: 10,
@@ -120,13 +157,13 @@ window.__ADLERCOV_SUMMARY__ = {
                                 },
                                 branchCoverage: { covered: 5, uncovered: 20, coverable: 25, total: 25, percentage: 20 },
                                 methodCoverage: { covered: 8, uncovered: 2, coverable: 10, total: 10, percentage: 80 },
-                                statementCoverage: {
-                                    covered: 70,
-                                    uncovered: 130,
-                                    coverable: 200,
-                                    total: 230,
-                                    percentage: 35,
-                                },
+                                // statementCoverage: {
+                                //     covered: 70,
+                                //     uncovered: 130,
+                                //     coverable: 200,
+                                //     total: 230,
+                                //     percentage: 35,
+                                // },
                                 functionCoverage: {
                                     covered: 15,
                                     uncovered: 10,

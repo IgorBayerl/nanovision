@@ -8,7 +8,6 @@ export default function TopBar({ title }: { title: string }) {
         <div className="flex items-start justify-between">
             <div>
                 <h1 className="font-bold text-2xl tracking-tight">{title || 'Coverage Report'}</h1>
-                <p className="text-muted-foreground text-sm">Backend-driven risk, square UI, column-tied filters</p>
             </div>
 
             <div className="flex items-center gap-2">

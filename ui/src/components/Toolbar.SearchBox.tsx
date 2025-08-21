@@ -33,7 +33,7 @@ const SearchBox = forwardRef<
                                 variant="ghost"
                                 size="sm"
                                 className={
-                                    'h-6 w-6 rounded-sm p-0 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary'
+                                    'h-6 w-6 rounded-sm p-0 text-muted-foreground hover:bg-primary/10 hover:text-primary'
                                 }
                                 onClick={() => onModeChange(isGlob ? 'normal' : 'glob')}
                                 aria-label="Toggle search mode"

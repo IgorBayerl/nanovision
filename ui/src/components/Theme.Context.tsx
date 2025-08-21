@@ -27,15 +27,16 @@ export function useTheme() {
  * This runs only once when the application starts.
  */
 function getInitialTheme(): Mode {
-    // Check for a user's explicit preference in localStorage.
-    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-    if (storedTheme === 'light' || storedTheme === 'dark') {
-        return storedTheme
-    }
+    return 'light'
+    // // Check for a user's explicit preference in localStorage.
+    // const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+    // if (storedTheme === 'light' || storedTheme === 'dark') {
+    //     return storedTheme
+    // }
 
-    // If no preference is stored, fall back to the system's color scheme.
-    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
-    return prefersDark ? 'dark' : 'light'
+    // // If no preference is stored, fall back to the system's color scheme.
+    // const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
+    // return prefersDark ? 'dark' : 'light'
 }
 
 /**

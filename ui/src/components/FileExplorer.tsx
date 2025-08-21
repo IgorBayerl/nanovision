@@ -9,7 +9,8 @@ import { TreeRow } from '@/components/Tree.Row'
 import { SUB_METRIC_COLS } from '@/lib/consts'
 import { flattenFiles } from '@/lib/metrics'
 import { useKeyboardSearch } from '@/lib/useKeyboardSearch'
-import { cn } from '@/lib/utils'
+import { useUrlState } from '@/lib/useUrlState'
+import { camelCaseToTitleCase, cn } from '@/lib/utils'
 import type {
     FileNode,
     FilterRange,
@@ -27,50 +28,136 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/t
 
 type RenderNode = FileNode & { depth: number }
 
-export default function FileExplorer({ tree }: { tree: FileNode[] }) {
+function getShortLabel(metricId: string): string {
+    const knownPrefixes = ['line', 'branch', 'method', 'statement', 'function']
+    const knownMatch = knownPrefixes.find((p) => metricId.toLowerCase().startsWith(p))
+    if (knownMatch) {
+        return knownMatch.charAt(0).toUpperCase() + knownMatch.slice(1)
+    }
+    return metricId.length > 4 ? `${metricId.slice(0, 3)}.` : metricId
+}
+
+const getDefaultEnabledMetrics = (metrics: string[]) => metrics.slice(0, 3)
+
+export default function FileExplorer({ tree, availableMetrics }: { tree: FileNode[]; availableMetrics: string[] }) {
+    const [viewMode, setViewMode] = useUrlState<'tree' | 'flat'>('view', 'tree')
+    const [query, setQuery] = useUrlState('q', '')
+    const [searchMode, setSearchMode] = useUrlState<'glob' | 'normal'>('qMode', 'normal')
+    const [riskFilter, setRiskFilter] = useUrlState<RiskFilter>('risk', 'all')
+    const [isNameColumnPinned, setIsNameColumnPinned] = useUrlState('pinned', true)
+
+    const [sortKey, setSortKey] = useUrlState<SortKey>('sortKey', 'name')
+    const [sortDir, setSortDir] = useUrlState<SortDir>('sortDir', 'asc')
+
+    const defaultEnabled = getDefaultEnabledMetrics(availableMetrics)
+    const [enabledMetricsParam, setEnabledMetricsParam] = useUrlState('cols', defaultEnabled.join(','))
+
+    const [filterRanges, setFilterRanges] = useUrlState<Record<MetricKey, FilterRange>>('ranges', {})
+
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
         () => new Set(tree.filter((n) => n.type === 'folder').map((n) => n.id)),
     )
-    const [viewMode, setViewMode] = useState<'tree' | 'flat'>('tree')
-    const [searchMode, setSearchMode] = useState<'glob' | 'normal'>('normal')
-    const [query, setQuery] = useState('')
     const searchRef = useRef<HTMLInputElement>(null)
     useKeyboardSearch(searchRef)
-    const [isNameColumnPinned, setIsNameColumnPinned] = useState(true)
 
-    const [riskFilter, setRiskFilter] = useState<RiskFilter>('all')
-    const [metricConfigs, setMetricConfigs] = useState<MetricConfig[]>([
-        { id: 'lineCoverage', label: 'Line Coverage', shortLabel: 'Line', enabled: true },
-        { id: 'branchCoverage', label: 'Branch Coverage', shortLabel: 'Branch', enabled: true },
-        { id: 'methodCoverage', label: 'Method Coverage', shortLabel: 'Method', enabled: true },
-        { id: 'statementCoverage', label: 'Statement Coverage', shortLabel: 'Stmt', enabled: false },
-        { id: 'functionCoverage', label: 'Function Coverage', shortLabel: 'Func', enabled: false },
-    ])
-    const [filterRanges, setFilterRanges] = useState<Record<MetricKey, FilterRange>>({
-        lineCoverage: { min: 0, max: 100 },
-        branchCoverage: { min: 0, max: 100 },
-        methodCoverage: { min: 0, max: 100 },
-        statementCoverage: { min: 0, max: 100 },
-        functionCoverage: { min: 0, max: 100 },
-    })
+    // Memoize a map of the tree for efficient node lookup.
+    const idToNodeMap = useMemo(() => {
+        const map = new Map<string, FileNode>()
+        const walk = (nodes: FileNode[]) => {
+            for (const node of nodes) {
+                map.set(node.id, node)
+                if (node.children) {
+                    walk(node.children)
+                }
+            }
+        }
+        walk(tree)
+        return map
+    }, [tree])
+
+    const metricConfigs: MetricConfig[] = useMemo(
+        () =>
+            availableMetrics.map((id) => ({
+                id,
+                label: camelCaseToTitleCase(id),
+                shortLabel: getShortLabel(id),
+                enabled: enabledMetricsParam.split(',').includes(id),
+            })),
+        [availableMetrics, enabledMetricsParam],
+    )
     const enabledMetrics = metricConfigs.filter((m) => m.enabled)
-    const [sortKey, setSortKey] = useState<SortKey>('name')
-    const [sortDir, setSortDir] = useState<SortDir>('asc')
 
-    const toggleFolder = (id: string) => {
+    // Helper function to get all descendant folder IDs for recursive toggling.
+    const getDescendantFolderIds = (startNode: FileNode): string[] => {
+        const ids: string[] = []
+        const walk = (node: FileNode) => {
+            if (node.type === 'folder' && node.children) {
+                ids.push(node.id)
+                for (const child of node.children) {
+                    walk(child)
+                }
+            }
+        }
+        if (startNode.children) {
+            for (const child of startNode.children) {
+                walk(child)
+            }
+        }
+        return ids
+    }
+
+    const toggleFolder = (id: string, event: React.MouseEvent | React.KeyboardEvent) => {
+        const isRecursive = event.altKey === true
+
         setExpandedFolders((prev) => {
-            const s = new Set(prev)
-            if (s.has(id)) s.delete(id)
-            else s.add(id)
-            return s
+            const newSet = new Set(prev)
+            const shouldExpand = !newSet.has(id)
+
+            if (isRecursive) {
+                const startNode = idToNodeMap.get(id)
+                if (startNode) {
+                    const descendantIds = getDescendantFolderIds(startNode)
+                    const allIdsToToggle = [id, ...descendantIds]
+
+                    if (shouldExpand) {
+                        allIdsToToggle.forEach((folderId) => newSet.add(folderId))
+                    } else {
+                        allIdsToToggle.forEach((folderId) => newSet.delete(folderId))
+                    }
+                }
+            } else {
+                // Standard non-recursive toggle
+                if (shouldExpand) {
+                    newSet.add(id)
+                } else {
+                    newSet.delete(id)
+                }
+            }
+            return newSet
         })
     }
 
-    const toggleMetric = (id: MetricKey) =>
-        setMetricConfigs((prev) => prev.map((m) => (m.id === id ? { ...m, enabled: !m.enabled } : m)))
+    const toggleMetric = (id: MetricKey) => {
+        const current = enabledMetricsParam.split(',').filter(Boolean)
+        const newSet = new Set(current)
+        if (newSet.has(id)) {
+            newSet.delete(id)
+        } else {
+            newSet.add(id)
+        }
+        const newEnabled = availableMetrics.filter((mId) => newSet.has(mId))
+        setEnabledMetricsParam(newEnabled.join(','))
+    }
 
-    const updateFilterRange = (id: MetricKey, vals: [number, number]) =>
-        setFilterRanges((prev) => ({ ...prev, [id]: { min: vals[0], max: vals[1] } }))
+    const updateFilterRange = (id: MetricKey, vals: [number, number]) => {
+        const newRanges = { ...filterRanges }
+        if (vals[0] === 0 && vals[1] === 100) {
+            delete newRanges[id]
+        } else {
+            newRanges[id] = { min: vals[0], max: vals[1] }
+        }
+        setFilterRanges(newRanges)
+    }
 
     const nameMatches = useCallback(
         (text: string) => {
@@ -106,18 +193,19 @@ export default function FileExplorer({ tree }: { tree: FileNode[] }) {
         (nodes: FileNode[]): FileNode[] => {
             const res: FileNode[] = []
             for (const node of nodes) {
-                if (node.type === 'file' && node.metrics) {
+                if (node.type === 'file') {
                     const passesRanges = enabledMetrics.every((cfg) => {
-                        const v = node.metrics?.[cfg.id]?.percentage
-                        const r = filterRanges[cfg.id]
-                        return v !== undefined && v >= r.min && v <= r.max
+                        const percentage = node.metrics?.[cfg.id]?.percentage
+                        const range = filterRanges[cfg.id] ?? { min: 0, max: 100 }
+                        if (percentage === undefined) return true
+                        return percentage >= range.min && percentage <= range.max
                     })
                     const passesName = nameMatches(node.name) || nameMatches(node.path)
                     const passesRisk = fileRiskMatches(node)
                     if (passesRanges && passesName && passesRisk) res.push(node)
                 } else if (node.type === 'folder' && node.children) {
-                    const kept = filterTreeForView(node.children)
-                    if (kept.length > 0) res.push({ ...node, children: kept })
+                    const keptChildren = filterTreeForView(node.children)
+                    if (keptChildren.length > 0) res.push({ ...node, children: keptChildren })
                 }
             }
             return res
@@ -137,7 +225,6 @@ export default function FileExplorer({ tree }: { tree: FileNode[] }) {
                     const nameB = viewMode === 'flat' ? b.path : b.name
                     return nameA.localeCompare(nameB) * dir
                 }
-
                 if (typeof sortKey === 'object') {
                     const { metric, subMetric } = sortKey
                     const getValue = (n: FileNode) => n.metrics?.[metric]?.[subMetric] ?? -1
@@ -168,7 +255,7 @@ export default function FileExplorer({ tree }: { tree: FileNode[] }) {
 
     const onHeaderClick = (key: SortKey) => {
         if (JSON.stringify(sortKey) === JSON.stringify(key)) {
-            setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+            setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
         } else {
             setSortKey(key)
             setSortDir('asc')
@@ -262,7 +349,7 @@ export default function FileExplorer({ tree }: { tree: FileNode[] }) {
                                                         variant="ghost"
                                                         size="sm"
                                                         className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                                                        onClick={() => setIsNameColumnPinned((p) => !p)}
+                                                        onClick={() => setIsNameColumnPinned(!isNameColumnPinned)}
                                                         aria-label={isNameColumnPinned ? 'Unpin column' : 'Pin column'}
                                                     >
                                                         {isNameColumnPinned ? (
@@ -295,7 +382,7 @@ export default function FileExplorer({ tree }: { tree: FileNode[] }) {
 
                                             <div className="px-2">
                                                 <HeaderRangeSlider
-                                                    range={filterRanges[m.id]}
+                                                    range={filterRanges[m.id] ?? { min: 0, max: 100 }}
                                                     onRangeCommit={(vals) => updateFilterRange(m.id, vals)}
                                                 />
                                             </div>

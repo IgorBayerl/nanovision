@@ -19,7 +19,8 @@ export function TreeRow({
     depth: number
     enabledMetrics: { id: MetricKey; label: string }[]
     isExpanded: boolean
-    onToggleFolder: (id: string) => void
+    // The prop now accepts the original UI event
+    onToggleFolder: (id: string, event: React.MouseEvent | React.KeyboardEvent) => void
     metricsForNode: (n: FileNode) => Partial<Metrics> | undefined
     viewMode: 'tree' | 'flat'
     index: number
@@ -34,11 +35,13 @@ export function TreeRow({
         ? {
               role: 'button',
               tabIndex: 0,
-              onClick: () => onToggleFolder(node.id),
+              // Pass the event object on click
+              onClick: (e: React.MouseEvent) => onToggleFolder(node.id, e),
+              // Pass the event object on key down
               onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
-                      onToggleFolder(node.id)
+                      onToggleFolder(node.id, e)
                   }
               },
           }
