@@ -1,11 +1,10 @@
-import { cn } from '@/lib/utils'
 import type { MetadataItem } from '@/types/summary'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 
 const InfoRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="flex flex-col gap-1 border-border border-t sm:flex-row sm:justify-between sm:gap-4">
+    <div className="flex flex-row justify-between gap-4 border-border border-t">
         <dt className="font-semibold text-foreground">{label}:</dt>
-        <dd className="text-muted-foreground sm:text-right">{children}</dd>
+        <dd className="text-right text-muted-foreground">{children}</dd>
     </div>
 )
 
@@ -40,7 +39,7 @@ export default function InfoCard({ title, items }: InfoCardProps) {
             <CardContent className="flex-grow">
                 <div className="flex flex-col flex-wrap content-start gap-x-6">
                     {items.map((item, _index) => (
-                        <div key={item.label} className={cn('group hover:bg-muted/50')}>
+                        <div key={item.label} className="group w-full hover:bg-muted/50">
                             <InfoRow label={item.label}>
                                 <ValueDisplay value={item.value} />
                             </InfoRow>

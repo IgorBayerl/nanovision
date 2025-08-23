@@ -15,9 +15,9 @@ type SummaryMetricsProps = {
 
 export default function SummaryMetrics({ info, metrics, metricOrder, metricDefinitions }: SummaryMetricsProps) {
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-wrap gap-4">
             {info && info.items.length > 0 && (
-                <div className="">
+                <div className="flex-grow rounded-lg">
                     <InfoCard title={info.title} items={info.items} />
                 </div>
             )}
@@ -29,13 +29,9 @@ export default function SummaryMetrics({ info, metrics, metricOrder, metricDefin
                 const label = definition?.label ?? camelCaseToTitleCase(metricId)
 
                 return (
-                    <MetricCard
-                        key={metricId}
-                        label={label}
-                        details={metricDetails}
-                        status={status}
-                        definition={definition}
-                    />
+                    <div key={metricId} className="min-w-sm flex-grow lg:max-w-1/2">
+                        <MetricCard label={label} details={metricDetails} status={status} definition={definition} />
+                    </div>
                 )
             })}
         </div>
