@@ -855,7 +855,7 @@ window.__ADLERCOV_SUMMARY__ = {
                 { id: 'uncovered', label: 'Uncovered', width: 90 },
                 { id: 'coverable', label: 'Coverable', width: 90 },
                 { id: 'total', label: 'Total', width: 70 },
-                { id: 'percentage', label: '%', width: 140 },
+                { id: 'percentage', label: 'Percentage %', width: 140 },
             ],
         },
         branchCoverage: {
@@ -864,7 +864,7 @@ window.__ADLERCOV_SUMMARY__ = {
             subMetrics: [
                 { id: 'covered', label: 'Covered', width: 80 },
                 { id: 'total', label: 'Total', width: 80 },
-                { id: 'percentage', label: '%', width: 140 },
+                { id: 'percentage', label: 'Percentage %', width: 140 },
             ],
         },
         methodCoverage: {
@@ -873,7 +873,7 @@ window.__ADLERCOV_SUMMARY__ = {
             subMetrics: [
                 { id: 'covered', label: 'Covered', width: 120 },
                 { id: 'total', label: 'Total', width: 80 },
-                { id: 'percentage', label: '%', width: 140 },
+                { id: 'percentage', label: 'Percentage %', width: 140 },
             ],
         },
         fullMethodCoverage: {
@@ -882,7 +882,7 @@ window.__ADLERCOV_SUMMARY__ = {
             subMetrics: [
                 { id: 'covered', label: 'Fully Covered', width: 120 },
                 { id: 'total', label: 'Total', width: 80 },
-                { id: 'percentage', label: '%', width: 140 },
+                { id: 'percentage', label: 'Percentage %', width: 140 },
             ],
         },
         statementCoverage: {
@@ -892,7 +892,7 @@ window.__ADLERCOV_SUMMARY__ = {
                 { id: 'uncovered', label: 'Uncovered', width: 90 },
                 { id: 'coverable', label: 'Coverable', width: 90 },
                 { id: 'total', label: 'Total', width: 70 },
-                { id: 'percentage', label: '%', width: 140 },
+                { id: 'percentage', label: 'Percentage %', width: 140 },
             ],
         },
     },

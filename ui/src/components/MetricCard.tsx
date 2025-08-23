@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 import { Progress } from '@/ui/progress'
 
 const DetailRow = ({ label, value }: { label: string; value: number | string }) => (
-    <div className="group flex items-baseline justify-between px-2 text-sm hover:bg-muted/50">
+    <div className="group flex items-baseline justify-between px-2 text-sm hover:bg-accent/50">
         <span className="text-muted-foreground group-hover:text-foreground">{label}</span>
         <span className="font-medium font-mono text-foreground">{value}</span>
     </div>
@@ -29,8 +29,6 @@ export default function MetricCard({
 }) {
     const pct = details ? Math.max(0, Math.min(100, Math.round(details.percentage))) : undefined
 
-    const statusBarColor = status === 'danger' ? 'bg-destructive' : status === 'warning' ? 'bg-accent' : 'bg-primary'
-
     return (
         <Card className="flex h-full w-full flex-col rounded-md">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -43,7 +41,7 @@ export default function MetricCard({
                         {pct !== undefined ? `${pct}%` : 'N/A'}
                     </div>
                     <div className="mt-2 w-full max-w-[100px]">
-                        <Progress value={pct} indicatorClassName={statusBarColor} />
+                        <Progress value={pct} indicatorClassName="bg-primary" />
                     </div>
                 </div>
                 <div className="flex flex-1 flex-col divide-y">

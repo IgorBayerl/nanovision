@@ -1,5 +1,6 @@
 import { AlertCircle, AlertTriangle } from 'lucide-react'
-import { Progress } from '@/ui/progress' // 1. Import the Progress component
+import type { RiskLevel } from '@/types/summary'
+import { Progress } from '@/ui/progress'
 
 export default function InlineCoverage({
     percentage,
@@ -7,7 +8,7 @@ export default function InlineCoverage({
     isFolder,
 }: {
     percentage: number
-    risk: 'safe' | 'warning' | 'danger'
+    risk: RiskLevel
     isFolder?: boolean
 }) {
     const clampedPercentage = Math.round(Math.max(0, Math.min(100, percentage)))
@@ -28,8 +29,8 @@ export default function InlineCoverage({
             </span>
             <Progress
                 value={clampedPercentage}
-                className="h-2 flex-1 rounded-xs bg-uncovered"
-                indicatorClassName="bg-covered rounded-xs"
+                className="h-2 flex-1 rounded-xs bg-muted"
+                indicatorClassName="bg-primary"
             />
         </div>
     )
