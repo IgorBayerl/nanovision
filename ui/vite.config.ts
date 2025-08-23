@@ -1,9 +1,8 @@
-// vite.config.ts
 import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
-import { nodePolyfills } from 'vite-plugin-node-polyfills' // 1. Import the plugin
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 
 export default defineConfig(() => ({

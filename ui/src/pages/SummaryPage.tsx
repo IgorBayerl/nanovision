@@ -5,7 +5,7 @@ import TopBar from '@/components/Layout.TopBar'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
 import { cn } from '@/lib/utils'
-import type { SummaryV1 } from '@/lib/validation' // Corrected: This import now works
+import type { SummaryV1 } from '@/lib/validation'
 import { validateSummaryData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
 

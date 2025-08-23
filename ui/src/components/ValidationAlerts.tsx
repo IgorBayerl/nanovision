@@ -5,9 +5,6 @@ interface ValidationAlertsProps {
     issues: ZodIssue[]
 }
 
-/**
- * A component to display data validation errors.
- */
 export default function ValidationAlerts({ issues }: ValidationAlertsProps) {
     if (!issues || issues.length === 0) {
         return null
@@ -34,7 +31,6 @@ export default function ValidationAlerts({ issues }: ValidationAlertsProps) {
                             ))}
                         </ul>
                         {issues.length > 5 && (
-                            // Corrected: Sorted Tailwind CSS classes
                             <p className="mt-2 font-medium text-xs">...and {issues.length - 5} more issues.</p>
                         )}
                     </div>
