@@ -2,8 +2,8 @@ export type RiskLevel = 'safe' | 'warning' | 'danger'
 
 export interface CoverageDetail {
     covered: number
-    uncovered: number
-    coverable: number
+    uncovered?: number
+    coverable?: number
     total: number
     percentage: number
 }
@@ -22,13 +22,13 @@ export interface FileNode {
     statuses?: Statuses
     componentId?: string
     componentName?: string
-    targetUrl?: string
+    targetUrl?: string | null
 }
 
 export interface Totals {
     files: number
     folders: number
-    statuses?: Statuses // Added statuses to totals
+    statuses?: Statuses
     [key: string]: CoverageDetail | number | Statuses | undefined
 }
 
@@ -59,7 +59,7 @@ export interface SummaryV1 {
     title: string
     totals: Totals
     tree: FileNode[]
-    metricDefinitions: MetricDefinitions // Added metric definitions
+    metricDefinitions: MetricDefinitions
     metadata?: MetadataItem[]
 }
 

@@ -23,31 +23,32 @@ export function useTheme() {
 }
 
 /**
- * A helper function to determine the initial theme based on storage or system preference.
- * This runs only once when the application starts.
+ * Determines the initial theme by checking local storage first, then falling
+ * back to the user's system preference. This function runs only once.
  */
 function getInitialTheme(): Mode {
-    return 'light'
-    // // Check for a user's explicit preference in localStorage.
-    // const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-    // if (storedTheme === 'light' || storedTheme === 'dark') {
-    //     return storedTheme
-    // }
+    // Check for a user's explicit preference in localStorage.
+    if (typeof window !== 'undefined') {
+        const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+            return storedTheme
+        }
+    }
 
-    // // If no preference is stored, fall back to the system's color scheme.
-    // const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
-    // return prefersDark ? 'dark' : 'light'
+    // If no preference is stored, fall back to the system's color scheme.
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
+    return prefersDark ? 'dark' : 'light'
 }
 
 /**
  * Wrap the entire application with this to use theme switching.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    // 2. Initialize the state by calling our new function.
+    // Initialize state by calling our new function.
     // Using a function initializer ensures it runs only on the first render.
     const [mode, setMode] = useState<Mode>(getInitialTheme)
 
-    // 3. This effect runs whenever the `mode` changes, SAVING the new value to localStorage.
+    // This effect runs whenever `mode` changes, saving the new value to localStorage.
     useEffect(() => {
         try {
             window.localStorage.setItem(THEME_STORAGE_KEY, mode)
@@ -56,7 +57,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         }
     }, [mode])
 
-    // This effect remains the same. It applies the 'dark' or 'light' class to the <html> tag.
+    // This effect applies the 'dark' or 'light' class to the <html> tag for CSS to work.
     useEffect(() => {
         const root = document.documentElement
         root.classList.remove('light', 'dark')
