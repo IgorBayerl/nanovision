@@ -28,16 +28,29 @@ export interface FileNode {
 export interface Totals {
     files: number
     folders: number
-    // This index signature allows for dynamic metric keys while keeping `files` and `folders` correctly typed.
-    [key: string]: CoverageDetail | number
+    statuses?: Statuses // Added statuses to totals
+    [key: string]: CoverageDetail | number | Statuses | undefined
 }
 
 export type MetadataItem = {
     label: string
     value: string | string[]
-    /** optional: override sizing */
     sizeHint?: 'small' | 'medium' | 'large'
 }
+
+export type SubMetric = {
+    id: keyof CoverageDetail | string
+    label: string
+    width: number
+}
+
+export type MetricDefinition = {
+    label: string
+    shortLabel?: string
+    subMetrics: SubMetric[]
+}
+
+export type MetricDefinitions = Record<string, MetricDefinition>
 
 export interface SummaryV1 {
     schemaVersion: number
@@ -46,14 +59,11 @@ export interface SummaryV1 {
     title: string
     totals: Totals
     tree: FileNode[]
-    parsers?: string[]
-    configFiles?: string[]
-    importedReports?: string[]
+    metricDefinitions: MetricDefinitions // Added metric definitions
     metadata?: MetadataItem[]
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'
-
 export type MetricKey = string
 
 export type MetricConfig = {
@@ -61,6 +71,7 @@ export type MetricConfig = {
     label: string
     shortLabel: string
     enabled: boolean
+    definition: MetricDefinition
 }
 
 export type FilterRange = {
@@ -68,7 +79,7 @@ export type FilterRange = {
     max: number
 }
 
-export type SortableSubMetricKey = keyof CoverageDetail
+export type SortableSubMetricKey = keyof CoverageDetail | string
 
 export type SortKey = 'name' | { metric: MetricKey; subMetric: SortableSubMetricKey }
 export type SortDir = 'asc' | 'desc'

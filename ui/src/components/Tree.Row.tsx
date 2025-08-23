@@ -1,8 +1,7 @@
 import { ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
 import InlineCoverage from '@/components/InlineCoverage'
-import { SUB_METRIC_COLS } from '@/lib/consts'
 import { cn } from '@/lib/utils'
-import type { FileNode, MetricKey, Metrics } from '@/types/summary'
+import type { FileNode, MetricConfig, Metrics } from '@/types/summary'
 
 export function TreeRow({
     node,
@@ -17,9 +16,8 @@ export function TreeRow({
 }: {
     node: FileNode
     depth: number
-    enabledMetrics: { id: MetricKey; label: string }[]
+    enabledMetrics: MetricConfig[]
     isExpanded: boolean
-    // The prop now accepts the original UI event
     onToggleFolder: (id: string, event: React.MouseEvent | React.KeyboardEvent) => void
     metricsForNode: (n: FileNode) => Partial<Metrics> | undefined
     viewMode: 'tree' | 'flat'
@@ -35,9 +33,7 @@ export function TreeRow({
         ? {
               role: 'button',
               tabIndex: 0,
-              // Pass the event object on click
               onClick: (e: React.MouseEvent) => onToggleFolder(node.id, e),
-              // Pass the event object on key down
               onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
@@ -47,7 +43,10 @@ export function TreeRow({
           }
         : {}
 
-    const totalMetricsWidth = enabledMetrics.reduce((sum) => sum + SUB_METRIC_COLS.reduce((s, c) => s + c.width, 0), 0)
+    const totalMetricsWidth = enabledMetrics.reduce(
+        (sum, metric) => sum + metric.definition.subMetrics.reduce((s, c) => s + c.width, 0),
+        0,
+    )
 
     return (
         <div
@@ -58,12 +57,7 @@ export function TreeRow({
             )}
             {...interactiveProps}
         >
-            <div
-                className="grid h-full"
-                style={{
-                    gridTemplateColumns: `minmax(300px, 1fr) ${totalMetricsWidth}px`,
-                }}
-            >
+            <div className="grid h-full" style={{ gridTemplateColumns: `minmax(300px, 1fr) ${totalMetricsWidth}px` }}>
                 <div
                     className={cn(
                         'flex min-w-0 items-center gap-2 border-border border-r',
@@ -95,10 +89,7 @@ export function TreeRow({
                     )}
 
                     <span
-                        className={cn(
-                            'truncate',
-                            isFolder ? 'font-semibold text-foreground' : 'font-medium text-foreground/90',
-                        )}
+                        className={cn('truncate', isFolder ? 'font-semibold' : 'font-medium text-foreground/90')}
                         title={node.path}
                     >
                         {viewMode === 'flat' ? node.path : node.name}
@@ -107,9 +98,7 @@ export function TreeRow({
 
                 <div
                     className={cn('grid items-center', isOdd ? 'bg-subtle' : 'bg-background', 'group-hover:bg-muted')}
-                    style={{
-                        gridTemplateColumns: `repeat(${enabledMetrics.length}, 1fr)`,
-                    }}
+                    style={{ gridTemplateColumns: `repeat(${enabledMetrics.length}, 1fr)` }}
                 >
                     {enabledMetrics.map((cfg, index) => {
                         const metricData = metrics?.[cfg.id]
@@ -120,27 +109,33 @@ export function TreeRow({
                                     'grid h-full items-center',
                                     index < enabledMetrics.length - 1 && 'border-border border-r',
                                 )}
-                                style={{ gridTemplateColumns: SUB_METRIC_COLS.map((c) => `${c.width}px`).join(' ') }}
+                                style={{
+                                    gridTemplateColumns: cfg.definition.subMetrics.map((c) => `${c.width}px`).join(' '),
+                                }}
                             >
-                                <div className="px-2 text-right text-xs tabular-nums">{metricData?.covered ?? '-'}</div>
-                                <div className="px-2 text-right text-xs tabular-nums">
-                                    {metricData?.uncovered ?? '-'}
-                                </div>
-                                <div className="px-2 text-right text-xs tabular-nums">
-                                    {metricData?.coverable ?? '-'}
-                                </div>
-                                <div className="px-2 text-right text-xs tabular-nums">{metricData?.total ?? '-'}</div>
-                                <div className="px-2 text-right text-xs tabular-nums">
-                                    {metricData !== undefined ? (
-                                        <InlineCoverage
-                                            percentage={metricData.percentage}
-                                            risk={node.statuses?.[cfg.id] ?? 'safe'}
-                                            isFolder={isFolder}
-                                        />
-                                    ) : (
-                                        <span className="text-muted-foreground text-xs">-</span>
-                                    )}
-                                </div>
+                                {cfg.definition.subMetrics.map((subMetric) => {
+                                    if (subMetric.id === 'percentage') {
+                                        return (
+                                            <div key={subMetric.id} className="px-2 text-right text-xs tabular-nums">
+                                                {metricData !== undefined ? (
+                                                    <InlineCoverage
+                                                        percentage={metricData.percentage}
+                                                        risk={node.statuses?.[cfg.id] ?? 'safe'}
+                                                        isFolder={isFolder}
+                                                    />
+                                                ) : (
+                                                    <span className="text-muted-foreground text-xs">-</span>
+                                                )}
+                                            </div>
+                                        )
+                                    }
+                                    const value = metricData?.[subMetric.id as keyof typeof metricData]
+                                    return (
+                                        <div key={subMetric.id} className="px-2 text-right text-xs tabular-nums">
+                                            {value ?? '-'}
+                                        </div>
+                                    )
+                                })}
                             </div>
                         )
                     })}

@@ -38,9 +38,9 @@ export default function InfoCard({ title, items }: InfoCardProps) {
                 <CardTitle className="text-lg">{title}</CardTitle>
             </CardHeader>
             <CardContent className="flex-grow">
-                <div className="flex h-64 flex-col flex-wrap content-start gap-x-6">
+                <div className="flex flex-col flex-wrap content-start gap-x-6">
                     {items.map((item, _index) => (
-                        <div key={item.label} className={cn('group w-[280px] hover:bg-muted/50')}>
+                        <div key={item.label} className={cn('group hover:bg-muted/50')}>
                             <InfoRow label={item.label}>
                                 <ValueDisplay value={item.value} />
                             </InfoRow>
