@@ -2,7 +2,7 @@ import type { MetadataItem } from '@/types/summary'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 
 const InfoRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="group flex items-baseline  w-full justify-between text-sm hover:bg-accent/50">
+    <div className="group flex w-full items-baseline justify-between text-sm hover:bg-accent/50">
         <span className="text-muted-foreground group-hover:text-foreground">{label}:</span>
         {children}
     </div>
