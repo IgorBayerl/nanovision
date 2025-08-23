@@ -1,5 +1,5 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
+    "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
     "root": true,
     "vcs": {
         "enabled": true,
@@ -8,7 +8,7 @@
     },
     "files": {
         "ignoreUnknown": false,
-        "includes": ["**", "!dist/**", "!build/**", "!coverage/**"]
+        "includes": ["**", "!dist", "!build", "!coverage"]
     },
     "formatter": {
         "enabled": true,
@@ -22,6 +22,9 @@
             "recommended": true,
             "nursery": {
                 "useSortedClasses": "warn"
+            },
+            "suspicious": {
+                "noUnknownAtRules": "off"
             }
         }
     },

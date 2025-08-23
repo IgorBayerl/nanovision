@@ -61,8 +61,15 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
                 if (startNode) {
                     const descendantIds = getDescendantFolderIds(startNode)
                     const allIdsToToggle = [id, ...descendantIds]
-                    if (shouldExpand) allIdsToToggle.forEach((folderId) => newSet.add(folderId))
-                    else allIdsToToggle.forEach((folderId) => newSet.delete(folderId))
+                    if (shouldExpand) {
+                        allIdsToToggle.forEach((folderId) => {
+                            newSet.add(folderId)
+                        })
+                    } else {
+                        allIdsToToggle.forEach((folderId) => {
+                            newSet.delete(folderId)
+                        })
+                    }
                 }
             } else {
                 if (shouldExpand) newSet.add(id)

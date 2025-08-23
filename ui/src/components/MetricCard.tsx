@@ -1,7 +1,7 @@
 import { AlertCircle, AlertTriangle, ShieldCheck } from 'lucide-react'
 import type { CoverageDetail, MetricDefinition, RiskLevel } from '@/types/summary'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
-import { Progress } from '@/ui/progress' 
+import { Progress } from '@/ui/progress'
 
 const DetailRow = ({ label, value }: { label: string; value: number | string }) => (
     <div className="group flex items-baseline justify-between px-2 text-sm hover:bg-muted/50">
@@ -38,7 +38,7 @@ export default function MetricCard({
                 {status && <StatusIcon status={status} />}
             </CardHeader>
             <CardContent className="flex flex-grow gap-4">
-                <div className="flex flex-col items-center justify-center">
+                <div className="flex flex-col items-center">
                     <div className="font-bold text-5xl text-foreground tabular-nums tracking-tight">
                         {pct !== undefined ? `${pct}%` : 'N/A'}
                     </div>
