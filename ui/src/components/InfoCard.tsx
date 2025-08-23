@@ -2,27 +2,24 @@ import type { MetadataItem } from '@/types/summary'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 
 const InfoRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="flex flex-row justify-between gap-4 border-border border-t">
-        <dt className="font-semibold text-foreground">{label}:</dt>
-        <dd className="text-right text-muted-foreground">{children}</dd>
+    <div className="group flex items-baseline  w-full justify-between text-sm hover:bg-accent/50">
+        <span className="text-muted-foreground group-hover:text-foreground">{label}:</span>
+        {children}
     </div>
 )
 
 const ValueDisplay = ({ value }: { value: MetadataItem['value'] }) => {
     if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
-        return <span>-</span>
+        return <span className="font-medium font-mono text-foreground">-</span>
     }
 
-    if (Array.isArray(value)) {
-        const fullString = value.join(', ')
-        return (
-            <span className="font-mono" title={fullString}>
-                {fullString}
-            </span>
-        )
-    }
+    const displayString = Array.isArray(value) ? value.join(', ') : String(value)
 
-    return <span className="font-mono">{String(value)}</span>
+    return (
+        <span className="font-medium font-mono text-foreground" title={displayString}>
+            {displayString}
+        </span>
+    )
 }
 
 interface InfoCardProps {
@@ -33,17 +30,15 @@ interface InfoCardProps {
 export default function InfoCard({ title, items }: InfoCardProps) {
     return (
         <Card className="flex h-full flex-col rounded-md">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">{title}</CardTitle>
             </CardHeader>
             <CardContent className="flex-grow">
-                <div className="flex flex-col flex-wrap content-start gap-x-6">
-                    {items.map((item, _index) => (
-                        <div key={item.label} className="group w-full hover:bg-muted/50">
-                            <InfoRow label={item.label}>
-                                <ValueDisplay value={item.value} />
-                            </InfoRow>
-                        </div>
+                <div className="flex flex-col flex-wrap content-start gap-x-6 divide-y border-border">
+                    {items.map((item) => (
+                        <InfoRow key={item.label} label={item.label}>
+                            <ValueDisplay value={item.value} />
+                        </InfoRow>
                     ))}
                 </div>
             </CardContent>
