@@ -3,7 +3,8 @@ package model
 // CoverageMetrics holds the aggregated coverage data for a node (project, dir, or file).
 type CoverageMetrics struct {
 	LinesCovered    int
-	LinesValid      int // Coverable lines
+	LinesValid      int
+	TotalLines      int
 	BranchesCovered int
 	BranchesValid   int
 }

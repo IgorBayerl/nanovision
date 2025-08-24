@@ -5,6 +5,8 @@ import (
 	"io/fs"
 )
 
+// This next line will throw an error if there is no content inside of assets/dist
+//
 //go:embed all:assets/dist
 var reactDist embed.FS
 

@@ -73,9 +73,8 @@ const metricDefinitionSchema = z.object({
     subMetrics: z.array(subMetricSchema),
 })
 
-// The final, top-level schema for the entire report data object
 export const summaryV1Schema = z.object({
-    schemaVersion: z.literal(2, { message: 'This report requires schemaVersion 2.' }),
+    schemaVersion: z.literal(1, { message: 'This report requires schemaVersion 1.' }),
     generatedAt: z
         .string()
         .refine((val) => !Number.isNaN(Date.parse(val)), { message: 'GeneratedAt must be a valid date string.' }),
@@ -87,7 +86,6 @@ export const summaryV1Schema = z.object({
     metadata: z.array(metadataItemSchema).optional(),
 })
 
-// Export the inferred SummaryV1 type from the schema
 export type SummaryV1 = z.infer<typeof summaryV1Schema>
 
 /**
