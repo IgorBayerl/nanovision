@@ -45,9 +45,18 @@ report_generator_dotnet/ReportGenerator.DotnetCorePluginLoader/**
 report_generator_dotnet/ReportGenerator.DotnetGlobalTool/**
 report_generator_dotnet/ReportGenerator.MSBuild/**
 
+ui/node_modules/**
+ui/src/components/**
+ui/src/hooks/**
+ui/src/lib/**
+ui/src/ui/**
+ui/pnpm-lock.yaml
+
 Testprojects/C++/Reports/Cobertura_CPPCoverage.xml
 Testprojects/FSharp/**
 Testprojects/Java/**
 docs/docs/roadmap/new-react-reporter
 
 demo_projects/**
+
+internal/reporter/htmlreport/**

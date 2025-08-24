@@ -1,0 +1,35 @@
+@import "tailwindcss";
+@import "./theme.css";
+@import "tw-animate-css";
+
+@layer base {
+    * {
+        border-color: var(--color-border);
+    }
+
+    html,
+    body,
+    #root {
+        @apply h-full;
+    }
+
+    body {
+        @apply bg-subtle;
+    }
+
+    /* Custom Scrollbar Styling */
+    body {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-border) transparent;
+    }
+    body::-webkit-scrollbar {
+        width: 8px;
+    }
+    body::-webkit-scrollbar-thumb {
+        @apply rounded-md;
+        background-color: var(--color-border);
+    }
+    body::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-muted-foreground);
+    }
+}

@@ -1,0 +1,68 @@
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
+
+const THEME_STORAGE_KEY = 'adlercov-ui-theme'
+
+export type Mode = 'light' | 'dark'
+
+type ThemeContextValue = {
+    mode: Mode
+    setMode: (m: Mode) => void
+}
+
+export const ThemeContext = createContext<ThemeContextValue | null>(null)
+
+/**
+ * Hook to access the current theme (light/dark) and a function to update it.
+ */
+export function useTheme() {
+    const ctx = useContext(ThemeContext)
+    if (!ctx) {
+        throw new Error('useTheme must be used within a ThemeProvider')
+    }
+    return ctx
+}
+
+/**
+ * Determines the initial theme by checking local storage first, then falling
+ * back to the user's system preference. This function runs only once.
+ */
+function getInitialTheme(): Mode {
+    // Check for a user's explicit preference in localStorage.
+    if (typeof window !== 'undefined') {
+        const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+            return storedTheme
+        }
+    }
+
+    // If no preference is stored, fall back to the system's color scheme.
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
+    return prefersDark ? 'dark' : 'light'
+}
+
+/**
+ * Wrap the entire application with this to use theme switching.
+ */
+export function ThemeProvider({ children }: { children: ReactNode }) {
+    // Initialize state by calling our new function.
+    // Using a function initializer ensures it runs only on the first render.
+    const [mode, setMode] = useState<Mode>(getInitialTheme)
+
+    // This effect runs whenever `mode` changes, saving the new value to localStorage.
+    useEffect(() => {
+        try {
+            window.localStorage.setItem(THEME_STORAGE_KEY, mode)
+        } catch (e) {
+            console.error('Failed to save theme to localStorage', e)
+        }
+    }, [mode])
+
+    // This effect applies the 'dark' or 'light' class to the <html> tag for CSS to work.
+    useEffect(() => {
+        const root = document.documentElement
+        root.classList.remove('light', 'dark')
+        root.classList.add(mode)
+    }, [mode])
+
+    return <ThemeContext.Provider value={{ mode, setMode }}>{children}</ThemeContext.Provider>
+}

@@ -59,6 +59,8 @@ func (h *Hydrator) hydrateFile(node *model.FileNode) {
 		return
 	}
 
+	node.TotalLines = len(sourceLines)
+
 	processor := h.langFactory.FindProcessorForFile(node.Path)
 
 	methods, err := processor.AnalyzeFile(resolvedPath, sourceLines)
@@ -98,9 +100,10 @@ func (h *Hydrator) aggregateTreeMetrics(node *model.DirNode) {
 	node.Metrics = model.CoverageMetrics{}
 
 	for _, file := range node.Files {
-		calculateFileMetrics(file) // Calculate metrics for the file itself.
+		calculateFileMetrics(file)
 		node.Metrics.LinesCovered += file.Metrics.LinesCovered
 		node.Metrics.LinesValid += file.Metrics.LinesValid
+		node.Metrics.TotalLines += file.Metrics.TotalLines
 		node.Metrics.BranchesCovered += file.Metrics.BranchesCovered
 		node.Metrics.BranchesValid += file.Metrics.BranchesValid
 	}
@@ -108,6 +111,7 @@ func (h *Hydrator) aggregateTreeMetrics(node *model.DirNode) {
 	for _, subdir := range node.Subdirs {
 		node.Metrics.LinesCovered += subdir.Metrics.LinesCovered
 		node.Metrics.LinesValid += subdir.Metrics.LinesValid
+		node.Metrics.TotalLines += subdir.Metrics.TotalLines
 		node.Metrics.BranchesCovered += subdir.Metrics.BranchesCovered
 		node.Metrics.BranchesValid += subdir.Metrics.BranchesValid
 	}
@@ -116,6 +120,9 @@ func (h *Hydrator) aggregateTreeMetrics(node *model.DirNode) {
 // calculateFileMetrics computes metrics for a file based on its (now normalized) line data.
 func calculateFileMetrics(node *model.FileNode) {
 	metrics := model.CoverageMetrics{}
+
+	metrics.TotalLines = node.TotalLines
+
 	for _, line := range node.Lines {
 		if line.Hits >= 0 {
 			metrics.LinesValid++
