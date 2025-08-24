@@ -22,11 +22,12 @@ type DirNode struct {
 
 // FileNode represents a single source code file in the tree.
 type FileNode struct {
-	Name      string              `json:"name"`
-	Path      string              `json:"path"`
-	Metrics   CoverageMetrics     `json:"metrics"`
-	Lines     map[int]LineMetrics `json:"lines,omitempty"`
-	Methods   []MethodMetrics     `json:"methods,omitempty"`
-	Parent    *DirNode            `json:"-"` // Ignore this field during JSON serialization to prevent cycles
-	SourceDir string              `json:"sourceDir"`
+	Name       string              `json:"name"`
+	Path       string              `json:"path"`
+	Metrics    CoverageMetrics     `json:"metrics"`
+	Lines      map[int]LineMetrics `json:"lines,omitempty"`
+	Methods    []MethodMetrics     `json:"methods,omitempty"`
+	Parent     *DirNode            `json:"-"`
+	TotalLines int                 `json:"totalLines"`
+	SourceDir  string              `json:"sourceDir"`
 }
