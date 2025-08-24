@@ -28,8 +28,7 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_cobertura"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gcov"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gocover"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter/htmlreport"
+	"github.com/IgorBayerl/AdlerCov/internal/reporter/htmlreact"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/lcov"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/textsummary"
@@ -164,7 +163,7 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	reportCtx := reporter.NewBuilderContext(appConfig, logger)
+	// reportCtx := reporter.NewBuilderContext(appConfig, logger)
 
 	for _, reportType := range appConfig.ReportTypes {
 		trimmedType := strings.TrimSpace(reportType)
@@ -175,8 +174,12 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 			if err := textsummary.NewTextReportBuilder(outputDir, logger).CreateReport(summaryTree); err != nil {
 				return fmt.Errorf("failed to generate text report: %w", err)
 			}
+		// case "Html":
+		// 	if err := htmlreport.NewHtmlReportBuilder(outputDir, reportCtx, fileReader).CreateReport(summaryTree); err != nil {
+		// 		return fmt.Errorf("failed to generate HTML report: %w", err)
+		// 	}
 		case "Html":
-			if err := htmlreport.NewHtmlReportBuilder(outputDir, reportCtx, fileReader).CreateReport(summaryTree); err != nil {
+			if err := htmlreact.NewHtmlReactReportBuilder(outputDir, logger).CreateReport(summaryTree); err != nil {
 				return fmt.Errorf("failed to generate HTML report: %w", err)
 			}
 		case "Lcov":
