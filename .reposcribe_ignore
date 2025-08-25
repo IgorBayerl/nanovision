@@ -52,6 +52,8 @@ ui/src/lib/**
 ui/src/ui/**
 ui/pnpm-lock.yaml
 
+docs/**
+
 Testprojects/C++/Reports/Cobertura_CPPCoverage.xml
 Testprojects/FSharp/**
 Testprojects/Java/**

@@ -1,3 +1,4 @@
+// cmd/main.go
 package main
 
 import (
@@ -14,14 +15,11 @@ import (
 
 	"github.com/IgorBayerl/fsglob"
 
+	cpp "github.com/IgorBayerl/AdlerCov/analyzer/cpp"
+	golang "github.com/IgorBayerl/AdlerCov/analyzer/go"
 	"github.com/IgorBayerl/AdlerCov/internal/config"
+	"github.com/IgorBayerl/AdlerCov/internal/enricher"
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/hydrator"
-	"github.com/IgorBayerl/AdlerCov/internal/language"
-	"github.com/IgorBayerl/AdlerCov/internal/language/lang_cpp"
-	"github.com/IgorBayerl/AdlerCov/internal/language/lang_csharp"
-	"github.com/IgorBayerl/AdlerCov/internal/language/lang_default"
-	"github.com/IgorBayerl/AdlerCov/internal/language/lang_go"
 	"github.com/IgorBayerl/AdlerCov/internal/logging"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
@@ -33,6 +31,7 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/textsummary"
 	"github.com/IgorBayerl/AdlerCov/internal/tree"
+	"github.com/IgorBayerl/AdlerCov/pkg/types"
 )
 
 var ErrMissingReportFlag = errors.New("missing required -report flag")
@@ -85,9 +84,12 @@ type reportInputPair struct {
 
 func resolveInputPairs(appConfig *config.AppConfig) []reportInputPair {
 	var pairs []reportInputPair
-	for i := 0; i < len(appConfig.ReportPatterns); i++ {
+	for i := range appConfig.ReportPatterns {
 		trimmedPattern := strings.TrimSpace(appConfig.ReportPatterns[i])
-		trimmedSourceDir := strings.TrimSpace(appConfig.SourceDirs[i])
+		var trimmedSourceDir string
+		if i < len(appConfig.SourceDirs) {
+			trimmedSourceDir = strings.TrimSpace(appConfig.SourceDirs[i])
+		}
 		if trimmedPattern != "" && trimmedSourceDir != "" {
 			pairs = append(pairs, reportInputPair{
 				ReportPattern: trimmedPattern,
@@ -118,10 +120,9 @@ func parseReportFiles(logger *slog.Logger, appConfig *config.AppConfig, inputPai
 			logger.Info("Attempting to parse report file", "file", absFile, "sourcedir", pair.SourceDir)
 
 			parseTaskConfig := &parsers.SimpleParserConfig{
-				SrcDirs:     []string{pair.SourceDir},
-				FileFilter:  appConfig.FileFilterInstance,
-				Log:         logger,
-				LangFactory: appConfig.LangFactory,
+				SrcDirs:    []string{pair.SourceDir},
+				FileFilter: appConfig.FileFilterInstance,
+				Log:        logger,
 			}
 
 			parserInstance, err := parserFactory.FindParserForFile(absFile)
@@ -151,10 +152,13 @@ func parseReportFiles(logger *slog.Logger, appConfig *config.AppConfig, inputPai
 	if totalFilesParsed == 0 {
 		return nil, errors.New("no coverage reports could be found or parsed successfully")
 	}
+	if len(parserErrors) > 0 {
+		return parserResults, fmt.Errorf("encountered errors during parsing: %s", strings.Join(parserErrors, "; "))
+	}
 	return parserResults, nil
 }
 
-func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree, fileReader filereader.Reader) error {
+func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree) error {
 	logger := slog.Default()
 	outputDir := appConfig.OutputDir
 
@@ -163,35 +167,23 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
-	// reportCtx := reporter.NewBuilderContext(appConfig, logger)
-
 	for _, reportType := range appConfig.ReportTypes {
 		trimmedType := strings.TrimSpace(reportType)
 		logger.Info("Generating report", "type", trimmedType)
-
+		var err error
 		switch trimmedType {
 		case "TextSummary":
-			if err := textsummary.NewTextReportBuilder(outputDir, logger).CreateReport(summaryTree); err != nil {
-				return fmt.Errorf("failed to generate text report: %w", err)
-			}
-		// case "Html":
-		// 	if err := htmlreport.NewHtmlReportBuilder(outputDir, reportCtx, fileReader).CreateReport(summaryTree); err != nil {
-		// 		return fmt.Errorf("failed to generate HTML report: %w", err)
-		// 	}
+			err = textsummary.NewTextReportBuilder(outputDir, logger).CreateReport(summaryTree)
 		case "Html":
-			if err := htmlreact.NewHtmlReactReportBuilder(outputDir, logger).CreateReport(summaryTree); err != nil {
-				return fmt.Errorf("failed to generate HTML report: %w", err)
-			}
+			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger).CreateReport(summaryTree)
 		case "Lcov":
-			if err := lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree); err != nil {
-				return fmt.Errorf("failed to generate lcov report: %w", err)
-			}
+			err = lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree)
 		case "RawJson":
-			if err := reporter_rawjson.NewRawJsonReportBuilder(outputDir).CreateReport(summaryTree); err != nil {
-				return fmt.Errorf("failed to generate json summary report: %w", err)
-			}
+			err = reporter_rawjson.NewRawJsonReportBuilder(outputDir).CreateReport(summaryTree)
 		}
-
+		if err != nil {
+			return fmt.Errorf("failed to generate '%s' report: %w", trimmedType, err)
+		}
 	}
 	return nil
 }
@@ -208,11 +200,18 @@ func executePipeline(appConfig *config.AppConfig) error {
 		parser_gcov.NewGCovParser(prodFileReader),
 	)
 	treeBuilder := tree.NewBuilder()
-	hydrator := hydrator.NewHydrator(prodFileReader, appConfig.LangFactory, logger)
+
+	// Create a list of all available language analyzers.
+	// To support a new language, simply add its constructor here.
+	allAnalyzers := []types.Analyzer{
+		golang.New(),
+		cpp.New(),
+	}
+	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger)
 
 	// --- Pipeline Execution ---
 
-	// 1. Resolve input pairs from the validated config.
+	// 1. Resolve input pairs
 	inputPairs := resolveInputPairs(appConfig)
 	if len(inputPairs) == 0 {
 		return fmt.Errorf("no valid report pattern and source directory pairs were provided")
@@ -226,24 +225,22 @@ func executePipeline(appConfig *config.AppConfig) error {
 	}
 	logger.Info("PARSE stage completed successfully.", "parsed_report_sets", len(parserResults))
 
-	// 3. TREE BUILDER Stage
-	logger.Info("Executing TREE BUILDER stage...")
-	rawTree, err := treeBuilder.BuildTree(parserResults)
+	// 3. BUILD
+	logger.Info("Executing BUILD stage...")
+	summaryTree, err := treeBuilder.BuildTree(parserResults)
 	if err != nil {
-		return fmt.Errorf("failed to build coverage tree: %w", err)
+		return fmt.Errorf("failed to build and aggregate coverage tree: %w", err)
 	}
-	logger.Info("TREE BUILDER stage completed successfully.")
+	logger.Info("BUILD stage completed successfully.")
 
-	// 4. HYDRATOR Stage
-	logger.Info("Executing HYDRATOR stage...")
-	if err := hydrator.HydrateTree(rawTree); err != nil {
-		return fmt.Errorf("failed to hydrate coverage tree: %w", err)
-	}
-	logger.Info("HYDRATOR stage completed successfully.")
+	// 4. ENRICH Stage (static analysis)
+	logger.Info("Executing ENRICH stage...")
+	treeEnricher.EnrichTree(summaryTree)
+	logger.Info("ENRICH stage completed successfully.")
 
 	// 5. REPORT Stage
 	logger.Info("Executing REPORT stage...")
-	return generateReports(appConfig, rawTree, prodFileReader)
+	return generateReports(appConfig, summaryTree)
 }
 
 func main() {
@@ -256,13 +253,6 @@ func main() {
 	rawFlags := parseFlags()
 	flag.Parse()
 
-	langFactory := language.NewProcessorFactory(
-		lang_default.NewDefaultProcessor(),
-		lang_csharp.NewCSharpProcessor(),
-		lang_go.NewGoProcessor(),
-		lang_cpp.NewCppProcessor(),
-	)
-
 	verbosity, _ := logging.ParseVerbosity(*rawFlags.verbosity)
 	if *rawFlags.verbose {
 		verbosity = logging.Verbose
@@ -271,7 +261,7 @@ func main() {
 	appConfig, err := config.BuildAppConfig(
 		*rawFlags.reportsPatterns, *rawFlags.sourceDirs, *rawFlags.reportTypes, *rawFlags.fileFilters,
 		*rawFlags.outputDir, *rawFlags.tag, *rawFlags.title, *rawFlags.logFile, *rawFlags.logFormat,
-		verbosity, langFactory,
+		verbosity,
 	)
 	if err != nil {
 		slog.Error("Configuration error", "error", err)

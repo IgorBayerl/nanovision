@@ -25,14 +25,11 @@ type branchCoverageDetail struct {
 type metricsMap map[string]any
 
 type totals struct {
-	// Define fields in the desired output order for the summary cards and columns.
 	LineCoverage   *lineCoverageDetail   `json:"lineCoverage,omitempty"`
 	BranchCoverage *branchCoverageDetail `json:"branchCoverage,omitempty"`
-
-	// Non-metric fields last
-	Files    int      `json:"files"`
-	Folders  int      `json:"folders"`
-	Statuses statuses `json:"statuses,omitempty"`
+	Files          int                   `json:"files"`
+	Folders        int                   `json:"folders"`
+	Statuses       statuses              `json:"statuses,omitempty"`
 }
 
 type statuses map[string]riskLevel
@@ -50,11 +47,11 @@ type fileNode struct {
 	TargetURL     string     `json:"targetUrl,omitempty"`
 }
 
-type totalsMap map[string]any
+// REMOVED: type totalsMap map[string]any (was unused)
 
 type metadataItem struct {
 	Label    string `json:"label"`
-	Value    any    `json:"value"` // string or []string
+	Value    any    `json:"value"`
 	SizeHint string `json:"sizeHint,omitempty"`
 }
 

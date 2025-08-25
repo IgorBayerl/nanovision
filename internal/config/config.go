@@ -5,12 +5,10 @@ import (
 	"strings"
 
 	"github.com/IgorBayerl/AdlerCov/internal/filtering"
-	"github.com/IgorBayerl/AdlerCov/internal/language"
 	"github.com/IgorBayerl/AdlerCov/internal/logging"
 )
 
 // AppConfig holds the parsed and validated configuration for the application.
-// This is the single source of truth that gets passed through the application.
 type AppConfig struct {
 	ReportPatterns []string
 	SourceDirs     []string
@@ -25,25 +23,20 @@ type AppConfig struct {
 
 	FileFilterInstance filtering.IFilter
 
-	// Settings (formerly from the settings package)
 	MaximumDecimalPlacesForCoverageQuotas    int
 	MaximumDecimalPlacesForPercentageDisplay int
-
-	LangFactory *language.ProcessorFactory
 }
 
 // BuildAppConfig creates the definitive AppConfig from raw flag inputs.
-// It handles all parsing and validation in one place.
 func BuildAppConfig(
 	reportPatterns, sourceDirs, reportTypes, fileFilters, outputDir, tag, title, logFile, logFormat string,
 	verbosity logging.VerbosityLevel,
-	langFactory *language.ProcessorFactory,
 ) (*AppConfig, error) {
 
 	patterns := strings.Split(reportPatterns, ";")
 	dirs := strings.Split(sourceDirs, ";")
 
-	if reportPatterns != "" && len(patterns) != len(dirs) {
+	if reportPatterns != "" && sourceDirs != "" && len(patterns) != len(dirs) {
 		return nil, fmt.Errorf(
 			"mismatch between number of report patterns (%d) and source directories (%d)",
 			len(patterns),
@@ -70,10 +63,7 @@ func BuildAppConfig(
 
 		FileFilterInstance: fileFilter,
 
-		// Set default values for settings
 		MaximumDecimalPlacesForCoverageQuotas:    1,
 		MaximumDecimalPlacesForPercentageDisplay: 0,
-
-		LangFactory: langFactory,
 	}, nil
 }
