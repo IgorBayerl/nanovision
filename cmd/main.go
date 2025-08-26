@@ -18,6 +18,7 @@ import (
 	cpp "github.com/IgorBayerl/AdlerCov/analyzer/cpp"
 	golang "github.com/IgorBayerl/AdlerCov/analyzer/go"
 	"github.com/IgorBayerl/AdlerCov/filereader"
+	"github.com/IgorBayerl/AdlerCov/internal/aggregator"
 	"github.com/IgorBayerl/AdlerCov/internal/config"
 	"github.com/IgorBayerl/AdlerCov/internal/enricher"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
@@ -204,6 +205,8 @@ func executePipeline(appConfig *config.AppConfig) error {
 	logger.Info("Executing ENRICH stage...")
 	treeEnricher.EnrichTree(summaryTree)
 	logger.Info("ENRICH stage completed successfully.")
+
+	aggregator.AggregateMetricsAfterEnrichment(summaryTree)
 
 	logger.Info("Executing REPORT stage...")
 	return generateReports(appConfig, summaryTree)

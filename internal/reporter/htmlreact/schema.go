@@ -22,14 +22,30 @@ type branchCoverageDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
+// Represents the metrics for methods that have at least one line covered.
+type methodsCoveredDetail struct {
+	Covered    int     `json:"covered"`
+	Total      int     `json:"total"`
+	Percentage float64 `json:"percentage"`
+}
+
+// Represents the metrics for methods that have 100% line coverage.
+type methodsFullyCoveredDetail struct {
+	Covered    int     `json:"covered"`
+	Total      int     `json:"total"`
+	Percentage float64 `json:"percentage"`
+}
+
 type metricsMap map[string]any
 
 type totals struct {
-	LineCoverage   *lineCoverageDetail   `json:"lineCoverage,omitempty"`
-	BranchCoverage *branchCoverageDetail `json:"branchCoverage,omitempty"`
-	Files          int                   `json:"files"`
-	Folders        int                   `json:"folders"`
-	Statuses       statuses              `json:"statuses,omitempty"`
+	LineCoverage        *lineCoverageDetail        `json:"lineCoverage,omitempty"`
+	BranchCoverage      *branchCoverageDetail      `json:"branchCoverage,omitempty"`
+	MethodsCovered      *methodsCoveredDetail      `json:"methodsCovered,omitempty"`
+	MethodsFullyCovered *methodsFullyCoveredDetail `json:"methodsFullyCovered,omitempty"`
+	Files               int                        `json:"files"`
+	Folders             int                        `json:"folders"`
+	Statuses            statuses                   `json:"statuses,omitempty"`
 }
 
 type statuses map[string]riskLevel

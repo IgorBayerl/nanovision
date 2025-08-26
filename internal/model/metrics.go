@@ -7,6 +7,10 @@ type CoverageMetrics struct {
 	BranchesCovered int
 	BranchesValid   int
 	TotalLines      int
+
+	MethodsCovered      int
+	MethodsFullyCovered int
+	MethodsValid        int
 }
 
 // LineMetrics holds the coverage data for a single line of code.
