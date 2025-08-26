@@ -1,4 +1,3 @@
-// cmd/main.go
 package main
 
 import (
@@ -217,13 +216,11 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	// The 'watch' flag is behavioral and doesn't belong in the config object.
 	watchFlag := flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes")
 
 	rawInput := parseAndBindFlags()
 	flag.Parse()
 
-	// It's good practice to provide feedback on invalid user input before building the logger.
 	if _, err := logging.ParseVerbosity(rawInput.Verbosity); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: %v. Defaulting to 'Info' level.\n", err)
 	}
