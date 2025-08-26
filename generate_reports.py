@@ -167,7 +167,9 @@ def build_adlercov_binary():
     """Builds the AdlerCov Go binary."""
     print(" Building AdlerCov binary ")
 
-    build_cmd = ["go", "build", "-o", str(BINARY_PATH), "cmd/main.go"]
+    # --- THIS IS THE CORRECTED LINE ---
+    build_cmd = ["go", "build", "-mod=vendor", "-o", str(BINARY_PATH), "cmd/main.go"]
+    
     run_command(build_cmd, working_dir=SCRIPT_ROOT, critical=True)
     print(f"✅ Successfully built '{BINARY_NAME}'")
 
@@ -184,19 +186,8 @@ def generate_reports(tasks_to_run, report_types):
 
         print(f"\n Processing Task: {task_name} ")
 
-        # ======================================================================
-        #  START OF FIX: Do NOT expand globs here. Pass raw patterns to Go.
-        # ======================================================================
-
-        # Convert pathlib objects to strings, but do not expand wildcard patterns.
-        # The Go application is responsible for glob expansion.
         report_patterns = [str(p) for p in task["inputs"]]
 
-        # ======================================================================
-        #  END OF FIX
-        # ======================================================================
-
-        # Prepare and run the adlercov command
         output_dir = REPORTS_OUTPUT_BASE / task["output_dir_suffix"]
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -211,7 +202,6 @@ def generate_reports(tasks_to_run, report_types):
             source_paths = [str(p.resolve()) for p in task["source_dirs"]]
             cmd.append(f"--sourcedirs={';'.join(source_paths)}")
 
-        # Execute the command and record the result
         result = run_command(cmd)
         if result["success"]:
             results.append({"name": task_name, "status": "✅ SUCCESS", "details": f"Reports saved to '{output_dir}'"})
@@ -234,7 +224,6 @@ def print_summary_report(results):
         
         if "FAILED" in result["status"]:
             failure_count += 1
-            # Indent the error details for readability
             details = "  " + result["details"].replace("\n", "\n  ")
             print(f"Details:\n{details}")
         elif "SUCCESS" in result["status"]:

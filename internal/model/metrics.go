@@ -4,9 +4,13 @@ package model
 type CoverageMetrics struct {
 	LinesCovered    int
 	LinesValid      int
-	TotalLines      int
 	BranchesCovered int
 	BranchesValid   int
+	TotalLines      int
+
+	MethodsCovered      int
+	MethodsFullyCovered int
+	MethodsValid        int
 }
 
 // LineMetrics holds the coverage data for a single line of code.
@@ -21,12 +25,11 @@ type MethodMetrics struct {
 	Name                 string // e.g., "MyFunction", "(MyType).MyMethod"
 	StartLine            int    // The starting line number of the method.
 	EndLine              int    // The ending line number of the method.
-	CyclomaticComplexity int    // Calculated complexity, 0 if not supported/calculated.
+	CyclomaticComplexity *int   // Is now a pointer.
 
-	// These will be calculated by the Hydrator
-	LinesValid     int     // Number of coverable lines within this method.
-	LinesCovered   int     // Number of covered lines within this method.
-	LineCoverage   float64 // (LinesCovered / LinesValid) * 100
-	BranchCoverage float64 // Branch coverage for this specific method.
-	IsFullyCovered bool    // True if all LinesValid are covered.
+	// Per-method coverage metrics.
+	LinesValid      int
+	LinesCovered    int
+	BranchesValid   int
+	BranchesCovered int
 }

@@ -4,13 +4,29 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filtering"
-	"github.com/IgorBayerl/AdlerCov/internal/language"
-	"github.com/IgorBayerl/AdlerCov/internal/logging"
+	"github.com/IgorBayerl/AdlerCov/filtering"
+	"github.com/IgorBayerl/AdlerCov/logging"
 )
 
-// AppConfig holds the parsed and validated configuration for the application.
-// This is the single source of truth that gets passed through the application.
+type ReportInputPair struct {
+	ReportPattern string
+	SourceDir     string
+}
+
+type RawConfigInput struct {
+	ReportPatterns string
+	SourceDirs     string
+	ReportTypes    string
+	FileFilters    string
+	OutputDir      string
+	Tag            string
+	Title          string
+	LogFile        string
+	LogFormat      string
+	Verbosity      string
+	Verbose        bool
+}
+
 type AppConfig struct {
 	ReportPatterns []string
 	SourceDirs     []string
@@ -25,25 +41,19 @@ type AppConfig struct {
 
 	FileFilterInstance filtering.IFilter
 
-	// Settings (formerly from the settings package)
 	MaximumDecimalPlacesForCoverageQuotas    int
 	MaximumDecimalPlacesForPercentageDisplay int
 
-	LangFactory *language.ProcessorFactory
+	InputPairs []ReportInputPair
 }
 
-// BuildAppConfig creates the definitive AppConfig from raw flag inputs.
-// It handles all parsing and validation in one place.
-func BuildAppConfig(
-	reportPatterns, sourceDirs, reportTypes, fileFilters, outputDir, tag, title, logFile, logFormat string,
-	verbosity logging.VerbosityLevel,
-	langFactory *language.ProcessorFactory,
-) (*AppConfig, error) {
+// BuildAppConfig creates and validates the application's configuration from the single RawConfigInput object.
+// It is responsible for all parsing, validation, and transformation of CLI arguments.
+func BuildAppConfig(rawInput RawConfigInput) (*AppConfig, error) {
+	patterns := strings.Split(rawInput.ReportPatterns, ";")
+	dirs := strings.Split(rawInput.SourceDirs, ";")
 
-	patterns := strings.Split(reportPatterns, ";")
-	dirs := strings.Split(sourceDirs, ";")
-
-	if reportPatterns != "" && len(patterns) != len(dirs) {
+	if rawInput.ReportPatterns != "" && rawInput.SourceDirs != "" && len(patterns) != len(dirs) {
 		return nil, fmt.Errorf(
 			"mismatch between number of report patterns (%d) and source directories (%d)",
 			len(patterns),
@@ -51,29 +61,70 @@ func BuildAppConfig(
 		)
 	}
 
-	fileFilter, err := filtering.NewDefaultFilter(strings.Split(fileFilters, ";"), true)
+	fileFilter, err := filtering.NewDefaultFilter(strings.Split(rawInput.FileFilters, ";"), true)
 	if err != nil {
 		return nil, err
 	}
 
+	verbosity, _ := logging.ParseVerbosity(rawInput.Verbosity)
+	if rawInput.Verbose {
+		verbosity = logging.Verbose
+	}
+
+	resolvedPairs := resolveInputPairs(patterns, dirs)
+
 	return &AppConfig{
-		ReportPatterns: patterns,
-		SourceDirs:     dirs,
-		ReportTypes:    strings.Split(reportTypes, ","),
-		FileFilters:    strings.Split(fileFilters, ";"),
-		OutputDir:      outputDir,
-		Tag:            tag,
-		Title:          title,
-		LogFile:        logFile,
-		LogFormat:      logFormat,
-		Verbosity:      verbosity,
-
-		FileFilterInstance: fileFilter,
-
-		// Set default values for settings
+		ReportPatterns:                           patterns,
+		SourceDirs:                               dirs,
+		ReportTypes:                              strings.Split(rawInput.ReportTypes, ","),
+		FileFilters:                              strings.Split(rawInput.FileFilters, ";"),
+		OutputDir:                                rawInput.OutputDir,
+		Tag:                                      rawInput.Tag,
+		Title:                                    rawInput.Title,
+		LogFile:                                  rawInput.LogFile,
+		LogFormat:                                rawInput.LogFormat,
+		Verbosity:                                verbosity,
+		FileFilterInstance:                       fileFilter,
 		MaximumDecimalPlacesForCoverageQuotas:    1,
 		MaximumDecimalPlacesForPercentageDisplay: 0,
-
-		LangFactory: langFactory,
+		InputPairs:                               resolvedPairs,
 	}, nil
+}
+
+// resolveInputPairs matches slices of report patterns and source directories into
+// structured pairs. The function pairs them by their order (e.g., the first report
+// is matched with the first directory).
+//
+// It also acts as a validation step by discarding any pairs that are incomplete
+// after trimming whitespace (e.g., a pattern without a directory).
+//
+// Example:
+//
+//	Given the following slices:
+//	- patterns: ["reportA.xml", "reportB.out", " "]
+//	- dirs:     ["./src/projectA", "./src/projectB"]
+//
+//	It will produce:
+//	[]ReportInputPair{
+//	    {ReportPattern: "reportA.xml", SourceDir: "./src/projectA"},
+//	    {ReportPattern: "reportB.out", SourceDir: "./src/projectB"},
+//	}
+//	// The third, empty report pattern is ignored.
+func resolveInputPairs(patterns []string, dirs []string) []ReportInputPair {
+	var pairs []ReportInputPair
+	for i := range patterns {
+		trimmedPattern := strings.TrimSpace(patterns[i])
+		var trimmedSourceDir string
+		if i < len(dirs) {
+			trimmedSourceDir = strings.TrimSpace(dirs[i])
+		}
+
+		if trimmedPattern != "" && trimmedSourceDir != "" {
+			pairs = append(pairs, ReportInputPair{
+				ReportPattern: trimmedPattern,
+				SourceDir:     trimmedSourceDir,
+			})
+		}
+	}
+	return pairs
 }
