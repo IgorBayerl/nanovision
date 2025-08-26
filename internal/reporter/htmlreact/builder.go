@@ -155,7 +155,12 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 	if bc, ok := metrics["branchCoverage"].(branchCoverageDetail); ok {
 		t.BranchCoverage = &bc
 	}
-
+	if mc, ok := metrics["methodsCovered"].(methodsCoveredDetail); ok {
+		t.MethodsCovered = &mc
+	}
+	if mfc, ok := metrics["methodsFullyCovered"].(methodsFullyCoveredDetail); ok {
+		t.MethodsFullyCovered = &mfc
+	}
 	return t
 }
 
@@ -205,6 +210,32 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) (metri
 		nodeStatuses["branchCoverage"] = getRiskStatus(branchPct)
 	}
 
+	if m.MethodsValid > 0 {
+		methodsCoveredPct := utils.CalculatePercentage(m.MethodsCovered, m.MethodsValid, 2)
+		if math.IsNaN(methodsCoveredPct) {
+			methodsCoveredPct = 0.0
+		}
+
+		metrics["methodsCovered"] = methodsCoveredDetail{
+			Covered:    m.MethodsCovered,
+			Total:      m.MethodsValid,
+			Percentage: methodsCoveredPct,
+		}
+		nodeStatuses["methodsCovered"] = getRiskStatus(methodsCoveredPct)
+
+		methodsFullyCoveredPct := utils.CalculatePercentage(m.MethodsFullyCovered, m.MethodsValid, 2)
+		if math.IsNaN(methodsFullyCoveredPct) {
+			methodsFullyCoveredPct = 0.0
+		}
+
+		metrics["methodsFullyCovered"] = methodsFullyCoveredDetail{
+			Covered:    m.MethodsFullyCovered,
+			Total:      m.MethodsValid,
+			Percentage: methodsFullyCoveredPct,
+		}
+		nodeStatuses["methodsFullyCovered"] = getRiskStatus(methodsFullyCoveredPct)
+	}
+
 	return metrics, nodeStatuses
 }
 
@@ -226,6 +257,24 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 			ShortLabel: "Branches",
 			SubMetrics: []subMetric{
 				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
+		"methodsCovered": {
+			Label:      "Methods Covered",
+			ShortLabel: "Methods Cov.",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 80},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
+		"methodsFullyCovered": {
+			Label:      "Methods Fully Covered",
+			ShortLabel: "Methods Full Cov.",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 80},
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},

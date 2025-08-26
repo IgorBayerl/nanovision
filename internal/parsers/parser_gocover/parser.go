@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filereader"
+	"github.com/IgorBayerl/AdlerCov/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 )
 
