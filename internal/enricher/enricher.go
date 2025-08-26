@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/IgorBayerl/AdlerCov/analyzer"
-	"github.com/IgorBayerl/AdlerCov/internal/filereader"
+	"github.com/IgorBayerl/AdlerCov/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
 )

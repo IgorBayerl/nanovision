@@ -18,10 +18,9 @@ import (
 	"github.com/IgorBayerl/AdlerCov/analyzer"
 	cpp "github.com/IgorBayerl/AdlerCov/analyzer/cpp"
 	golang "github.com/IgorBayerl/AdlerCov/analyzer/go"
+	"github.com/IgorBayerl/AdlerCov/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/config"
 	"github.com/IgorBayerl/AdlerCov/internal/enricher"
-	"github.com/IgorBayerl/AdlerCov/internal/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/logging"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_cobertura"
@@ -32,6 +31,7 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/textsummary"
 	"github.com/IgorBayerl/AdlerCov/internal/tree"
+	"github.com/IgorBayerl/AdlerCov/logging"
 )
 
 var ErrMissingReportFlag = errors.New("missing required -report flag")

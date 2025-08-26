@@ -4,7 +4,7 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filtering"
+	"github.com/IgorBayerl/AdlerCov/filtering"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 )
 

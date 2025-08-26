@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filereader"
+	"github.com/IgorBayerl/AdlerCov/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"

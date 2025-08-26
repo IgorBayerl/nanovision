@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filesystem"
+	"github.com/IgorBayerl/AdlerCov/filesystem"
 )
 
 type VerbosityLevel int

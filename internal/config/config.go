@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filtering"
-	"github.com/IgorBayerl/AdlerCov/internal/logging"
+	"github.com/IgorBayerl/AdlerCov/filtering"
+	"github.com/IgorBayerl/AdlerCov/logging"
 )
 
 type ReportInputPair struct {

@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filtering"
+	"github.com/IgorBayerl/AdlerCov/filtering"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 )
 
