@@ -2,10 +2,10 @@
  * NOTE: This is a developer data fixture for testing purposes.
  * This file provides a larger, more complex dataset to test rendering,
  * filtering, and performance of the coverage report UI.
- * Schema version: 2
+ * Schema version: 1
  */
 window.__ADLERCOV_SUMMARY__ = {
-    schemaVersion: 2,
+    schemaVersion: 1,
     generatedAt: '2025-08-22T20:30:00Z',
     reportId: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
     title: 'Project Titan - Comprehensive Coverage Report',
