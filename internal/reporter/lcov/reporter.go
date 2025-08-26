@@ -38,7 +38,6 @@ func (b *LcovReportBuilder) CreateReport(tree *model.SummaryTree) error {
 	writer := bufio.NewWriter(file)
 	defer writer.Flush()
 
-	// Collect all FileNodes by walking the tree.
 	files := collectFileNodes(tree.Root)
 	sort.Slice(files, func(i, j int) bool {
 		return files[i].Path < files[j].Path
@@ -58,11 +57,10 @@ func writeLcovFileSection(writer *bufio.Writer, file *model.FileNode) error {
 		return err
 	}
 
-	// FN/FNDA: Function data.
-	// Sort methods by their starting line number for consistent output.
 	sort.SliceStable(file.Methods, func(i, j int) bool {
 		return file.Methods[i].StartLine < file.Methods[j].StartLine
 	})
+
 	fnf := len(file.Methods)
 	fnh := 0
 	for _, method := range file.Methods {
@@ -70,7 +68,8 @@ func writeLcovFileSection(writer *bufio.Writer, file *model.FileNode) error {
 			return err
 		}
 		hitCount := 0
-		if method.LineCoverage > 0 {
+		// CORRECTED: Check LinesCovered instead of the old LineCoverage field.
+		if method.LinesCovered > 0 {
 			hitCount = 1 // LCOV treats any coverage as 1 hit.
 			fnh++
 		}
@@ -85,7 +84,6 @@ func writeLcovFileSection(writer *bufio.Writer, file *model.FileNode) error {
 		return err
 	}
 
-	// DA/LF/LH: Line data.
 	lf := file.Metrics.LinesValid
 	lh := file.Metrics.LinesCovered
 	for lineNum, lineMetrics := range file.Lines {
@@ -102,16 +100,11 @@ func writeLcovFileSection(writer *bufio.Writer, file *model.FileNode) error {
 		return err
 	}
 
-	// BRDA/BRF/BRH: Branch data.
 	brf := file.Metrics.BranchesValid
 	brh := file.Metrics.BranchesCovered
 	if brf > 0 {
 		for lineNum, lineMetrics := range file.Lines {
 			if lineMetrics.TotalBranches > 0 {
-				// This is a simplification. LCOV needs per-branch data, which our
-				// new model currently aggregates. For now, we report the line-level aggregate.
-				// Format: BRDA:<line>,<block>,<branch>,<hits>
-				// We can represent covered branches as hit and uncovered as not hit.
 				for i := 0; i < lineMetrics.TotalBranches; i++ {
 					hits := "-"
 					if i < lineMetrics.CoveredBranches {
@@ -138,7 +131,6 @@ func writeLcovFileSection(writer *bufio.Writer, file *model.FileNode) error {
 	return nil
 }
 
-// collectFileNodes is a new helper to walk the tree and gather all file nodes.
 func collectFileNodes(dir *model.DirNode) []*model.FileNode {
 	var files []*model.FileNode
 	for _, file := range dir.Files {

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/internal/filereader"
+	"github.com/IgorBayerl/AdlerCov/filereader"
 )
 
 // walk is a local, recursive helper that mimics filepath.WalkDir but uses our mockable filereader.Reader interface.
