@@ -9,12 +9,12 @@ import (
 	sitter "github.com/tree-sitter/go-tree-sitter"
 	tscpp "github.com/tree-sitter/tree-sitter-cpp/bindings/go"
 
-	"github.com/IgorBayerl/AdlerCov/pkg/types"
+	"github.com/IgorBayerl/AdlerCov/analyzer"
 )
 
 type CppAnalyzer struct{}
 
-func New() types.Analyzer { return &CppAnalyzer{} }
+func New() analyzer.Analyzer { return &CppAnalyzer{} }
 
 func (a *CppAnalyzer) Name() string {
 	return "C++"
@@ -73,18 +73,18 @@ const (
   `
 )
 
-func (a *CppAnalyzer) Analyze(sourceCode []byte) (types.AnalysisResult, error) {
+func (a *CppAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, error) {
 	parser := sitter.NewParser()
 	defer parser.Close()
 
 	lang := sitter.NewLanguage(tscpp.Language())
 	if err := parser.SetLanguage(lang); err != nil {
-		return types.AnalysisResult{}, fmt.Errorf("set language: %w", err)
+		return analyzer.AnalysisResult{}, fmt.Errorf("set language: %w", err)
 	}
 
 	tree := parser.Parse(sourceCode, nil)
 	if tree == nil {
-		return types.AnalysisResult{}, fmt.Errorf("parse returned nil tree")
+		return analyzer.AnalysisResult{}, fmt.Errorf("parse returned nil tree")
 	}
 	defer tree.Close()
 
@@ -92,7 +92,7 @@ func (a *CppAnalyzer) Analyze(sourceCode []byte) (types.AnalysisResult, error) {
 
 	q, qerr := sitter.NewQuery(lang, funcQueryString)
 	if qerr != nil {
-		return types.AnalysisResult{}, fmt.Errorf("compile function query: %w", qerr)
+		return analyzer.AnalysisResult{}, fmt.Errorf("compile function query: %w", qerr)
 	}
 	defer q.Close()
 
@@ -101,7 +101,7 @@ func (a *CppAnalyzer) Analyze(sourceCode []byte) (types.AnalysisResult, error) {
 
 	matches := qc.Matches(q, root, sourceCode)
 
-	var result types.AnalysisResult
+	var result analyzer.AnalysisResult
 
 	for m := matches.Next(); m != nil; m = matches.Next() {
 		var nameUnqualified string
@@ -148,9 +148,9 @@ func (a *CppAnalyzer) Analyze(sourceCode []byte) (types.AnalysisResult, error) {
 			}
 		}
 
-		result.Functions = append(result.Functions, types.FunctionMetric{
+		result.Functions = append(result.Functions, analyzer.FunctionMetric{
 			Name:                 name,
-			Position:             types.Position{StartLine: int(start), EndLine: int(end)},
+			Position:             analyzer.Position{StartLine: int(start), EndLine: int(end)},
 			CyclomaticComplexity: &complexity,
 		})
 	}

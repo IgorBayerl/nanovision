@@ -15,6 +15,7 @@ import (
 
 	"github.com/IgorBayerl/fsglob"
 
+	"github.com/IgorBayerl/AdlerCov/analyzer"
 	cpp "github.com/IgorBayerl/AdlerCov/analyzer/cpp"
 	golang "github.com/IgorBayerl/AdlerCov/analyzer/go"
 	"github.com/IgorBayerl/AdlerCov/internal/config"
@@ -31,41 +32,25 @@ import (
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/AdlerCov/internal/reporter/textsummary"
 	"github.com/IgorBayerl/AdlerCov/internal/tree"
-	"github.com/IgorBayerl/AdlerCov/pkg/types"
 )
 
 var ErrMissingReportFlag = errors.New("missing required -report flag")
 
-type cliFlags struct {
-	reportsPatterns *string
-	outputDir       *string
-	reportTypes     *string
-	sourceDirs      *string
-	tag             *string
-	title           *string
-	fileFilters     *string
-	verbose         *bool
-	verbosity       *string
-	logFile         *string
-	logFormat       *string
-	watch           *bool
-}
+func parseAndBindFlags() *config.RawConfigInput {
+	rawInput := &config.RawConfigInput{}
 
-func parseFlags() *cliFlags {
-	return &cliFlags{
-		reportsPatterns: flag.String("report", "", "Coverage report file paths or patterns (semicolon-separated)"),
-		outputDir:       flag.String("output", "coverage-report", "Output directory for generated reports"),
-		reportTypes:     flag.String("reporttypes", "TextSummary,Html", "Report types (comma-separated)"),
-		sourceDirs:      flag.String("sourcedirs", "", "Source directories (semicolon-separated, one per report pattern)"),
-		tag:             flag.String("tag", "", "Optional tag, e.g. build number"),
-		title:           flag.String("title", "", "Optional report title (default: 'Coverage Report')"),
-		fileFilters:     flag.String("filefilters", "", "File path filters (+Include;-Exclude, semicolon-separated)"),
-		verbose:         flag.Bool("verbose", false, "Shortcut for Verbose logging (overridden by -verbosity)"),
-		verbosity:       flag.String("verbosity", "Info", "Logging level: Verbose, Info, Warning, Error, Off"),
-		logFile:         flag.String("logfile", "", "Write logs to this file as well as the console"),
-		logFormat:       flag.String("logformat", "text", "Log output format: text (default) or json"),
-		watch:           flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes"),
-	}
+	flag.StringVar(&rawInput.ReportPatterns, "report", "", "Coverage report file paths or patterns (semicolon-separated)")
+	flag.StringVar(&rawInput.OutputDir, "output", "coverage-report", "Output directory for generated reports")
+	flag.StringVar(&rawInput.ReportTypes, "reporttypes", "TextSummary,Html", "Report types (comma-separated)")
+	flag.StringVar(&rawInput.SourceDirs, "sourcedirs", "", "Source directories (semicolon-separated, one per report pattern)")
+	flag.StringVar(&rawInput.Tag, "tag", "", "Optional tag, e.g. build number")
+	flag.StringVar(&rawInput.Title, "title", "", "Optional report title (default: 'Coverage Report')")
+	flag.StringVar(&rawInput.FileFilters, "filefilters", "", "File path filters (+Include;-Exclude, semicolon-separated)")
+	flag.StringVar(&rawInput.LogFile, "logfile", "", "Write logs to this file as well as the console")
+	flag.StringVar(&rawInput.LogFormat, "logformat", "text", "Log output format: text (default) or json")
+	flag.StringVar(&rawInput.Verbosity, "verbosity", "Info", "Logging level: Verbose, Info, Warning, Error, Off")
+	flag.BoolVar(&rawInput.Verbose, "verbose", false, "Shortcut for Verbose logging (overridden by -verbosity)")
+	return rawInput
 }
 
 func buildLogger(appConfig *config.AppConfig) (io.Closer, error) {
@@ -77,30 +62,7 @@ func buildLogger(appConfig *config.AppConfig) (io.Closer, error) {
 	return logging.Init(&cfg)
 }
 
-type reportInputPair struct {
-	ReportPattern string
-	SourceDir     string
-}
-
-func resolveInputPairs(appConfig *config.AppConfig) []reportInputPair {
-	var pairs []reportInputPair
-	for i := range appConfig.ReportPatterns {
-		trimmedPattern := strings.TrimSpace(appConfig.ReportPatterns[i])
-		var trimmedSourceDir string
-		if i < len(appConfig.SourceDirs) {
-			trimmedSourceDir = strings.TrimSpace(appConfig.SourceDirs[i])
-		}
-		if trimmedPattern != "" && trimmedSourceDir != "" {
-			pairs = append(pairs, reportInputPair{
-				ReportPattern: trimmedPattern,
-				SourceDir:     trimmedSourceDir,
-			})
-		}
-	}
-	return pairs
-}
-
-func parseReportFiles(logger *slog.Logger, appConfig *config.AppConfig, inputPairs []reportInputPair, parserFactory *parsers.ParserFactory) ([]*parsers.ParserResult, error) {
+func parseReportFiles(logger *slog.Logger, appConfig *config.AppConfig, inputPairs []config.ReportInputPair, parserFactory *parsers.ParserFactory) ([]*parsers.ParserResult, error) {
 	var parserResults []*parsers.ParserResult
 	var parserErrors []string
 	var totalFilesParsed int
@@ -188,11 +150,26 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 	return nil
 }
 
+// executePipeline orchestrates the report generation process from start to finish.
+//
+// The function attempts to parse each report file provided by the user. If an
+// individual file cannot be processed, the error is logged, and the pipeline
+// continues to the next file.
+//
+// To ensure accuracy, the entire process will halt if any parsing errors
+// occurred. This prevents the creation of a final report from incomplete data.
+//
+// The process follows these stages:
+//   - Component Initialization: Prepares all the tools needed for the pipeline,
+//     such as the parsers and the tree builder.
+//   - Parse: Reads the different coverage report formats into a standard structure.
+//   - Build: Combines data from all parsed reports into a single project tree.
+//   - Enrich: Gathers extra details from the source code, like method complexity.
+//   - Report: Generates the final output files, such as the HTML and text summaries.
 func executePipeline(appConfig *config.AppConfig) error {
 	logger := slog.Default()
 	logger.Info("Executing report generation pipeline...")
 
-	// --- Component Initialization ---
 	prodFileReader := filereader.NewDefaultReader()
 	parserFactory := parsers.NewParserFactory(
 		parser_cobertura.NewCoberturaParser(prodFileReader),
@@ -201,31 +178,23 @@ func executePipeline(appConfig *config.AppConfig) error {
 	)
 	treeBuilder := tree.NewBuilder()
 
-	// Create a list of all available language analyzers.
-	// To support a new language, simply add its constructor here.
-	allAnalyzers := []types.Analyzer{
+	allAnalyzers := []analyzer.Analyzer{
 		golang.New(),
 		cpp.New(),
 	}
 	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger)
 
-	// --- Pipeline Execution ---
-
-	// 1. Resolve input pairs
-	inputPairs := resolveInputPairs(appConfig)
-	if len(inputPairs) == 0 {
+	if len(appConfig.InputPairs) == 0 {
 		return fmt.Errorf("no valid report pattern and source directory pairs were provided")
 	}
 
-	// 2. PARSE Stage
 	logger.Info("Executing PARSE stage...")
-	parserResults, err := parseReportFiles(logger, appConfig, inputPairs, parserFactory)
+	parserResults, err := parseReportFiles(logger, appConfig, appConfig.InputPairs, parserFactory)
 	if err != nil {
 		return err
 	}
 	logger.Info("PARSE stage completed successfully.", "parsed_report_sets", len(parserResults))
 
-	// 3. BUILD
 	logger.Info("Executing BUILD stage...")
 	summaryTree, err := treeBuilder.BuildTree(parserResults)
 	if err != nil {
@@ -233,12 +202,10 @@ func executePipeline(appConfig *config.AppConfig) error {
 	}
 	logger.Info("BUILD stage completed successfully.")
 
-	// 4. ENRICH Stage (static analysis)
 	logger.Info("Executing ENRICH stage...")
 	treeEnricher.EnrichTree(summaryTree)
 	logger.Info("ENRICH stage completed successfully.")
 
-	// 5. REPORT Stage
 	logger.Info("Executing REPORT stage...")
 	return generateReports(appConfig, summaryTree)
 }
@@ -250,19 +217,18 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	rawFlags := parseFlags()
+	// The 'watch' flag is behavioral and doesn't belong in the config object.
+	watchFlag := flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes")
+
+	rawInput := parseAndBindFlags()
 	flag.Parse()
 
-	verbosity, _ := logging.ParseVerbosity(*rawFlags.verbosity)
-	if *rawFlags.verbose {
-		verbosity = logging.Verbose
+	// It's good practice to provide feedback on invalid user input before building the logger.
+	if _, err := logging.ParseVerbosity(rawInput.Verbosity); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: %v. Defaulting to 'Info' level.\n", err)
 	}
 
-	appConfig, err := config.BuildAppConfig(
-		*rawFlags.reportsPatterns, *rawFlags.sourceDirs, *rawFlags.reportTypes, *rawFlags.fileFilters,
-		*rawFlags.outputDir, *rawFlags.tag, *rawFlags.title, *rawFlags.logFile, *rawFlags.logFormat,
-		verbosity,
-	)
+	appConfig, err := config.BuildAppConfig(*rawInput)
 	if err != nil {
 		slog.Error("Configuration error", "error", err)
 		if errors.Is(err, ErrMissingReportFlag) {
@@ -286,7 +252,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *rawFlags.watch {
+	if *watchFlag {
 		slog.Info("Watch mode enabled. Press Ctrl+C to exit.")
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, os.Interrupt)

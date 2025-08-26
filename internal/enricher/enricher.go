@@ -2,25 +2,24 @@
 package enricher
 
 import (
-	"bufio"
 	"log/slog"
 	"os"
 
+	"github.com/IgorBayerl/AdlerCov/analyzer"
 	"github.com/IgorBayerl/AdlerCov/internal/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
-	"github.com/IgorBayerl/AdlerCov/pkg/types"
 )
 
 // Enricher applies static analysis to the file nodes in a summary tree.
 type Enricher struct {
-	analyzers  []types.Analyzer // The list of all available analyzers.
+	analyzers  []analyzer.Analyzer // The list of all available analyzers.
 	fileReader filereader.Reader
 	logger     *slog.Logger
 }
 
 // New creates a new Enricher, accepting a slice of all available analyzers.
-func New(analyzers []types.Analyzer, fileReader filereader.Reader, logger *slog.Logger) *Enricher {
+func New(analyzers []analyzer.Analyzer, fileReader filereader.Reader, logger *slog.Logger) *Enricher {
 	return &Enricher{
 		analyzers:  analyzers,
 		fileReader: fileReader,
@@ -29,7 +28,7 @@ func New(analyzers []types.Analyzer, fileReader filereader.Reader, logger *slog.
 }
 
 // findAnalyzerForFile iterates through the available analyzers to find one that supports the file.
-func (e *Enricher) findAnalyzerForFile(filePath string) types.Analyzer {
+func (e *Enricher) findAnalyzerForFile(filePath string) analyzer.Analyzer {
 	for _, analyzer := range e.analyzers {
 		if analyzer.SupportsFile(filePath) {
 			return analyzer
@@ -98,7 +97,7 @@ func (e *Enricher) readSourceFile(fileNode *model.FileNode) ([]byte, error) {
 	return os.ReadFile(absPath)
 }
 
-func (e *Enricher) applyAnalysisToFileNode(fileNode *model.FileNode, analysis types.AnalysisResult) {
+func (e *Enricher) applyAnalysisToFileNode(fileNode *model.FileNode, analysis analyzer.AnalysisResult) {
 	var methodMetrics []model.MethodMetrics
 	for _, funcMetric := range analysis.Functions {
 		metric := model.MethodMetrics{
@@ -137,25 +136,4 @@ func collectFiles(dir *model.DirNode, fileMap map[string]*model.FileNode) {
 	for _, subDir := range dir.Subdirs {
 		collectFiles(subDir, fileMap)
 	}
-}
-
-func CountLines(path string) (int, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return 0, err
-	}
-	defer f.Close()
-
-	s := bufio.NewScanner(f)
-	// Allow long lines
-	buf := make([]byte, 0, 1024*1024)
-	s.Buffer(buf, 1024*1024)
-	n := 0
-	for s.Scan() {
-		n++
-	}
-	if err := s.Err(); err != nil {
-		return 0, err
-	}
-	return n, nil
 }

@@ -5,15 +5,14 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/IgorBayerl/AdlerCov/analyzer"
 	sitter "github.com/tree-sitter/go-tree-sitter"
 	tsgo "github.com/tree-sitter/tree-sitter-go/bindings/go"
-
-	"github.com/IgorBayerl/AdlerCov/pkg/types"
 )
 
 type GoAnalyzer struct{}
 
-func New() types.Analyzer { return &GoAnalyzer{} }
+func New() analyzer.Analyzer { return &GoAnalyzer{} }
 
 func (a *GoAnalyzer) Name() string {
 	return "Go"
@@ -58,18 +57,18 @@ const (
   `
 )
 
-func (a *GoAnalyzer) Analyze(sourceCode []byte) (types.AnalysisResult, error) {
+func (a *GoAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, error) {
 	parser := sitter.NewParser()
 	defer parser.Close()
 
 	lang := sitter.NewLanguage(tsgo.Language())
 	if err := parser.SetLanguage(lang); err != nil {
-		return types.AnalysisResult{}, fmt.Errorf("set language: %w", err)
+		return analyzer.AnalysisResult{}, fmt.Errorf("set language: %w", err)
 	}
 
 	tree := parser.Parse(sourceCode, nil)
 	if tree == nil {
-		return types.AnalysisResult{}, fmt.Errorf("parse returned nil tree")
+		return analyzer.AnalysisResult{}, fmt.Errorf("parse returned nil tree")
 	}
 	defer tree.Close()
 
@@ -77,7 +76,7 @@ func (a *GoAnalyzer) Analyze(sourceCode []byte) (types.AnalysisResult, error) {
 
 	q, qerr := sitter.NewQuery(lang, funcQueryString)
 	if qerr != nil {
-		return types.AnalysisResult{}, fmt.Errorf("compile function query: %w", qerr)
+		return analyzer.AnalysisResult{}, fmt.Errorf("compile function query: %w", qerr)
 	}
 	defer q.Close()
 
@@ -86,7 +85,7 @@ func (a *GoAnalyzer) Analyze(sourceCode []byte) (types.AnalysisResult, error) {
 
 	matches := qc.Matches(q, root, sourceCode)
 
-	var result types.AnalysisResult
+	var result analyzer.AnalysisResult
 
 	for m := matches.Next(); m != nil; m = matches.Next() {
 		var funcNode *sitter.Node
@@ -119,9 +118,9 @@ func (a *GoAnalyzer) Analyze(sourceCode []byte) (types.AnalysisResult, error) {
 			name = fmt.Sprintf("(%s).%s", receiver, funcName) // e.g. (*MessageBuilder).Greet
 		}
 
-		result.Functions = append(result.Functions, types.FunctionMetric{
+		result.Functions = append(result.Functions, analyzer.FunctionMetric{
 			Name:                 name,
-			Position:             types.Position{StartLine: int(start), EndLine: int(end)},
+			Position:             analyzer.Position{StartLine: int(start), EndLine: int(end)},
 			CyclomaticComplexity: &complexity,
 		})
 	}
