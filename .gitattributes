@@ -1,2 +1,10 @@
 demo_projects/** linguist-vendored
+docs/** linguist-vendored
 internal/reporter/htmlreact/assets/** linguist-vendored
+
+ui/public/data.js linguist-vendored
+ui/tailwind.config.ts linguist-vendored
+ui/tsconfig.json linguist-vendored
+ui/tsconfig.app.json linguist-vendored
+ui/tsconfig.node.json linguist-vendored
+ui/vite.config.**.ts linguist-vendored
