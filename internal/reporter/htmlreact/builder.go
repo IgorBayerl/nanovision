@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/IgorBayerl/AdlerCov/internal/model"
@@ -38,6 +39,11 @@ func (b *HtmlReactReportBuilder) CreateReport(tree *model.SummaryTree) error {
 
 	if err := GenerateSummary(b.outputDir, summaryData, nil); err != nil {
 		return fmt.Errorf("failed to generate summary files: %w", err)
+	}
+
+	// *** ADD THIS CALL to generate the details pages ***
+	if err := generateDetailsPages(b.outputDir, tree); err != nil {
+		return fmt.Errorf("failed to generate details pages: %w", err)
 	}
 
 	b.logger.Info("Successfully generated React HTML report.", "directory", b.outputDir)
@@ -119,13 +125,17 @@ func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNod
 	// Add files
 	for _, file := range dir.Files {
 		nodeMetrics, nodeStatuses := b.buildMetricsMap(file.Metrics)
+
+		detailsFileName := strings.ReplaceAll(file.Path, "/", "_") + ".html"
+
 		children = append(children, fileNode{
-			ID:       file.Path,
-			Name:     file.Name,
-			Type:     "file",
-			Path:     file.Path,
-			Metrics:  nodeMetrics,
-			Statuses: nodeStatuses,
+			ID:        file.Path,
+			Name:      file.Name,
+			Type:      "file",
+			Path:      file.Path,
+			Metrics:   nodeMetrics,
+			Statuses:  nodeStatuses,
+			TargetURL: detailsFileName,
 		})
 	}
 

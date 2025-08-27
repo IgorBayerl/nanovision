@@ -8,7 +8,8 @@ require (
 	github.com/tree-sitter/go-tree-sitter v0.25.0
 	github.com/tree-sitter/tree-sitter-cpp v0.23.4
 	github.com/tree-sitter/tree-sitter-go v0.23.4
-	golang.org/x/text v0.25.0
+	golang.org/x/net v0.43.0
+	golang.org/x/text v0.28.0
 )
 
 require (

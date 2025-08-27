@@ -3,6 +3,33 @@ import InlineCoverage from '@/components/InlineCoverage'
 import { cn } from '@/lib/utils'
 import type { FileNode, MetricConfig, Metrics } from '@/types/summary'
 
+const NodeName = ({ node, viewMode }: { node: FileNode; viewMode: 'tree' | 'flat' }) => {
+    const isFolder = node.type === 'folder' && viewMode === 'tree'
+    const content = viewMode === 'flat' ? node.path : node.name
+    const commonClasses = cn('truncate', isFolder ? 'font-semibold' : 'font-medium text-foreground/90')
+
+    // If it's a file and has a targetUrl, render it as a link.
+    if (!isFolder && node.targetUrl) {
+        return (
+            <a
+                href={node.targetUrl}
+                className={cn(commonClasses, 'hover:underline hover:text-primary')}
+                title={node.path}
+            >
+                {content}
+            </a>
+        )
+    }
+
+    // Otherwise, render it as a plain span.
+    return (
+        <span className={commonClasses} title={node.path}>
+            {content}
+        </span>
+    )
+}
+
+
 export function TreeRow({
     node,
     depth,
@@ -88,12 +115,8 @@ export function TreeRow({
                         <File className="h-4 w-4 text-muted-foreground" />
                     )}
 
-                    <span
-                        className={cn('truncate', isFolder ? 'font-semibold' : 'font-medium text-foreground/90')}
-                        title={node.path}
-                    >
-                        {viewMode === 'flat' ? node.path : node.name}
-                    </span>
+                    <NodeName node={node} viewMode={viewMode} />
+
                 </div>
 
                 <div
