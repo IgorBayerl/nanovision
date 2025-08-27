@@ -21,7 +21,7 @@ export function FileDetailsIsland(props: IslandProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                     This component is a React "island" that was hydrated on the client. The data below was passed via a{' '}
                     <code>data-props</code> attribute.
                 </p>
