@@ -62,3 +62,5 @@ docs/docs/roadmap/new-react-reporter
 demo_projects/**
 
 internal/reporter/htmlreport/**
+
+tree-sitter/**/src/parser.c
