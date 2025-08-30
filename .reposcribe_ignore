@@ -63,4 +63,4 @@ demo_projects/**
 
 internal/reporter/htmlreport/**
 
-tree-sitter/**/src/parser.c
+tree-sitter/**
