@@ -34,17 +34,6 @@ vendor/
 
 **.ps1
 
-report_generator_dotnet/AngularComponents/**
-report_generator_dotnet/AzureDevopsTask/**
-report_generator_dotnet/AzureDevopsTaskTest/**
-report_generator_dotnet/Deployment/**
-report_generator_dotnet/ReportGenerator.Console/**
-report_generator_dotnet/ReportGenerator.Console.NetCore/**
-report_generator_dotnet/ReportGenerator.Core.Test/**
-report_generator_dotnet/ReportGenerator.DotnetCorePluginLoader/**
-report_generator_dotnet/ReportGenerator.DotnetGlobalTool/**
-report_generator_dotnet/ReportGenerator.MSBuild/**
-
 ui/node_modules/**
 ui/src/components/**
 ui/src/hooks/**
