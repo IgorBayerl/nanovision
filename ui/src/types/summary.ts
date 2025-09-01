@@ -83,3 +83,27 @@ export type SortableSubMetricKey = keyof CoverageDetail | string
 
 export type SortKey = 'name' | { metric: MetricKey; subMetric: SortableSubMetricKey }
 export type SortDir = 'asc' | 'desc'
+
+export type LineStatus = 'covered' | 'uncovered' | 'not-coverable' | 'partial'
+
+export interface LineDetails {
+    lineNumber: number
+    content: string
+    status: LineStatus
+    hits?: number
+    branchInfo?: {
+        covered: number
+        total: number
+    }
+}
+
+export type MethodMetricValue = CoverageDetail | number
+export type MethodMetrics = Record<string, MethodMetricValue>
+
+export interface Method {
+    name: string
+    startLine: number
+    endLine: number
+    metrics: MethodMetrics
+    statuses?: Statuses
+}

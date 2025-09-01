@@ -33,3 +33,20 @@
         background-color: var(--color-muted-foreground);
     }
 }
+
+@keyframes pulse-bg-animation {
+    0%,
+    100% {
+        /* Use a transparent background of the line's actual color */
+        background-color: transparent;
+    }
+    50% {
+        /* Use a semi-transparent version of the primary color for the highlight */
+        background-color: oklch(var(--color-primary) / 0.2);
+    }
+}
+
+.animate-pulse-bg {
+    /* The animation will run once and last 1.5 seconds */
+    animation: pulse-bg-animation 1.5s ease-in-out;
+}

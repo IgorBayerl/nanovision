@@ -13,7 +13,7 @@ const NodeName = ({ node, viewMode }: { node: FileNode; viewMode: 'tree' | 'flat
         return (
             <a
                 href={node.targetUrl}
-                className={cn(commonClasses, 'hover:underline hover:text-primary')}
+                className={cn(commonClasses, 'hover:text-primary hover:underline')}
                 title={node.path}
             >
                 {content}
@@ -28,7 +28,6 @@ const NodeName = ({ node, viewMode }: { node: FileNode; viewMode: 'tree' | 'flat
         </span>
     )
 }
-
 
 export function TreeRow({
     node,
@@ -116,7 +115,6 @@ export function TreeRow({
                     )}
 
                     <NodeName node={node} viewMode={viewMode} />
-
                 </div>
 
                 <div

@@ -47,6 +47,11 @@
     --shadow-lg: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 4px 6px -1px oklch(0 0 0 / 0.1);
     --shadow-xl: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 8px 10px -1px oklch(0 0 0 / 0.1);
     --shadow-2xl: 0 1px 3px 0px oklch(0 0 0 / 0.25);
+
+    /* Line coverage highlight */
+    --color-coverage-covered: var(--primary);
+    --color-coverage-uncovered: var(--destructive);
+    --color-coverage-partial: oklch(0.85 0.15 85);
 }
 .dark {
     --background: oklch(0.23 0.01 260.69);
@@ -90,6 +95,10 @@
     --shadow-lg: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 4px 6px -1px oklch(0 0 0 / 0.1);
     --shadow-xl: 0 1px 3px 0px oklch(0 0 0 / 0.1), 0 8px 10px -1px oklch(0 0 0 / 0.1);
     --shadow-2xl: 0 1px 3px 0px oklch(0 0 0 / 0.25);
+
+    --color-coverage-covered: var(--primary);
+    --color-coverage-uncovered: var(--destructive);
+    --color-coverage-partial: oklch(0.75 0.18 85);
 }
 
 @theme inline {
@@ -143,4 +152,8 @@
     --shadow-lg: var(--shadow-lg);
     --shadow-xl: var(--shadow-xl);
     --shadow-2xl: var(--shadow-2xl);
+
+    --color-covered: var(--color-coverage-covered);
+    --color-uncovered: var(--color-coverage-uncovered);
+    --color-partial: var(--color-coverage-partial);
 }

@@ -1,35 +1,110 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Coverage Details</title>
-  </head>
-  <body>
-    <div class="mx-auto min-h-screen w-full max-w-7xl space-y-5 bg-background p-6 text-foreground">
-      <h1 class="font-bold text-2xl tracking-tight">File Coverage Details</h1>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Coverage Details</title>
+	</head>
+	<body>
+		<div id="root"></div>
 
-      <!--
-        This is a placeholder for a React Island.
-        Your Go application will be responsible for rendering this div
-        and serializing the correct props into the `data-props` attribute.
-      -->
-      <div
-        data-island="FileDetails"
-        data-props='{"fileName":"src/components/ui/Button.tsx", "coverage":90, "risk":"safe"}'
-      >
-        <!-- Static content or a loading skeleton can be placed here -->
-        <div class="rounded-md border border-border bg-card p-10 text-center text-muted-foreground">
-          Loading interactive component...
-        </div>
-      </div>
+		<!--
+            Dev fixture: In production, Go will generate this script with file-specific data.
+        -->
+		<script>
+			window.__ADLERCOV_DETAILS__ = {
+				schemaVersion: 1,
+				generatedAt: '2025-09-01T16:49:31Z',
+				title: 'Coverage Report',
+				fileName: 'test_project_go/calculator/calculator.go',
+				metadata: [
+					{ label: 'File Name', value: 'calculator.go' },
+					{ label: 'Language Analyzer', value: 'GoCover' },
+					{ label: 'Parsed Reports', value: 'coverage.out' },
+				],
+				totals: {
+					files: 1,
+					folders: 0,
+					lineCoverage: { covered: 27, uncovered: 5, coverable: 32, total: 53, percentage: 84.37 },
+					methodsCovered: { covered: 5, total: 5, percentage: 100 },
+					methodsFullyCovered: { covered: 2, total: 5, percentage: 40 },
+					statuses: { lineCoverage: 'safe', methodsCovered: 'safe', methodsFullyCovered: 'danger' },
+				},
+				// --- THIS SECTION IS NOW CORRECT AND COMPLETE ---
+				metricDefinitions: {
+					lineCoverage: {
+						label: 'Lines',
+						shortLabel: 'Lines',
+						subMetrics: [
+							{ id: 'covered', label: 'Covered', width: 100 },
+							{ id: 'uncovered', label: 'Uncovered', width: 100 },
+							{ id: 'total', label: 'Total', width: 80 },
+							{ id: 'percentage', label: '%', width: 160 },
+						],
+					},
+					methodsCovered: {
+						label: 'Methods Covered',
+						shortLabel: 'Methods Cov.',
+						subMetrics: [
+							{ id: 'covered', label: 'Covered', width: 80 },
+							{ id: 'total', label: 'Total', width: 80 },
+							{ id: 'percentage', label: '%', width: 160 },
+						],
+					},
+					methodsFullyCovered: {
+						label: 'Methods Fully Covered',
+						shortLabel: 'Methods Full Cov.',
+						subMetrics: [
+							{ id: 'covered', label: 'Covered', width: 80 },
+							{ id: 'total', label: 'Total', width: 80 },
+							{ id: 'percentage', label: '%', width: 160 },
+						],
+					},
+					// Added for the methods table to use
+					branchCoverage: { label: 'Branches', shortLabel: 'Branch Cov.', subMetrics: [] },
+					cyclomaticComplexity: { label: 'Cyclomatic', shortLabel: 'Cyclo.', subMetrics: [] },
+					npathComplexity: { label: 'NPath', shortLabel: 'NPath', subMetrics: [] },
+					crapScore: { label: 'C.R.A.P. Score', shortLabel: 'C.R.A.P.', subMetrics: [] },
+				},
+				methods: [
+					{
+						name: 'Add(a, b int)',
+						startLine: 3, endLine: 5,
+						metrics: {
+							lineCoverage: { covered: 3, uncovered: 0, total: 3, percentage: 100 },
+							branchCoverage: { covered: 0, uncovered: 0, total: 0, percentage: 100 },
+							cyclomaticComplexity: 1,
+							npathComplexity: 1,
+							crapScore: 1.0,
+						},
+						statuses: { lineCoverage: 'safe', branchCoverage: 'safe' },
+					},
+					{
+						name: 'Subtract(a, b int)',
+						startLine: 7, endLine: 9,
+						metrics: {
+							lineCoverage: { covered: 0, uncovered: 3, total: 3, percentage: 0 },
+							branchCoverage: { covered: 0, uncovered: 0, total: 0, percentage: 100 },
+							cyclomaticComplexity: 1,
+							npathComplexity: 1,
+							crapScore: 2.0,
+						},
+						statuses: { lineCoverage: 'danger', branchCoverage: 'safe' },
+					},
+				],
+				lines: [
+					{ lineNumber: 1, content: 'using System;', status: 'not-coverable' },
+					{ lineNumber: 3, content: 'public void ExecutedMethod_1()', status: 'covered', hits: 1 },
+					{ lineNumber: 5, content: '    Console.WriteLine("Test");', status: 'covered', hits: 1 },
+					{ lineNumber: 8, content: 'public void UnExecutedMethod_1()', status: 'uncovered', hits: 0 },
+					{ lineNumber: 10, content: '    Console.WriteLine("Test");', status: 'uncovered', hits: 0 },
+					{ lineNumber: 13, content: 'if (value < 0)', status: 'partial', hits: 1, branchInfo: { covered: 1, total: 2 } },
+					{ lineNumber: 15, content: '    this.someProperty = 0;', status: 'covered', hits: 1 },
+					{ lineNumber: 18, content: '{', status: 'uncovered', hits: 0 },
+				],
+			}
+		</script>
 
-    </div>
-
-    <!--
-      This script is the entry point for this specific page.
-      It will load the React code to activate the islands above.
-    -->
-    <script type="module" src="/src/details.tsx"></script>
-  </body>
+		<script type="module" src="/src/details.tsx"></script>
+	</body>
 </html>
