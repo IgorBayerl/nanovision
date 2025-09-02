@@ -41,8 +41,8 @@ func (b *HtmlReactReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		return fmt.Errorf("failed to generate summary files: %w", err)
 	}
 
-	// *** ADD THIS CALL to generate the details pages ***
-	if err := generateDetailsPages(b.outputDir, tree); err != nil {
+	// *** ADDED: Call to generate the details pages ***
+	if err := generateDetailsPages(b, tree); err != nil {
 		return fmt.Errorf("failed to generate details pages: %w", err)
 	}
 
@@ -287,6 +287,22 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "covered", Label: "Covered", Width: 80},
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
+		"methodBranchCoverage": {
+			Label:      "Method Branches",
+			ShortLabel: "Method Branches",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
+		"maxCyclomaticComplexity": {
+			Label:      "Max Cyclomatic Complexity",
+			ShortLabel: "Max Complexity",
+			SubMetrics: []subMetric{
+				{ID: "total", Label: "Value", Width: 100},
 			},
 		},
 	}
