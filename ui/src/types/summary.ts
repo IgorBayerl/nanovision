@@ -86,6 +86,7 @@ export type SortDir = 'asc' | 'desc'
 
 export type LineStatus = 'covered' | 'uncovered' | 'not-coverable' | 'partial'
 
+export type DiffStatus = 'added' | 'removed' | 'unchanged'
 export interface LineDetails {
     lineNumber: number
     content: string
@@ -95,15 +96,17 @@ export interface LineDetails {
         covered: number
         total: number
     }
+    diffStatus?: DiffStatus
 }
 
-export type MethodMetricValue = CoverageDetail | number
-export type MethodMetrics = Record<string, MethodMetricValue>
+export type MethodMetric = {
+    value: string // The value to display (e.g., "100%", "1.00")
+    status?: RiskLevel
+}
 
 export interface Method {
     name: string
     startLine: number
     endLine: number
-    metrics: MethodMetrics
-    statuses?: Statuses
+    metrics: Record<string, MethodMetric>
 }

@@ -12,98 +12,148 @@
             Dev fixture: In production, Go will generate this script with file-specific data.
         -->
 		<script>
-			window.__ADLERCOV_DETAILS__ = {
-				schemaVersion: 1,
-				generatedAt: '2025-09-01T16:49:31Z',
-				title: 'Coverage Report',
-				fileName: 'test_project_go/calculator/calculator.go',
-				metadata: [
-					{ label: 'File Name', value: 'calculator.go' },
-					{ label: 'Language Analyzer', value: 'GoCover' },
-					{ label: 'Parsed Reports', value: 'coverage.out' },
-				],
-				totals: {
-					files: 1,
-					folders: 0,
-					lineCoverage: { covered: 27, uncovered: 5, coverable: 32, total: 53, percentage: 84.37 },
-					methodsCovered: { covered: 5, total: 5, percentage: 100 },
-					methodsFullyCovered: { covered: 2, total: 5, percentage: 40 },
-					statuses: { lineCoverage: 'safe', methodsCovered: 'safe', methodsFullyCovered: 'danger' },
+    window.__ADLERCOV_DETAILS__ = {
+        schemaVersion: 1,
+        generatedAt: '2025-09-02T10:30:00Z',
+        title: 'Coverage Report',
+        fileName: 'src/core/ShoppingCart.ts',
+        metadata: [
+            { label: 'File Name', value: 'ShoppingCart.ts' },
+            { label: 'Language Analyzer', value: 'ts-jest' },
+            { label: 'Git Ref', value: 'feature/discount-logic' },
+        ],
+        totals: {
+            files: 1,
+            folders: 0,
+            lineCoverage: { covered: 12, uncovered: 4, coverable: 16, total: 46, percentage: 75.0 },
+            methodsCovered: { covered: 3, total: 4, percentage: 75.0 },
+            methodsFullyCovered: { covered: 2, total: 4, percentage: 50.0 },
+            statuses: { lineCoverage: 'warning', methodsCovered: 'warning', methodsFullyCovered: 'danger' },
+        },
+        metricDefinitions: {
+            lineCoverage: {
+                label: 'Line Coverage',
+                shortLabel: 'Line Coverage',
+                subMetrics: [
+                    { id: 'covered', label: 'Covered', width: 100 },
+                    { id: 'uncovered', label: 'Uncovered', width: 100 },
+                    { id: 'percentage', label: '%', width: 160 },
+                ],
+            },
+            methodsCovered: {
+                label: 'Methods Coverage',
+                shortLabel: 'Methods Coverage',
+                subMetrics: [
+                    { id: 'covered', label: 'Covered', width: 80 },
+                    { id: 'total', label: 'Total', width: 80 },
+                    { id: 'percentage', label: '%', width: 160 },
+                ],
+            },
+            methodsFullyCovered: {
+                label: 'Methods Fully Covered',
+                shortLabel: 'Methods Full Coverage',
+                subMetrics: [
+                    { id: 'covered', label: 'Covered', width: 80 },
+                    { id: 'total', label: 'Total', width: 80 },
+                    { id: 'percentage', label: '%', width: 160 },
+                ],
+            },
+            branchCoverage: { label: 'Branch Coverage', shortLabel: 'Branch Coverage', subMetrics: [] },
+            cyclomaticComplexity: { label: 'Cyclomatic Complexity', shortLabel: 'Cyclomatic Complexity', subMetrics: [] },
+        },
+        methods: [
+			{
+				name: 'constructor()',
+				startLine: 11,
+				endLine: 13,
+				metrics: {
+					lineCoverage: { value: '100%' },
+					branchCoverage: { value: '100%' },
+					cyclomaticComplexity: { value: '1' },
 				},
-				// --- THIS SECTION IS NOW CORRECT AND COMPLETE ---
-				metricDefinitions: {
-					lineCoverage: {
-						label: 'Lines',
-						shortLabel: 'Lines',
-						subMetrics: [
-							{ id: 'covered', label: 'Covered', width: 100 },
-							{ id: 'uncovered', label: 'Uncovered', width: 100 },
-							{ id: 'total', label: 'Total', width: 80 },
-							{ id: 'percentage', label: '%', width: 160 },
-						],
-					},
-					methodsCovered: {
-						label: 'Methods Covered',
-						shortLabel: 'Methods Cov.',
-						subMetrics: [
-							{ id: 'covered', label: 'Covered', width: 80 },
-							{ id: 'total', label: 'Total', width: 80 },
-							{ id: 'percentage', label: '%', width: 160 },
-						],
-					},
-					methodsFullyCovered: {
-						label: 'Methods Fully Covered',
-						shortLabel: 'Methods Full Cov.',
-						subMetrics: [
-							{ id: 'covered', label: 'Covered', width: 80 },
-							{ id: 'total', label: 'Total', width: 80 },
-							{ id: 'percentage', label: '%', width: 160 },
-						],
-					},
-					// Added for the methods table to use
-					branchCoverage: { label: 'Branches', shortLabel: 'Branch Cov.', subMetrics: [] },
-					cyclomaticComplexity: { label: 'Cyclomatic', shortLabel: 'Cyclo.', subMetrics: [] },
-					npathComplexity: { label: 'NPath', shortLabel: 'NPath', subMetrics: [] },
-					crapScore: { label: 'C.R.A.P. Score', shortLabel: 'C.R.A.P.', subMetrics: [] },
+			},
+			{
+				name: 'addItem(item: CartItem)',
+				startLine: 15,
+				endLine: 17,
+				metrics: {
+					lineCoverage: { value: '100%' },
+					branchCoverage: { value: '100%' },
+					cyclomaticComplexity: { value: '1' },
 				},
-				methods: [
-					{
-						name: 'Add(a, b int)',
-						startLine: 3, endLine: 5,
-						metrics: {
-							lineCoverage: { covered: 3, uncovered: 0, total: 3, percentage: 100 },
-							branchCoverage: { covered: 0, uncovered: 0, total: 0, percentage: 100 },
-							cyclomaticComplexity: 1,
-							npathComplexity: 1,
-							crapScore: 1.0,
-						},
-						statuses: { lineCoverage: 'safe', branchCoverage: 'safe' },
-					},
-					{
-						name: 'Subtract(a, b int)',
-						startLine: 7, endLine: 9,
-						metrics: {
-							lineCoverage: { covered: 0, uncovered: 3, total: 3, percentage: 0 },
-							branchCoverage: { covered: 0, uncovered: 0, total: 0, percentage: 100 },
-							cyclomaticComplexity: 1,
-							npathComplexity: 1,
-							crapScore: 2.0,
-						},
-						statuses: { lineCoverage: 'danger', branchCoverage: 'safe' },
-					},
-				],
-				lines: [
-					{ lineNumber: 1, content: 'using System;', status: 'not-coverable' },
-					{ lineNumber: 3, content: 'public void ExecutedMethod_1()', status: 'covered', hits: 1 },
-					{ lineNumber: 5, content: '    Console.WriteLine("Test");', status: 'covered', hits: 1 },
-					{ lineNumber: 8, content: 'public void UnExecutedMethod_1()', status: 'uncovered', hits: 0 },
-					{ lineNumber: 10, content: '    Console.WriteLine("Test");', status: 'uncovered', hits: 0 },
-					{ lineNumber: 13, content: 'if (value < 0)', status: 'partial', hits: 1, branchInfo: { covered: 1, total: 2 } },
-					{ lineNumber: 15, content: '    this.someProperty = 0;', status: 'covered', hits: 1 },
-					{ lineNumber: 18, content: '{', status: 'uncovered', hits: 0 },
-				],
-			}
-		</script>
+			},
+			{
+				name: 'applyDiscount(code: string)',
+				startLine: 26,
+				endLine: 34,
+				metrics: {
+					lineCoverage: { value: '66%', status: 'warning' },
+					branchCoverage: { value: '50%', status: 'danger' },
+					cyclomaticComplexity: { value: '2' },
+				},
+			},
+			{
+				name: 'emptyCart()',
+				startLine: 44,
+				endLine: 46,
+				metrics: {
+					lineCoverage: { value: '0%', status: 'danger' },
+					branchCoverage: { value: '100%' },
+					cyclomaticComplexity: { value: '1' },
+				},
+			},
+		],
+
+        lines: [
+            { lineNumber: 1, content: "import { find, sumBy } from 'lodash';", status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 2, content: '', status: 'not-coverable' },
+            { lineNumber: 3, content: 'interface CartItem {', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 4, content: '    id: string;', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 5, content: '    price: number;', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 6, content: '}', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 7, content: '', status: 'not-coverable' },
+            { lineNumber: 8, content: 'export class ShoppingCart {', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 9, content: '    private items: CartItem[] = [];', status: 'covered', hits: 1, diffStatus: 'unchanged' },
+            { lineNumber: 10, content: '', status: 'not-coverable' },
+            { lineNumber: 11, content: '    constructor() {', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 12, content: '        this.items = [];', status: 'covered', hits: 1, diffStatus: 'unchanged' },
+            { lineNumber: 13, content: '    }', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 14, content: '', status: 'not-coverable' },
+            { lineNumber: 15, content: '    addItem(item: CartItem) {', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 16, content: '        this.items.push(item);', status: 'covered', hits: 5, diffStatus: 'unchanged' },
+            { lineNumber: 17, content: '    }', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 18, content: '', status: 'not-coverable' },
+            { lineNumber: 19, content: '    removeItem(itemId: string) {', status: 'not-coverable', diffStatus: 'removed' },
+            { lineNumber: 20, content: '        this.items = this.items.filter(i => i.id !== itemId);', status: 'uncovered', hits: 0, diffStatus: 'removed' },
+            { lineNumber: 21, content: '    }', status: 'not-coverable', diffStatus: 'removed' },
+            { lineNumber: 22, content: '', status: 'not-coverable' },
+            { lineNumber: 23, content: '    getTotal(): number {', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 24, content: '        return sumBy(this.items, item => item.price);', status: 'covered', hits: 3, diffStatus: 'unchanged' },
+            { lineNumber: 25, content: '    }', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 26, content: '', status: 'not-coverable' },
+            { lineNumber: 27, content: '    applyDiscount(code: string): number {', status: 'not-coverable', diffStatus: 'added' },
+            { lineNumber: 28, content: '        const total = this.getTotal();', status: 'covered', hits: 2, diffStatus: 'added' },
+            { lineNumber: 29, content: "        if (code === 'SAVE10') {", status: 'partial', hits: 2, diffStatus: 'added', branchInfo: { covered: 1, total: 2 } },
+            { lineNumber: 30, content: '            return total * 0.9;', status: 'covered', hits: 1, diffStatus: 'added' },
+            { lineNumber: 31, content: '        } else {', status: 'not-coverable', diffStatus: 'added' },
+            { lineNumber: 32, content: '            console.warn("Invalid discount code");', status: 'uncovered', hits: 0, diffStatus: 'added' },
+            { lineNumber: 33, content: '            return total;', status: 'uncovered', hits: 0, diffStatus: 'added' },
+            { lineNumber: 34, content: '        }', status: 'not-coverable', diffStatus: 'added' },
+            { lineNumber: 35, content: '    }', status: 'not-coverable', diffStatus: 'added' },
+            { lineNumber: 36, content: '', status: 'not-coverable' },
+            { lineNumber: 37, content: '    /** Checks if the cart has a specific item */', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 38, content: '    hasItem(itemId: string): boolean {', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 39, content: '        return !!find(this.items, { id: itemId });', status: 'covered', hits: 4, diffStatus: 'unchanged' },
+            { lineNumber: 40, content: '    }', status: 'not-coverable', diffStatus: 'unchanged' },
+            { lineNumber: 41, content: '', status: 'not-coverable' },
+            { lineNumber: 42, content: '    // TODO: This method needs to be tested', status: 'not-coverable' },
+            { lineNumber: 43, content: '    emptyCart() {', status: 'not-coverable' },
+            { lineNumber: 44, content: '        this.items = [];', status: 'uncovered', hits: 0 },
+            { lineNumber: 45, content: '    }', status: 'not-coverable' },
+            { lineNumber: 46, content: '}', status: 'not-coverable', diffStatus: 'unchanged' },
+        ],
+    }
+</script>
 
 		<script type="module" src="/src/details.tsx"></script>
 	</body>

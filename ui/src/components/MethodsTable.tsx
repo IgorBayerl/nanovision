@@ -1,27 +1,8 @@
-import { Target } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import InlineCoverage from '@/components/InlineCoverage'
-import { camelCaseToTitleCase, cn } from '@/lib/utils'
-import type { Method, MetricDefinitions, SortDir } from '@/types/summary'
-import { Button } from '@/ui/button'
+import { useMemo } from 'react'
+import { camelCaseToTitleCase } from '@/lib/utils'
+import type { Method, MetricDefinitions } from '@/types/summary'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
-
-type MethodSortKey = 'name' | { metric: string }
-
-// Helper to get a comparable value for sorting remains the same
-function getSortValue(method: Method, key: MethodSortKey): string | number {
-    if (key === 'name') {
-        return method.name
-    }
-    const metric = method.metrics[key.metric]
-    if (typeof metric === 'number') {
-        return metric
-    }
-    if (typeof metric === 'object' && metric.percentage !== undefined) {
-        return metric.percentage
-    }
-    return -1
-}
+import { StatusIcon } from './MetricCard'
 
 export default function MethodsTable({
     methods,
@@ -30,9 +11,6 @@ export default function MethodsTable({
     methods: Method[]
     metricDefinitions: MetricDefinitions
 }) {
-    const [sortKey, setSortKey] = useState<MethodSortKey>('name')
-    const [sortDir, setSortDir] = useState<SortDir>('asc')
-
     const handleGoToLine = (lineNumber: number) => {
         const selector = `[data-line-number="${lineNumber}"]`
         const lineElement = document.querySelector(selector) as HTMLElement
@@ -61,37 +39,9 @@ export default function MethodsTable({
         })
     }, [methods, metricDefinitions])
 
-    const sortedMethods = useMemo(() => {
-        return [...methods].sort((a, b) => {
-            const valA = getSortValue(a, sortKey)
-            const valB = getSortValue(b, sortKey)
-            const dir = sortDir === 'asc' ? 1 : -1
-            if (typeof valA === 'string' && typeof valB === 'string') {
-                return valA.localeCompare(valB) * dir
-            }
-            return (valA as number) - (valB as number)
-        })
-    }, [methods, sortKey, sortDir])
-
-    const handleHeaderClick = (key: MethodSortKey) => {
-        if (
-            sortKey === key ||
-            (typeof sortKey === 'object' && typeof key === 'object' && sortKey.metric === key.metric)
-        ) {
-            setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
-        } else {
-            setSortKey(key)
-            setSortDir('asc')
-        }
-    }
-
     if (!methods || methods.length === 0) {
         return null
     }
-
-    // --- THIS IS THE FIX ---
-    // Create the CSS value for the grid-template-columns property directly.
-    const gridTemplateColumns = `minmax(300px, 2fr) repeat(${metricConfigs.length}, minmax(150px, 1fr)) 60px`
 
     return (
         <Card>
@@ -99,95 +49,57 @@ export default function MethodsTable({
                 <CardTitle>Method Coverage</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto p-0">
-                <div className="w-full min-w-max">
-                    {/* Table Header */}
-                    <div
-                        className="grid border-border border-b bg-subtle/50 font-semibold text-xs"
-                        // Apply the dynamic style using the 'style' prop
-                        style={{ gridTemplateColumns }}
-                    >
-                        <button
-                            type="button"
-                            onClick={() => handleHeaderClick('name')}
-                            className="sticky left-0 z-10 flex items-center gap-1 bg-subtle/50 px-4 py-3 text-left hover:text-foreground"
-                        >
-                            Method
-                            <span>{sortKey === 'name' ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
-                        </button>
-                        {metricConfigs.map((mc) => (
-                            <button
-                                type="button"
-                                key={mc.id}
-                                onClick={() => handleHeaderClick({ metric: mc.id })}
-                                className="flex items-center justify-end gap-1 px-4 py-3 text-right hover:text-foreground"
-                            >
-                                <span>
-                                    {typeof sortKey === 'object' && sortKey.metric === mc.id
-                                        ? sortDir === 'asc'
-                                            ? '▲'
-                                            : '▼'
-                                        : ''}
-                                </span>
-                                {mc.shortLabel}
-                            </button>
-                        ))}
-                        <div className="px-4 py-3 text-right" />
-                    </div>
-
-                    {/* Table Body */}
-                    <div>
-                        {sortedMethods.map((method, index) => (
-                            <div
-                                key={method.name}
-                                className={cn(
-                                    'group grid items-center',
-                                    index % 2 === 0 ? 'bg-background' : 'bg-subtle/30',
-                                )}
-                                // Apply the same dynamic style to the rows
-                                style={{ gridTemplateColumns }}
-                            >
-                                <div
-                                    className="sticky left-0 z-10 truncate bg-inherit px-4 py-2 font-mono text-sm group-hover:bg-muted"
-                                    title={method.name}
+                {/* --- 1. REMOVED 'table-fixed' to use the browser's auto-sizing algorithm --- */}
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="border-border border-b bg-subtle/50 font-semibold text-xs">
+                            <th className="text-nowrap px-4 py-2 text-right text-muted-foreground">Line #</th>
+                            {/* --- 2. THE KEY: Tell this column to expand --- */}
+                            <th className="w-full px-4 py-2 text-left text-muted-foreground">Method</th>
+                            {metricConfigs.map((mc) => (
+                                <th
+                                    key={mc.id}
+                                    className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground"
                                 >
-                                    {method.name}
-                                </div>
+                                    {mc.shortLabel}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {methods.map((method) => (
+                            <tr key={method.name} className="group border-border/50 border-b hover:bg-accent/50">
+                                <td className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-muted-foreground text-xs">
+                                    {method.startLine}
+                                </td>
+                                <td className="px-4 py-1.5 text-left font-mono">
+                                    <button
+                                        type="button"
+                                        className="truncate text-left hover:text-primary hover:underline"
+                                        title={method.name}
+                                        onClick={() => handleGoToLine(method.startLine)}
+                                    >
+                                        {method.name}
+                                    </button>
+                                </td>
                                 {metricConfigs.map((mc) => {
                                     const metric = method.metrics[mc.id]
-                                    const status = method.statuses?.[mc.id]
                                     return (
-                                        <div
+                                        <td
                                             key={mc.id}
-                                            className="px-4 py-2 text-right font-mono text-xs group-hover:bg-muted"
+                                            className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-xs"
                                         >
-                                            {typeof metric === 'number' ? (
-                                                metric.toFixed(2)
-                                            ) : metric ? (
-                                                <InlineCoverage
-                                                    percentage={metric.percentage}
-                                                    risk={status ?? 'safe'}
-                                                />
-                                            ) : (
-                                                '-'
-                                            )}
-                                        </div>
+                                            <div className="flex items-center justify-end gap-2">
+                                                {metric?.status && <StatusIcon status={metric?.status} />}
+                                                <span>{metric?.value ?? '-'}</span>
+                                            </div>
+                                        </td>
                                     )
                                 })}
-                                <div className="flex items-center justify-center bg-inherit px-4 py-2 group-hover:bg-muted">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                                        onClick={() => handleGoToLine(method.startLine)}
-                                        title={`Go to line ${method.startLine}`}
-                                    >
-                                        <Target className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
+                            </tr>
                         ))}
-                    </div>
-                </div>
+                    </tbody>
+                </table>
             </CardContent>
         </Card>
     )

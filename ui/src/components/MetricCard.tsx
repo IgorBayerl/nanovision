@@ -10,9 +10,9 @@ const DetailRow = ({ label, value }: { label: string; value: number | string }) 
     </div>
 )
 
-const StatusIcon = ({ status }: { status: RiskLevel }) => {
-    if (status === 'danger') return <AlertCircle className="h-4 w-4 text-destructive" />
-    if (status === 'warning') return <AlertTriangle className="h-4 w-4 text-accent" />
+export const StatusIcon = ({ status }: { status: RiskLevel }) => {
+    if (status === 'danger') return <AlertCircle className="h-4 w-4 text-uncovered" />
+    if (status === 'warning') return <AlertTriangle className="h-4 w-4 text-partial" />
     return <ShieldCheck className="h-4 w-4 text-primary" />
 }
 

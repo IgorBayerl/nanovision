@@ -17,7 +17,6 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
     const validationResult = useMemo(() => validateDetailsData(rawData), [rawData])
 
     const { validatedData, metricKeys, reportInfo } = useMemo(() => {
-        // <-- ADD reportInfo
         if (!validationResult.success) {
             const partialData = rawData as Partial<DetailsV1>
             return {
@@ -29,7 +28,6 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
         const data = validationResult.data
         const keys = Object.keys(data.totals).filter(isMetricKey)
 
-        // Create the info for the InfoCard
         let reportInfo: { title: string; items: MetadataItem[] } | undefined
         if (data.metadata && data.metadata.length > 0) {
             reportInfo = {
@@ -45,7 +43,7 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
 
     return (
         <div className={cn('mx-auto min-h-screen w-full max-w-7xl space-y-5 bg-background p-6 text-foreground')}>
-            <TopBar title={title} />
+            <TopBar title={title} showBackButton />
 
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}
 

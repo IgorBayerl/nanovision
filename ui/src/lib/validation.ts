@@ -99,6 +99,7 @@ export function validateSummaryData(data: unknown) {
 
 // Schema for a single line of code
 const lineStatusSchema = z.enum(['covered', 'uncovered', 'not-coverable', 'partial'])
+const diffStatusSchema = z.enum(['added', 'removed', 'unchanged'])
 
 const lineDetailsSchema = z.object({
     lineNumber: z.number().int().positive(),
@@ -111,21 +112,21 @@ const lineDetailsSchema = z.object({
             total: z.number().int(),
         })
         .optional(),
+    diffStatus: diffStatusSchema.optional(),
 })
 
-// A schema for a metric that can be a number OR a full coverage object
-const methodMetricValueSchema = z.union([coverageDetailSchema, z.number()])
-
 // A schema for a method's metrics
-const methodMetricsSchema = z.record(z.string(), methodMetricValueSchema)
+const methodMetricSchema = z.object({
+    value: z.string(),
+    status: riskLevelSchema.optional(),
+})
 
 // A schema for a single method/function in the file
 const methodSchema = z.object({
     name: z.string(),
     startLine: z.number(),
     endLine: z.number(),
-    metrics: methodMetricsSchema,
-    statuses: statusesSchema,
+    metrics: z.record(z.string(), methodMetricSchema),
 })
 
 // Schema for the entire details page data object
