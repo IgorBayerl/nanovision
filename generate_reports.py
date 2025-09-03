@@ -166,8 +166,8 @@ def run_command(cmd, working_dir=None, critical=False):
 def build_adlercov_binary():
     """Builds the AdlerCov Go binary."""
     print(" Building AdlerCov binary ")
+    # os.environ["CGO_ENABLED"] = "1"
 
-    # --- THIS IS THE CORRECTED LINE ---
     build_cmd = ["go", "build", "-mod=vendor", "-o", str(BINARY_PATH), "cmd/main.go"]
     
     run_command(build_cmd, working_dir=SCRIPT_ROOT, critical=True)

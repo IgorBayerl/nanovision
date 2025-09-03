@@ -1,69 +1,62 @@
-# React + TypeScript + Vite
+# Build Configuration
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+You may have noticed our project contains multiple Vite configuration files. This setup is intentional and necessary to meet two distinct deployment requirements for the generated report.
 
-Currently, two official plugins are available:
+## The Core Requirement: Web vs. Local
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+We must produce a report that works in two environments:
 
-## Expanding the ESLint configuration
+2.  **Local Filesystem (`file://`)**: To embed in the CLI tool, we will be able to open this without a web server, double click the .html file and it just works.
+1.  **Web Server (`http://`)**: The standard environment for hosting on a website (Not Used Yet).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Vite's default build uses modern JavaScript Modules (`<script type="module">`). For security (CORS), browsers block these modules when an HTML file is opened locally via `file://`.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+To support the local filesystem, we must generate a "portable" version of the report that uses classic scripts (`<script defer>`), which browsers allow on `file://`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+| Script Type        | Loaded As                | Behavior on `file://` |
+|:-------------------|:-------------------------|:----------------------|
+| **Modern Module**  | `<script type="module">` | **Blocked**           |
+| **Classic Script** | `<script defer>`         | **Allowed**           |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Build Targets
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+We have two build commands to generate these different versions.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 1. Modern Build
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+*   **Command:** `pnpm build`
+*   **Output:** `dist-modern/`
+*   **Use Case:** Deploying the report to any standard web server.
+*   **Technology:** Uses `<script type="module">` and efficient code-splitting. **Will not work on `file://`**.
+
+### 2. Portable Build
+
+*   **Command:** `pnpm build:portable`
+*   **Output:** `dist/`
+*   **Use Case:** Creating a downloadable report where every page works locally via `file://`.
+*   **Technology:** Uses classic `<script defer>`. To bypass bundler limitations with this format, it runs a separate build for each HTML entry point.
+
+## Vite Configuration Files
+
+This two-target approach explains our file structure.
+
+#### Modern Build
+
+*   `vite.config.modern.ts`: A single config that builds all pages at once using modern defaults.
+
+#### Portable Build
+
+*   `vite.config.portable.base.ts`: Contains shared logic for the portable build, including the custom plugin to convert scripts to the classic format.
+*   `vite.config.portable.index.ts`: Config for the first step, building *only* `index.html`.
+*   `vite.config.portable.details.ts`: Config for the second step, building *only* `details.html`.
+
+## Summary of Commands
+
+| To Achieve This...                      | Run This Command...     | Output Directory      |
+|:----------------------------------------|:------------------------|:----------------------|
+| Create the report for a **web server**. | `pnpm build`            | `dist-modern/`        |
+| Create the report for **local use**.    | `pnpm build:portable`   | `dist/`               |
+| Preview the **modern build** locally.   | `pnpm preview`          | Serves `dist-modern/` |
+| Preview the **portable build** locally. | `pnpm preview:portable` | Serves `dist/`        |
+
+> **Important**: The `preview` command always uses a web server (`http://`). To test the `file://` functionality of the portable build, you must navigate to the `dist` folder in your file explorer and **double-click the HTML files** directly.

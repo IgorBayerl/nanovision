@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	sitter "github.com/tree-sitter/go-tree-sitter"
-	tscpp "github.com/tree-sitter/tree-sitter-cpp/bindings/go"
+	sitter "github.com/IgorBayerl/AdlerCov/tree-sitter/go-tree-sitter"
+	tscpp "github.com/IgorBayerl/AdlerCov/tree-sitter/tree-sitter-cpp/bindings/go"
 
 	"github.com/IgorBayerl/AdlerCov/analyzer"
 )

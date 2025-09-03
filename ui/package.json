@@ -4,9 +4,10 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
-        "build": "tsc -b && vite build --mode standalone",
-        "preview": "vite preview",
+        "dev": "vite --config vite.config.modern.ts",
+        "build": "vite build --config vite.config.index.ts && vite build --config vite.config.details.ts",
+        "build:modern": "vite build --config vite.config.modern.ts",
+        "preview": "vite preview --outDir dist",
         "lint": "biome check .",
         "fmt": "biome check --write .",
         "fix": "biome check --write --unsafe ."
