@@ -39,13 +39,15 @@ type methodsFullyCoveredDetail struct {
 type metricsMap map[string]any
 
 type totals struct {
-	LineCoverage        *lineCoverageDetail        `json:"lineCoverage,omitempty"`
-	BranchCoverage      *branchCoverageDetail      `json:"branchCoverage,omitempty"`
-	MethodsCovered      *methodsCoveredDetail      `json:"methodsCovered,omitempty"`
-	MethodsFullyCovered *methodsFullyCoveredDetail `json:"methodsFullyCovered,omitempty"`
-	Files               int                        `json:"files"`
-	Folders             int                        `json:"folders"`
-	Statuses            statuses                   `json:"statuses,omitempty"`
+	LineCoverage            *lineCoverageDetail        `json:"lineCoverage,omitempty"`
+	BranchCoverage          *branchCoverageDetail      `json:"branchCoverage,omitempty"`
+	MethodsCovered          *methodsCoveredDetail      `json:"methodsCovered,omitempty"`
+	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methodsFullyCovered,omitempty"`
+	MethodBranchCoverage    *branchCoverageDetail      `json:"methodBranchCoverage,omitempty"`
+	MaxCyclomaticComplexity *lineCoverageDetail        `json:"maxCyclomaticComplexity,omitempty"`
+	Files                   int                        `json:"files"`
+	Folders                 int                        `json:"folders"`
+	Statuses                statuses                   `json:"statuses,omitempty"`
 }
 
 type statuses map[string]riskLevel
@@ -94,4 +96,52 @@ type summaryV1 struct {
 	Tree              []fileNode        `json:"tree"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
+}
+
+// --- NEW STRUCTS FOR DETAILS PAGE ---
+
+type lineStatus string
+
+const (
+	StatusCovered      lineStatus = "covered"
+	StatusUncovered    lineStatus = "uncovered"
+	StatusNotCoverable lineStatus = "not-coverable"
+	StatusPartial      lineStatus = "partial"
+)
+
+type branchInfo struct {
+	Covered int `json:"covered"`
+	Total   int `json:"total"`
+}
+
+type lineDetail struct {
+	LineNumber int         `json:"lineNumber"`
+	Content    string      `json:"content"`
+	Status     lineStatus  `json:"status"`
+	Hits       *int        `json:"hits,omitempty"`
+	BranchInfo *branchInfo `json:"branchInfo,omitempty"`
+}
+
+type methodMetric struct {
+	Value  string    `json:"value"`
+	Status riskLevel `json:"status,omitempty"`
+}
+
+type methodDetail struct {
+	Name      string                  `json:"name"`
+	StartLine int                     `json:"startLine"`
+	EndLine   int                     `json:"endLine"`
+	Metrics   map[string]methodMetric `json:"metrics"`
+}
+
+type detailsV1 struct {
+	SchemaVersion     int               `json:"schemaVersion"`
+	GeneratedAt       string            `json:"generatedAt"`
+	Title             string            `json:"title"`
+	FileName          string            `json:"fileName"`
+	Metadata          []metadataItem    `json:"metadata"`
+	Totals            totals            `json:"totals"`
+	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
+	Methods           []methodDetail    `json:"methods,omitempty"`
+	Lines             []lineDetail      `json:"lines"`
 }

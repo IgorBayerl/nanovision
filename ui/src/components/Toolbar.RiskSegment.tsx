@@ -1,7 +1,7 @@
-import { AlertCircle, AlertTriangle, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { RiskFilter } from '@/types/summary'
 import { Button } from '@/ui/button'
+import { StatusIcon } from './MetricCard';
 
 export default function RiskSegment({ value, onChange }: { value: RiskFilter; onChange: (v: RiskFilter) => void }) {
     const opts: RiskFilter[] = ['all', 'danger', 'warning', 'safe']
@@ -17,9 +17,9 @@ export default function RiskSegment({ value, onChange }: { value: RiskFilter; on
                     title={`Show ${opt}`}
                 >
                     {opt === 'all' && <span className="text-xs">All</span>}
-                    {opt === 'danger' && <AlertCircle className="h-4 w-4 text-destructive" />}
-                    {opt === 'warning' && <AlertTriangle className="h-4 w-4 text-accent" />}
-                    {opt === 'safe' && <Shield className="h-4 w-4 text-primary" />}
+                    {opt === 'danger' && <StatusIcon status='danger'/>}
+                    {opt === 'warning' && <StatusIcon status='warning'/>}
+                    {opt === 'safe' && <StatusIcon status='safe'/>}
                 </Button>
             ))}
         </div>

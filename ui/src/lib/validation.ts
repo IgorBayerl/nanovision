@@ -96,3 +96,59 @@ export type SummaryV1 = z.infer<typeof summaryV1Schema>
 export function validateSummaryData(data: unknown) {
     return summaryV1Schema.safeParse(data)
 }
+
+// Schema for a single line of code
+const lineStatusSchema = z.enum(['covered', 'uncovered', 'not-coverable', 'partial'])
+const diffStatusSchema = z.enum(['added', 'removed', 'unchanged'])
+
+const lineDetailsSchema = z.object({
+    lineNumber: z.number().int().positive(),
+    content: z.string(),
+    status: lineStatusSchema,
+    hits: z.number().int().optional(),
+    branchInfo: z
+        .object({
+            covered: z.number().int(),
+            total: z.number().int(),
+        })
+        .optional(),
+    diffStatus: diffStatusSchema.optional(),
+})
+
+// A schema for a method's metrics
+const methodMetricSchema = z.object({
+    value: z.string(),
+    status: riskLevelSchema.optional(),
+})
+
+// A schema for a single method/function in the file
+const methodSchema = z.object({
+    name: z.string(),
+    startLine: z.number(),
+    endLine: z.number(),
+    metrics: z.record(z.string(), methodMetricSchema),
+})
+
+// Schema for the entire details page data object
+export const detailsV1Schema = z.object({
+    schemaVersion: z.literal(1),
+    generatedAt: z.string().refine((val) => !Number.isNaN(Date.parse(val))),
+    title: z.string(),
+    fileName: z.string(),
+    totals: totalsSchema,
+    metricDefinitions: z.record(z.string(), metricDefinitionSchema),
+    lines: z.array(lineDetailsSchema),
+    metadata: z.array(metadataItemSchema).optional(),
+    methods: z.array(methodSchema).optional(),
+})
+
+export type DetailsV1 = z.infer<typeof detailsV1Schema>
+
+/**
+ * Validates the details page data object against the schema.
+ * @param data The unknown data, typically from window.__ADLERCOV_DETAILS__.
+ * @returns A Zod SafeParseReturnType which indicates success or failure with detailed errors.
+ */
+export function validateDetailsData(data: unknown) {
+    return detailsV1Schema.safeParse(data)
+}
