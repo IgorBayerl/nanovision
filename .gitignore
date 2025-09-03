@@ -23,3 +23,5 @@ adlercov.log
 
 report_generator_dotnet
 output_report.txt
+internal/reporter/htmlreact/assets/dist/data.js
+build
