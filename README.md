@@ -34,7 +34,18 @@ The motivations for creating **AdlerCov**:
 2.  **Dependency-Free:** A lightweight, native binary that runs anywhere without external runtimes—ideal for containers and CI/CD pipelines.
 3.  **Modern Extensibility:** Designed with a clean, multi-stage pipeline in Go, enabling rapid extension for new report formats and language-specific analysis.
 
+## Screenshots
+
+
+### HTML Report
+
+Summary
+![coverage report summary page example](docs/docs/imgs/adlercov_summary_screen.png)
+
+Details
+![coverage report details page example C++](docs/docs/imgs/adlercov_details.png)
 ## Feature Status
+
 
 While AdlerCov began by mirroring ReportGenerator’s capabilities, it is now diverging with Go-native enhancements and a growing list of planned features.
 

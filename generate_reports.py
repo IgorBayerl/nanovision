@@ -19,6 +19,8 @@ import argparse
 import platform
 import os
 import glob
+import tempfile
+import shutil
 
 # ==============================================================================
 #  Configuration: Paths and Tool Information 
@@ -28,6 +30,9 @@ import glob
 SCRIPT_ROOT = pathlib.Path(__file__).resolve().parent
 REPORTS_OUTPUT_BASE = SCRIPT_ROOT / "reports"
 DEMO_PROJECTS_ROOT = SCRIPT_ROOT / "demo_projects"
+
+# Path for the tool's own coverage report, generated when using --cover
+SELF_COVERAGE_OUT = REPORTS_OUTPUT_BASE / "adlercov_coverage" / "coverage.out"
 
 # AdlerCov Tool Location 
 GO_TOOL_SRC_DIR = SCRIPT_ROOT
@@ -163,15 +168,52 @@ def run_command(cmd, working_dir=None, critical=False):
         return {"success": False, "output": message}
 
 
-def build_adlercov_binary():
-    """Builds the AdlerCov Go binary."""
-    print(" Building AdlerCov binary ")
-    # os.environ["CGO_ENABLED"] = "1"
+def build_adlercov_binary(cover=False):
+    """
+    Builds the AdlerCov Go binary.
+    If 'cover' is True, builds with coverage instrumentation.
+    """
+    if cover:
+        print(" Building AdlerCov binary with coverage instrumentation ")
+    else:
+        print(" Building AdlerCov binary ")
 
-    build_cmd = ["go", "build", "-mod=vendor", "-o", str(BINARY_PATH), "cmd/main.go"]
+    build_cmd = ["go", "build", "-mod=vendor"]
+    if cover:
+        build_cmd.append("-cover")
+    
+    build_cmd.extend(["-o", str(BINARY_PATH), "cmd/main.go"])
     
     run_command(build_cmd, working_dir=SCRIPT_ROOT, critical=True)
     print(f"✅ Successfully built '{BINARY_NAME}'")
+
+def convert_go_coverage(raw_data_dir, output_file):
+    """
+    Merges raw Go coverage data files into a single coverage.out file.
+    """
+    print("\n" + "-"*80)
+    print(" Converting Go Coverage Data ")
+    print(f"  Raw data source: '{raw_data_dir}'")
+    print(f"  Output file: '{output_file}'")
+    
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    cmd = [
+        "go",
+        "tool",
+        "covdata",
+        "textfmt",
+        f"-i={raw_data_dir}",
+        f"-o={str(output_file.resolve())}",
+    ]
+    
+    result = run_command(cmd, working_dir=SCRIPT_ROOT)
+    
+    if result["success"]:
+        print(f"✅ Successfully converted coverage data to '{output_file}'")
+    else:
+        print("❌ Failed to convert coverage data.")
+        # The failure details are already printed by run_command
 
 def generate_reports(tasks_to_run, report_types):
     """Iterates through tasks, runs them, and collects the results."""
@@ -239,23 +281,45 @@ def print_summary_report(results):
 def main():
     """Main execution function."""
     parser = argparse.ArgumentParser(description="Generate coverage reports using the AdlerCov tool.")
-    parser.add_argument("--rebuild-binary", action="store_true", help="Force a rebuild of the AdlerCov binary.")
+    parser.add_argument("--build", action="store_true", help="Force a rebuild of the AdlerCov binary.")
     parser.add_argument("--report-types", default="Html,TextSummary,Lcov,RawJson", help="Comma-separated report types.")
+    parser.add_argument("--cover", action="store_true", help="Build with coverage instrumentation and generate a coverage report for the tool itself.")
     args = parser.parse_args()
 
-    if args.rebuild_binary or not BINARY_PATH.exists():
-        build_adlercov_binary()
-    else:
-        print(f"Using existing binary: {BINARY_PATH}")
+    # Setup for coverage run
+    temp_cover_dir = None
+    if args.cover:
+        temp_cover_dir = tempfile.mkdtemp(prefix="adlercov_raw_")
+        os.environ["GOCOVERDIR"] = temp_cover_dir
+        print(f"Coverage data will be collected in: {temp_cover_dir}")
 
-    results = []
     try:
-        results = generate_reports(REPORT_TASKS, args.report_types)
-    finally:        
-        print_summary_report(results)
-        if any("FAILED" in r["status"] for r in results):
-            print("\nOne or more tasks failed. Exiting with error status.")
-            sys.exit(1)
+        if args.build or not BINARY_PATH.exists() or args.cover:
+            build_adlercov_binary(cover=args.cover)
+        else:
+            print(f"Using existing binary: {BINARY_PATH}")
+
+        results = []
+        tasks_failed = False
+        try:
+            results = generate_reports(REPORT_TASKS, args.report_types)
+        finally:
+            tasks_failed = any("FAILED" in r["status"] for r in results)
+            
+            # If coverage was enabled and all tasks succeeded, convert the report
+            if args.cover and not tasks_failed:
+                convert_go_coverage(temp_cover_dir, SELF_COVERAGE_OUT)
+
+            print_summary_report(results)
+            if tasks_failed:
+                print("\nOne or more tasks failed. Exiting with error status.")
+                sys.exit(1)
+    finally:
+        # Cleanup the temporary directory for coverage data
+        if temp_cover_dir:
+            print(f"Cleaning up temporary coverage directory: {temp_cover_dir}")
+            shutil.rmtree(temp_cover_dir)
+
 
 if __name__ == "__main__":
     main()
