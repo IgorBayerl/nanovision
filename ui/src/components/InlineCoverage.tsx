@@ -16,7 +16,7 @@ export default function InlineCoverage({
     return (
         <div className="flex w-full items-center gap-2 pl-2">
             <span className="inline-flex items-center justify-center" style={{ width: 14 }}>
-                {!isFolder ? <StatusIcon status={risk} showOk={false} /> : <></>}
+                {!isFolder ? <StatusIcon status={risk} showOk={false} /> : null}
             </span>
             <span className="pl-1 text-right text-foreground text-xs tabular-nums" style={{ width: 32 }}>
                 {clampedPercentage}%
