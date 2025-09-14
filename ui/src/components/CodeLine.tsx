@@ -55,7 +55,7 @@ export default function CodeLine({ lineNumber, content, status, hits, branchInfo
                 {/* 3. Hit Count Badge */}
                 <div className="flex items-center justify-center border-border/30 border-r px-4 py-0.5">
                     {hasHitCount && (
-                        <span className="select-none rounded-md bg-muted px-1.5 text-center font-medium font-sans text-muted-foreground text-xs">
+                        <span className="select-none rounded-md bg-background px-1.5 text-center font-medium font-sans text-muted-foreground text-xs">
                             {hits}
                         </span>
                     )}

@@ -2,15 +2,14 @@
 """
 Runs the AdlerCov CLI tool to generate many coverage reports at once
 
-It attempts to run all enabled report tasks
-provides a final summary of which tasks succeeded and which failed 
-along with any error details
+It attempts to run all enabled report tasks, provides a final summary of
+which tasks succeeded and which failed along with any error details.
 
 It assumes that coverage data files (e.g., Cobertura XML, .gcov, .out)
 have already been generated inside the 'demo_projects' directory.
 
-if the coverage output files are not yet generated, 
-each demo_project has a script to generate the coverage reports.
+If the coverage output files are not yet generated, each demo_project has a
+script to generate the coverage reports.
 """
 import subprocess
 import sys
@@ -18,12 +17,11 @@ import pathlib
 import argparse
 import platform
 import os
-import glob
-import tempfile
 import shutil
+import tempfile
 
 # ==============================================================================
-#  Configuration: Paths and Tool Information 
+#  Configuration: Paths and Tool Information
 # ==============================================================================
 
 # The root of the script is the project root.
@@ -34,7 +32,7 @@ DEMO_PROJECTS_ROOT = SCRIPT_ROOT / "demo_projects"
 # Path for the tool's own coverage report, generated when using --cover
 SELF_COVERAGE_OUT = REPORTS_OUTPUT_BASE / "adlercov_coverage" / "coverage.out"
 
-# AdlerCov Tool Location 
+# AdlerCov Tool Location
 GO_TOOL_SRC_DIR = SCRIPT_ROOT
 def get_binary_name():
     """Returns the platform-specific name for the AdlerCov executable."""
@@ -42,29 +40,29 @@ def get_binary_name():
 BINARY_NAME = get_binary_name()
 BINARY_PATH = SCRIPT_ROOT / BINARY_NAME
 
-# C++ Project Paths (inside demo_projects) 
+# C++ Project Paths (inside demo_projects)
 CPP_DIR = DEMO_PROJECTS_ROOT / "cpp"
 CPP_PROJECT_DIR = CPP_DIR / "project"
 CPP_COBERTURA_XML = CPP_DIR / "report" / "cobertura" / "cobertura.xml"
 CPP_GCOV_DIR = CPP_DIR / "report" / "gcov" / "branch-probabilities"
 CPP_GCOV_PATTERN = str(CPP_GCOV_DIR.resolve() / "*.gcov")
 
-# C# Project Paths (inside demo_projects) 
+# C# Project Paths (inside demo_projects)
 CSHARP_DIR = DEMO_PROJECTS_ROOT / "csharp"
 CSHARP_PROJECT_DIR = CSHARP_DIR / "project"
 CSHARP_COBERTURA_XML = CSHARP_DIR / "report" / "cobertura" / "cobertura.xml"
 
-# Go Project Paths (inside demo_projects) 
+# Go Project Paths (inside demo_projects)
 GO_DIR = DEMO_PROJECTS_ROOT / "go"
 GO_PROJECT_DIR = GO_DIR / "project"
 GO_COVERAGE_OUT = GO_DIR / "report" / "gocover" / "coverage.out"
 
 # ==============================================================================
-# Report Generation Tasks 
+# Report Generation Tasks
 # ==============================================================================
 
 REPORT_TASKS = [
-    # Individual Reports 
+    # Individual Reports
     {
         "name": "C# Project Only (from Cobertura)",
         "inputs": [CSHARP_COBERTURA_XML],
@@ -93,7 +91,7 @@ REPORT_TASKS = [
         "output_dir_suffix": "cpp_cobertura_only",
         "enabled": True,
     },
-    # Merged Reports 
+    # Merged Reports
     {
         "name": "Merged - All Cobertura Reports",
         "inputs": [CSHARP_COBERTURA_XML, CPP_COBERTURA_XML],
@@ -181,23 +179,24 @@ def build_adlercov_binary(cover=False):
     build_cmd = ["go", "build", "-mod=vendor"]
     if cover:
         build_cmd.append("-cover")
-    
+
     build_cmd.extend(["-o", str(BINARY_PATH), "cmd/main.go"])
-    
+
     run_command(build_cmd, working_dir=SCRIPT_ROOT, critical=True)
     print(f"✅ Successfully built '{BINARY_NAME}'")
 
 def convert_go_coverage(raw_data_dir, output_file):
     """
     Merges raw Go coverage data files into a single coverage.out file.
+    Returns True on success, False on failure.
     """
     print("\n" + "-"*80)
-    print(" Converting Go Coverage Data ")
+    print(" Converting Go Coverage Data for AdlerCov ")
     print(f"  Raw data source: '{raw_data_dir}'")
     print(f"  Output file: '{output_file}'")
-    
+
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    
+
     cmd = [
         "go",
         "tool",
@@ -206,18 +205,20 @@ def convert_go_coverage(raw_data_dir, output_file):
         f"-i={raw_data_dir}",
         f"-o={str(output_file.resolve())}",
     ]
-    
+
     result = run_command(cmd, working_dir=SCRIPT_ROOT)
-    
+
     if result["success"]:
         print(f"✅ Successfully converted coverage data to '{output_file}'")
     else:
         print("❌ Failed to convert coverage data.")
-        # The failure details are already printed by run_command
+    return result["success"]
 
 def generate_reports(tasks_to_run, report_types):
     """Iterates through tasks, runs them, and collects the results."""
+    print("\n" + "="*80)
     print(" Starting Report Generation ")
+    print("="*80)
     results = []
 
     for task in tasks_to_run:
@@ -257,13 +258,13 @@ def print_summary_report(results):
     print("\n" + "="*80)
     print(" Final Report Generation Summary ")
     print("="*80)
-    
+
     success_count, failure_count, skipped_count = 0, 0, 0
 
     for result in results:
         print(f"\nTask  : {result['name']}")
         print(f"Status: {result['status']}")
-        
+
         if "FAILED" in result["status"]:
             failure_count += 1
             details = "  " + result["details"].replace("\n", "\n  ")
@@ -305,11 +306,40 @@ def main():
             results = generate_reports(REPORT_TASKS, args.report_types)
         finally:
             tasks_failed = any("FAILED" in r["status"] for r in results)
-            
-            # If coverage was enabled and all tasks succeeded, convert the report
-            if args.cover and not tasks_failed:
-                convert_go_coverage(temp_cover_dir, SELF_COVERAGE_OUT)
 
+            # If coverage was enabled, process the tool's own coverage report
+            if args.cover:
+                if not tasks_failed:
+                    conversion_ok = convert_go_coverage(temp_cover_dir, SELF_COVERAGE_OUT)
+
+                    if conversion_ok:
+                        # Define the self-coverage task and run it
+                        self_coverage_task = {
+                            "name": "AdlerCov Self-Coverage Report (from .out)",
+                            "inputs": [SELF_COVERAGE_OUT],
+                            "source_dirs": [GO_TOOL_SRC_DIR],
+                            "output_dir_suffix": "adlercov_self_coverage",
+                            "enabled": True,
+                        }
+                        self_results = generate_reports([self_coverage_task], args.report_types)
+                        results.extend(self_results)
+                    else:
+                        # Append a failure result if conversion failed
+                        results.append({
+                            "name": "AdlerCov Self-Coverage Report",
+                            "status": "❌ FAILED",
+                            "details": "Failed to convert raw Go coverage data. See logs."
+                        })
+                else:
+                    print("\n⚪ SKIPPING self-coverage report generation because one or more primary tasks failed.")
+                    results.append({
+                        "name": "AdlerCov Self-Coverage Report",
+                        "status": "⚪ SKIPPED",
+                        "details": "Skipped because one or more primary tasks failed."
+                    })
+
+            # Re-evaluate failure status before final summary
+            tasks_failed = any("FAILED" in r["status"] for r in results)
             print_summary_report(results)
             if tasks_failed:
                 print("\nOne or more tasks failed. Exiting with error status.")
