@@ -1,9 +1,27 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useKeyboardSearch } from '@/lib/useKeyboardSearch'
 import { useUrlState } from '@/lib/useUrlState'
 import type { FileNode, FilterRange, MetricKey, RiskFilter, SortDir, SortKey } from '@/types/summary'
 
 const getDefaultEnabledMetrics = (metrics: string[]) => metrics.slice(0, 3)
+const EXPANDED_FOLDERS_STORAGE_KEY = 'adlercov-expanded-folders'
+
+// Helper function to recursively find all folder IDs in the tree.
+const getAllFolderIds = (nodes: FileNode[]): string[] => {
+    const ids: string[] = []
+    const walk = (arr: FileNode[]) => {
+        arr.forEach((n) => {
+            if (n.type === 'folder') {
+                ids.push(n.id)
+            }
+            if (n.children) {
+                walk(n.children)
+            }
+        })
+    }
+    walk(nodes)
+    return ids
+}
 
 export function useFileExplorerState(tree: FileNode[], availableMetrics: string[]) {
     const [viewMode, setViewMode] = useUrlState<'tree' | 'flat'>('view', 'tree')
@@ -19,9 +37,27 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
     const enabledMetrics = useMemo(() => enabledMetricsParam.split(','), [enabledMetricsParam])
 
     const [filterRanges, setFilterRanges] = useUrlState<Record<MetricKey, FilterRange>>('ranges', {})
-    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
-        () => new Set(tree.filter((n) => n.type === 'folder').map((n) => n.id)),
-    )
+
+    const [expandedFoldersArray, setExpandedFoldersArray] = useState<string[]>(() => {
+        try {
+            const item = window.localStorage.getItem(EXPANDED_FOLDERS_STORAGE_KEY)
+            return item ? JSON.parse(item) : getAllFolderIds(tree)
+        } catch (error) {
+            console.error('Error reading from localStorage', error)
+            return []
+        }
+    })
+
+    useEffect(() => {
+        try {
+            window.localStorage.setItem(EXPANDED_FOLDERS_STORAGE_KEY, JSON.stringify(expandedFoldersArray))
+        } catch (error) {
+            console.error('Error writing to localStorage', error)
+        }
+    }, [expandedFoldersArray])
+
+    const expandedFolders = useMemo(() => new Set(expandedFoldersArray), [expandedFoldersArray])
+
     const searchRef = useRef<HTMLInputElement>(null)
     useKeyboardSearch(searchRef)
 
@@ -53,30 +89,33 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
 
     const toggleFolder = (id: string, event: React.MouseEvent | React.KeyboardEvent) => {
         const isRecursive = event.altKey === true
-        setExpandedFolders((prev) => {
-            const newSet = new Set(prev)
-            const shouldExpand = !newSet.has(id)
-            if (isRecursive) {
-                const startNode = idToNodeMap.get(id)
-                if (startNode) {
-                    const descendantIds = getDescendantFolderIds(startNode)
-                    const allIdsToToggle = [id, ...descendantIds]
-                    if (shouldExpand) {
-                        allIdsToToggle.forEach((folderId) => {
-                            newSet.add(folderId)
-                        })
-                    } else {
-                        allIdsToToggle.forEach((folderId) => {
-                            newSet.delete(folderId)
-                        })
-                    }
+
+        const newSet = new Set(expandedFolders)
+        const shouldExpand = !newSet.has(id)
+
+        if (isRecursive) {
+            const startNode = idToNodeMap.get(id)
+            if (startNode) {
+                const descendantIds = getDescendantFolderIds(startNode)
+                const allIdsToToggle = [id, ...descendantIds]
+                if (shouldExpand) {
+                    allIdsToToggle.forEach((folderId) => {
+                        newSet.add(folderId)
+                    })
+                } else {
+                    allIdsToToggle.forEach((folderId) => {
+                        newSet.delete(folderId)
+                    })
                 }
-            } else {
-                if (shouldExpand) newSet.add(id)
-                else newSet.delete(id)
             }
-            return newSet
-        })
+        } else {
+            if (shouldExpand) {
+                newSet.add(id)
+            } else {
+                newSet.delete(id)
+            }
+        }
+        setExpandedFoldersArray(Array.from(newSet))
     }
 
     const toggleMetric = (id: MetricKey) => {

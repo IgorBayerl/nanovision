@@ -101,7 +101,9 @@ export function TreeRow({
                             )
                         ) : viewMode === 'tree' ? (
                             <div className="w-4 shrink-0" />
-                        ) : null}
+                        ) : (
+                            <></>
+                        )}
                     </div>
 
                     {isFolder ? (
@@ -111,9 +113,8 @@ export function TreeRow({
                             <Folder className="h-4 w-4 shrink-0 text-primary" />
                         )
                     ) : (
-                        <File className="h-4 w-4 text-muted-foreground" />
+                        <File className="h-4 w-4 shrink-0 text-muted-foreground" />
                     )}
-
                     <NodeName node={node} viewMode={viewMode} />
                 </div>
 
