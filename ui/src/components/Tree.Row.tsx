@@ -101,9 +101,7 @@ export function TreeRow({
                             )
                         ) : viewMode === 'tree' ? (
                             <div className="w-4 shrink-0" />
-                        ) : (
-                            <></>
-                        )}
+                        ) : null}
                     </div>
 
                     {isFolder ? (
