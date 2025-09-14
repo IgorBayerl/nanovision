@@ -91,7 +91,7 @@ export default function FileExplorerHeader({
                             <div className="px-2">
                                 <HeaderRangeSlider
                                     range={filterRanges[m.id] ?? { min: 0, max: 100 }}
-                                    onRangeCommit={(vals) => onRangeUpdate(m.id, vals)}
+                                    onRangeUpdate={(vals) => onRangeUpdate(m.id, vals)}
                                 />
                             </div>
 
