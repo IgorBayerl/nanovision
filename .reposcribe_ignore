@@ -12,6 +12,7 @@ AzureDevopsTaskTest/
 Deployment/
 coverage-report/
 vendor/
+.gitattributes
 
 
 .github/*
@@ -53,3 +54,5 @@ demo_projects/**
 internal/reporter/htmlreport/**
 
 tree-sitter/**
+
+ui

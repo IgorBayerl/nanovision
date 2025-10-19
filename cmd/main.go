@@ -34,8 +34,6 @@ import (
 	"github.com/IgorBayerl/AdlerCov/logging"
 )
 
-var ErrMissingReportFlag = errors.New("missing required -report flag")
-
 func parseAndBindFlags() *config.RawConfigInput {
 	rawInput := &config.RawConfigInput{}
 
@@ -55,7 +53,7 @@ func parseAndBindFlags() *config.RawConfigInput {
 
 func buildLogger(appConfig *config.AppConfig) (io.Closer, error) {
 	cfg := logging.Config{
-		Verbosity: appConfig.Verbosity,
+		Verbosity: appConfig.VerbosityLevel,
 		File:      appConfig.LogFile,
 		Format:    appConfig.LogFormat,
 	}
@@ -219,6 +217,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 
+	configPath := flag.String("config", "", "Path to a adlercov.yaml configuration file.")
 	watchFlag := flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes")
 
 	rawInput := parseAndBindFlags()
@@ -228,10 +227,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Warning: %v. Defaulting to 'Info' level.\n", err)
 	}
 
-	appConfig, err := config.BuildAppConfig(*rawInput)
+	appConfig, err := config.Load(*configPath, *rawInput)
 	if err != nil {
 		slog.Error("Configuration error", "error", err)
-		if errors.Is(err, ErrMissingReportFlag) {
+		if strings.Contains(err.Error(), "must be specified") {
 			fmt.Fprintln(os.Stderr, "")
 			flag.Usage()
 		}

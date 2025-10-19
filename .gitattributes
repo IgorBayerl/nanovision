@@ -8,3 +8,5 @@ ui/tsconfig.json linguist-vendored
 ui/tsconfig.app.json linguist-vendored
 ui/tsconfig.node.json linguist-vendored
 ui/vite.config.**.ts linguist-vendored
+
+tree-sitter/** linguist-vendored
