@@ -1,13 +1,25 @@
 package parser_gocover
 
 import (
+	"bufio"
+	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 
 	"github.com/IgorBayerl/AdlerCov/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
+)
+
+var (
+	moduleName string
+	moduleRoot string
+	moduleErr  error
+	moduleOnce sync.Once
 )
 
 // processingOrchestrator now holds state for converting raw blocks into a flat
@@ -24,6 +36,52 @@ func newProcessingOrchestrator(fileReader filereader.Reader, config parsers.Pars
 		config:     config,
 		logger:     logger,
 	}
+}
+
+// Helper function to find the go.mod file and parse the module name
+func getGoModuleInfo() (string, string, error) {
+	moduleOnce.Do(func() {
+		currentDir, err := os.Getwd()
+		if err != nil {
+			moduleErr = fmt.Errorf("could not get current working directory: %w", err)
+			return
+		}
+
+		dir := currentDir
+		for {
+			goModPath := filepath.Join(dir, "go.mod")
+			if _, err := os.Stat(goModPath); err == nil {
+				moduleRoot = dir
+				break
+			}
+			parent := filepath.Dir(dir)
+			if parent == dir {
+				moduleErr = fmt.Errorf("could not find go.mod in any parent directory of %s", currentDir)
+				return
+			}
+			dir = parent
+		}
+
+		file, err := os.Open(filepath.Join(moduleRoot, "go.mod"))
+		if err != nil {
+			moduleErr = fmt.Errorf("could not open go.mod: %w", err)
+			return
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		if scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, "module ") {
+				moduleName = strings.TrimSpace(strings.TrimPrefix(line, "module "))
+			}
+		}
+
+		if moduleName == "" {
+			moduleErr = fmt.Errorf("could not parse module name from go.mod")
+		}
+	})
+	return moduleName, moduleRoot, moduleErr
 }
 
 // processBlocks is the main entry point for the orchestrator. It groups the raw
@@ -61,13 +119,34 @@ func (o *processingOrchestrator) processBlocks(blocks []GoCoverProfileBlock) ([]
 // of all coverage blocks belonging to that file.
 func (o *processingOrchestrator) groupBlocksByFile(blocks []GoCoverProfileBlock) map[string][]GoCoverProfileBlock {
 	blocksByFile := make(map[string][]GoCoverProfileBlock)
+
+	modName, modRoot, err := getGoModuleInfo()
+	if err != nil {
+		o.logger.Error("Could not determine Go module information, path normalization will fail.", "error", err)
+		// Fallback to old behavior if we can't find module info
+		modName = ""
+	}
+
 	for _, block := range blocks {
-		if !o.config.FileFilters().IsElementIncludedInReport(block.FileName) {
+		normalizedPath := block.FileName
+
+		// If the path is absolute and we have module info, normalize it.
+		if modName != "" && filepath.IsAbs(normalizedPath) {
+			relPath, err := filepath.Rel(modRoot, normalizedPath)
+			if err == nil {
+				// Join module name and relative path to get the canonical module path
+				// e.g., "github.com/IgorBayerl/AdlerCov" + "cmd/main.go"
+				normalizedPath = filepath.Join(modName, relPath)
+			}
+		}
+
+		// Always convert to forward slashes for consistency.
+		normalizedPath = filepath.ToSlash(normalizedPath)
+
+		if !o.config.FileFilters().IsElementIncludedInReport(normalizedPath) {
 			continue
 		}
-		// Go reports use forward slashes, which is our desired canonical format.
-		// filepath.ToSlash ensures consistency if the OS is Windows.
-		normalizedPath := filepath.ToSlash(block.FileName)
+
 		blocksByFile[normalizedPath] = append(blocksByFile[normalizedPath], block)
 	}
 	return blocksByFile

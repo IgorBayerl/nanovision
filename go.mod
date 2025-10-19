@@ -1,6 +1,6 @@
 module github.com/IgorBayerl/AdlerCov
 
-go 1.23.5
+go 1.25.3
 
 require (
 	github.com/IgorBayerl/fsglob v0.1.3
@@ -9,7 +9,6 @@ require (
 	golang.org/x/net v0.43.0
 	golang.org/x/text v0.28.0
 	gopkg.in/yaml.v3 v3.0.1
-
 )
 
 require (

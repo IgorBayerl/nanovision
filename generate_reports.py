@@ -29,8 +29,14 @@ SCRIPT_ROOT = pathlib.Path(__file__).resolve().parent
 REPORTS_OUTPUT_BASE = SCRIPT_ROOT / "reports"
 DEMO_PROJECTS_ROOT = SCRIPT_ROOT / "demo_projects"
 
-# Path for the tool's own coverage report, generated when using --cover
-SELF_COVERAGE_OUT = REPORTS_OUTPUT_BASE / "adlercov_coverage" / "coverage.out"
+# Path to the new configuration file.
+CONFIG_FILE_PATH = SCRIPT_ROOT / "adlercov.yaml"
+
+# Paths for the tool's own coverage reports, generated when using --cover.
+SELF_COVERAGE_DIR = REPORTS_OUTPUT_BASE / "adlercov_coverage"
+UNIT_TEST_COVERAGE_OUT = SELF_COVERAGE_DIR / "coverage-unit.out"
+INTEGRATION_TEST_COVERAGE_OUT = SELF_COVERAGE_DIR / "coverage-integration.out"
+
 
 # AdlerCov Tool Location
 GO_TOOL_SRC_DIR = SCRIPT_ROOT
@@ -137,7 +143,6 @@ def run_command(cmd, working_dir=None, critical=False):
             errors='replace'
         )
 
-        # Read and print output line-by-line in real-time
         for line in process.stdout:
             print(line, end='')
             full_output.append(line)
@@ -185,13 +190,34 @@ def build_adlercov_binary(cover=False):
     run_command(build_cmd, working_dir=SCRIPT_ROOT, critical=True)
     print(f"✅ Successfully built '{BINARY_NAME}'")
 
-def convert_go_coverage(raw_data_dir, output_file):
+
+def run_unit_tests():
     """
-    Merges raw Go coverage data files into a single coverage.out file.
+    Runs Go unit tests and generates a coverage profile.
+    This is a critical step; failure will halt the script.
+    """
+    print("\n" + "-"*80)
+    print(" Running Unit Tests and Generating Coverage Report ")
+    print("-" * 80)
+    
+    SELF_COVERAGE_DIR.mkdir(parents=True, exist_ok=True)
+    
+    cmd = [
+        "go", "test", "-v",
+        f"-coverprofile={UNIT_TEST_COVERAGE_OUT}",
+        "./..."
+    ]
+    run_command(cmd, working_dir=SCRIPT_ROOT, critical=True)
+    print(f"✅ Successfully generated unit test coverage at '{UNIT_TEST_COVERAGE_OUT}'")
+
+
+def convert_integration_coverage(raw_data_dir, output_file):
+    """
+    Merges raw Go coverage data files from the integration run into a single coverage.out file.
     Returns True on success, False on failure.
     """
     print("\n" + "-"*80)
-    print(" Converting Go Coverage Data for AdlerCov ")
+    print(" Converting Integration Test Coverage Data for AdlerCov ")
     print(f"  Raw data source: '{raw_data_dir}'")
     print(f"  Output file: '{output_file}'")
 
@@ -209,12 +235,22 @@ def convert_go_coverage(raw_data_dir, output_file):
     result = run_command(cmd, working_dir=SCRIPT_ROOT)
 
     if result["success"]:
-        print(f"✅ Successfully converted coverage data to '{output_file}'")
+        try:
+            with open(output_file, 'r+') as f:
+                content = f.read()
+                f.seek(0, 0)
+                f.write('mode: set\n' + content)
+            print(f"✅ Successfully converted and patched integration coverage data to '{output_file}'")
+            return True
+        except IOError as e:
+            print(f"❌ Failed to patch the coverage file: {e}")
+            return False
     else:
-        print("❌ Failed to convert coverage data.")
-    return result["success"]
+        print("❌ Failed to convert integration coverage data.")
+        return False
 
-def generate_reports(tasks_to_run, report_types):
+
+def generate_reports(tasks_to_run, global_report_types):
     """Iterates through tasks, runs them, and collects the results."""
     print("\n" + "="*80)
     print(" Starting Report Generation ")
@@ -229,29 +265,42 @@ def generate_reports(tasks_to_run, report_types):
 
         print(f"\n Processing Task: {task_name} ")
 
-        report_patterns = [str(p) for p in task["inputs"]]
-
+        cmd = [str(BINARY_PATH)]
         output_dir = REPORTS_OUTPUT_BASE / task["output_dir_suffix"]
-        output_dir.mkdir(parents=True, exist_ok=True)
 
-        cmd = [
-            str(BINARY_PATH),
-            f"--report={';'.join(report_patterns)}",
-            f"--output={str(output_dir.resolve())}",
-            f"--reporttypes={report_types}",
-            "--verbose"
-        ]
-        if task["source_dirs"]:
+        if task.get("use_config_file", False) and CONFIG_FILE_PATH.exists():
+            print(f"  Using configuration file: {CONFIG_FILE_PATH}")
+            cmd.append(f"--config={CONFIG_FILE_PATH}")
+        else:
+            print("  Using CLI flags for configuration.")
+            report_patterns = [str(p) for p in task["inputs"]]
             source_paths = [str(p.resolve()) for p in task["source_dirs"]]
-            cmd.append(f"--sourcedirs={';'.join(source_paths)}")
+
+            cmd.append(f"--reporttypes={global_report_types}")
+            if task.get("title"):
+                cmd.append(f"--title={task['title']}")
+            if task.get("verbosity"):
+                cmd.append(f"--verbosity={task['verbosity']}")
+            if task.get("ignore_files"):
+                filters = [f"-{pattern}" for pattern in task["ignore_files"]]
+                cmd.append(f"--filefilters={';'.join(filters)}")
+            
+            cmd.extend([
+                f"--report={';'.join(report_patterns)}",
+                f"--output={str(output_dir.resolve())}",
+                f"--sourcedirs={';'.join(source_paths)}",
+            ])
 
         result = run_command(cmd)
         if result["success"]:
+            # For config-file runs, the output path is defined in the YAML.
+            # For logging, we assume it matches the suffix convention.
             results.append({"name": task_name, "status": "✅ SUCCESS", "details": f"Reports saved to '{output_dir}'"})
         else:
             results.append({"name": task_name, "status": "❌ FAILED", "details": result["output"]})
 
     return results
+
 
 def print_summary_report(results):
     """Prints a formatted summary of all attempted tasks."""
@@ -287,7 +336,6 @@ def main():
     parser.add_argument("--cover", action="store_true", help="Build with coverage instrumentation and generate a coverage report for the tool itself.")
     args = parser.parse_args()
 
-    # Setup for coverage run
     temp_cover_dir = None
     if args.cover:
         temp_cover_dir = tempfile.mkdtemp(prefix="adlercov_raw_")
@@ -299,6 +347,9 @@ def main():
             build_adlercov_binary(cover=args.cover)
         else:
             print(f"Using existing binary: {BINARY_PATH}")
+        
+        if args.cover:
+            run_unit_tests()
 
         results = []
         tasks_failed = False
@@ -307,45 +358,70 @@ def main():
         finally:
             tasks_failed = any("FAILED" in r["status"] for r in results)
 
-            # If coverage was enabled, process the tool's own coverage report
             if args.cover:
                 if not tasks_failed:
-                    conversion_ok = convert_go_coverage(temp_cover_dir, SELF_COVERAGE_OUT)
+                    conversion_ok = convert_integration_coverage(temp_cover_dir, INTEGRATION_TEST_COVERAGE_OUT)
 
                     if conversion_ok:
-                        # Define the self-coverage task and run it
-                        self_coverage_task = {
-                            "name": "AdlerCov Self-Coverage Report (from .out)",
-                            "inputs": [SELF_COVERAGE_OUT],
-                            "source_dirs": [GO_TOOL_SRC_DIR],
-                            "output_dir_suffix": "adlercov_self_coverage",
-                            "enabled": True,
-                        }
-                        self_results = generate_reports([self_coverage_task], args.report_types)
+                        ignore_patterns = [
+                            "**/tree-sitter/**",
+                            "**/*_test.go",
+                            "tools/**",
+                            "vendor/**",
+                        ]
+                        
+                        self_coverage_tasks = [
+                            {
+                                "name": "AdlerCov Self-Coverage (Unit Tests Only - CLI)",
+                                "inputs": [UNIT_TEST_COVERAGE_OUT],
+                                "source_dirs": [GO_TOOL_SRC_DIR],
+                                "output_dir_suffix": "adlercov_self_coverage_unit",
+                                "enabled": True,
+                                "use_config_file": False,
+                                "title": "AdlerCov Self-Coverage (Unit)",
+                                "verbosity": "Verbose",
+                                "ignore_files": ignore_patterns,
+                            },
+                            {
+                                "name": "AdlerCov Self-Coverage (Integration Tests Only - CLI)",
+                                "inputs": [INTEGRATION_TEST_COVERAGE_OUT],
+                                "source_dirs": [GO_TOOL_SRC_DIR],
+                                "output_dir_suffix": "adlercov_self_coverage_integration",
+                                "enabled": True,
+                                "use_config_file": False,
+                                "title": "AdlerCov Self-Coverage (Integration)",
+                                "verbosity": "Verbose",
+                                "ignore_files": ignore_patterns,
+                            },
+                            {
+                                "name": "AdlerCov Self-Coverage (Full Merged - YAML Config)",
+                                "output_dir_suffix": "adlercov_self_coverage_full",
+                                "enabled": True,
+                                "use_config_file": True,
+                            }
+                        ]
+                        self_results = generate_reports(self_coverage_tasks, args.report_types)
                         results.extend(self_results)
                     else:
-                        # Append a failure result if conversion failed
                         results.append({
-                            "name": "AdlerCov Self-Coverage Report",
+                            "name": "AdlerCov Self-Coverage Reports",
                             "status": "❌ FAILED",
-                            "details": "Failed to convert raw Go coverage data. See logs."
+                            "details": "Failed to convert raw Go integration coverage data. See logs."
                         })
                 else:
                     print("\n⚪ SKIPPING self-coverage report generation because one or more primary tasks failed.")
                     results.append({
-                        "name": "AdlerCov Self-Coverage Report",
+                        "name": "AdlerCov Self-Coverage Reports",
                         "status": "⚪ SKIPPED",
                         "details": "Skipped because one or more primary tasks failed."
                     })
 
-            # Re-evaluate failure status before final summary
             tasks_failed = any("FAILED" in r["status"] for r in results)
             print_summary_report(results)
             if tasks_failed:
                 print("\nOne or more tasks failed. Exiting with error status.")
                 sys.exit(1)
     finally:
-        # Cleanup the temporary directory for coverage data
         if temp_cover_dir:
             print(f"Cleaning up temporary coverage directory: {temp_cover_dir}")
             shutil.rmtree(temp_cover_dir)
