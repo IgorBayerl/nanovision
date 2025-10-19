@@ -1,11 +1,14 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/IgorBayerl/AdlerCov/filtering"
 	"github.com/IgorBayerl/AdlerCov/logging"
+	"gopkg.in/yaml.v3"
 )
 
 type ReportInputPair struct {
@@ -28,88 +31,24 @@ type RawConfigInput struct {
 }
 
 type AppConfig struct {
-	ReportPatterns []string
-	SourceDirs     []string
-	ReportTypes    []string
-	FileFilters    []string
-	OutputDir      string
-	Tag            string
-	Title          string
-	LogFile        string
-	LogFormat      string
-	Verbosity      logging.VerbosityLevel
+	ReportPatterns []string `yaml:"reports"`
+	SourceDirs     []string `yaml:"source_dirs"`
+	ReportTypes    []string `yaml:"report_types"`
+	FileFilters    []string `yaml:"file_filters"`
+	OutputDir      string   `yaml:"output_dir"`
+	Tag            string   `yaml:"tag"`
+	Title          string   `yaml:"title"`
+	LogFile        string   `yaml:"log_file"`
+	LogFormat      string   `yaml:"log_format"`
+	Verbosity      string   `yaml:"verbosity"`
+	IgnoreFiles    []string `yaml:"ignore_files"`
 
 	FileFilterInstance filtering.IFilter
-
-	MaximumDecimalPlacesForCoverageQuotas    int
-	MaximumDecimalPlacesForPercentageDisplay int
-
-	InputPairs []ReportInputPair
+	VerbosityLevel     logging.VerbosityLevel
+	InputPairs         []ReportInputPair
 }
 
-// BuildAppConfig creates and validates the application's configuration from the single RawConfigInput object.
-// It is responsible for all parsing, validation, and transformation of CLI arguments.
-func BuildAppConfig(rawInput RawConfigInput) (*AppConfig, error) {
-	patterns := strings.Split(rawInput.ReportPatterns, ";")
-	dirs := strings.Split(rawInput.SourceDirs, ";")
-
-	if rawInput.ReportPatterns != "" && rawInput.SourceDirs != "" && len(patterns) != len(dirs) {
-		return nil, fmt.Errorf(
-			"mismatch between number of report patterns (%d) and source directories (%d)",
-			len(patterns),
-			len(dirs),
-		)
-	}
-
-	fileFilter, err := filtering.NewDefaultFilter(strings.Split(rawInput.FileFilters, ";"), true)
-	if err != nil {
-		return nil, err
-	}
-
-	verbosity, _ := logging.ParseVerbosity(rawInput.Verbosity)
-	if rawInput.Verbose {
-		verbosity = logging.Verbose
-	}
-
-	resolvedPairs := resolveInputPairs(patterns, dirs)
-
-	return &AppConfig{
-		ReportPatterns:                           patterns,
-		SourceDirs:                               dirs,
-		ReportTypes:                              strings.Split(rawInput.ReportTypes, ","),
-		FileFilters:                              strings.Split(rawInput.FileFilters, ";"),
-		OutputDir:                                rawInput.OutputDir,
-		Tag:                                      rawInput.Tag,
-		Title:                                    rawInput.Title,
-		LogFile:                                  rawInput.LogFile,
-		LogFormat:                                rawInput.LogFormat,
-		Verbosity:                                verbosity,
-		FileFilterInstance:                       fileFilter,
-		MaximumDecimalPlacesForCoverageQuotas:    1,
-		MaximumDecimalPlacesForPercentageDisplay: 0,
-		InputPairs:                               resolvedPairs,
-	}, nil
-}
-
-// resolveInputPairs matches slices of report patterns and source directories into
-// structured pairs. The function pairs them by their order (e.g., the first report
-// is matched with the first directory).
-//
-// It also acts as a validation step by discarding any pairs that are incomplete
-// after trimming whitespace (e.g., a pattern without a directory).
-//
-// Example:
-//
-//	Given the following slices:
-//	- patterns: ["reportA.xml", "reportB.out", " "]
-//	- dirs:     ["./src/projectA", "./src/projectB"]
-//
-//	It will produce:
-//	[]ReportInputPair{
-//	    {ReportPattern: "reportA.xml", SourceDir: "./src/projectA"},
-//	    {ReportPattern: "reportB.out", SourceDir: "./src/projectB"},
-//	}
-//	// The third, empty report pattern is ignored.
+// resolveInputPairs matches slices of report patterns and source directories into structured pairs.
 func resolveInputPairs(patterns []string, dirs []string) []ReportInputPair {
 	var pairs []ReportInputPair
 	for i := range patterns {
@@ -127,4 +66,129 @@ func resolveInputPairs(patterns []string, dirs []string) []ReportInputPair {
 		}
 	}
 	return pairs
+}
+
+// Load loads the configuration from defaults, a YAML file, and CLI flags.
+func Load(configPath string, cliInput RawConfigInput) (*AppConfig, error) {
+	cfg := GetDefaultConfig()
+
+	if configPath == "" {
+		if _, err := os.Stat("adlercov.yaml"); err == nil {
+			configPath = "adlercov.yaml"
+		}
+	}
+
+	if configPath != "" {
+		yamlFile, err := os.ReadFile(configPath)
+		if err != nil {
+			if !os.IsNotExist(err) || (configPath != "adlercov.yaml" && configPath != "") {
+				return nil, fmt.Errorf("failed to read config file %s: %w", configPath, err)
+			}
+		} else {
+			if err := yaml.Unmarshal(yamlFile, cfg); err != nil {
+				return nil, fmt.Errorf("failed to parse YAML config %s: %w", configPath, err)
+			}
+		}
+	}
+
+	cfg.mergeCliOverrides(cliInput)
+
+	if err := cfg.validate(); err != nil {
+		return nil, err
+	}
+
+	if err := cfg.computeDerivedFields(); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+// GetDefaultConfig returns a new AppConfig with hard-coded default values.
+func GetDefaultConfig() *AppConfig {
+	return &AppConfig{
+		OutputDir:   "coverage-report",
+		ReportTypes: []string{"TextSummary", "Html"},
+		Title:       "Coverage Report",
+		LogFormat:   "text",
+		Verbosity:   "Info",
+	}
+}
+
+// mergeCliOverrides updates the config with values from the CLI.
+func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
+	if cli.ReportPatterns != "" {
+		c.ReportPatterns = strings.Split(cli.ReportPatterns, ";")
+	}
+	if cli.SourceDirs != "" {
+		c.SourceDirs = strings.Split(cli.SourceDirs, ";")
+	}
+	if cli.ReportTypes != "TextSummary,Html" {
+		c.ReportTypes = strings.Split(cli.ReportTypes, ",")
+	}
+	if cli.FileFilters != "" {
+		c.FileFilters = strings.Split(cli.FileFilters, ";")
+	}
+	if cli.OutputDir != "coverage-report" {
+		c.OutputDir = cli.OutputDir
+	}
+	if cli.Tag != "" {
+		c.Tag = cli.Tag
+	}
+	if cli.Title != "" {
+		c.Title = cli.Title
+	}
+	if cli.LogFile != "" {
+		c.LogFile = cli.LogFile
+	}
+	if cli.LogFormat != "text" {
+		c.LogFormat = cli.LogFormat
+	}
+	if cli.Verbosity != "Info" {
+		c.Verbosity = cli.Verbosity
+	}
+	if cli.Verbose {
+		c.Verbosity = "Verbose"
+	}
+}
+
+// validate checks the final configuration for logical errors.
+func (c *AppConfig) validate() error {
+	if len(c.ReportPatterns) == 0 {
+		return errors.New("configuration error: at least one report pattern must be specified")
+	}
+	if len(c.SourceDirs) == 0 {
+		return errors.New("configuration error: at least one source directory must be specified")
+	}
+	if len(c.ReportPatterns) != len(c.SourceDirs) {
+		return fmt.Errorf(
+			"configuration error: mismatch between number of report patterns (%d) and source directories (%d)",
+			len(c.ReportPatterns),
+			len(c.SourceDirs),
+		)
+	}
+	if _, err := logging.ParseVerbosity(c.Verbosity); err != nil {
+		return fmt.Errorf("invalid verbosity level '%s'", c.Verbosity)
+	}
+	return nil
+}
+
+// computeDerivedFields processes raw config values into usable internal fields.
+func (c *AppConfig) computeDerivedFields() error {
+	allFilters := c.FileFilters
+	for _, pattern := range c.IgnoreFiles {
+		allFilters = append(allFilters, "-"+pattern)
+	}
+
+	filter, err := filtering.NewDefaultFilter(allFilters, true)
+	if err != nil {
+		return fmt.Errorf("failed to initialize file filter: %w", err)
+	}
+	c.FileFilterInstance = filter
+
+	c.VerbosityLevel, _ = logging.ParseVerbosity(c.Verbosity)
+
+	c.InputPairs = resolveInputPairs(c.ReportPatterns, c.SourceDirs)
+
+	return nil
 }
