@@ -1,5 +1,4 @@
 *.exe
-.github
 .vscode
 *.suo
 *.user
