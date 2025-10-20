@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "main" ]
   
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 permissions:
@@ -33,8 +34,8 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Generate Coverage Reports
-        run: python generate_reports.py --build --cover
+      - name: Run E2E Tests and Generate Self-Coverage Report
+        run: python3 scripts/e2e_test.py --self-cover --report-types=Html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -50,16 +50,22 @@ func FindFileInSourceDirs(relativePath string, sourceDirs []string, reader filer
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
 
-	normalizedRelativePath := filepath.ToSlash(relativePath)
+	// Normalize path separators: replace backslashes with forward slashes
+	// This handles Windows-style paths in coverage reports even when running on Unix
+	// (coverage tools sometimes emit Windows paths like "src\app.go" even in cross-platform reports)
+	normalizedRelativePath := strings.ReplaceAll(relativePath, "\\", "/")
 	fileNameToFind := filepath.Base(normalizedRelativePath)
-	logger.Debug("FindFileInSourceDirs starting", "relativePath", relativePath, "sourceDirs", sourceDirs)
+	logger.Debug("FindFileInSourceDirs starting", "relativePath", relativePath, "normalizedPath", normalizedRelativePath, "sourceDirs", sourceDirs)
 
 	// Strategy 1: Absolute Path Check
-	if filepath.IsAbs(relativePath) {
-		logger.Debug("Strategy 1: Path is absolute, checking existence.", "path", relativePath)
-		if _, err := reader.Stat(relativePath); err == nil {
-			logger.Debug("Strategy 1: Success.", "foundPath", relativePath)
-			return relativePath, nil
+	// Check both the original path and normalized path in case the report contains an absolute path
+	for _, pathToCheck := range []string{relativePath, normalizedRelativePath} {
+		if filepath.IsAbs(pathToCheck) {
+			logger.Debug("Strategy 1: Path is absolute, checking existence.", "path", pathToCheck)
+			if _, err := reader.Stat(pathToCheck); err == nil {
+				logger.Debug("Strategy 1: Success.", "foundPath", pathToCheck)
+				return pathToCheck, nil
+			}
 		}
 	}
 
