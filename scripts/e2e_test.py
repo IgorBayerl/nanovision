@@ -145,11 +145,7 @@ SELF_COVERAGE_TESTS = [
     TestCase(
         name="AdlerCov Self-Coverage (Unit + Integration Merged)",
         output_dir_name="adlercov_self_coverage_full",
-        args=[
-            f"-report={UNIT_TEST_COVERAGE_OUT};{INTEGRATION_TEST_COVERAGE_OUT}",
-            f"-sourcedirs={SCRIPT_ROOT};{SCRIPT_ROOT}",
-            "-filefilters=-**/*_test.go;-vendor/**;-tools/**"
-        ],
+        args=[], # No args, its using config file
     )
 ]
 

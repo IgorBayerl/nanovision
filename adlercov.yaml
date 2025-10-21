@@ -7,13 +7,15 @@
 
 # A list of coverage report files to parse for the merged report.
 reports:
-  - "reports/adlercov_coverage/coverage-unit.out"
-  - "reports/adlercov_coverage/coverage-integration.out"
+  - "reports/adlercov_self_coverage/coverage-unit.out"
+  - "reports/adlercov_self_coverage/coverage-integration.out"
+  - "demo_projects/cpp/report/gcov/branch-probabilities/*.gcov"
 
 # A list of source code directories. The order must match the `reports` list.
 source_dirs:
   - "."
   - "."
+  - "demo_projects/cpp/project"
 
 # The directory where the final self-coverage report will be saved.
 output_dir: "reports/adlercov_self_coverage_full"
