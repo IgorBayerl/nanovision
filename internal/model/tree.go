@@ -7,7 +7,7 @@ type SummaryTree struct {
 	Timestamp   int64           // The timestamp of the report generation.
 	SourceFiles []string        // List of original source directories provided by the user.
 	ReportFiles []string        // List of report files that were parsed.
-	ParserName  string          // Name of the parser(s) used.
+	ParserNames []string        // Name of the parser(s) used.
 }
 
 // DirNode represents a directory in the file system tree.

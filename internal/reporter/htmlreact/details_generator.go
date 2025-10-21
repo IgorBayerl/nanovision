@@ -183,7 +183,7 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 	return &detailsV1{
 		SchemaVersion:     1,
 		GeneratedAt:       time.Now().UTC().Format(time.RFC3339),
-		Title:             tree.ParserName,
+		Title:             strings.Join(tree.ParserNames, " | "),
 		FileName:          fileNode.Path,
 		Metadata:          []metadataItem{},
 		Totals:            totalsData,

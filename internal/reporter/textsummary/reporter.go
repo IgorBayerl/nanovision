@@ -48,7 +48,9 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 	if tree.Timestamp > 0 {
 		fmt.Fprintf(f, "  Coverage date: %s\n", time.Unix(tree.Timestamp, 0).Format("02/01/2006 - 15:04:05"))
 	}
-	fmt.Fprintf(f, "  Parser: %s\n", tree.ParserName)
+	if len(tree.ParserNames) > 0 {
+		fmt.Fprintf(f, "  Parser: %s\n", strings.Join(tree.ParserNames, " | "))
+	}
 
 	lineCoverage := utils.CalculatePercentage(tree.Metrics.LinesCovered, tree.Metrics.LinesValid, 1)
 	fmt.Fprintf(f, "  Line coverage: %s\n", utils.FormatPercentage(lineCoverage, 0))
