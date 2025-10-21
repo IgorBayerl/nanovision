@@ -42,6 +42,7 @@ type AppConfig struct {
 	LogFormat      string   `yaml:"log_format"`
 	Verbosity      string   `yaml:"verbosity"`
 	IgnoreFiles    []string `yaml:"ignore_files"`
+	ProjectRoot    string   `yaml:"-"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel
