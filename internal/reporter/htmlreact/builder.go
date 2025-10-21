@@ -99,7 +99,10 @@ func (b *HtmlReactReportBuilder) buildMetadata(tree *model.SummaryTree, generate
 		coverageDate := time.Unix(tree.Timestamp, 0).Format("2006-01-02 15:04:05")
 		addMeta(&meta, "Coverage Date", coverageDate)
 	}
-	addMeta(&meta, "Parser", tree.ParserName)
+	if len(tree.ParserNames) > 0 {
+		parserValue := strings.Join(tree.ParserNames, " | ")
+		addMeta(&meta, "Parser", parserValue)
+	}
 	addMeta(&meta, "Report Files", tree.ReportFiles, "large")
 
 	return meta

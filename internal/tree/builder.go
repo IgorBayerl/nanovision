@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/IgorBayerl/AdlerCov/filereader"
@@ -39,8 +40,21 @@ func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree
 			Subdirs: make(map[string]*model.DirNode),
 			Files:   make(map[string]*model.FileNode),
 		},
-		ParserName: results[0].ParserName,
 	}
+
+	uniqueParsers := make(map[string]struct{})
+	for _, result := range results {
+		if result.ParserName != "" {
+			uniqueParsers[result.ParserName] = struct{}{}
+		}
+	}
+
+	var parserNames []string
+	for name := range uniqueParsers {
+		parserNames = append(parserNames, name)
+	}
+	sort.Strings(parserNames) // Sort for consistent output
+	tree.ParserNames = parserNames
 
 	for _, result := range results {
 		for _, fileCov := range result.FileCoverage {

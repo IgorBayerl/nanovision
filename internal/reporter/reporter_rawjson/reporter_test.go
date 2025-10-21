@@ -87,7 +87,7 @@ func TestRawJsonReportBuilder_CreateReport(t *testing.T) {
 		Root:        rootNode,
 		Metrics:     rootNode.Metrics,
 		Timestamp:   sampleTime,
-		ParserName:  "GoCover",
+		ParserNames: []string{"GoCover"},
 		ReportFiles: []string{"coverage.out"},
 		SourceFiles: []string{"/src"},
 	}
