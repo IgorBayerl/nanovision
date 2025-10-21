@@ -302,7 +302,7 @@ def main():
     parser = argparse.ArgumentParser(description="E2E test script for AdlerCov.")
     parser.add_argument("-v", "--verbose", action="store_true", help="Stream the live output from the AdlerCov tool during tests.")
     parser.add_argument("-sc", "--self-cover", action="store_true", help="Build with coverage and generate a coverage report for the tool itself.")
-    parser.add_argument("--report-types", default="Html,TextSummary", help="Comma-separated list of report types to generate.")
+    parser.add_argument("--report-types", default="Html,TextSummary,Lcov,RawJson", help="Comma-separated list of report types to generate.")
     args = parser.parse_args()
 
     platform, binary_name = get_platform_and_binary_name()
