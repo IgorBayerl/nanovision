@@ -174,7 +174,7 @@ func executePipeline(appConfig *config.AppConfig) error {
 		parser_gocover.NewGoCoverParser(prodFileReader),
 		parser_gcov.NewGCovParser(prodFileReader),
 	)
-	treeBuilder := tree.NewBuilder()
+	treeBuilder := tree.NewBuilder(appConfig.ProjectRoot)
 
 	allAnalyzers := []analyzer.Analyzer{
 		golang.New(),
@@ -210,6 +210,23 @@ func executePipeline(appConfig *config.AppConfig) error {
 	return generateReports(appConfig, summaryTree)
 }
 
+func determineProjectRoot(configPath string) (string, error) {
+	if configPath != "" {
+		absConfigPath, err := filepath.Abs(configPath)
+		if err != nil {
+			return "", fmt.Errorf("could not determine absolute path for config file: %w", err)
+		}
+		return filepath.Dir(absConfigPath), nil
+	}
+
+	// Fallback to current working directory if no config file is used
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("could not get current working directory: %w", err)
+	}
+	return wd, nil
+}
+
 func main() {
 	start := time.Now()
 	flag.Usage = func() {
@@ -236,6 +253,13 @@ func main() {
 		}
 		os.Exit(1)
 	}
+
+	appConfig.ProjectRoot, err = determineProjectRoot(*configPath)
+	if err != nil {
+		slog.Error("Failed to determine project root", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("Project root determined", "path", appConfig.ProjectRoot)
 
 	closer, err := buildLogger(appConfig)
 	if err != nil {

@@ -46,20 +46,9 @@ func (o *processingOrchestrator) processLines(lines []string) (*parsers.FileCove
 	sourceFilePathFromReport := filepath.ToSlash(strings.TrimSpace(strings.SplitN(firstLine, "0:Source:", 2)[1]))
 	sourceDirs := o.config.SourceDirectories()
 
-	displayPath := ""
-	if len(sourceDirs) > 0 {
-		cleanDir := filepath.Clean(sourceDirs[0])
-		cleanReportPath := filepath.Clean(sourceFilePathFromReport)
-		if strings.HasPrefix(strings.ToLower(cleanReportPath), strings.ToLower(cleanDir)) {
-			relPath, err := filepath.Rel(cleanDir, cleanReportPath)
-			if err == nil {
-				displayPath = filepath.ToSlash(relPath)
-			}
-		}
-	}
-	if displayPath == "" {
-		displayPath = filepath.Base(sourceFilePathFromReport)
-	}
+	// We will pass the original, potentially absolute path to the builder.
+	// The builder will resolve it against the source_dir and project_root.
+	displayPath := sourceFilePathFromReport
 
 	var unresolvedFiles []string
 	// Pass the logger from the orchestrator into the find utility

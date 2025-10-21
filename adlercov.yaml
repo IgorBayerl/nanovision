@@ -10,12 +10,16 @@ reports:
   - "reports/adlercov_self_coverage/coverage-unit.out"
   - "reports/adlercov_self_coverage/coverage-integration.out"
   - "demo_projects/cpp/report/gcov/branch-probabilities/*.gcov"
+  - "demo_projects/csharp/report/cobertura/cobertura.xml"
+  - "demo_projects/go/report/gocover/coverage.out"
 
 # A list of source code directories. The order must match the `reports` list.
 source_dirs:
   - "."
   - "."
   - "demo_projects/cpp/project"
+  - "demo_projects/csharp/project"
+  - "demo_projects/go/project"
 
 # The directory where the final self-coverage report will be saved.
 output_dir: "reports/adlercov_self_coverage_full"

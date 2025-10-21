@@ -120,28 +120,10 @@ func (o *processingOrchestrator) processBlocks(blocks []GoCoverProfileBlock) ([]
 func (o *processingOrchestrator) groupBlocksByFile(blocks []GoCoverProfileBlock) map[string][]GoCoverProfileBlock {
 	blocksByFile := make(map[string][]GoCoverProfileBlock)
 
-	modName, modRoot, err := getGoModuleInfo()
-	if err != nil {
-		o.logger.Error("Could not determine Go module information, path normalization will fail.", "error", err)
-		// Fallback to old behavior if we can't find module info
-		modName = ""
-	}
-
 	for _, block := range blocks {
-		normalizedPath := block.FileName
-
-		// If the path is absolute and we have module info, normalize it.
-		if modName != "" && filepath.IsAbs(normalizedPath) {
-			relPath, err := filepath.Rel(modRoot, normalizedPath)
-			if err == nil {
-				// Join module name and relative path to get the canonical module path
-				// e.g., "github.com/IgorBayerl/AdlerCov" + "cmd/main.go"
-				normalizedPath = filepath.Join(modName, relPath)
-			}
-		}
-
-		// Always convert to forward slashes for consistency.
-		normalizedPath = filepath.ToSlash(normalizedPath)
+		// The path is used exactly as it is in the report.
+		// The tree builder will be responsible for finding its true location.
+		normalizedPath := filepath.ToSlash(block.FileName)
 
 		if !o.config.FileFilters().IsElementIncludedInReport(normalizedPath) {
 			continue

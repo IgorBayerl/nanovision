@@ -66,8 +66,7 @@ branch  1 never executed
 				require.Len(t, result.FileCoverage, 1)
 				fileCov := result.FileCoverage[0]
 
-				// *** FIX: Assert the new, correct RELATIVE path ***
-				assert.Equal(t, "calculator.cpp", fileCov.Path)
+				assert.Equal(t, absoluteSourcePath, fileCov.Path)
 				require.NotNil(t, fileCov.Lines)
 
 				// Assert line hits
@@ -102,7 +101,7 @@ branch  1 never executed
 
 				require.Len(t, result.FileCoverage, 1)
 				// Even if unresolved, the path should be the normalized relative one
-				assert.Equal(t, "calculator.cpp", result.FileCoverage[0].Path)
+				assert.Equal(t, absoluteSourcePath, result.FileCoverage[0].Path)
 
 				require.Len(t, result.UnresolvedSourceFiles, 1)
 				// The unresolved file list should contain the original path from the report

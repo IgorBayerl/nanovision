@@ -2,23 +2,35 @@ package tree
 
 import (
 	"fmt"
+	"log/slog"
 	"path"
+	"path/filepath"
 	"strings"
 
+	"github.com/IgorBayerl/AdlerCov/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
+	"github.com/IgorBayerl/AdlerCov/internal/utils"
 )
 
-type Builder struct{}
+type Builder struct {
+	projectRoot string
+	fileReader  filereader.Reader
+}
 
-func NewBuilder() *Builder {
-	return &Builder{}
+func NewBuilder(projectRoot string) *Builder {
+	return &Builder{
+		projectRoot: projectRoot,
+		fileReader:  filereader.NewDefaultReader(),
+	}
 }
 
 func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree, error) {
 	if len(results) == 0 {
 		return nil, fmt.Errorf("cannot build tree with no parser results")
 	}
+
+	logger := slog.Default()
 
 	tree := &model.SummaryTree{
 		Root: &model.DirNode{
@@ -32,7 +44,24 @@ func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree
 
 	for _, result := range results {
 		for _, fileCov := range result.FileCoverage {
-			fileNode := b.findOrCreateFileNode(tree.Root, fileCov.Path, result.SourceDirectory)
+			// Find the canonical absolute path of the file.
+			absoluteFilePath, err := utils.FindFileInSourceDirs(fileCov.Path, []string{result.SourceDirectory}, b.fileReader, logger)
+			if err != nil {
+				logger.Warn("Could not resolve file path, skipping file.", "path", fileCov.Path, "sourceDir", result.SourceDirectory, "error", err)
+				continue
+			}
+
+			// Make it relative to our project root.
+			relativeToProjectRoot, err := filepath.Rel(b.projectRoot, absoluteFilePath)
+			if err != nil {
+				logger.Warn("Could not make path relative to project root, using absolute.", "path", absoluteFilePath, "projectRoot", b.projectRoot, "error", err)
+				relativeToProjectRoot = absoluteFilePath // Fallback
+			}
+
+			// Ensure consistent separators and use this path to build the tree.
+			finalPath := filepath.ToSlash(relativeToProjectRoot)
+
+			fileNode := b.findOrCreateFileNode(tree.Root, finalPath, result.SourceDirectory)
 			b.mergeLineMetrics(fileNode, fileCov.Lines)
 		}
 	}
