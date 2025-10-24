@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/IgorBayerl/AdlerCov/filereader"
+	"github.com/IgorBayerl/AdlerCov/filtering"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
@@ -17,12 +18,14 @@ import (
 type Builder struct {
 	projectRoot string
 	fileReader  filereader.Reader
+	fileFilter  filtering.IFilter
 }
 
-func NewBuilder(projectRoot string) *Builder {
+func NewBuilder(projectRoot string, fileFilter filtering.IFilter) *Builder {
 	return &Builder{
 		projectRoot: projectRoot,
 		fileReader:  filereader.NewDefaultReader(),
+		fileFilter:  fileFilter,
 	}
 }
 
@@ -74,6 +77,12 @@ func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree
 
 			// Ensure consistent separators and use this path to build the tree.
 			finalPath := filepath.ToSlash(relativeToProjectRoot)
+
+			// Apply filtering on project relative path.
+			if !b.fileFilter.IsElementIncludedInReport(finalPath) {
+				logger.Debug("File excluded by filter", "path", finalPath)
+				continue
+			}
 
 			fileNode := b.findOrCreateFileNode(tree.Root, finalPath, result.SourceDirectory)
 			b.mergeLineMetrics(fileNode, fileCov.Lines)

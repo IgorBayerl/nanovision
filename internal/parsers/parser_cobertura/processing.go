@@ -45,7 +45,7 @@ func (o *processingOrchestrator) processPackages(packages []PackageXML) ([]parse
 	for _, pkgXML := range packages {
 		for _, classXML := range pkgXML.Classes.Class {
 			filePath := filepath.ToSlash(classXML.Filename)
-			if filePath == "" || !o.config.FileFilters().IsElementIncludedInReport(filePath) {
+			if filePath == "" {
 				continue
 			}
 			if _, ok := fileData[filePath]; !ok {
