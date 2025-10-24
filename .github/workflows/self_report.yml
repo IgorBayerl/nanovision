@@ -35,7 +35,7 @@ jobs:
           python-version: '3.x'
 
       - name: Run E2E Tests and Generate Self-Coverage Report
-        run: python3 scripts/e2e_test.py --self-cover --report-types=Html
+        run: python3 scripts/e2e_test.py --self-cover
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
