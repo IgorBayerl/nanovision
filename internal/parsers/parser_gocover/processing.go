@@ -1,25 +1,13 @@
 package parser_gocover
 
 import (
-	"bufio"
-	"fmt"
 	"log/slog"
-	"os"
 	"path/filepath"
-	"strings"
-	"sync"
 
 	"github.com/IgorBayerl/AdlerCov/filereader"
 	"github.com/IgorBayerl/AdlerCov/internal/model"
 	"github.com/IgorBayerl/AdlerCov/internal/parsers"
 	"github.com/IgorBayerl/AdlerCov/internal/utils"
-)
-
-var (
-	moduleName string
-	moduleRoot string
-	moduleErr  error
-	moduleOnce sync.Once
 )
 
 // processingOrchestrator now holds state for converting raw blocks into a flat
@@ -36,52 +24,6 @@ func newProcessingOrchestrator(fileReader filereader.Reader, config parsers.Pars
 		config:     config,
 		logger:     logger,
 	}
-}
-
-// Helper function to find the go.mod file and parse the module name
-func getGoModuleInfo() (string, string, error) {
-	moduleOnce.Do(func() {
-		currentDir, err := os.Getwd()
-		if err != nil {
-			moduleErr = fmt.Errorf("could not get current working directory: %w", err)
-			return
-		}
-
-		dir := currentDir
-		for {
-			goModPath := filepath.Join(dir, "go.mod")
-			if _, err := os.Stat(goModPath); err == nil {
-				moduleRoot = dir
-				break
-			}
-			parent := filepath.Dir(dir)
-			if parent == dir {
-				moduleErr = fmt.Errorf("could not find go.mod in any parent directory of %s", currentDir)
-				return
-			}
-			dir = parent
-		}
-
-		file, err := os.Open(filepath.Join(moduleRoot, "go.mod"))
-		if err != nil {
-			moduleErr = fmt.Errorf("could not open go.mod: %w", err)
-			return
-		}
-		defer file.Close()
-
-		scanner := bufio.NewScanner(file)
-		if scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "module ") {
-				moduleName = strings.TrimSpace(strings.TrimPrefix(line, "module "))
-			}
-		}
-
-		if moduleName == "" {
-			moduleErr = fmt.Errorf("could not parse module name from go.mod")
-		}
-	})
-	return moduleName, moduleRoot, moduleErr
 }
 
 // processBlocks is the main entry point for the orchestrator. It groups the raw
@@ -122,13 +64,8 @@ func (o *processingOrchestrator) groupBlocksByFile(blocks []GoCoverProfileBlock)
 
 	for _, block := range blocks {
 		// The path is used exactly as it is in the report.
-		// The tree builder will be responsible for finding its true location.
+		// The tree builder will be responsible for finding its true location and filtering.
 		normalizedPath := filepath.ToSlash(block.FileName)
-
-		if !o.config.FileFilters().IsElementIncludedInReport(normalizedPath) {
-			continue
-		}
-
 		blocksByFile[normalizedPath] = append(blocksByFile[normalizedPath], block)
 	}
 	return blocksByFile

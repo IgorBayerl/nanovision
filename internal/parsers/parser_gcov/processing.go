@@ -57,10 +57,6 @@ func (o *processingOrchestrator) processLines(lines []string) (*parsers.FileCove
 		unresolvedFiles = append(unresolvedFiles, sourceFilePathFromReport)
 	}
 
-	if !o.config.FileFilters().IsElementIncludedInReport(displayPath) {
-		return nil, nil, nil
-	}
-
 	lineMetrics := make(map[int]model.LineMetrics)
 	var lastCoverableLineNumber int
 

@@ -174,7 +174,7 @@ func executePipeline(appConfig *config.AppConfig) error {
 		parser_gocover.NewGoCoverParser(prodFileReader),
 		parser_gcov.NewGCovParser(prodFileReader),
 	)
-	treeBuilder := tree.NewBuilder(appConfig.ProjectRoot)
+	treeBuilder := tree.NewBuilder(appConfig.ProjectRoot, appConfig.FileFilterInstance)
 
 	allAnalyzers := []analyzer.Analyzer{
 		golang.New(),
