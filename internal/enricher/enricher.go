@@ -5,6 +5,8 @@ package enricher
 import (
 	"log/slog"
 	"os"
+	"runtime"
+	"sync"
 
 	"github.com/IgorBayerl/AdlerCov/analyzer"
 	"github.com/IgorBayerl/AdlerCov/filereader"
@@ -54,45 +56,70 @@ func (e *Enricher) EnrichTree(tree *model.SummaryTree) {
 	fileNodeMap := make(map[string]*model.FileNode)
 	collectFiles(tree.Root, fileNodeMap)
 
-	for path, fileNode := range fileNodeMap {
-		if abs, err := utils.FindFileInSourceDirs(fileNode.Path, []string{fileNode.SourceDir}, e.fileReader, e.logger); err == nil {
-			if n, err := e.fileReader.CountLines(abs); err == nil {
-				old := fileNode.Metrics.TotalLines
-				fileNode.TotalLines = n
-				fileNode.Metrics.TotalLines = n
-				if delta := n - old; delta != 0 {
-					for p := fileNode.Parent; p != nil; p = p.Parent {
-						p.Metrics.TotalLines += delta
-					}
-					tree.Metrics.TotalLines += delta
-				}
-			} else {
-				e.logger.Warn("Could not count lines", "file", abs, "error", err)
+	numWorkers := runtime.NumCPU()
+	jobs := make(chan *model.FileNode, len(fileNodeMap))
+	var wg sync.WaitGroup
+
+	// Start worker goroutines
+	for i := 0; i < numWorkers; i++ {
+		go func() {
+			for fileNode := range jobs {
+				e.enrichFileNode(fileNode)
+				wg.Done()
 			}
-		} else {
-			e.logger.Warn("Source file not found for line counting", "file", fileNode.Path, "error", err)
-		}
-
-		analyzer := e.findAnalyzerForFile(path)
-		if analyzer == nil {
-			continue
-		}
-
-		e.logger.Info("Analyzing file", "path", path, "analyzer", analyzer.Name())
-		sourceBytes, err := e.readSourceFile(fileNode)
-		if err != nil {
-			e.logger.Warn("Could not read source file for analysis", "file", path, "error", err)
-			continue
-		}
-
-		analysis, err := analyzer.Analyze(sourceBytes)
-		if err != nil {
-			e.logger.Warn("Static analysis failed for file", "file", path, "error", err)
-			continue
-		}
-
-		e.applyAnalysisToFileNode(fileNode, analysis)
+		}()
 	}
+
+	// Send jobs to the workers
+	for _, fileNode := range fileNodeMap {
+		wg.Add(1)
+		jobs <- fileNode
+	}
+	close(jobs)
+
+	// Wait for all jobs to complete
+	wg.Wait()
+}
+
+// enrichFileNode performs the enrichment process for a single file.
+// This includes line counting and static code analysis.
+// It is designed to be called concurrently.
+func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
+	path := fileNode.Path
+
+	// Count the total number of lines in the source file.
+	if abs, err := utils.FindFileInSourceDirs(path, []string{fileNode.SourceDir}, e.fileReader, e.logger); err == nil {
+		if n, err := e.fileReader.CountLines(abs); err == nil {
+			// Set the total lines. Aggregation is handled later, so no need to update parents here.
+			fileNode.TotalLines = n
+			fileNode.Metrics.TotalLines = n
+		} else {
+			e.logger.Warn("Could not count lines", "file", abs, "error", err)
+		}
+	} else {
+		e.logger.Warn("Source file not found for line counting", "file", path, "error", err)
+	}
+
+	// Find a suitable analyzer for the file.
+	analyzer := e.findAnalyzerForFile(path)
+	if analyzer == nil {
+		return // No analysis needed for this file type.
+	}
+
+	e.logger.Info("Analyzing file", "path", path, "analyzer", analyzer.Name())
+	sourceBytes, err := e.readSourceFile(fileNode)
+	if err != nil {
+		e.logger.Warn("Could not read source file for analysis", "file", path, "error", err)
+		return
+	}
+
+	analysis, err := analyzer.Analyze(sourceBytes)
+	if err != nil {
+		e.logger.Warn("Static analysis failed for file", "file", path, "error", err)
+		return
+	}
+
+	e.applyAnalysisToFileNode(fileNode, analysis)
 }
 
 // readSourceFile locates and reads the content of a source file from disk.
