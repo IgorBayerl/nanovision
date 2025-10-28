@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import FileExplorer from '@/components/FileExplorer'
 import Footer from '@/components/Layout.Footer'
 import TopBar from '@/components/Layout.TopBar'
@@ -8,6 +7,7 @@ import { cn } from '@/lib/utils'
 import type { SummaryV1 } from '@/lib/validation'
 import { validateSummaryData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
+import { useMemo } from 'react'
 
 const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
 
@@ -55,7 +55,7 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
     const title = validatedData?.title ?? (rawData as Partial<SummaryV1>)?.title ?? 'Coverage Report'
 
     return (
-        <div className={cn('mx-auto min-h-screen w-full max-w-7xl space-y-5 bg-background p-6 text-foreground')}>
+        <div className={cn('mx-auto min-h-screen w-full max-w-7xl space-y-5 bg-background p-6 text-foreground shadow-2xl')}>
             <TopBar title={title} />
 
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}

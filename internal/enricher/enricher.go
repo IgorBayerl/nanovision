@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/IgorBayerl/AdlerCov/analyzer"
-	"github.com/IgorBayerl/AdlerCov/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/model"
-	"github.com/IgorBayerl/AdlerCov/internal/utils"
+	"github.com/IgorBayerl/nanovision/analyzer"
+	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/model"
+	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 type Enricher struct {

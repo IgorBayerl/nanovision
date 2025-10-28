@@ -1,15 +1,15 @@
 # 📝 Project Documentation
 
-This folder contains the documentation site for the **AdlerCov** project, built with [MkDocs](https://www.mkdocs.org/) and the [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) theme.
+This folder contains the documentation site for the **nanovision** project, built with [MkDocs](https://www.mkdocs.org/) and the [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) theme.
 
 ---
 
 ## 📦 Stack Overview
 
-| Tool                                                                     | Description                                                      |
-| ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| [MkDocs](https://www.mkdocs.org/)                                        | Static site generator geared towards project documentation.      |
-| [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)      | A MkDocs theme.                |
+| Tool                                                                | Description                                                 |
+|---------------------------------------------------------------------|-------------------------------------------------------------|
+| [MkDocs](https://www.mkdocs.org/)                                   | Static site generator geared towards project documentation. |
+| [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) | A MkDocs theme.                                             |
 
 ---
 

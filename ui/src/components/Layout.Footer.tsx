@@ -11,7 +11,7 @@ export default function Footer() {
                     rel="noopener noreferrer"
                     className="font-medium text-primary hover:underline"
                 >
-                    adlercov
+                    nanovision
                 </a>
             </p>
             <div className="mt-2 flex items-center justify-center gap-4">

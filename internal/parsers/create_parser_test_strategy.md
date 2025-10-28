@@ -2,7 +2,7 @@
 
 Hello there, future contributor! 👋
 
-Welcome to the AdlerCov parser development guide. We're thrilled you're interested in adding support for a new coverage report format. This document is designed to make that process as smooth and clear as possible.
+Welcome to the nanovision parser development guide. We're thrilled you're interested in adding support for a new coverage report format. This document is designed to make that process as smooth and clear as possible.
 
 The core philosophy of this project is a clean, four-stage pipeline: **Parse -> Build Tree -> Hydrate -> Report**. Your work will be in the very first stage: **Parsing**.
 

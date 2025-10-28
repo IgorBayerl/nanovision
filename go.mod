@@ -1,4 +1,4 @@
-module github.com/IgorBayerl/AdlerCov
+module github.com/IgorBayerl/nanovision
 
 go 1.25.3
 

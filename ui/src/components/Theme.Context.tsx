@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
 
-const THEME_STORAGE_KEY = 'adlercov-ui-theme'
+const THEME_STORAGE_KEY = 'nanovision-ui-theme'
 
 export type Mode = 'light' | 'dark'
 

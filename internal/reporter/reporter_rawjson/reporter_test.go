@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/IgorBayerl/AdlerCov/internal/model"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter/reporter_rawjson"
+	"github.com/IgorBayerl/nanovision/internal/model"
+	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

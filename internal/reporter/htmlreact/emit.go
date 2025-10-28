@@ -17,7 +17,7 @@ func writeSummaryDataJS(outDir string, data summaryV1) error {
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString("window.__ADLERCOV_SUMMARY__=")
+	buf.WriteString("window.__NANOVISION_SUMMARY__=")
 	buf.Write(bytes.TrimSpace(jsonBuf.Bytes()))
 	buf.WriteString(";")
 

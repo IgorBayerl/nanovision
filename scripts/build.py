@@ -15,8 +15,8 @@ OUTPUT_DIR = os.path.join(SCRIPT_ROOT, "bin")
 MAIN_PACKAGE_PATH = "cmd/main.go"
 
 # Platform-specific binary names.
-BINARY_NAME_LINUX = "adlercov"
-BINARY_NAME_WINDOWS = "adlercov.exe"
+BINARY_NAME_LINUX = "nanovision"
+BINARY_NAME_WINDOWS = "nanovision.exe"
 
 
 def run_command(command, env=None, working_dir=SCRIPT_ROOT):
@@ -68,7 +68,7 @@ def build_windows():
 
 def main():
     """Main function to parse arguments and execute the corresponding action."""
-    parser = argparse.ArgumentParser(description="Build script for the AdlerCov project.")
+    parser = argparse.ArgumentParser(description="Build script for the nanovision project.")
     parser.add_argument(
         "--target",
         default='all',

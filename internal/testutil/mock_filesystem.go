@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IgorBayerl/AdlerCov/filesystem"
+	"github.com/IgorBayerl/nanovision/filesystem"
 )
 
 // MockFilesystem implements filesystem.Filesystem and filereader.Reader for testing.

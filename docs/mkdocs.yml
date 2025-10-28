@@ -1,5 +1,5 @@
-site_name: AdlerCov Docs
-site_url: https://igorbayerl.github.io/AdlerCov/
+site_name: nanovision Docs
+site_url: https://igorbayerl.github.io/nanovision/
 theme:
   logo: imgs/icon.png
   favicon: imgs/icon.ico

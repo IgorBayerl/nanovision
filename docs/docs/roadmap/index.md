@@ -1,6 +1,6 @@
 # Project Roadmap
 
-This section outlines the planned features and architectural enhancements for AdlerCov. Our goal is to build upon the solid foundation of ReportGenerator while introducing modern, Go-native features that improve developer workflows.
+This section outlines the planned features and architectural enhancements for nanovision. Our goal is to build upon the solid foundation of ReportGenerator while introducing modern, Go-native features that improve developer workflows.
 
 The following documents provide detailed implementation plans for major upcoming features.
 

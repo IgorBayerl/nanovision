@@ -1,6 +1,6 @@
 # Feature Plan: Modern Frontend with Server-Side HTML and React Islands
 
-This document outlines the architectural vision for the next generation of the AdlerCov HTML reporter. We will be moving from a purely client-side rendered (Angular SPA) model to a hybrid approach that leverages Go for server-side templating and React for targeted client-side interactivity.
+This document outlines the architectural vision for the next generation of the nanovision HTML reporter. We will be moving from a purely client-side rendered (Angular SPA) model to a hybrid approach that leverages Go for server-side templating and React for targeted client-side interactivity.
 
 ## 1. Architectural Vision
 

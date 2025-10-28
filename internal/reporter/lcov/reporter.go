@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/IgorBayerl/AdlerCov/internal/model"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter"
+	"github.com/IgorBayerl/nanovision/internal/model"
+	"github.com/IgorBayerl/nanovision/internal/reporter"
 )
 
 type LcovReportBuilder struct {

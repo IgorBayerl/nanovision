@@ -4,7 +4,7 @@ import { useUrlState } from '@/lib/useUrlState'
 import type { FileNode, FilterRange, MetricKey, RiskFilter, SortDir, SortKey } from '@/types/summary'
 
 const getDefaultEnabledMetrics = (metrics: string[]) => metrics.slice(0, 3)
-const EXPANDED_FOLDERS_STORAGE_KEY = 'adlercov-expanded-folders'
+const EXPANDED_FOLDERS_STORAGE_KEY = 'nanovision-expanded-folders'
 
 // Helper function to recursively find all folder IDs in the tree.
 const getAllFolderIds = (nodes: FileNode[]): string[] => {

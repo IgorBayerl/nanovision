@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/IgorBayerl/AdlerCov/filtering"
-	"github.com/IgorBayerl/AdlerCov/internal/model"
+	"github.com/IgorBayerl/nanovision/filtering"
+	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
 type ParserResult struct {

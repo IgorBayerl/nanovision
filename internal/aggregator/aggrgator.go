@@ -2,7 +2,7 @@
 
 package aggregator
 
-import "github.com/IgorBayerl/AdlerCov/internal/model"
+import "github.com/IgorBayerl/nanovision/internal/model"
 
 // AggregateMetricsAfterEnrichment recalculates and aggregates all metrics for the entire
 // tree now that method data from the enrichment phase is available. This should be

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IgorBayerl/AdlerCov/internal/model"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter"
-	"github.com/IgorBayerl/AdlerCov/internal/utils"
+	"github.com/IgorBayerl/nanovision/internal/model"
+	"github.com/IgorBayerl/nanovision/internal/reporter"
+	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 type HtmlReactReportBuilder struct {

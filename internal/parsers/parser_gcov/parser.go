@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers"
+	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/parsers"
 )
 
 // GCovParser implements the parsers.IParser interface for gcov reports.

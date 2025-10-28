@@ -1,7 +1,7 @@
-import { ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
 import InlineCoverage from '@/components/InlineCoverage'
 import { cn } from '@/lib/utils'
 import type { FileNode, MetricConfig, Metrics } from '@/types/summary'
+import { ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
 
 const NodeName = ({ node, viewMode }: { node: FileNode; viewMode: 'tree' | 'flat' }) => {
     const isFolder = node.type === 'folder' && viewMode === 'tree'
@@ -78,10 +78,8 @@ export function TreeRow({
         <div
             className={cn(
                 'group grid w-full items-center',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                isFolder ? 'cursor-pointer' : 'cursor-default',
+                isFolder ? 'text-foreground/70 font-bold' : '',
             )}
-            {...interactiveProps}
         >
             <div className="grid h-full" style={{ gridTemplateColumns: `minmax(300px, 1fr) ${totalMetricsWidth}px` }}>
                 <div
@@ -90,7 +88,11 @@ export function TreeRow({
                         isPinned && 'sticky left-0 z-10',
                         isOdd ? 'bg-subtle' : 'bg-background',
                         'group-hover:bg-muted',
+                        // This makes only this section clickable and focusable for folders
+                        isFolder &&
+                            'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                     )}
+                    {...interactiveProps}
                 >
                     <div style={{ paddingLeft: indentPx }}>
                         {isFolder ? (

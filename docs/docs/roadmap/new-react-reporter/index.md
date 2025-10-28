@@ -1,6 +1,6 @@
 # Roadmap: New HTML Reporter (SSR + React Islands)
 
-This section outlines the comprehensive plan to re-architect the AdlerCov HTML reporter. The goal is to move from the current client-side rendered Angular application to a modern, high-performance solution that combines server-side rendering (SSR) with Go and targeted client-side interactivity using React "islands".
+This section outlines the comprehensive plan to re-architect the nanovision HTML reporter. The goal is to move from the current client-side rendered Angular application to a modern, high-performance solution that combines server-side rendering (SSR) with Go and targeted client-side interactivity using React "islands".
 
 This initiative will significantly improve report load times, enhance the developer experience for contributors, and create a more maintainable and extensible frontend architecture for the future.
 

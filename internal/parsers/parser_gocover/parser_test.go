@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/IgorBayerl/AdlerCov/internal/parsers"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gocover"
-	"github.com/IgorBayerl/AdlerCov/internal/testutil"
+	"github.com/IgorBayerl/nanovision/internal/parsers"
+	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gocover"
+	"github.com/IgorBayerl/nanovision/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
