@@ -7,15 +7,15 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/IgorBayerl/AdlerCov/internal/testutil"
-	"github.com/IgorBayerl/AdlerCov/internal/utils"
+	"github.com/IgorBayerl/nanovision/internal/testutil"
+	"github.com/IgorBayerl/nanovision/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFindFileInSourceDirs(t *testing.T) {
 	isWindows := runtime.GOOS == "windows"
-	
+
 	// Helper to create platform-appropriate paths
 	p := func(path string) string {
 		if isWindows {
@@ -25,13 +25,13 @@ func TestFindFileInSourceDirs(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name            string
-		mockFiles       map[string]string
-		sourceDirs      []string
-		relativePath    string
-		expectedPath    string
-		expectError     bool
-		skipPathCheck   bool // For ambiguous cases where we can't predict the exact path
+		name          string
+		mockFiles     map[string]string
+		sourceDirs    []string
+		relativePath  string
+		expectedPath  string
+		expectError   bool
+		skipPathCheck bool // For ambiguous cases where we can't predict the exact path
 	}{
 		// ===== STRATEGY 1: ABSOLUTE PATH =====
 		{
@@ -46,7 +46,7 @@ func TestFindFileInSourceDirs(t *testing.T) {
 			name:         "Strategy 1: Absolute path doesn't exist, should try other strategies",
 			mockFiles:    map[string]string{p("/actual/location/file.go"): "content"},
 			sourceDirs:   []string{p("/actual/location")},
-			relativePath: p("/wrong/path/file.go"), // Absolute but wrong
+			relativePath: p("/wrong/path/file.go"),      // Absolute but wrong
 			expectedPath: p("/actual/location/file.go"), // Should find via recursive search
 			expectError:  false,
 		},
@@ -129,10 +129,10 @@ func TestFindFileInSourceDirs(t *testing.T) {
 			expectError:  false,
 		},
 		{
-			name:         "Strategy 4: Filename exists in multiple locations - returns first match",
+			name: "Strategy 4: Filename exists in multiple locations - returns first match",
 			mockFiles: map[string]string{
-				p("/project/api/config.go"):  "content1",
-				p("/project/lib/config.go"):  "content2",
+				p("/project/api/config.go"): "content1",
+				p("/project/lib/config.go"): "content2",
 			},
 			sourceDirs:   []string{p("/project/api"), p("/project/lib")},
 			relativePath: "config.go",
@@ -149,7 +149,7 @@ func TestFindFileInSourceDirs(t *testing.T) {
 			},
 			sourceDirs:    []string{p("/project")},
 			relativePath:  "handler.go",
-			expectedPath:  "", // Not used when skipPathCheck is true
+			expectedPath:  "",   // Not used when skipPathCheck is true
 			skipPathCheck: true, // Can't predict which one will be found first
 			expectError:   false,
 		},
@@ -209,7 +209,7 @@ func TestFindFileInSourceDirs(t *testing.T) {
 			expectedPath: p("/a/b/c/d/e/f/g/h/i/j/file.go"),
 			expectError:  false,
 		},
-		
+
 		// ===== REALISTIC SCENARIOS FROM DIFFERENT TOOLS =====
 		{
 			name:         "Real: Go coverage - relative from module root",
@@ -299,7 +299,7 @@ func TestFindFileInSourceDirs_ErrorHandling(t *testing.T) {
 	t.Run("Nil logger should not panic", func(t *testing.T) {
 		mockFS := testutil.NewMockFilesystem(platform)
 		mockFS.AddFile(p("/project/app.go"), "content")
-		
+
 		// Should not panic with nil logger
 		_, err := utils.FindFileInSourceDirs("app.go", []string{p("/project")}, mockFS, nil)
 		require.NoError(t, err)
@@ -309,7 +309,7 @@ func TestFindFileInSourceDirs_ErrorHandling(t *testing.T) {
 		mockFS := testutil.NewMockFilesystem(platform)
 		// Add a file but make the parent directory unreadable (if your mock supports this)
 		mockFS.AddFile(p("/project/src/app.go"), "content")
-		
+
 		// Even if we can't read some dirs, it shouldn't panic
 		_, err := utils.FindFileInSourceDirs("nonexistent.go", []string{p("/project")}, mockFS, nopLogger)
 		require.Error(t, err) // Should error because file not found, not because of dir read
@@ -319,7 +319,7 @@ func TestFindFileInSourceDirs_ErrorHandling(t *testing.T) {
 	t.Run("Backslashes in relative path - normalized on all platforms", func(t *testing.T) {
 		mockFS := testutil.NewMockFilesystem(platform)
 		mockFS.AddFile(p("/project/src/app.go"), "content")
-		
+
 		foundPath, err := utils.FindFileInSourceDirs("src\\app.go", []string{p("/project")}, mockFS, nopLogger)
 		require.NoError(t, err, "Backslashes should be normalized to forward slashes on all platforms")
 		assert.Equal(t, filepath.Clean(p("/project/src/app.go")), filepath.Clean(foundPath))
@@ -347,14 +347,14 @@ func TestFindFileInSourceDirs_StrategyPriority(t *testing.T) {
 		mockFS := testutil.NewMockFilesystem(platform)
 		mockFS.AddFile(p("/absolute/path/file.go"), "absolute content")
 		mockFS.AddFile(p("/project/file.go"), "relative content")
-		
+
 		foundPath, err := utils.FindFileInSourceDirs(
 			p("/absolute/path/file.go"),
 			[]string{p("/project")},
 			mockFS,
 			nopLogger,
 		)
-		
+
 		require.NoError(t, err)
 		assert.Equal(t, filepath.Clean(p("/absolute/path/file.go")), filepath.Clean(foundPath))
 	})
@@ -363,14 +363,14 @@ func TestFindFileInSourceDirs_StrategyPriority(t *testing.T) {
 		mockFS := testutil.NewMockFilesystem(platform)
 		mockFS.AddFile(p("/project/src/app.go"), "direct join")
 		mockFS.AddFile(p("/project/app.go"), "would match by suffix")
-		
+
 		foundPath, err := utils.FindFileInSourceDirs(
 			"src/app.go",
 			[]string{p("/project")},
 			mockFS,
 			nopLogger,
 		)
-		
+
 		require.NoError(t, err)
 		assert.Equal(t, filepath.Clean(p("/project/src/app.go")), filepath.Clean(foundPath))
 	})
@@ -379,14 +379,14 @@ func TestFindFileInSourceDirs_StrategyPriority(t *testing.T) {
 		mockFS := testutil.NewMockFilesystem(platform)
 		mockFS.AddFile(p("/project/correct/path/file.go"), "suffix match")
 		mockFS.AddFile(p("/project/wrong/location/file.go"), "recursive would find this first")
-		
+
 		foundPath, err := utils.FindFileInSourceDirs(
 			p("/different/root/correct/path/file.go"),
 			[]string{p("/project")},
 			mockFS,
 			nopLogger,
 		)
-		
+
 		require.NoError(t, err)
 		assert.Equal(t, filepath.Clean(p("/project/correct/path/file.go")), filepath.Clean(foundPath))
 	})

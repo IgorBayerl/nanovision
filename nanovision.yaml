@@ -1,14 +1,14 @@
 # ------------------------------------------------------------------
-#  AdlerCov Configuration for the Self-Coverage Report
+#  nanovision Configuration for the Self-Coverage Report
 # ------------------------------------------------------------------
-# This file defines the default settings for generating AdlerCov's own
+# This file defines the default settings for generating nanovision's own
 # coverage report. CLI flags provided by the python script will override
 # the settings in this file.
 
 # A list of coverage report files to parse for the merged report.
 reports:
-  - "reports/adlercov_self_coverage/coverage-unit.out"
-  - "reports/adlercov_self_coverage/coverage-integration.out"
+  - "reports/nanovision_self_coverage/coverage-unit.out"
+  - "reports/nanovision_self_coverage/coverage-integration.out"
   - "demo_projects/cpp/report/gcov/branch-probabilities/*.gcov"
   - "demo_projects/csharp/report/cobertura/cobertura.xml"
   - "demo_projects/go/report/gocover/coverage.out"
@@ -22,7 +22,7 @@ source_dirs:
   - "demo_projects/go/project"
 
 # The directory where the final self-coverage report will be saved.
-output_dir: "reports/adlercov_self_coverage_full"
+output_dir: "reports/nanovision_self_coverage_full"
 
 # The types of reports to generate.
 report_types:
@@ -32,7 +32,7 @@ report_types:
   - "RawJson"
 
 # The title for the generated HTML report.
-title: "AdlerCov Self-Coverage (Full Merged)"
+title: "nanovision Self-Coverage (Full Merged)"
 
 # Logging verbosity for the self-coverage run.
 verbosity: "Verbose"

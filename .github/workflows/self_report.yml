@@ -43,7 +43,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './reports/adlercov_self_coverage_full'
+          path: './reports/nanovision_self_coverage_full'
 
       - name: Deploy to GitHub Pages
         id: deployment

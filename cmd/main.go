@@ -14,24 +14,24 @@ import (
 
 	"github.com/IgorBayerl/fsglob"
 
-	"github.com/IgorBayerl/AdlerCov/analyzer"
-	cpp "github.com/IgorBayerl/AdlerCov/analyzer/cpp"
-	golang "github.com/IgorBayerl/AdlerCov/analyzer/go"
-	"github.com/IgorBayerl/AdlerCov/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/aggregator"
-	"github.com/IgorBayerl/AdlerCov/internal/config"
-	"github.com/IgorBayerl/AdlerCov/internal/enricher"
-	"github.com/IgorBayerl/AdlerCov/internal/model"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_cobertura"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gcov"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers/parser_gocover"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter/htmlreact"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter/lcov"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter/reporter_rawjson"
-	"github.com/IgorBayerl/AdlerCov/internal/reporter/textsummary"
-	"github.com/IgorBayerl/AdlerCov/internal/tree"
-	"github.com/IgorBayerl/AdlerCov/logging"
+	"github.com/IgorBayerl/nanovision/analyzer"
+	cpp "github.com/IgorBayerl/nanovision/analyzer/cpp"
+	golang "github.com/IgorBayerl/nanovision/analyzer/go"
+	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/aggregator"
+	"github.com/IgorBayerl/nanovision/internal/config"
+	"github.com/IgorBayerl/nanovision/internal/enricher"
+	"github.com/IgorBayerl/nanovision/internal/model"
+	"github.com/IgorBayerl/nanovision/internal/parsers"
+	"github.com/IgorBayerl/nanovision/internal/parsers/parser_cobertura"
+	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gcov"
+	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gocover"
+	"github.com/IgorBayerl/nanovision/internal/reporter/htmlreact"
+	"github.com/IgorBayerl/nanovision/internal/reporter/lcov"
+	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
+	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
+	"github.com/IgorBayerl/nanovision/internal/tree"
+	"github.com/IgorBayerl/nanovision/logging"
 )
 
 func parseAndBindFlags() *config.RawConfigInput {
@@ -234,7 +234,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 
-	configPath := flag.String("config", "", "Path to a adlercov.yaml configuration file.")
+	configPath := flag.String("config", "", "Path to a nanovision.yaml configuration file.")
 	watchFlag := flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes")
 
 	rawInput := parseAndBindFlags()

@@ -1,10 +1,10 @@
 # How to Contribute
 
-We actively welcome contributions to AdlerCov! Whether it's adding a new parser, improving the documentation, or fixing a bug, your help is valued.
+We actively welcome contributions to nanovision! Whether it's adding a new parser, improving the documentation, or fixing a bug, your help is valued.
 
 ## Project Architecture
 
-AdlerCov is built with a modular design to enable easy expansion. The core pipeline is:
+nanovision is built with a modular design to enable easy expansion. The core pipeline is:
 
 1.  **Parsers (`internal/parsers`):** Convert various input formats (e.g., Cobertura, GoCover) into a standardized intermediate `model`.
 2.  **Analyzer (`internal/analyzer`):** Merges one or more parsed results into a single, unified summary. This is where filtering and data enrichment happens.
@@ -14,7 +14,7 @@ AdlerCov is built with a modular design to enable easy expansion. The core pipel
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/IgorBayerl/AdlerCov.git
+    git clone https://github.com/IgorBayerl/nanovision.git
     ```
 2.  Install Go (version 1.23 or higher).
 3.  Install dependencies:

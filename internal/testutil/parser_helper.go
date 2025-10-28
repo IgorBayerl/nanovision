@@ -4,8 +4,8 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/IgorBayerl/AdlerCov/filtering"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers"
+	"github.com/IgorBayerl/nanovision/filtering"
+	"github.com/IgorBayerl/nanovision/internal/parsers"
 )
 
 // MockParserConfig implements the lean parsers.ParserConfig interface for testing.

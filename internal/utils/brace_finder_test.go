@@ -3,7 +3,7 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/IgorBayerl/AdlerCov/internal/utils"
+	"github.com/IgorBayerl/nanovision/internal/utils"
 	"github.com/stretchr/testify/assert"
 )
 

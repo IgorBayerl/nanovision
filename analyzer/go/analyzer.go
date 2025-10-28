@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"strings"
 
-	sitter "github.com/IgorBayerl/AdlerCov/tree-sitter/go-tree-sitter"
-	tsgo "github.com/IgorBayerl/AdlerCov/tree-sitter/tree-sitter-go/bindings/go"
+	sitter "github.com/IgorBayerl/nanovision/tree-sitter/go-tree-sitter"
+	tsgo "github.com/IgorBayerl/nanovision/tree-sitter/tree-sitter-go/bindings/go"
 
-	"github.com/IgorBayerl/AdlerCov/analyzer"
+	"github.com/IgorBayerl/nanovision/analyzer"
 )
 
 type GoAnalyzer struct{}

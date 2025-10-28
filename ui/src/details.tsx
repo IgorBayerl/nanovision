@@ -1,15 +1,15 @@
-import ReactDOM from 'react-dom/client'
-import '@/index.css'
 import { ThemeProvider } from '@/components/Theme.Context'
+import '@/index.css'
 import DetailsPage from '@/pages/DetailsPage'
+import ReactDOM from 'react-dom/client'
 
 /**
  * Retrieves details data from the window.
  * The data is treated as `unknown` because it has not yet been validated.
  */
 function getDetailsData(): unknown | null {
-    if (window.__ADLERCOV_DETAILS__) {
-        return window.__ADLERCOV_DETAILS__
+    if (window.__NANOVISION_DETAILS__) {
+        return window.__NANOVISION_DETAILS__
     }
     // Data for the details page must be embedded directly by the generator.
     return null

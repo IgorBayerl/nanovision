@@ -1,7 +1,7 @@
-import ReactDOM from 'react-dom/client'
-import '@/index.css'
 import { ThemeProvider } from '@/components/Theme.Context'
+import '@/index.css'
 import SummaryPage from '@/pages/SummaryPage'
+import ReactDOM from 'react-dom/client'
 
 /**
  * Retrieves summary data from the window or a script tag.
@@ -9,8 +9,8 @@ import SummaryPage from '@/pages/SummaryPage'
  */
 function getSummaryData(): unknown | null {
     // The primary method: data injected by Go into a global variable.
-    if (window.__ADLERCOV_SUMMARY__) {
-        return window.__ADLERCOV_SUMMARY__
+    if (window.__NANOVISION_SUMMARY__) {
+        return window.__NANOVISION_SUMMARY__
     }
 
     // fallback
