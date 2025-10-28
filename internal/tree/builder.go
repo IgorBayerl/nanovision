@@ -8,11 +8,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/filereader"
-	"github.com/IgorBayerl/AdlerCov/filtering"
-	"github.com/IgorBayerl/AdlerCov/internal/model"
-	"github.com/IgorBayerl/AdlerCov/internal/parsers"
-	"github.com/IgorBayerl/AdlerCov/internal/utils"
+	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/filtering"
+	"github.com/IgorBayerl/nanovision/internal/model"
+	"github.com/IgorBayerl/nanovision/internal/parsers"
+	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 type Builder struct {

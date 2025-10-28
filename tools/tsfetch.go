@@ -44,7 +44,7 @@ const (
 )
 
 type Config struct {
-	SchemaVersion int    `yaml:"adlercov_grammars version"`
+	SchemaVersion int    `yaml:"nanovision_grammars version"`
 	BaseDir       string `yaml:"base_dir"`
 	Packages      []Pkg  `yaml:"packages"`
 }

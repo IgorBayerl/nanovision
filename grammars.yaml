@@ -1,4 +1,4 @@
-adlercov_grammars version: 1
+nanovision_grammars version: 1
 base_dir: tree-sitter
 packages:
   - name: cpp

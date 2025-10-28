@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	sitter "github.com/IgorBayerl/AdlerCov/tree-sitter/go-tree-sitter"
-	tscpp "github.com/IgorBayerl/AdlerCov/tree-sitter/tree-sitter-cpp/bindings/go"
+	sitter "github.com/IgorBayerl/nanovision/tree-sitter/go-tree-sitter"
+	tscpp "github.com/IgorBayerl/nanovision/tree-sitter/tree-sitter-cpp/bindings/go"
 
-	"github.com/IgorBayerl/AdlerCov/analyzer"
+	"github.com/IgorBayerl/nanovision/analyzer"
 )
 
 type CppAnalyzer struct{}

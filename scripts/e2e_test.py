@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-End-to-End (E2E) Test Script for the AdlerCov Project.
+End-to-End (E2E) Test Script for the nanovision Project.
 
-This script validates the compiled AdlerCov CLI tool by running it against a
+This script validates the compiled nanovision CLI tool by running it against a
 variety of demo projects and coverage report formats.
 
 Key Features:
@@ -12,7 +12,7 @@ Key Features:
 - Verifies command exit codes and the creation of expected output files.
 - Provides a detailed summary of PASS/FAIL for all tests.
 - Includes a '--self-cover' mode to generate a coverage report for the
-  AdlerCov tool itself, combining unit and E2E test coverage.
+  nanovision tool itself, combining unit and E2E test coverage.
 - Use the '-v' or '--verbose' flag to see the live output from the CLI tool.
 """
 import argparse
@@ -51,7 +51,7 @@ GO_PROJECT_DIR = os.path.join(GO_DIR, "project")
 GO_COVERAGE_OUT = os.path.join(GO_DIR, "report", "gocover", "coverage.out")
 
 # Self-Coverage Paths (for the --self-cover flag)
-SELF_COVERAGE_DIR = os.path.join(REPORTS_OUTPUT_DIR, "adlercov_self_coverage")
+SELF_COVERAGE_DIR = os.path.join(REPORTS_OUTPUT_DIR, "nanovision_self_coverage")
 UNIT_TEST_COVERAGE_OUT = os.path.join(SELF_COVERAGE_DIR, "coverage-unit.out")
 INTEGRATION_TEST_COVERAGE_OUT = os.path.join(SELF_COVERAGE_DIR, "coverage-integration.out")
 
@@ -143,8 +143,8 @@ DEMO_PROJECT_TESTS = [
 # --- Test cases for --self-cover mode ---
 SELF_COVERAGE_TESTS = [
     TestCase(
-        name="AdlerCov Self-Coverage (Unit + Integration Merged)",
-        output_dir_name="adlercov_self_coverage_full",
+        name="nanovision Self-Coverage (Unit + Integration Merged)",
+        output_dir_name="nanovision_self_coverage_full",
         args=[], # No args, its using config file
     )
 ]
@@ -181,9 +181,9 @@ def clean_directory(path):
 def get_platform_and_binary_name():
     """Determines the current OS and the corresponding binary name."""
     if sys.platform.startswith("linux"):
-        return "linux", "adlercov"
+        return "linux", "nanovision"
     elif sys.platform == "win32":
-        return "windows", "adlercov.exe"
+        return "windows", "nanovision.exe"
     else:
         print(f"--- Unsupported platform: {sys.platform}", file=sys.stderr)
         sys.exit(1)
@@ -270,7 +270,7 @@ def run_test_suite(test_cases, binary_path, global_args, title_prefix="E2E", ver
 def run_self_coverage_workflow(binary_path, global_args, verbose=False):
     """Handles the entire self-coverage report generation process."""
     print("\n" + "="*80)
-    print("--- Starting AdlerCov Self-Coverage Workflow ---")
+    print("--- Starting nanovision Self-Coverage Workflow ---")
     print("="*80)
 
     clean_directory(SELF_COVERAGE_DIR)
@@ -299,8 +299,8 @@ def run_self_coverage_workflow(binary_path, global_args, verbose=False):
 
 def main():
     """Main function to set up, build, and run all tests."""
-    parser = argparse.ArgumentParser(description="E2E test script for AdlerCov.")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Stream the live output from the AdlerCov tool during tests.")
+    parser = argparse.ArgumentParser(description="E2E test script for nanovision.")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Stream the live output from the nanovision tool during tests.")
     parser.add_argument("-sc", "--self-cover", action="store_true", help="Build with coverage and generate a coverage report for the tool itself.")
     parser.add_argument("--report-types", default="Html,TextSummary,Lcov,RawJson", help="Comma-separated list of report types to generate.")
     args = parser.parse_args()
@@ -313,7 +313,7 @@ def main():
 
     try:
         if args.self_cover:
-            temp_cover_dir = tempfile.mkdtemp(prefix="adlercov_raw_")
+            temp_cover_dir = tempfile.mkdtemp(prefix="nanovision_raw_")
             os.environ["GOCOVERDIR"] = temp_cover_dir
             print(f"--- Raw coverage data will be collected in: {temp_cover_dir} ---")
 

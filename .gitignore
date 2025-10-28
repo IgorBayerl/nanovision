@@ -17,8 +17,8 @@ Testprojects/Go/coverage.out
 coverage-report
 
 aldercov.exe 
-adlercov
-adlercov.log
+nanovision
+nanovision.log
 
 report_generator_dotnet
 output_report.txt

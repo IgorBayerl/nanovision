@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/IgorBayerl/AdlerCov/filtering"
-	"github.com/IgorBayerl/AdlerCov/logging"
+	"github.com/IgorBayerl/nanovision/filtering"
+	"github.com/IgorBayerl/nanovision/logging"
 	"gopkg.in/yaml.v3"
 )
 
@@ -74,15 +74,15 @@ func Load(configPath string, cliInput RawConfigInput) (*AppConfig, error) {
 	cfg := GetDefaultConfig()
 
 	if configPath == "" {
-		if _, err := os.Stat("adlercov.yaml"); err == nil {
-			configPath = "adlercov.yaml"
+		if _, err := os.Stat("nanovision.yaml"); err == nil {
+			configPath = "nanovision.yaml"
 		}
 	}
 
 	if configPath != "" {
 		yamlFile, err := os.ReadFile(configPath)
 		if err != nil {
-			if !os.IsNotExist(err) || (configPath != "adlercov.yaml" && configPath != "") {
+			if !os.IsNotExist(err) || (configPath != "nanovision.yaml" && configPath != "") {
 				return nil, fmt.Errorf("failed to read config file %s: %w", configPath, err)
 			}
 		} else {

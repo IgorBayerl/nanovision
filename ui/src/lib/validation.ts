@@ -90,7 +90,7 @@ export type SummaryV1 = z.infer<typeof summaryV1Schema>
 
 /**
  * Validates the entire summary data object against the schema.
- * @param data The unknown data, typically from window.__ADLERCOV_SUMMARY__.
+ * @param data The unknown data, typically from window.__NANOVISION_SUMMARY__.
  * @returns A Zod SafeParseReturnType which indicates success or failure with detailed errors.
  */
 export function validateSummaryData(data: unknown) {
@@ -146,7 +146,7 @@ export type DetailsV1 = z.infer<typeof detailsV1Schema>
 
 /**
  * Validates the details page data object against the schema.
- * @param data The unknown data, typically from window.__ADLERCOV_DETAILS__.
+ * @param data The unknown data, typically from window.__NANOVISION_DETAILS__.
  * @returns A Zod SafeParseReturnType which indicates success or failure with detailed errors.
  */
 export function validateDetailsData(data: unknown) {

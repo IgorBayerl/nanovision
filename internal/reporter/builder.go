@@ -1,6 +1,6 @@
 package reporter
 
-import "github.com/IgorBayerl/AdlerCov/internal/model"
+import "github.com/IgorBayerl/nanovision/internal/model"
 
 // ReportBuilder interface defines methods that all report generators must implement
 type ReportBuilder interface {

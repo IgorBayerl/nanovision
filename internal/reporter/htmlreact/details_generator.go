@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IgorBayerl/AdlerCov/filereader"
-	"github.com/IgorBayerl/AdlerCov/internal/model"
-	"github.com/IgorBayerl/AdlerCov/internal/utils"
+	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/model"
+	"github.com/IgorBayerl/nanovision/internal/utils"
 	"golang.org/x/net/html"
 )
 
@@ -50,7 +50,7 @@ func (b *HtmlReactReportBuilder) createDetailPage(fileNode *model.FileNode, deta
 	if err := enc.Encode(detailsData); err != nil {
 		return fmt.Errorf("failed to marshal details data to JSON: %w", err)
 	}
-	scriptContent := "window.__ADLERCOV_DETAILS__ = " + jsonBuf.String()
+	scriptContent := "window.__NANOVISION_DETAILS__ = " + jsonBuf.String()
 
 	modifiedHTML, err := injectDataIntoHTML(detailsHTMLContent, scriptContent)
 	if err != nil {
@@ -220,7 +220,7 @@ func injectDataIntoHTML(htmlContent []byte, scriptContent string) (string, error
 	var traverse func(*html.Node)
 	traverse = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "script" {
-			if n.FirstChild != nil && strings.Contains(n.FirstChild.Data, "window.__ADLERCOV_DETAILS__") {
+			if n.FirstChild != nil && strings.Contains(n.FirstChild.Data, "window.__NANOVISION_DETAILS__") {
 				n.FirstChild.Data = scriptContent
 				found = true
 				return
@@ -236,7 +236,7 @@ func injectDataIntoHTML(htmlContent []byte, scriptContent string) (string, error
 	traverse(doc)
 
 	if !found {
-		return "", fmt.Errorf("placeholder script 'window.__ADLERCOV_DETAILS__' not found in details.html template")
+		return "", fmt.Errorf("placeholder script 'window.__NANOVISION_DETAILS__' not found in details.html template")
 	}
 
 	var buf bytes.Buffer

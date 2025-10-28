@@ -4,7 +4,7 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/IgorBayerl/AdlerCov/internal/config"
+	"github.com/IgorBayerl/nanovision/internal/config"
 )
 
 // IBuilderContext defines the contract for the context passed to report builders.
