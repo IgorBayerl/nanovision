@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
 import Footer from '@/components/Layout.Footer'
 import TopBar from '@/components/Layout.TopBar'
 import MethodsTable from '@/components/MethodsTable'
+import ReportsSelector from '@/components/ReportsSelector'
 import SourceCodeViewer from '@/components/SourceCodeViewer'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import type { DetailsV1 } from '@/lib/validation'
 import { validateDetailsData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
+import { useMemo, useState } from 'react'
 
 const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
 const isMetricKey = (key: string): boolean => !NON_METRIC_KEYS.has(key)
@@ -39,6 +40,22 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
         return { validatedData: data, metricKeys: keys, reportInfo }
     }, [validationResult, rawData])
 
+    const [activeReportIndices, setActiveReportIndices] = useState<Set<number>>(
+        () => new Set(validatedData?.reports?.map((_, i) => i) ?? []),
+    )
+
+    const handleToggleReport = (index: number) => {
+        setActiveReportIndices((prev) => {
+            const newSet = new Set(prev)
+            if (newSet.has(index)) {
+                newSet.delete(index)
+            } else {
+                newSet.add(index)
+            }
+            return newSet
+        })
+    }
+
     const title = validatedData?.title ?? (rawData as Partial<DetailsV1>)?.title ?? 'Coverage Details'
 
     return (
@@ -55,13 +72,24 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
                         metricOrder={metricKeys}
                         metricDefinitions={validatedData.metricDefinitions}
                     />
+                    {validatedData.reports && validatedData.reports.length > 0 && (
+                        <ReportsSelector
+                            reports={validatedData.reports}
+                            activeReportIndices={activeReportIndices}
+                            onToggleReport={handleToggleReport}
+                        />
+                    )}
                     {validatedData.methods && (
                         <MethodsTable
                             methods={validatedData.methods}
                             metricDefinitions={validatedData.metricDefinitions}
                         />
                     )}
-                    <SourceCodeViewer fileName={validatedData.fileName} lines={validatedData.lines} />
+                    <SourceCodeViewer
+                        fileName={validatedData.fileName}
+                        lines={validatedData.lines}
+                        activeReportIndices={activeReportIndices}
+                    />
                 </>
             ) : (
                 <div className="rounded-md border border-border bg-card p-10 text-center text-muted-foreground">
