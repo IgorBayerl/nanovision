@@ -1,15 +1,13 @@
-import Footer from '@/components/Layout.Footer'
-import TopBar from '@/components/Layout.TopBar'
+import { useMemo, useState } from 'react'
+import Layout from '@/components/Layout'
 import MethodsTable from '@/components/MethodsTable'
 import ReportsSelector from '@/components/ReportsSelector'
 import SourceCodeViewer from '@/components/SourceCodeViewer'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
-import { cn } from '@/lib/utils'
 import type { DetailsV1 } from '@/lib/validation'
 import { validateDetailsData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
-import { useMemo, useState } from 'react'
 
 const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
 const isMetricKey = (key: string): boolean => !NON_METRIC_KEYS.has(key)
@@ -59,9 +57,7 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
     const title = validatedData?.title ?? (rawData as Partial<DetailsV1>)?.title ?? 'Coverage Details'
 
     return (
-        <div className={cn('mx-auto min-h-screen w-full max-w-7xl space-y-5 bg-background p-6 text-foreground')}>
-            <TopBar title={title} showBackButton />
-
+        <Layout title={title} showBackButton>
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}
 
             {validatedData ? (
@@ -96,8 +92,6 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
                     Could not render the report due to critical data errors. Please review the alerts above.
                 </div>
             )}
-
-            <Footer />
-        </div>
+        </Layout>
     )
 }

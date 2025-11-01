@@ -1,7 +1,7 @@
 import { ThemeProvider } from '@/components/Theme.Context'
 import '@/index.css'
-import SummaryPage from '@/pages/SummaryPage'
 import ReactDOM from 'react-dom/client'
+import SummaryPage from '@/pages/SummaryPage'
 
 /**
  * Retrieves summary data from the window or a script tag.

@@ -1,7 +1,7 @@
+import { GitBranch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { DiffStatus, LineDetails, LineStatus } from '@/types/summary'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
-import { GitBranch } from 'lucide-react'
 
 const squareBgClasses: Record<LineStatus, string> = {
     covered: 'bg-covered',

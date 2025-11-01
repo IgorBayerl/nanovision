@@ -1,7 +1,7 @@
 import { ThemeProvider } from '@/components/Theme.Context'
 import '@/index.css'
-import DetailsPage from '@/pages/DetailsPage'
 import ReactDOM from 'react-dom/client'
+import DetailsPage from '@/pages/DetailsPage'
 
 /**
  * Retrieves details data from the window.

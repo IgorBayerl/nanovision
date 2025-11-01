@@ -1,7 +1,7 @@
+import { ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
 import InlineCoverage from '@/components/InlineCoverage'
 import { cn } from '@/lib/utils'
 import type { FileNode, MetricConfig, Metrics } from '@/types/summary'
-import { ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
 
 const NodeName = ({ node, viewMode }: { node: FileNode; viewMode: 'tree' | 'flat' }) => {
     const isFolder = node.type === 'folder' && viewMode === 'tree'
@@ -75,12 +75,7 @@ export function TreeRow({
     )
 
     return (
-        <div
-            className={cn(
-                'group grid w-full items-center',
-                isFolder ? 'text-foreground/70 font-bold' : '',
-            )}
-        >
+        <div className={cn('group grid w-full items-center', isFolder ? 'font-bold text-foreground/70' : '')}>
             <div className="grid h-full" style={{ gridTemplateColumns: `minmax(300px, 1fr) ${totalMetricsWidth}px` }}>
                 <div
                     className={cn(

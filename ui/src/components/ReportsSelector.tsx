@@ -18,13 +18,13 @@ export default function ReportsSelector({ reports, activeReportIndices, onToggle
             <CardContent>
                 <div className="space-y-2">
                     {reports.map((report, index) => (
-                        <div key={index} className="flex items-center space-x-2">
+                        <div key={report.path} className="flex items-center space-x-2">
                             <Checkbox
-                                id={`report-checkbox-${index}`}
+                                id={`report-checkbox-${report.path}`}
                                 checked={activeReportIndices.has(index)}
                                 onCheckedChange={() => onToggleReport(index)}
                             />
-                            <Label htmlFor={`report-checkbox-${index}`} title={report.path}>
+                            <Label htmlFor={`report-checkbox-${report.path}`} title={report.path}>
                                 {report.name}
                             </Label>
                         </div>
