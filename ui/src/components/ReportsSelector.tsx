@@ -13,7 +13,7 @@ export default function ReportsSelector({ reports, activeReportIndices, onToggle
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Test Reports</CardTitle>
+                <CardTitle>Reports</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
