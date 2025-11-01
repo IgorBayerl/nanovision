@@ -65,8 +65,6 @@ type fileNode struct {
 	TargetURL     string     `json:"targetUrl,omitempty"`
 }
 
-// REMOVED: type totalsMap map[string]any (was unused)
-
 type metadataItem struct {
 	Label    string `json:"label"`
 	Value    any    `json:"value"`
@@ -98,8 +96,6 @@ type summaryV1 struct {
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
 }
 
-// --- NEW STRUCTS FOR DETAILS PAGE ---
-
 type lineStatus string
 
 const (
@@ -118,7 +114,7 @@ type lineDetail struct {
 	LineNumber int         `json:"lineNumber"`
 	Content    string      `json:"content"`
 	Status     lineStatus  `json:"status"`
-	Hits       *int        `json:"hits,omitempty"`
+	Hits       []int       `json:"hits,omitempty"`
 	BranchInfo *branchInfo `json:"branchInfo,omitempty"`
 }
 
@@ -134,6 +130,11 @@ type methodDetail struct {
 	Metrics   map[string]methodMetric `json:"metrics"`
 }
 
+type report struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
 type detailsV1 struct {
 	SchemaVersion     int               `json:"schemaVersion"`
 	GeneratedAt       string            `json:"generatedAt"`
@@ -144,4 +145,5 @@ type detailsV1 struct {
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	Methods           []methodDetail    `json:"methods,omitempty"`
 	Lines             []lineDetail      `json:"lines"`
+	Reports           []report          `json:"reports,omitempty"`
 }

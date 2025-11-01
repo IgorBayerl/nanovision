@@ -4,8 +4,8 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Coverage Details</title>
-		<script defer src="./assets/details-D8BZcwIj.js"></script>
-		<link rel="stylesheet" href="./assets/details-BuIb_lWS.css">
+		<script defer src="./assets/details-QxIRhm8D.js"></script>
+		<link rel="stylesheet" href="./assets/details-DylYcLRQ.css">
 	</head>
 	<body>
 		<div id="root"></div>
@@ -15,146 +15,544 @@
         -->
 		<script>
     window.__NANOVISION_DETAILS__ = {
-        schemaVersion: 1,
-        generatedAt: '2025-09-02T10:30:00Z',
-        title: 'Coverage Report',
-        fileName: 'src/core/ShoppingCart.ts',
-        metadata: [
-            { label: 'File Name', value: 'ShoppingCart.ts' },
-            { label: 'Language Analyzer', value: 'ts-jest' },
-            { label: 'Git Ref', value: 'feature/discount-logic' },
-        ],
-        totals: {
-            files: 1,
-            folders: 0,
-            lineCoverage: { covered: 12, uncovered: 4, coverable: 16, total: 46, percentage: 75.0 },
-            methodsCovered: { covered: 3, total: 4, percentage: 75.0 },
-            methodsFullyCovered: { covered: 2, total: 4, percentage: 50.0 },
-            statuses: { lineCoverage: 'warning', methodsCovered: 'warning', methodsFullyCovered: 'danger' },
-        },
-        metricDefinitions: {
-            lineCoverage: {
-                label: 'Line Coverage',
-                shortLabel: 'Line Coverage',
-                subMetrics: [
-                    { id: 'covered', label: 'Covered', width: 100 },
-                    { id: 'uncovered', label: 'Uncovered', width: 100 },
-                    { id: 'percentage', label: '%', width: 160 },
-                ],
-            },
-            methodsCovered: {
-                label: 'Methods Coverage',
-                shortLabel: 'Methods Coverage',
-                subMetrics: [
-                    { id: 'covered', label: 'Covered', width: 80 },
-                    { id: 'total', label: 'Total', width: 80 },
-                    { id: 'percentage', label: '%', width: 160 },
-                ],
-            },
-            methodsFullyCovered: {
-                label: 'Methods Fully Covered',
-                shortLabel: 'Methods Full Coverage',
-                subMetrics: [
-                    { id: 'covered', label: 'Covered', width: 80 },
-                    { id: 'total', label: 'Total', width: 80 },
-                    { id: 'percentage', label: '%', width: 160 },
-                ],
-            },
-            branchCoverage: { label: 'Branch Coverage', shortLabel: 'Branch Coverage', subMetrics: [] },
-            cyclomaticComplexity: { label: 'Cyclomatic Complexity', shortLabel: 'Cyclomatic Complexity', subMetrics: [] },
-        },
-        methods: [
-			{
-				name: 'constructor()',
-				startLine: 11,
-				endLine: 13,
-				metrics: {
-					lineCoverage: { value: '100%' },
-					branchCoverage: { value: '100%' },
-					cyclomaticComplexity: { value: '1' },
-				},
-			},
-			{
-				name: 'addItem(item: CartItem)',
-				startLine: 15,
-				endLine: 17,
-				metrics: {
-					lineCoverage: { value: '100%' },
-					branchCoverage: { value: '100%' },
-					cyclomaticComplexity: { value: '1' },
-				},
-			},
-			{
-				name: 'applyDiscount(code: string)',
-				startLine: 26,
-				endLine: 34,
-				metrics: {
-					lineCoverage: { value: '66%', status: 'warning' },
-					branchCoverage: { value: '50%', status: 'danger' },
-					cyclomaticComplexity: { value: '2' },
-				},
-			},
-			{
-				name: 'emptyCart()',
-				startLine: 44,
-				endLine: 46,
-				metrics: {
-					lineCoverage: { value: '0%', status: 'danger' },
-					branchCoverage: { value: '100%' },
-					cyclomaticComplexity: { value: '1' },
-				},
-			},
-		],
-
-        lines: [
-            { lineNumber: 1, content: "import { find, sumBy } from 'lodash';", status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 2, content: '', status: 'not-coverable' },
-            { lineNumber: 3, content: 'interface CartItem {', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 4, content: '    id: string;', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 5, content: '    price: number;', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 6, content: '}', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 7, content: '', status: 'not-coverable' },
-            { lineNumber: 8, content: 'export class ShoppingCart {', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 9, content: '    private items: CartItem[] = [];', status: 'covered', hits: 1, diffStatus: 'unchanged' },
-            { lineNumber: 10, content: '', status: 'not-coverable' },
-            { lineNumber: 11, content: '    constructor() {', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 12, content: '        this.items = [];', status: 'covered', hits: 1, diffStatus: 'unchanged' },
-            { lineNumber: 13, content: '    }', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 14, content: '', status: 'not-coverable' },
-            { lineNumber: 15, content: '    addItem(item: CartItem) {', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 16, content: '        this.items.push(item);', status: 'covered', hits: 5, diffStatus: 'unchanged' },
-            { lineNumber: 17, content: '    }', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 18, content: '', status: 'not-coverable' },
-            { lineNumber: 19, content: '    removeItem(itemId: string) {', status: 'not-coverable', diffStatus: 'removed' },
-            { lineNumber: 20, content: '        this.items = this.items.filter(i => i.id !== itemId);', status: 'uncovered', hits: 0, diffStatus: 'removed' },
-            { lineNumber: 21, content: '    }', status: 'not-coverable', diffStatus: 'removed' },
-            { lineNumber: 22, content: '', status: 'not-coverable' },
-            { lineNumber: 23, content: '    getTotal(): number {', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 24, content: '        return sumBy(this.items, item => item.price);', status: 'covered', hits: 3, diffStatus: 'unchanged' },
-            { lineNumber: 25, content: '    }', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 26, content: '', status: 'not-coverable' },
-            { lineNumber: 27, content: '    applyDiscount(code: string): number {', status: 'not-coverable', diffStatus: 'added' },
-            { lineNumber: 28, content: '        const total = this.getTotal();', status: 'covered', hits: 2, diffStatus: 'added' },
-            { lineNumber: 29, content: "        if (code === 'SAVE10') {", status: 'partial', hits: 2, diffStatus: 'added', branchInfo: { covered: 1, total: 2 } },
-            { lineNumber: 30, content: '            return total * 0.9;', status: 'covered', hits: 1, diffStatus: 'added' },
-            { lineNumber: 31, content: '        } else {', status: 'not-coverable', diffStatus: 'added' },
-            { lineNumber: 32, content: '            console.warn("Invalid discount code");', status: 'uncovered', hits: 0, diffStatus: 'added' },
-            { lineNumber: 33, content: '            return total;', status: 'uncovered', hits: 0, diffStatus: 'added' },
-            { lineNumber: 34, content: '        }', status: 'not-coverable', diffStatus: 'added' },
-            { lineNumber: 35, content: '    }', status: 'not-coverable', diffStatus: 'added' },
-            { lineNumber: 36, content: '', status: 'not-coverable' },
-            { lineNumber: 37, content: '    /** Checks if the cart has a specific item */', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 38, content: '    hasItem(itemId: string): boolean {', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 39, content: '        return !!find(this.items, { id: itemId });', status: 'covered', hits: 4, diffStatus: 'unchanged' },
-            { lineNumber: 40, content: '    }', status: 'not-coverable', diffStatus: 'unchanged' },
-            { lineNumber: 41, content: '', status: 'not-coverable' },
-            { lineNumber: 42, content: '    // TODO: This method needs to be tested', status: 'not-coverable' },
-            { lineNumber: 43, content: '    emptyCart() {', status: 'not-coverable' },
-            { lineNumber: 44, content: '        this.items = [];', status: 'uncovered', hits: 0 },
-            { lineNumber: 45, content: '    }', status: 'not-coverable' },
-            { lineNumber: 46, content: '}', status: 'not-coverable', diffStatus: 'unchanged' },
-        ],
+  "schemaVersion": 1,
+  "generatedAt": "2025-10-29T20:35:21Z",
+  "title": "Cobertura | GCov | GoCover",
+  "fileName": "analyzer/go/analyzer.go",
+  "metadata": [
+    { "label": "File Name", "value": "analyzer.go" },
+    { "label": "Parser Types", "value": ["Cobertura", "GCov", "GoCover"] },
+    { "label": "Source Directory", "value": "." }
+  ],
+  "totals": {
+    "lineCoverage": { "covered": 82, "uncovered": 13, "coverable": 95, "total": 164, "percentage": 86.31 },
+    "methodsCovered": { "covered": 5, "total": 5, "percentage": 100 },
+    "methodsFullyCovered": { "covered": 3, "total": 5, "percentage": 60 },
+    "maxCyclomaticComplexity": { "covered": 0, "uncovered": 0, "coverable": 0, "total": 10, "percentage": 0 },
+    "files": 1,
+    "folders": 0,
+    "statuses": { "lineCoverage": "safe", "methodsCovered": "safe", "methodsFullyCovered": "warning" }
+  },
+  "metricDefinitions": {
+    "branchCoverage": {
+      "label": "Branches",
+      "shortLabel": "Branches",
+      "subMetrics": [
+        { "id": "covered", "label": "Covered", "width": 100 },
+        { "id": "total", "label": "Total", "width": 80 },
+        { "id": "percentage", "label": "Percentage %", "width": 160 }
+      ]
+    },
+    "lineCoverage": {
+      "label": "Lines",
+      "shortLabel": "Lines",
+      "subMetrics": [
+        { "id": "covered", "label": "Covered", "width": 100 },
+        { "id": "uncovered", "label": "Uncovered", "width": 100 },
+        { "id": "coverable", "label": "Coverable", "width": 100 },
+        { "id": "total", "label": "Total", "width": 80 },
+        { "id": "percentage", "label": "Percentage %", "width": 160 }
+      ]
+    },
+    "maxCyclomaticComplexity": {
+      "label": "Max Cyclomatic Complexity",
+      "shortLabel": "Max Complexity",
+      "subMetrics": [{ "id": "total", "label": "Value", "width": 100 }]
+    },
+    "methodBranchCoverage": {
+      "label": "Method Branches",
+      "shortLabel": "Method Branches",
+      "subMetrics": [
+        { "id": "covered", "label": "Covered", "width": 100 },
+        { "id": "total", "label": "Total", "width": 80 },
+        { "id": "percentage", "label": "Percentage %", "width": 160 }
+      ]
+    },
+    "methodsCovered": {
+      "label": "Methods Covered",
+      "shortLabel": "Methods Cov.",
+      "subMetrics": [
+        { "id": "covered", "label": "Covered", "width": 80 },
+        { "id": "total", "label": "Total", "width": 80 },
+        { "id": "percentage", "label": "Percentage %", "width": 160 }
+      ]
+    },
+    "methodsFullyCovered": {
+      "label": "Methods Fully Covered",
+      "shortLabel": "Methods Full Cov.",
+      "subMetrics": [
+        { "id": "covered", "label": "Covered", "width": 80 },
+        { "id": "total", "label": "Total", "width": 80 },
+        { "id": "percentage", "label": "Percentage %", "width": 160 }
+      ]
     }
+  },
+  "methods": [
+    {
+      "name": "New",
+      "startLine": 16,
+      "endLine": 16,
+      "metrics": { "cyclomaticComplexity": { "value": "1" }, "lineCoverage": { "value": "100%" } }
+    },
+    {
+      "name": "(*GoAnalyzer).Name",
+      "startLine": 18,
+      "endLine": 20,
+      "metrics": { "cyclomaticComplexity": { "value": "1" }, "lineCoverage": { "value": "100%" } }
+    },
+    {
+      "name": "(*GoAnalyzer).SupportsFile",
+      "startLine": 22,
+      "endLine": 24,
+      "metrics": { "cyclomaticComplexity": { "value": "1" }, "lineCoverage": { "value": "100%" } }
+    },
+    {
+      "name": "(*GoAnalyzer).Analyze",
+      "startLine": 61,
+      "endLine": 130,
+      "metrics": { "cyclomaticComplexity": { "value": "10" }, "lineCoverage": { "value": "88%" } }
+    },
+    {
+      "name": "calculateComplexity",
+      "startLine": 132,
+      "endLine": 164,
+      "metrics": { "cyclomaticComplexity": { "value": "8" }, "lineCoverage": { "value": "78%", "status": "warning" } }
+    }
+  ],
+  "lines": [
+    { "lineNumber": 1, "content": "package golang", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 2, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 3, "content": "import (", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 4, "content": "\t\"fmt\"", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 5, "content": "\t\"log/slog\"", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 6, "content": "\t\"strings\"", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 7, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 8,
+      "content": "\tsitter \"github.com/IgorBayerl/nanovision/tree-sitter/go-tree-sitter\"",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    {
+      "lineNumber": 9,
+      "content": "\ttsgo \"github.com/IgorBayerl/nanovision/tree-sitter/tree-sitter-go/bindings/go\"",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 10, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 11,
+      "content": "\t\"github.com/IgorBayerl/nanovision/analyzer\"",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 12, "content": ")", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 13, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 14, "content": "type GoAnalyzer struct{}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 15, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 16,
+      "content": "func New() analyzer.Analyzer { return &GoAnalyzer{} }",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 17, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 18, "content": "func (a *GoAnalyzer) Name() string {", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 19, "content": "\treturn \"Go\"", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 20, "content": "}", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 21, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 22,
+      "content": "func (a *GoAnalyzer) SupportsFile(filePath string) bool {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 23,
+      "content": "\treturn strings.HasSuffix(strings.ToLower(filePath), \".go\")",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 24, "content": "}", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 25, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 26, "content": "const (", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 27,
+      "content": "\t// -------- function & method names --------",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 28, "content": "\t// Captures:", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 29,
+      "content": "\t//   @name     -> function or method name",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    {
+      "lineNumber": 30,
+      "content": "\t//   @receiver -> receiver TYPE only (e.g. T or *pkg.T), not \"(x T)\"",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 31, "content": "\tfuncQueryString = `", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 32, "content": "    (function_declaration", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 33, "content": "      name: (identifier) @name)", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 34, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 35, "content": "    (method_declaration", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 36, "content": "      receiver: (parameter_list", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 37,
+      "content": "                  (parameter_declaration",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    {
+      "lineNumber": 38,
+      "content": "                    type: (_) @receiver))",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    {
+      "lineNumber": 39,
+      "content": "      name: (field_identifier) @name)",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 40, "content": "  `", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 41, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 42,
+      "content": "\t// -------- cyclomatic complexity drivers --------",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    {
+      "lineNumber": 43,
+      "content": "\t// Start at 1, then +1 for each capture here.",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    {
+      "lineNumber": 44,
+      "content": "\t// We capture only non-default cases (default is its own node type).",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 45, "content": "\tcomplexityQueryString = `", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 46, "content": "    ;; branches / loops", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 47, "content": "    (if_statement)  @decision", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 48, "content": "    (for_statement) @decision", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 49, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 50,
+      "content": "    ;; switch/type-switch/select non-default arms",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 51, "content": "    (expression_case)     @case", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 52, "content": "    (type_case)           @case", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 53, "content": "    (communication_case)  @case", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 54, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 55,
+      "content": "    ;; short-circuit boolean ops (anywhere in the body)",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    {
+      "lineNumber": 56,
+      "content": "    (binary_expression operator: \"&&\") @op",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    {
+      "lineNumber": 57,
+      "content": "    (binary_expression operator: \"||\") @op",
+      "status": "not-coverable",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 58, "content": "  `", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 59, "content": ")", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 60, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 61,
+      "content": "func (a *GoAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, error) {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 62, "content": "\tparser := sitter.NewParser()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 63, "content": "\tdefer parser.Close()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 64, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 65,
+      "content": "\tlang := sitter.NewLanguage(tsgo.Language())",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 66,
+      "content": "\tif err := parser.SetLanguage(lang); err != nil {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 67,
+      "content": "\t\treturn analyzer.AnalysisResult{}, fmt.Errorf(\"set language: %w\", err)",
+      "status": "uncovered",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 68, "content": "\t}", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 69, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 70,
+      "content": "\ttree := parser.Parse(sourceCode, nil)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 71, "content": "\tif tree == nil {", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 72,
+      "content": "\t\treturn analyzer.AnalysisResult{}, fmt.Errorf(\"parse returned nil tree\")",
+      "status": "uncovered",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 73, "content": "\t}", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 74, "content": "\tdefer tree.Close()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 75, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 76, "content": "\troot := tree.RootNode()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 77, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 78,
+      "content": "\tq, qerr := sitter.NewQuery(lang, funcQueryString)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 79, "content": "\tif qerr != nil {", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 80,
+      "content": "\t\treturn analyzer.AnalysisResult{}, fmt.Errorf(\"compile function query: %w\", qerr)",
+      "status": "uncovered",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 81, "content": "\t}", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 82, "content": "\tdefer q.Close()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 83, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 84, "content": "\tqc := sitter.NewQueryCursor()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 85, "content": "\tdefer qc.Close()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 86, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 87,
+      "content": "\tmatches := qc.Matches(q, root, sourceCode)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 88, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 89, "content": "\tvar result analyzer.AnalysisResult", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 90, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 91,
+      "content": "\tfor m := matches.Next(); m != nil; m = matches.Next() {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 92, "content": "\t\tvar funcNode *sitter.Node", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 93, "content": "\t\tfuncName := \"\"", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 94, "content": "\t\treceiver := \"\"", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 95, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 96,
+      "content": "\t\tfor _, capture := range m.Captures {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 97,
+      "content": "\t\t\tcaptureName := q.CaptureNames()[capture.Index]",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 98, "content": "\t\t\tswitch captureName {", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 99, "content": "\t\t\tcase \"name\":", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 100,
+      "content": "\t\t\t\tfuncName = capture.Node.Utf8Text(sourceCode)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 101,
+      "content": "\t\t\t\tfuncNode = capture.Node.Parent()",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 102, "content": "\t\t\tcase \"receiver\":", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 103,
+      "content": "\t\t\t\treceiver = capture.Node.Utf8Text(sourceCode)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 104, "content": "\t\t\t}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 105, "content": "\t\t}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 106, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 107, "content": "\t\tif funcNode == nil {", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 108, "content": "\t\t\tcontinue", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 109, "content": "\t\t}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 110, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 111,
+      "content": "\t\tbodyNode := funcNode.ChildByFieldName(\"body\")",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 112,
+      "content": "\t\tcomplexity := calculateComplexity(lang, sourceCode, bodyNode)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 113, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 114,
+      "content": "\t\tstart := funcNode.StartPosition().Row + 1",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 115,
+      "content": "\t\tend := funcNode.EndPosition().Row + 1",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 116, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 117, "content": "\t\tname := funcName", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 118,
+      "content": "\t\tif strings.TrimSpace(receiver) != \"\" {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 119,
+      "content": "\t\t\tname = fmt.Sprintf(\"(%s).%s\", receiver, funcName) // e.g. (*MessageBuilder).Greet",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 120, "content": "\t\t}", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 121, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 122,
+      "content": "\t\tresult.Functions = append(result.Functions, analyzer.FunctionMetric{",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 123, "content": "\t\t\tName:                 name,", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 124,
+      "content": "\t\t\tPosition:             analyzer.Position{StartLine: int(start), EndLine: int(end)},",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 125,
+      "content": "\t\t\tCyclomaticComplexity: &complexity,",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 126, "content": "\t\t})", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 127, "content": "\t}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 128, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 129, "content": "\treturn result, nil", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 130, "content": "}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 131, "content": "", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    {
+      "lineNumber": 132,
+      "content": "func calculateComplexity(lang *sitter.Language, src []byte, bodyNode *sitter.Node) int {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 133, "content": "\tif bodyNode == nil {", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 134, "content": "\t\treturn 1", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 135, "content": "\t}", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 136, "content": "\tcomplexity := 1", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 137, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 138,
+      "content": "\tq, qerr := sitter.NewQuery(lang, complexityQueryString)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 139, "content": "\tif qerr != nil {", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 140,
+      "content": "\t\tslog.Warn(\"Error compiling Go complexity query\", \"error\", qerr)",
+      "status": "uncovered",
+      "hits": [0, 0, 0, 0]
+    },
+    { "lineNumber": 141, "content": "\t\treturn -1", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 142, "content": "\t}", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 143, "content": "\tdefer q.Close()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 144, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 145, "content": "\tcaptureNames := q.CaptureNames()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 146, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 147, "content": "\tqc := sitter.NewQueryCursor()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 148, "content": "\tdefer qc.Close()", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 149, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 150,
+      "content": "\tmatches := qc.Matches(q, bodyNode, src)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 151, "content": "", "status": "covered", "hits": [1, 0, 0, 0] },
+    {
+      "lineNumber": 152,
+      "content": "\tfor m := matches.Next(); m != nil; m = matches.Next() {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 153,
+      "content": "\t\tfor _, capture := range m.Captures {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 154,
+      "content": "\t\t\tif captureNames[capture.Index] == \"case\" {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 155,
+      "content": "\t\t\t\tfirstChild := capture.Node.Child(0)",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    {
+      "lineNumber": 156,
+      "content": "\t\t\t\tif firstChild != nil && firstChild.Kind() == \"default\" {",
+      "status": "covered",
+      "hits": [1, 0, 0, 0]
+    },
+    { "lineNumber": 157, "content": "\t\t\t\t\tcontinue", "status": "uncovered", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 158, "content": "\t\t\t\t}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 159, "content": "\t\t\t}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 160, "content": "\t\t\tcomplexity++", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 161, "content": "\t\t}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 162, "content": "\t}", "status": "not-coverable", "hits": [0, 0, 0, 0] },
+    { "lineNumber": 163, "content": "\treturn complexity", "status": "covered", "hits": [1, 0, 0, 0] },
+    { "lineNumber": 164, "content": "}", "status": "not-coverable", "hits": [0, 0, 0, 0] }
+  ],
+  "reports": [
+    { "name": "Tests from .", "path": "." },
+    { "name": "Cpp Tests (project)", "path": "demo_projects/cpp/project" },
+    { "name": "Csharp Tests (project)", "path": "demo_projects/csharp/project" },
+    { "name": "Go Tests (project)", "path": "demo_projects/go/project" }
+  ]
+}
+
 </script>
 
 	</body>

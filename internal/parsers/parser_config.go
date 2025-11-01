@@ -14,6 +14,7 @@ type ParserResult struct {
 	UnresolvedSourceFiles []string
 	SourceDirectory       string
 	Timestamp             *time.Time
+	ReportPattern         string
 }
 
 type FileCoverage struct {

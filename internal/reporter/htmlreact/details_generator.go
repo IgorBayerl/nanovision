@@ -77,6 +77,33 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 		b.logger.Warn("Could not find source file for details page", "file", fileNode.Path, "error", err)
 	}
 
+	// Find which report indices are relevant for this specific file, FIRST.
+	relevantReportIndices := make(map[int]struct{})
+	for _, lineMetric := range fileNode.Lines {
+		for reportIndex, hitCount := range lineMetric.ReportHits {
+			if hitCount > 0 {
+				relevantReportIndices[reportIndex] = struct{}{}
+			}
+		}
+	}
+
+	// Convert the map of relevant indices to a sorted slice for stable ordering.
+	var sortedIndices []int
+	for index := range relevantReportIndices {
+		sortedIndices = append(sortedIndices, index)
+	}
+	sort.Ints(sortedIndices)
+
+	// Build the final list of reports for the UI using only the relevant ones.
+	var reportsList []report
+	for _, reportIndex := range sortedIndices {
+		reportName := tree.ReportNames[reportIndex]
+		reportsList = append(reportsList, report{
+			Name: fmt.Sprintf("Report %d: %s", reportIndex+1, filepath.Base(reportName)),
+			Path: reportName,
+		})
+	}
+
 	detailsLines := make([]lineDetail, len(sourceLines))
 	for i, lineContent := range sourceLines {
 		lineNumber := i + 1
@@ -84,8 +111,15 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 		ld := lineDetail{LineNumber: lineNumber, Content: lineContent, Status: StatusNotCoverable}
 
 		if hasMetric && lineMetric.Hits >= 0 {
-			hits := lineMetric.Hits
-			ld.Hits = &hits
+			// Create the dense hits array that corresponds to the filtered reportsList
+			denseHits := make([]int, 0, len(sortedIndices))
+			if lineMetric.ReportHits != nil {
+				for _, reportIndex := range sortedIndices {
+					denseHits = append(denseHits, lineMetric.ReportHits[reportIndex])
+				}
+			}
+			ld.Hits = denseHits
+
 			ld.Status = StatusUncovered
 			if lineMetric.Hits > 0 {
 				ld.Status = StatusCovered
@@ -190,6 +224,7 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 		MetricDefinitions: b.buildMetricDefinitions(),
 		Methods:           detailsMethods,
 		Lines:             detailsLines,
+		Reports:           reportsList,
 	}, nil
 }
 
