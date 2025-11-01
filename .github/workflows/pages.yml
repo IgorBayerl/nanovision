@@ -1,0 +1,74 @@
+name: Docs and Example
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'scripts/**'
+      - 'docs/requirements.txt'
+      - '.github/actions/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build-docs
+
+  build_report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/build-report
+
+  assemble_and_deploy:
+    runs-on: ubuntu-latest
+    needs: [build_docs, build_report]
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Download docs
+        uses: actions/download-artifact@v4
+        with:
+          name: site-docs
+          path: public/docs
+
+      - name: Download reports
+        uses: actions/download-artifact@v4
+        with:
+          name: site-reports
+          path: public/reports
+
+      - name: Add simple index.html
+        run: |
+          cat > public/index.html <<'EOF'
+          <!doctype html><meta charset="utf-8">
+          <meta http-equiv="refresh" content="0; url=./docs/">
+          <title>Site</title>
+          <p><a href="./docs/">Docs</a> | <a href="./reports/">Reports</a></p>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4
