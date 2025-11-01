@@ -8,6 +8,7 @@ type SummaryTree struct {
 	SourceFiles []string        // List of original source directories provided by the user.
 	ReportFiles []string        // List of report files that were parsed.
 	ParserNames []string        // Name of the parser(s) used.
+	ReportNames []string        // Holds the list of reports, the index of an element needs to correspond to the index of LineMetrics.ReportHits
 }
 
 // DirNode represents a directory in the file system tree.

@@ -103,6 +103,7 @@ func parseReportFiles(logger *slog.Logger, appConfig *config.AppConfig, inputPai
 			}
 
 			result.SourceDirectory = pair.SourceDir
+			result.ReportPattern = pair.ReportPattern
 			parserResults = append(parserResults, result)
 			totalFilesParsed++
 			logger.Info("Successfully parsed file", "file", absFile)

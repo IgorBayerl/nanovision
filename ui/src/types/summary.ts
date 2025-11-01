@@ -87,11 +87,17 @@ export type SortDir = 'asc' | 'desc'
 export type LineStatus = 'covered' | 'uncovered' | 'not-coverable' | 'partial'
 
 export type DiffStatus = 'added' | 'removed' | 'unchanged'
+
+export interface Report {
+    name: string
+    path: string
+}
+
 export interface LineDetails {
     lineNumber: number
     content: string
     status: LineStatus
-    hits?: number
+    hits?: number[]
     branchInfo?: {
         covered: number
         total: number
@@ -109,4 +115,17 @@ export interface Method {
     startLine: number
     endLine: number
     metrics: Record<string, MethodMetric>
+}
+
+export interface DetailsV1 {
+    schemaVersion: 1
+    generatedAt: string
+    title: string
+    fileName: string
+    totals: Totals
+    metricDefinitions: MetricDefinitions
+    lines: LineDetails[]
+    metadata?: MetadataItem[]
+    methods?: Method[]
+    reports?: Report[]
 }
