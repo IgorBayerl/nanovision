@@ -1,5 +1,9 @@
 site_name: nanovision Docs
 site_url: https://igorbayerl.github.io/nanovision/
+
+repo_url: https://github.com/igorbayerl/nanovision
+repo_name: igorbayerl/nanovision
+edit_uri: edit/main/docs/
 theme:
   logo: imgs/icon.png
   favicon: imgs/icon.ico

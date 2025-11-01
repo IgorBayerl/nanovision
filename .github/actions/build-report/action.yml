@@ -1,0 +1,36 @@
+name: Build Self Coverage
+description: Run E2E and produce self-coverage report as artifact
+inputs:
+  go-version:
+    description: Go version
+    default: '1.25.x'
+  python-version:
+    description: Python version
+    default: '3.12'
+  retention-days:
+    description: Artifact retention (days) for non-PR runs
+    default: '7'
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Run E2E & generate self-coverage
+      shell: bash
+      run: python3 scripts/e2e_test.py --self-cover
+
+    # Upload only when NOT a PR (saves Actions storage on PR checks)
+    - name: Upload report bundle
+      if: ${{ github.event_name != 'pull_request' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: site-reports
+        path: ./reports/nanovision_self_coverage_full
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: error
