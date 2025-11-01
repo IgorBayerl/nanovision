@@ -1,9 +1,9 @@
+import { useMemo } from 'react'
 import CodeLine from '@/components/CodeLine'
 import SourceCodeHeader from '@/components/SourceCodeHeader'
 import type { DetailsV1 } from '@/lib/validation'
 import type { LineStatus } from '@/types/summary'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
-import { useMemo } from 'react'
 
 interface SourceCodeViewerProps {
     fileName: string

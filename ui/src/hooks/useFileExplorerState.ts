@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useKeyboardSearch } from '@/lib/useKeyboardSearch'
-import { useUrlState } from '@/lib/useUrlState'
+import { useKeyboardSearch } from '@/hooks/useKeyboardSearch'
+import { useUrlState } from '@/hooks/useUrlState'
 import type { FileNode, FilterRange, MetricKey, RiskFilter, SortDir, SortKey } from '@/types/summary'
 
 const getDefaultEnabledMetrics = (metrics: string[]) => metrics.slice(0, 3)
