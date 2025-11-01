@@ -6,7 +6,7 @@ inputs:
     default: '3.12'
   retention-days:
     description: Artifact retention (days) for non-PR runs
-    default: '7'
+    default: '1'
 runs:
   using: composite
   steps:
@@ -20,9 +20,16 @@ runs:
 
     - name: Build MkDocs
       shell: bash
-      run: mkdocs build --strict -f docs/mkdocs.yml -d out/docs
+      run: mkdocs build --strict -f docs/mkdocs.yml
 
-    # Upload only when NOT a PR (saves Actions storage on PR checks)
+    - name: Repack docs to out/docs
+      shell: bash
+      run: |
+        rm -rf out/docs
+        mkdir -p out/docs
+        shopt -s dotglob
+        mv docs/site/* out/docs/
+        
     - name: Upload docs bundle
       if: ${{ github.event_name != 'pull_request' }}
       uses: actions/upload-artifact@v4
