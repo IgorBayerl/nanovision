@@ -45,6 +45,19 @@ func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree
 		},
 	}
 
+	// Create a stable, ordered list of report sources to use as indices
+	// Using the report pattern as a unique key for the report group
+	// This prevents reports that cover the same part of the project to merge
+	reportNameMap := make(map[string]int)
+	for _, result := range results {
+		reportKey := result.ReportPattern
+		if _, exists := reportNameMap[reportKey]; !exists {
+			reportNameMap[reportKey] = len(tree.ReportNames)
+			tree.ReportNames = append(tree.ReportNames, reportKey)
+		}
+	}
+	numReports := len(tree.ReportNames)
+
 	uniqueParsers := make(map[string]struct{})
 	for _, result := range results {
 		if result.ParserName != "" {
@@ -84,8 +97,10 @@ func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree
 				continue
 			}
 
+			reportKey := result.ReportPattern
+			reportIndex := reportNameMap[reportKey]
 			fileNode := b.findOrCreateFileNode(tree.Root, finalPath, result.SourceDirectory)
-			b.mergeLineMetrics(fileNode, fileCov.Lines)
+			b.mergeLineMetrics(fileNode, fileCov.Lines, reportIndex, numReports)
 		}
 	}
 
@@ -128,12 +143,19 @@ func (b *Builder) findOrCreateFileNode(startNode *model.DirNode, filePath string
 	return currentNode.Files[fileName]
 }
 
-func (b *Builder) mergeLineMetrics(node *model.FileNode, newLines map[int]model.LineMetrics) {
+func (b *Builder) mergeLineMetrics(node *model.FileNode, newLines map[int]model.LineMetrics, reportIndex int, numReports int) {
 	for lineNum, newLineMetric := range newLines {
 		existing := node.Lines[lineNum]
+
+		if existing.ReportHits == nil {
+			existing.ReportHits = make([]int, numReports)
+		}
+
 		existing.Hits += newLineMetric.Hits
+
+		existing.ReportHits[reportIndex] = newLineMetric.Hits
+
 		existing.CoveredBranches += newLineMetric.CoveredBranches
-		// Total branches should not be summed - the last value from a report is authoritative.
 		if newLineMetric.TotalBranches > 0 {
 			existing.TotalBranches = newLineMetric.TotalBranches
 		}

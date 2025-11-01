@@ -1,7 +1,7 @@
-import { GitBranch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { DiffStatus, LineDetails, LineStatus } from '@/types/summary'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
+import { GitBranch } from 'lucide-react'
 
 const squareBgClasses: Record<LineStatus, string> = {
     covered: 'bg-covered',
@@ -29,7 +29,11 @@ const diffSymbolClasses: Partial<Record<DiffStatus, string>> = {
 
 const gridTemplateColumns = '1.5rem 4rem 4rem 1.5rem 1.5rem 1fr'
 
-export default function CodeLine({ lineNumber, content, status, hits, branchInfo, diffStatus }: LineDetails) {
+interface CodeLineProps extends Omit<LineDetails, 'hits'> {
+    hits?: number
+}
+
+export default function CodeLine({ lineNumber, content, status, hits, branchInfo, diffStatus }: CodeLineProps) {
     const hasHitCount = typeof hits === 'number' && hits > 0
     const diffSymbol = diffStatus ? diffSymbols[diffStatus] : undefined
     const diffClass = diffStatus ? diffSymbolClasses[diffStatus] : undefined
@@ -43,7 +47,6 @@ export default function CodeLine({ lineNumber, content, status, hits, branchInfo
             >
                 {/* 1. Status Color Square */}
                 <div className="flex items-center justify-center">
-                    {/* Your new styling: a vertical bar instead of a square */}
                     <div className={cn('h-full w-2', squareBgClasses[status])} />
                 </div>
 

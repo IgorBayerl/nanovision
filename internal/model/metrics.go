@@ -15,7 +15,15 @@ type CoverageMetrics struct {
 
 // LineMetrics holds the coverage data for a single line of code.
 type LineMetrics struct {
-	Hits            int
+	// Hits stores the SUM of hits from all merged reports. This is used for
+	// general aggregation and reporters that don't need per-report details.
+	Hits int
+
+	// ReportHits stores the individual hit count from each report. The index
+	// corresponds to the ReportNames slice in the SummaryTree.
+	// This is used by reporters that support per-report filtering (e.g., HTML).
+	ReportHits []int
+
 	CoveredBranches int
 	TotalBranches   int
 }
