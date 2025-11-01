@@ -48,7 +48,6 @@ nav:
       - 'Summary Page Refactor Plan': 'roadmap/new-react-reporter/feature-plan-summary-page-refactor.md'
       - 'UI Development Guide': 'roadmap/new-react-reporter/ui-development-guide.md'
     - 'Hierarchical Components': 'roadmap/components.md'
-    - 'History and Delta Coverage': 'roadmap/history-coverage.md'
     - 'Traceable Reports': 'roadmap/trace-reports.md'
     - 'Live Reload (Watch Mode)': 'roadmap/watch-mode.md'
   - 'Contributing': 'contributing.md'
