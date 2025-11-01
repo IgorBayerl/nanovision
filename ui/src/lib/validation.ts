@@ -101,11 +101,16 @@ export function validateSummaryData(data: unknown) {
 const lineStatusSchema = z.enum(['covered', 'uncovered', 'not-coverable', 'partial'])
 const diffStatusSchema = z.enum(['added', 'removed', 'unchanged'])
 
+const reportSchema = z.object({
+    name: z.string(),
+    path: z.string(),
+})
+
 const lineDetailsSchema = z.object({
     lineNumber: z.number().int().positive(),
     content: z.string(),
     status: lineStatusSchema,
-    hits: z.number().int().optional(),
+    hits: z.array(z.number().int()).optional(),
     branchInfo: z
         .object({
             covered: z.number().int(),
@@ -140,6 +145,7 @@ export const detailsV1Schema = z.object({
     lines: z.array(lineDetailsSchema),
     metadata: z.array(metadataItemSchema).optional(),
     methods: z.array(methodSchema).optional(),
+    reports: z.array(reportSchema).optional(),
 })
 
 export type DetailsV1 = z.infer<typeof detailsV1Schema>
