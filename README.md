@@ -20,21 +20,22 @@ The reports show the coverage quotas and also visualize which lines of your sour
 
 **nanovision** supports merging several coverage files into a single report, giving you a unified view of your project's test coverage across different test suites (e.g., unit and integration tests).
 
-Originally a Go port of the excellent [ReportGenerator](https://github.com/danielpalme/ReportGenerator) by Daniel Palme, **nanovision** has evolved into something different. Built in Go, it focuses on performance, simplicity, and a clean architecture tailored for today’s development workflows.
+Originally a Go rewrite of the excellent [ReportGenerator](https://github.com/danielpalme/ReportGenerator) by Daniel Palme, **nanovision** has evolved into something different. Built in Go, it focuses on performance, simplicity, and a fresh clean architecture focused on today's workflow.
 
 ![alt text](docs/docs/imgs/nanovision_input_output.png)
 
-## Motivation
+---
 
-[ReportGenerator](https://github.com/danielpalme/ReportGenerator) is a mature and feature-rich tool that has served the .NET ecosystem for over **14 years**. Its robustness and design inspired this project.
+Here is an [example report](https://igorbayerl.github.io/nanovision/reports/), its a self coverage report of the **nanovision** project.
 
-The motivations for creating **nanovision**:
+For more details check the [docs](https://igorbayerl.github.io/nanovision/docs/)
 
-1.  **For Study:** To explore the architectural challenges of translating a large project to a new language while keeping the result idiomatic and aligned with modern best practices of the target language.
-2.  **Dependency-Free:** A lightweight, native binary that runs anywhere without external runtimes—ideal for containers and CI/CD pipelines.
-3.  **Modern Extensibility:** Designed with a clean, multi-stage pipeline in Go, enabling rapid extension for new report formats and language-specific analysis.
 
-## Screenshots
+---
+
+
+
+## Screenshots 
 
 
 ### HTML Report
@@ -49,30 +50,30 @@ Details
 
 While nanovision began by mirroring ReportGenerator’s capabilities, it is now diverging with Go-native enhancements and a growing list of planned features.
 
-| Feature Category   | Feature               | ReportGenerator | nanovision | Notes                  |
-|:-------------------|:----------------------|:---------------:|:----------:|:-----------------------|
-| **Input Formats**  | Cobertura             |        ✅        |     ✅      | Core support.          |
-|                    | Go Cover              |        ❌        |     ✅      |                        |
-|                    | OpenCover             |        ✅        |     ❌      | Planned.               |
-|                    | JaCoCo                |        ✅        |     ❌      | Planned.               |
-|                    | Merge Reports         |        ✅        |     ✅      |                        |
-| **Output Formats** | HTML (SPA)            |        ✅        |     ✅      | Angular frontend.      |
-|                    | TextSummary           |        ✅        |     ✅      | Fully supported.       |
-|                    | lcov                  |        ✅        |     ✅      | Fully supported.       |
-|                    | RawJSON               |        ✅        |     ✅      | Coming soon.           |
-|                    | Badge                 |        ✅        |     ❌      | Coming soon.           |
-|                    | XML                   |        ✅        |     ❌      | Coming soon.           |
-| **Core Features**  | File Filtering        |        ✅        |     ✅      |                        |
-|                    | Branch Coverage       |        ✅        |     ✅      |                        |
-|                    | Method Coverage       |        ✅        |     ✅      |                        |
-|                    | Cyclomatic Complexity |        ✅        |     ✅      | Go-native; C++/C# WIP. |
-|                    | History Charts        |        ✅        |     ❌      | Coming soon.           |
-|                    | Patch Coverage        |        ✅        |     ❌      | Coming soon.           |
-|                    | Risk Hotspots         |        ✅        |     ❌      | Coming soon.           |
+| Feature Category   | Feature               | nanovision | Notes          |
+|:-------------------|:----------------------|:----------:|:---------------|
+| **Input Formats**  | Cobertura             |     ✅      |                |
+|                    | Go Cover              |     ✅      |                |
+|                    | OpenCover             |     ❌      | Planned.       |
+|                    | JaCoCo                |     ❌      | Planned.       |
+|                    | Merge Reports         |     ✅      |                |
+| **Output Formats** | HTML (SPA)            |     ✅      |                |
+|                    | TextSummary           |     ✅      |                |
+|                    | lcov                  |     ✅      |                |
+|                    | RawJSON               |     ✅      |                |
+|                    | Badge                 |     ❌      | Coming soon.   |
+|                    | XML                   |     ❌      | Coming soon.   |
+| **Core Features**  | File Filtering        |     ✅      |                |
+|                    | Report Selection      |     ✅      |                |
+|                    | Branch Coverage       |     ✅      |                |
+|                    | Method Coverage       |     ✅      |                |
+|                    | Cyclomatic Complexity |     ✅      | Go-native; C++ |
+|                    | Patch Coverage        |     ❌      | Coming soon.   |
+|                    | Risk Hotspots         |     ❌      | Coming soon.   |
 
 ## Command Line Interface
 
-nanovision mirrors the familiar command-line interface of ReportGenerator while following idiomatic Go CLI patterns.
+nanovision mirrors the familiar command-line interface of ReportGenerator while adding a config file as well `nanovision.yaml`.
 
 | Argument      | nanovision | Description                                   |
 |:--------------|:----------:|:----------------------------------------------|
@@ -84,97 +85,56 @@ nanovision mirrors the familiar command-line interface of ReportGenerator while 
 | `verbosity`   |     ✅      | Log level (e.g., Verbose, Info, Error).       |
 | `tag`         |     ✅      | Optional label for the report.                |
 | `title`       |     ✅      | Custom report title.                          |
-| `historydir`  |     ❌      | TODO                                          |
+
+### Config file example
+```yaml
+# A list of coverage report files to parse for the merged report.
+reports:
+  - "reports/nanovision_self_coverage/coverage-unit.out"
+  - "reports/nanovision_self_coverage/coverage-integration.out"
+  - "demo_projects/cpp/report/gcov/branch-probabilities/*.gcov"
+  - "demo_projects/csharp/report/cobertura/cobertura.xml"
+  - "demo_projects/go/report/gocover/coverage.out"
+
+# A list of source code directories. The order must match the `reports` list.
+source_dirs:
+  - "."
+  - "."
+  - "demo_projects/cpp/project"
+  - "demo_projects/csharp/project"
+  - "demo_projects/go/project"
+
+# The directory where the final self-coverage report will be saved.
+output_dir: "reports/nanovision_self_coverage_full"
+
+# The types of reports to generate.
+report_types:
+  - "Html"
+  - "TextSummary"
+  - "Lcov"
+  - "RawJson"
+
+# The title for the generated HTML report.
+title: "nanovision Self-Coverage (Full Merged)"
+
+# Logging verbosity for the self-coverage run.
+verbosity: "Verbose"
+
+# A list of glob patterns for files and directories to exclude from the report.
+ignore_files:
+  - "tree-sitter/**"       # Exclude all downloaded tree-sitter grammars
+  - "**/*_test.go"         # Exclude test files themselves from coverage metrics
+  - "tools/**"             # Exclude helper tools
+  - "vendor/**"            # Exclude vendored dependencies
+```
 
 ## Why "nanovision"?
 
-The name **nanovision** combines **“Adler”** (German for **eagle**) with **coverage**, evoking the image of a high-flying, sharp-eyed bird analyzing your entire codebase. It reflects the project's mission: to help developers detect weaknesses and gaps in their test coverage with clarity and accuracy.
+Reference to Crysis thermal vision capability, used in game to spot threats.
 
 ## How to Contribute
 
-This project is actively evolving. Your contributions are highly valued! Whether you're adding new input formats, improving a language processor, or enhancing the documentation, I would love your help.
-
-### System Design
-
-nanovision is built around a clean, four-stage pipeline that makes it easy to extend and maintain.
-
-*   **1. Parsing (`internal/parsers`):** Each parser has one job: to translate a specific report format (like Cobertura XML) into a standardized, raw `ParserResult` struct. It extracts line and branch hits but does no further analysis.
-
-*   **2. Tree Building (`internal/tree`):** The `TreeBuilder` takes all the `ParserResult` and merges them into a single, hierarchical `SummaryTree`. This tree mirrors the project's file structure and correctly sums coverage data for files that appear in multiple reports. The tree is still "raw" at this stage with just Line and Branch coverage extracted from the report.
-
-*   **3. Hydration (`internal/hydrator`):** The `Hydrator` takes the raw tree and enriches it. For each file, it reads the source code, uses a `language.Processor` to perform static analysis (like finding method boundaries and calculating cyclomatic complexity), and populates the tree with this rich data.
-
-*   **4. Reporting (`internal/reporter`):** The final, hydrated `SummaryTree` is passed to one or more `Reporter` components. Each reporter is responsible for transforming this complete data model into a user-facing format, like an HTML report or a text summary.
-
-This modular design ensures that each component has a single and clear responsibility.
-
-
-## Getting Started & Development
-
-This section guides you through setting up the project for local development and contribution.
-
-### Development Environment Prerequisites
-
-To work on this project, you will need certain tools installed depending on what you want to do.
-
-*   **Go (Required):** You must have Go version 1.23 or higher installed to build and run the core nanovision application.
-*   **Python (Optional):** Needed to run the `generate_reports.py` script located in the `Testprojects` directory. This script is used to generate sample coverage reports for testing.
-*   **Node.js & Angular CLI (Optional):** If you plan to modify the frontend of the HTML report, you will need Node.js and the Angular CLI to build the Angular single-page application located in the `internal/assets/angular_frontend_spa` directory.
-*   **.NET SDK (Optional):** Required by the `generate_reports.py` script to build the C# test project and generate its coverage data.
-
-### 1. Clone the Repository
-
-First, clone the project to your local machine using git:
-
-```bash
-git clone https://github.com/IgorBayerl/nanovision.git
-cd nanovision
-```
-
-### 2. Run Locally
-
-You can run the application directly without building a binary using `go run`. This is the recommended approach for development and quick testing.
-
-To see all available command-line flags:
-```bash
-go run ./cmd/main.go --help
-```
-
-To run with a sample report (you may need to generate it first using the `generate_reports.py` script):
-```bash
-go run ./cmd/main.go --report="Testprojects/Go/coverage.cobertura.xml" --output="reports/go_report"
-```
-
-### 3. Build the Binary
-
-To compile the project into a single executable binary, use the `go build` command:
-
-Linux / Mac
-```bash
-go build -o nanovision ./cmd/main.go
-```
-
-Windows
-```powershell
-go build -o nanovision.exe ./cmd/main.go
-```
-This will create an executable file named `nanovision` (or `nanovision.exe` on Windows) in the root directory. You can then run it directly:
-
-```bash
-./nanovision --report="path/to/your/coverage.xml" --output="your_report_directory"
-```
-
-### Feature Requests
-
-If you're missing a feature from the original ReportGenerator or have new ideas, please [open an issue](https://github.com/IgorBayerl/nanovision/issues) and include:
-
-1. Feature description
-2. Reference (link or example from ReportGenerator)
-3. Sample CLI usage
-4. Sample input/output if possible
-
-This context makes implementation much smoother.
-
+Check the [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
-- **nanovision** is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0)
+**nanovision** is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0)
