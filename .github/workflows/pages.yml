@@ -3,12 +3,9 @@ name: Docs and Example
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'docs/**'
-      - 'scripts/**'
-      - 'docs/requirements.txt'
-      - '.github/actions/**'
-      - '.github/workflows/pages.yml'
+    paths-ignore: 
+      - '.devcontainer/**'
+      - 'vendor/**'
   workflow_dispatch: {}
 
 permissions:
