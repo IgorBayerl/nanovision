@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/parsers"
 	"github.com/IgorBayerl/nanovision/internal/utils"
 )

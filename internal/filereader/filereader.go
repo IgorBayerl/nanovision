@@ -20,7 +20,6 @@ type Reader interface {
 }
 
 // DetectEncoding attempts to detect the encoding of a file by sniffing its BOM.
-// It is moved here to break the import cycle with the utils package.
 func DetectEncoding(filePath string) (encoding.Encoding, error) {
 	f, err := os.Open(filePath)
 	if err != nil {

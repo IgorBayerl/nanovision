@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/filereader"
 )
 
 // walk is a local, recursive helper that mimics filepath.WalkDir but uses our mockable filereader.Reader interface.
