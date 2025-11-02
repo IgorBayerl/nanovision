@@ -57,16 +57,16 @@ export function TreeRow({
 
     const interactiveProps = isFolder
         ? {
-            role: 'button',
-            tabIndex: 0,
-            onClick: (e: React.MouseEvent) => onToggleFolder(node.id, e),
-            onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    onToggleFolder(node.id, e)
-                }
-            },
-        }
+              role: 'button',
+              tabIndex: 0,
+              onClick: (e: React.MouseEvent) => onToggleFolder(node.id, e),
+              onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onToggleFolder(node.id, e)
+                  }
+              },
+          }
         : {}
 
     const totalMetricsWidth = enabledMetrics.reduce(
@@ -85,7 +85,7 @@ export function TreeRow({
                         'group-hover:bg-muted',
                         // This makes only this section clickable and focusable for folders
                         isFolder &&
-                        'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                            'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                     )}
                     {...interactiveProps}
                 >

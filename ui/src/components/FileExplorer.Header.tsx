@@ -111,8 +111,8 @@ export default function FileExplorerHeader({
                                     >
                                         <span className="inline-flex h-3 w-3 items-center justify-center">
                                             {typeof sortKey === 'object' &&
-                                                sortKey.metric === m.id &&
-                                                sortKey.subMetric === sub.id
+                                            sortKey.metric === m.id &&
+                                            sortKey.subMetric === sub.id
                                                 ? sortDir === 'asc'
                                                     ? '▲'
                                                     : '▼'
