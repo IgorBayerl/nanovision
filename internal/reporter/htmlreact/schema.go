@@ -39,12 +39,12 @@ type methodsFullyCoveredDetail struct {
 type metricsMap map[string]any
 
 type totals struct {
-	LineCoverage            *lineCoverageDetail        `json:"lineCoverage,omitempty"`
-	BranchCoverage          *branchCoverageDetail      `json:"branchCoverage,omitempty"`
-	MethodsCovered          *methodsCoveredDetail      `json:"methodsCovered,omitempty"`
-	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methodsFullyCovered,omitempty"`
-	MethodBranchCoverage    *branchCoverageDetail      `json:"methodBranchCoverage,omitempty"`
-	MaxCyclomaticComplexity *lineCoverageDetail        `json:"maxCyclomaticComplexity,omitempty"`
+	LineCoverage            *lineCoverageDetail        `json:"line_coverage,omitempty"`
+	BranchCoverage          *branchCoverageDetail      `json:"branch_coverage,omitempty"`
+	MethodsCovered          *methodsCoveredDetail      `json:"methods_covered,omitempty"`
+	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
+	MethodBranchCoverage    *branchCoverageDetail      `json:"method_branch_coverage,omitempty"`
+	MaxCyclomaticComplexity *lineCoverageDetail        `json:"max_cyclomatic_complexity,omitempty"`
 	Files                   int                        `json:"files"`
 	Folders                 int                        `json:"folders"`
 	Statuses                statuses                   `json:"statuses,omitempty"`

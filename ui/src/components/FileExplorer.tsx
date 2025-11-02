@@ -58,7 +58,7 @@ export default function FileExplorer({ tree, availableMetrics, metricDefinitions
         (sum, metric) => sum + (metric.definition?.subMetrics.reduce((s, c) => s + c.width, 0) ?? 0),
         0,
     )
-    const totalTableWidth = `calc(max(100%, 300px + ${totalMetricsWidth}px))`
+    const totalTableWidth = `calc(max(100%, 450px + ${totalMetricsWidth}px))`
 
     return (
         <Card className="rounded-md">
