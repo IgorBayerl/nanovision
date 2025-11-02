@@ -41,10 +41,10 @@ verbosity: "Verbose"
 # This is crucial for ignoring generated files and the vendored tree-sitter grammars,
 # which are not part of the core tool's logic.
 ignore_files:
-  - "tree-sitter/**"       # Exclude all downloaded tree-sitter grammars
-  - "**/*_test.go"         # Exclude test files themselves from coverage metrics
-  - "tools/**"             # Exclude helper tools
-  - "vendor/**"            # Exclude vendored dependencies
+  - "tree-sitter/**"
+  - "**/*_test.go"
+  - "scripts/**"
+  - "vendor/**"
   - "internal/analyzer/analyzer.go"
   - "internal/filesystem/filesystem.go"
   - "internal/reporter/context.go"
