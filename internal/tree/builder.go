@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/IgorBayerl/nanovision/filereader"
-	"github.com/IgorBayerl/nanovision/filtering"
+	"github.com/IgorBayerl/nanovision/internal/filereader"
+	"github.com/IgorBayerl/nanovision/internal/filtering"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/parsers"
 	"github.com/IgorBayerl/nanovision/internal/utils"

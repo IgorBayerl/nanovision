@@ -14,13 +14,14 @@ import (
 
 	"github.com/IgorBayerl/fsglob"
 
-	"github.com/IgorBayerl/nanovision/analyzer"
-	cpp "github.com/IgorBayerl/nanovision/analyzer/cpp"
-	golang "github.com/IgorBayerl/nanovision/analyzer/go"
-	"github.com/IgorBayerl/nanovision/filereader"
 	"github.com/IgorBayerl/nanovision/internal/aggregator"
+	"github.com/IgorBayerl/nanovision/internal/analyzer"
+	cpp "github.com/IgorBayerl/nanovision/internal/analyzer/cpp"
+	golang "github.com/IgorBayerl/nanovision/internal/analyzer/go"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/enricher"
+	"github.com/IgorBayerl/nanovision/internal/filereader"
+	"github.com/IgorBayerl/nanovision/internal/logging"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/parsers"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_cobertura"
@@ -31,7 +32,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
 	"github.com/IgorBayerl/nanovision/internal/tree"
-	"github.com/IgorBayerl/nanovision/logging"
 )
 
 func parseAndBindFlags() *config.RawConfigInput {

@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/IgorBayerl/nanovision/filtering"
-	"github.com/IgorBayerl/nanovision/logging"
+	"github.com/IgorBayerl/nanovision/internal/filtering"
+	"github.com/IgorBayerl/nanovision/internal/logging"
 	"gopkg.in/yaml.v3"
 )
 

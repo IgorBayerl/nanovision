@@ -9,7 +9,7 @@ import (
 	sitter "github.com/IgorBayerl/nanovision/tree-sitter/go-tree-sitter"
 	tscpp "github.com/IgorBayerl/nanovision/tree-sitter/tree-sitter-cpp/bindings/go"
 
-	"github.com/IgorBayerl/nanovision/analyzer"
+	"github.com/IgorBayerl/nanovision/internal/analyzer"
 )
 
 type CppAnalyzer struct{}
