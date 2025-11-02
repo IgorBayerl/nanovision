@@ -29,6 +29,12 @@ export interface Totals {
     files: number
     folders: number
     statuses?: Statuses
+    line_coverage?: CoverageDetail
+    branch_coverage?: CoverageDetail
+    methods_covered?: CoverageDetail
+    methods_fully_covered?: CoverageDetail
+    method_branch_coverage?: CoverageDetail
+    max_cyclomatic_complexity?: CoverageDetail
     [key: string]: CoverageDetail | number | Statuses | undefined
 }
 

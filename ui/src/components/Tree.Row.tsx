@@ -76,7 +76,7 @@ export function TreeRow({
 
     return (
         <div className={cn('group grid w-full items-center', isFolder ? 'font-bold text-foreground/70' : '')}>
-            <div className="grid h-full" style={{ gridTemplateColumns: `minmax(300px, 1fr) ${totalMetricsWidth}px` }}>
+            <div className="grid h-full" style={{ gridTemplateColumns: `minmax(450px, 1fr) ${totalMetricsWidth}px` }}>
                 <div
                     className={cn(
                         'flex min-w-0 items-center gap-2 border-border border-r',
