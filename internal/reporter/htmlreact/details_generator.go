@@ -140,8 +140,6 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 	var totalMethodBranches, coveredMethodBranches int = 0, 0
 
 	for _, method := range fileNode.Methods {
-		lineCovPct := utils.CalculatePercentage(method.LinesCovered, method.LinesValid, 0)
-		branchCovPct := utils.CalculatePercentage(method.BranchesCovered, method.BranchesValid, 0)
 		md := methodDetail{
 			Name:      method.Name,
 			StartLine: method.StartLine,
@@ -149,24 +147,16 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 			Metrics:   make(map[string]methodMetric),
 		}
 
-		lineMetric := methodMetric{Value: utils.FormatPercentage(lineCovPct, 0)}
-		lineRisk := getRiskStatus(lineCovPct)
-		if lineRisk == RiskDanger || lineRisk == RiskWarning {
-			lineMetric.Status = lineRisk
-		}
-		md.Metrics["lineCoverage"] = lineMetric
+		lineCovPct := utils.CalculatePercentage(method.LinesCovered, method.LinesValid, 0)
+		md.Metrics["line_coverage"] = methodMetric{Value: utils.FormatPercentage(lineCovPct, 0)}
 
 		if method.BranchesValid > 0 {
-			branchMetric := methodMetric{Value: utils.FormatPercentage(branchCovPct, 0)}
-			branchRisk := getRiskStatus(branchCovPct)
-			if branchRisk == RiskDanger || branchRisk == RiskWarning {
-				branchMetric.Status = branchRisk
-			}
-			md.Metrics["branchCoverage"] = branchMetric
+			branchCovPct := utils.CalculatePercentage(method.BranchesCovered, method.BranchesValid, 0)
+			md.Metrics["branch_coverage"] = methodMetric{Value: utils.FormatPercentage(branchCovPct, 0)}
 		}
 
 		if method.CyclomaticComplexity != nil {
-			md.Metrics["cyclomaticComplexity"] = methodMetric{Value: fmt.Sprintf("%d", *method.CyclomaticComplexity)}
+			md.Metrics["cyclomatic_complexity"] = methodMetric{Value: fmt.Sprintf("%d", *method.CyclomaticComplexity)}
 		}
 		detailsMethods = append(detailsMethods, md)
 
@@ -179,18 +169,22 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 	}
 	sort.Slice(detailsMethods, func(i, j int) bool { return detailsMethods[i].StartLine < detailsMethods[j].StartLine })
 
-	fileMetrics, fileStatuses := b.buildMetricsMap(fileNode.Metrics)
-	totalsData := totals{Files: 1, Folders: 0, Statuses: fileStatuses}
-	if lc, ok := fileMetrics["lineCoverage"].(lineCoverageDetail); ok {
+	fileMetrics := b.buildMetricsMap(fileNode.Metrics)
+	totalsData := totals{
+		Files:    1,
+		Folders:  0,
+		Statuses: b.convertStatuses(fileNode.Statuses),
+	}
+	if lc, ok := fileMetrics["line_coverage"].(lineCoverageDetail); ok {
 		totalsData.LineCoverage = &lc
 	}
-	if bc, ok := fileMetrics["branchCoverage"].(branchCoverageDetail); ok {
+	if bc, ok := fileMetrics["branch_coverage"].(branchCoverageDetail); ok {
 		totalsData.BranchCoverage = &bc
 	}
-	if mc, ok := fileMetrics["methodsCovered"].(methodsCoveredDetail); ok {
+	if mc, ok := fileMetrics["methods_covered"].(methodsCoveredDetail); ok {
 		totalsData.MethodsCovered = &mc
 	}
-	if mfc, ok := fileMetrics["methodsFullyCovered"].(methodsFullyCoveredDetail); ok {
+	if mfc, ok := fileMetrics["methods_fully_covered"].(methodsFullyCoveredDetail); ok {
 		totalsData.MethodsFullyCovered = &mfc
 	}
 
@@ -202,7 +196,6 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 			Total:      totalMethodBranches,
 			Percentage: methodBranchPct,
 		}
-		fileStatuses["methodBranchCoverage"] = getRiskStatus(methodBranchPct)
 	}
 
 	if maxCyclo > 0 {

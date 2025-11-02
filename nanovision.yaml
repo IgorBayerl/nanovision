@@ -49,3 +49,20 @@ ignore_files:
   - "internal/filesystem/filesystem.go"
   - "internal/reporter/context.go"
   - "internal/testutil/**"
+
+
+# Risk Status Thresholds
+# Defines the percentage ranges for 'warning' status.
+# - Percentages BELOW the minimum are marked as 'danger'.
+# - Percentages WITHIN the range (inclusive) are 'warning'.
+# - Percentages ABOVE the maximum are 'safe'.
+#
+# Format: "min..max" (e.g., "60..75")
+# Metric keys must be in snake_case.
+# If a metric is not listed here, it will not have a status indicator.
+#
+status_bands:
+  line_coverage: "60..75"
+  branch_coverage: "50..70"
+  # methods_covered: "60..80"
+  methods_fully_covered: "40..60"
