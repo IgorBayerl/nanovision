@@ -33,7 +33,7 @@ export default function FileExplorerHeader({
             <div
                 className="grid"
                 style={{
-                    gridTemplateColumns: `minmax(300px, 1fr) ${totalMetricsWidth}px`,
+                    gridTemplateColumns: `minmax(450px, 1fr) ${totalMetricsWidth}px`,
                 }}
             >
                 <div

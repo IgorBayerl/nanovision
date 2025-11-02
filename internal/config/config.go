@@ -4,12 +4,87 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/IgorBayerl/nanovision/internal/filtering"
 	"github.com/IgorBayerl/nanovision/internal/logging"
 	"gopkg.in/yaml.v3"
 )
+
+// -------- Status bands parsing ----------
+// Band is an inclusive range [Min, Max].
+type Band struct {
+	Min float64 `yaml:"min"`
+	Max float64 `yaml:"max"`
+}
+
+// MetricKey is the canonical snake_case key used in config & model.
+type MetricKey string
+
+const (
+	LineCoverage        MetricKey = "line_coverage"
+	BranchCoverage      MetricKey = "branch_coverage"
+	MethodsCovered      MetricKey = "methods_covered"
+	MethodsFullyCovered MetricKey = "methods_fully_covered"
+)
+
+// StatusBands supports either:
+// 1) map form:    { "line_coverage": "60..75", ... }
+// 2) list form:   [ { "line_coverage": "60..75" }, ... ]
+type StatusBands map[MetricKey]Band
+
+func (sb *StatusBands) UnmarshalYAML(unmarshal func(any) error) error {
+	// Try map[string]string first
+	var m1 map[string]string
+	if err := unmarshal(&m1); err == nil && len(m1) > 0 {
+		bands := make(StatusBands, len(m1))
+		for k, v := range m1 {
+			b, err := parseBandString(v)
+			if err != nil {
+				return fmt.Errorf("status_bands.%s: %w", k, err)
+			}
+			bands[MetricKey(k)] = b
+		}
+		*sb = bands
+		return nil
+	}
+	// Try []map[string]string (list form)
+	var m2 []map[string]string
+	if err := unmarshal(&m2); err == nil && len(m2) > 0 {
+		bands := make(StatusBands)
+		for _, item := range m2 {
+			for k, v := range item {
+				b, err := parseBandString(v)
+				if err != nil {
+					return fmt.Errorf("status_bands.%s: %w", k, err)
+				}
+				bands[MetricKey(k)] = b
+			}
+		}
+		*sb = bands
+		return nil
+	}
+	// Empty or null is allowed (no bands configured)
+	*sb = make(StatusBands)
+	return nil
+}
+
+func parseBandString(s string) (Band, error) {
+	parts := strings.Split(s, "..")
+	if len(parts) != 2 {
+		return Band{}, fmt.Errorf("invalid band %q (expected \"min..max\")", s)
+	}
+	min, err1 := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
+	max, err2 := strconv.ParseFloat(strings.TrimSpace(parts[1]), 64)
+	if err1 != nil || err2 != nil {
+		return Band{}, fmt.Errorf("invalid numbers in %q", s)
+	}
+	if min < 0 || max > 100 || min > max {
+		return Band{}, fmt.Errorf("out of range in %q (require 0 <= min <= max <= 100)", s)
+	}
+	return Band{Min: min, Max: max}, nil
+}
 
 type ReportInputPair struct {
 	ReportPattern string
@@ -31,18 +106,19 @@ type RawConfigInput struct {
 }
 
 type AppConfig struct {
-	ReportPatterns []string `yaml:"reports"`
-	SourceDirs     []string `yaml:"source_dirs"`
-	ReportTypes    []string `yaml:"report_types"`
-	FileFilters    []string `yaml:"file_filters"`
-	OutputDir      string   `yaml:"output_dir"`
-	Tag            string   `yaml:"tag"`
-	Title          string   `yaml:"title"`
-	LogFile        string   `yaml:"log_file"`
-	LogFormat      string   `yaml:"log_format"`
-	Verbosity      string   `yaml:"verbosity"`
-	IgnoreFiles    []string `yaml:"ignore_files"`
-	ProjectRoot    string   `yaml:"-"`
+	ReportPatterns []string    `yaml:"reports"`
+	SourceDirs     []string    `yaml:"source_dirs"`
+	ReportTypes    []string    `yaml:"report_types"`
+	FileFilters    []string    `yaml:"file_filters"`
+	OutputDir      string      `yaml:"output_dir"`
+	Tag            string      `yaml:"tag"`
+	Title          string      `yaml:"title"`
+	LogFile        string      `yaml:"log_file"`
+	LogFormat      string      `yaml:"log_format"`
+	Verbosity      string      `yaml:"verbosity"`
+	IgnoreFiles    []string    `yaml:"ignore_files"`
+	ProjectRoot    string      `yaml:"-"`
+	StatusBands    StatusBands `yaml:"status_bands"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel

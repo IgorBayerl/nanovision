@@ -31,6 +31,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/reporter/lcov"
 	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
+	"github.com/IgorBayerl/nanovision/internal/status"
 	"github.com/IgorBayerl/nanovision/internal/tree"
 )
 
@@ -149,6 +150,32 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 	return nil
 }
 
+func deriveCapabilities(tree *model.SummaryTree) status.Capabilities {
+	caps := status.Capabilities{}
+	var walk func(n *model.DirNode)
+	walk = func(n *model.DirNode) {
+		if n.Metrics.BranchesValid > 0 {
+			caps.HasBranchCoverage = true
+		}
+		if n.Metrics.MethodsValid > 0 {
+			caps.HasMethodCoverage = true
+		}
+		for _, c := range n.Subdirs {
+			walk(c)
+		}
+		for _, f := range n.Files {
+			if f.Metrics.BranchesValid > 0 {
+				caps.HasBranchCoverage = true
+			}
+			if f.Metrics.MethodsValid > 0 {
+				caps.HasMethodCoverage = true
+			}
+		}
+	}
+	walk(tree.Root)
+	return caps
+}
+
 // executePipeline orchestrates the report generation process from start to finish.
 //
 // The function attempts to parse each report file provided by the user. If an
@@ -206,6 +233,11 @@ func executePipeline(appConfig *config.AppConfig) error {
 	logger.Info("ENRICH stage completed successfully.")
 
 	aggregator.AggregateMetricsAfterEnrichment(summaryTree)
+
+	logger.Info("Executing ANNOTATE stage...")
+	caps := deriveCapabilities(summaryTree)
+	status.Annotate(summaryTree, appConfig.StatusBands, caps)
+	logger.Info("ANNOTATE stage completed successfully.")
 
 	logger.Info("Executing REPORT stage...")
 	return generateReports(appConfig, summaryTree)

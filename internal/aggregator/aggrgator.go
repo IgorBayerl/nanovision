@@ -10,7 +10,9 @@ import "github.com/IgorBayerl/nanovision/internal/model"
 func AggregateMetricsAfterEnrichment(tree *model.SummaryTree) {
 	// The recursive call on the root node will calculate and aggregate all metrics
 	// from the bottom up. The return value is the final, correct total for the project.
-	tree.Metrics = aggregateNodeMetrics(tree.Root)
+	totalMetrics := aggregateNodeMetrics(tree.Root)
+	tree.Metrics = totalMetrics
+	tree.Root.Metrics = totalMetrics // This ensures the root node itself has the final aggregated metrics.
 }
 
 // aggregateNodeMetrics performs a post-order traversal to correctly sum all metrics.
