@@ -8,7 +8,7 @@ import (
 	sitter "github.com/IgorBayerl/nanovision/tree-sitter/go-tree-sitter"
 	tsgo "github.com/IgorBayerl/nanovision/tree-sitter/tree-sitter-go/bindings/go"
 
-	"github.com/IgorBayerl/nanovision/analyzer"
+	"github.com/IgorBayerl/nanovision/internal/analyzer"
 )
 
 type GoAnalyzer struct{}

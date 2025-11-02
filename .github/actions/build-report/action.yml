@@ -9,7 +9,7 @@ inputs:
     default: '3.12'
   retention-days:
     description: Artifact retention (days) for non-PR runs
-    default: '7'
+    default: '1'
 runs:
   using: composite
   steps:

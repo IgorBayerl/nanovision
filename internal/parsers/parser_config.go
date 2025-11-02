@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/IgorBayerl/nanovision/filtering"
+	"github.com/IgorBayerl/nanovision/internal/filtering"
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 

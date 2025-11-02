@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/parsers"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_cobertura"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gocover"

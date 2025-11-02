@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/parsers"
 )
 

@@ -45,3 +45,7 @@ ignore_files:
   - "**/*_test.go"         # Exclude test files themselves from coverage metrics
   - "tools/**"             # Exclude helper tools
   - "vendor/**"            # Exclude vendored dependencies
+  - "internal/analyzer/analyzer.go"
+  - "internal/filesystem/filesystem.go"
+  - "internal/reporter/context.go"
+  - "internal/testutil/**"

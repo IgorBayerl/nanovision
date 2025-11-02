@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/IgorBayerl/nanovision/analyzer"
-	"github.com/IgorBayerl/nanovision/filereader"
+	"github.com/IgorBayerl/nanovision/internal/analyzer"
+	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/utils"
 )
