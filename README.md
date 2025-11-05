@@ -8,7 +8,7 @@ nanovision
 
 <div align="center">
     
-<b>Powerful code coverage visualization</b>
+<b>The code coverage visualization tool that understands your code</b>
   
 </div>
 
