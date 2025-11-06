@@ -1,0 +1,247 @@
+diff --git a/demo_projects/go/project/calculator/calculator.go b/demo_projects/go/project/calculator/calculator.go
+index d121fd4..9f77bdf 100644
+--- a/demo_projects/go/project/calculator/calculator.go
++++ b/demo_projects/go/project/calculator/calculator.go
+@@ -28,10 +28,30 @@ func Divide(a, b int) (int, int) {
+ 	return a / b, a % b
+ }
+ 
++// CalculateFactorial returns the factorial of a number (not tested)
++func CalculateFactorial(n int) int {
++	if n <= 1 {
++		return 1
++	}
++	return n * CalculateFactorial(n-1)
++}
++
++// ReverseNumber reverses the digits of a number (will be tested)
++func ReverseNumber(n int) int {
++	reversed := 0
++	for n > 0 {
++		digit := n % 10
++		reversed = reversed*10 + digit
++		n = n / 10
++	}
++	return reversed
++}
++
+ // GetGradeForScore calculates a letter grade based on a numeric score.
+ // This function has a high cyclomatic complexity to stress test the metrics.
+ // Complexity is introduced by the initial check (with an OR) and the switch statement.
+ func GetGradeForScore(score int) string {
++	// Modified to include extra grade levels
+ 	// Each condition adds to the complexity. The "||" operator is one decision point.
+ 	if score < 0 || score > 100 {
+ 		return "Invalid Score"
+@@ -39,8 +59,12 @@ func GetGradeForScore(score int) string {
+ 
+ 	// A switch statement is a series of decision points.
+ 	switch {
++	case score >= 95:
++		return "A+"
+ 	case score >= 90:
+ 		return "A"
++	case score >= 85:
++		return "B+"
+ 	case score >= 80:
+ 		return "B"
+ 	case score >= 70:
+@@ -50,4 +74,4 @@ func GetGradeForScore(score int) string {
+ 	default:
+ 		return "F"
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/demo_projects/go/project/calculator/calculator_test.go b/demo_projects/go/project/calculator/calculator_test.go
+index efbe95c..4220b07 100644
+--- a/demo_projects/go/project/calculator/calculator_test.go
++++ b/demo_projects/go/project/calculator/calculator_test.go
+@@ -89,6 +89,26 @@ func TestUnexportedHelper(t *testing.T) {
+ 
+ // --- Test for Cyclomatic Complexity ---
+ 
++func TestReverseNumber(t *testing.T) {
++	testCases := []struct {
++		input    int
++		expected int
++	}{
++		{123, 321},
++		{1000, 1},
++		{1, 1},
++		{1234567, 7654321},
++	}
++
++	for _, tc := range testCases {
++		t.Run("", func(t *testing.T) {
++			if got := ReverseNumber(tc.input); got != tc.expected {
++				t.Errorf("ReverseNumber(%d) = %d; want %d", tc.input, got, tc.expected)
++			}
++		})
++	}
++}
++
+ func TestGetGradeForScore(t *testing.T) {
+ 	testCases := []struct {
+ 		score    int
+@@ -96,9 +116,10 @@ func TestGetGradeForScore(t *testing.T) {
+ 	}{
+ 		{101, "Invalid Score"}, // Test upper bound
+ 		// Note: The score < 0 case is intentionally NOT tested
+-		{95, "A"},
+-		{90, "A"},
+-		{85, "B"},
++		{98, "A+"},
++		{92, "A"},
++		{87, "B+"},
++		{83, "B"},
+ 		// Note: The "C" grade (70-79) is intentionally NOT tested
+ 		{65, "D"},
+ 		{59, "F"},
+@@ -112,4 +133,4 @@ func TestGetGradeForScore(t *testing.T) {
+ 			}
+ 		})
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/demo_projects/go/report/gocover/coverage.out b/demo_projects/go/report/gocover/coverage.out
+index d0d7cc8..856e7c6 100644
+--- a/demo_projects/go/report/gocover/coverage.out
++++ b/demo_projects/go/report/gocover/coverage.out
+@@ -1,57 +1,65 @@
+-mode: set
+-test_project_go/calculator_2/calculator.go:4.24,6.2 1 1
+-test_project_go/calculator_2/calculator.go:9.29,11.2 1 1
+-test_project_go/calculator_2/calculator.go:15.29,16.22 1 0
+-test_project_go/calculator_2/calculator.go:16.22,18.3 1 0
+-test_project_go/calculator_2/calculator.go:19.2,19.14 1 0
+-test_project_go/calculator_2/calculator.go:24.34,25.12 1 1
+-test_project_go/calculator_2/calculator.go:25.12,27.3 1 0
+-test_project_go/calculator_2/calculator.go:28.2,28.21 1 1
+-test_project_go/calculator_2/calculator.go:34.41,36.30 1 1
+-test_project_go/calculator_2/calculator.go:36.30,38.3 1 1
+-test_project_go/calculator_2/calculator.go:41.2,41.9 1 1
+-test_project_go/calculator_2/calculator.go:42.19,43.13 1 1
+-test_project_go/calculator_2/calculator.go:44.19,45.13 1 1
+-test_project_go/calculator_2/calculator.go:46.19,47.13 1 0
+-test_project_go/calculator_2/calculator.go:48.19,49.13 1 1
+-test_project_go/calculator_2/calculator.go:50.10,51.13 1 1
+-test_project_go/calculator_2/entities.go:11.31,13.2 1 0
+-test_project_go/calculator_2/entities.go:16.30,18.2 1 0
+-test_project_go/calculator_2/entities.go:22.35,23.16 1 0
+-test_project_go/calculator_2/entities.go:23.16,26.3 1 0
+-test_project_go/calculator_2/entities.go:27.2,27.19 1 0
+-test_project_go/calculator_2/entities.go:37.57,38.20 1 0
+-test_project_go/calculator_2/entities.go:38.20,40.3 1 0
+-test_project_go/calculator_2/entities.go:41.2,41.44 1 0
+-test_project_go/calculator_2/entities.go:45.53,46.16 1 1
+-test_project_go/calculator_2/entities.go:46.16,48.3 1 1
+-test_project_go/calculator_2/entities.go:49.2,49.50 1 1
+-test_project_go/calculator_2/entities.go:54.32,56.2 1 0
+-test_project_go/calculator/calculator.go:4.24,6.2 1 1
+-test_project_go/calculator/calculator.go:9.29,11.2 1 1
+-test_project_go/calculator/calculator.go:15.29,16.22 1 1
+-test_project_go/calculator/calculator.go:16.22,18.3 1 1
+-test_project_go/calculator/calculator.go:19.2,19.14 1 0
+-test_project_go/calculator/calculator.go:24.34,25.12 1 1
+-test_project_go/calculator/calculator.go:25.12,27.3 1 0
+-test_project_go/calculator/calculator.go:28.2,28.21 1 1
+-test_project_go/calculator/calculator.go:34.41,36.30 1 1
+-test_project_go/calculator/calculator.go:36.30,38.3 1 1
+-test_project_go/calculator/calculator.go:41.2,41.9 1 1
+-test_project_go/calculator/calculator.go:42.19,43.13 1 1
+-test_project_go/calculator/calculator.go:44.19,45.13 1 1
+-test_project_go/calculator/calculator.go:46.19,47.13 1 0
+-test_project_go/calculator/calculator.go:48.19,49.13 1 1
+-test_project_go/calculator/calculator.go:50.10,51.13 1 1
+-test_project_go/calculator/entities.go:11.31,13.2 1 1
+-test_project_go/calculator/entities.go:16.30,18.2 1 1
+-test_project_go/calculator/entities.go:22.35,23.16 1 1
+-test_project_go/calculator/entities.go:23.16,26.3 1 1
+-test_project_go/calculator/entities.go:27.2,27.19 1 1
+-test_project_go/calculator/entities.go:37.57,38.20 1 0
+-test_project_go/calculator/entities.go:38.20,40.3 1 0
+-test_project_go/calculator/entities.go:41.2,41.44 1 0
+-test_project_go/calculator/entities.go:45.53,46.16 1 1
+-test_project_go/calculator/entities.go:46.16,48.3 1 1
+-test_project_go/calculator/entities.go:49.2,49.50 1 1
+-test_project_go/calculator/entities.go:54.32,56.2 1 1
++mode: set
++test_project_go/calculator/calculator.go:4.24,6.2 1 1
++test_project_go/calculator/calculator.go:9.29,11.2 1 1
++test_project_go/calculator/calculator.go:15.29,16.22 1 1
++test_project_go/calculator/calculator.go:16.22,18.3 1 1
++test_project_go/calculator/calculator.go:19.2,19.14 1 0
++test_project_go/calculator/calculator.go:24.34,25.12 1 1
++test_project_go/calculator/calculator.go:25.12,27.3 1 0
++test_project_go/calculator/calculator.go:28.2,28.21 1 1
++test_project_go/calculator/calculator.go:32.36,33.12 1 0
++test_project_go/calculator/calculator.go:33.12,35.3 1 0
++test_project_go/calculator/calculator.go:36.2,36.36 1 0
++test_project_go/calculator/calculator.go:40.31,42.12 2 1
++test_project_go/calculator/calculator.go:42.12,46.3 3 1
++test_project_go/calculator/calculator.go:47.2,47.17 1 1
++test_project_go/calculator/calculator.go:53.41,56.30 1 1
++test_project_go/calculator/calculator.go:56.30,58.3 1 1
++test_project_go/calculator/calculator.go:61.2,61.9 1 1
++test_project_go/calculator/calculator.go:62.19,63.14 1 1
++test_project_go/calculator/calculator.go:64.19,65.13 1 1
++test_project_go/calculator/calculator.go:66.19,67.14 1 1
++test_project_go/calculator/calculator.go:68.19,69.13 1 1
++test_project_go/calculator/calculator.go:70.19,71.13 1 0
++test_project_go/calculator/calculator.go:72.19,73.13 1 1
++test_project_go/calculator/calculator.go:74.10,75.13 1 1
++test_project_go/calculator/entities.go:11.31,13.2 1 1
++test_project_go/calculator/entities.go:16.30,18.2 1 1
++test_project_go/calculator/entities.go:22.35,23.16 1 1
++test_project_go/calculator/entities.go:23.16,26.3 1 1
++test_project_go/calculator/entities.go:27.2,27.19 1 1
++test_project_go/calculator/entities.go:37.57,38.20 1 0
++test_project_go/calculator/entities.go:38.20,40.3 1 0
++test_project_go/calculator/entities.go:41.2,41.44 1 0
++test_project_go/calculator/entities.go:45.53,46.16 1 1
++test_project_go/calculator/entities.go:46.16,48.3 1 1
++test_project_go/calculator/entities.go:49.2,49.50 1 1
++test_project_go/calculator/entities.go:54.32,56.2 1 1
++test_project_go/calculator_2/calculator.go:4.24,6.2 1 1
++test_project_go/calculator_2/calculator.go:9.29,11.2 1 1
++test_project_go/calculator_2/calculator.go:15.29,16.22 1 0
++test_project_go/calculator_2/calculator.go:16.22,18.3 1 0
++test_project_go/calculator_2/calculator.go:19.2,19.14 1 0
++test_project_go/calculator_2/calculator.go:24.34,25.12 1 1
++test_project_go/calculator_2/calculator.go:25.12,27.3 1 0
++test_project_go/calculator_2/calculator.go:28.2,28.21 1 1
++test_project_go/calculator_2/calculator.go:34.41,36.30 1 1
++test_project_go/calculator_2/calculator.go:36.30,38.3 1 1
++test_project_go/calculator_2/calculator.go:41.2,41.9 1 1
++test_project_go/calculator_2/calculator.go:42.19,43.13 1 1
++test_project_go/calculator_2/calculator.go:44.19,45.13 1 1
++test_project_go/calculator_2/calculator.go:46.19,47.13 1 0
++test_project_go/calculator_2/calculator.go:48.19,49.13 1 1
++test_project_go/calculator_2/calculator.go:50.10,51.13 1 1
++test_project_go/calculator_2/entities.go:11.31,13.2 1 0
++test_project_go/calculator_2/entities.go:16.30,18.2 1 0
++test_project_go/calculator_2/entities.go:22.35,23.16 1 0
++test_project_go/calculator_2/entities.go:23.16,26.3 1 0
++test_project_go/calculator_2/entities.go:27.2,27.19 1 0
++test_project_go/calculator_2/entities.go:37.57,38.20 1 0
++test_project_go/calculator_2/entities.go:38.20,40.3 1 0
++test_project_go/calculator_2/entities.go:41.2,41.44 1 0
++test_project_go/calculator_2/entities.go:45.53,46.16 1 1
++test_project_go/calculator_2/entities.go:46.16,48.3 1 1
++test_project_go/calculator_2/entities.go:49.2,49.50 1 1
++test_project_go/calculator_2/entities.go:54.32,56.2 1 0
+diff --git a/internal/filtering/filter.go b/internal/filtering/filter.go
+index 6eaede3..a19c77c 100644
+--- a/internal/filtering/filter.go
++++ b/internal/filtering/filter.go
+@@ -64,7 +64,7 @@ func NewDefaultFilter(filters []string, osIndependantPathSeparator ...bool) (IFi
+ 	var errs []string
+ 
+ 	for _, f := range filters {
+-		trimmedFilter := strings.TrimSpace(f)
++		trimmedFilter := strings.TrimSpace(f, f)
+ 		if trimmedFilter == "" {
+ 			continue // Ignore empty strings
+ 		}
