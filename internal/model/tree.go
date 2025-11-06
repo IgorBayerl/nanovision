@@ -35,4 +35,5 @@ type FileNode struct {
 	TotalLines int                         `json:"totalLines"`
 	SourceDir  string                      `json:"sourceDir"`
 	Statuses   map[config.MetricKey]string `json:"statuses,omitempty"`
+	Diff       *DiffInfo                   `json:"diff,omitempty"`
 }
