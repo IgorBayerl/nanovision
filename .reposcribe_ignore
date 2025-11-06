@@ -1,19 +1,5 @@
-
-internal/assets/angular_frontend_spa/
-internal/assets/angular_report_complement/
-docs/site/
-
-Testprojects/CSharp/**
-Testprojects/Go/**
-
-AngularComponents/
-AzureDevopsTask/
-AzureDevopsTaskTest/
-Deployment/
-coverage-report/
 vendor/
 .gitattributes
-
 
 .github/*
 .vscode/*
@@ -42,7 +28,12 @@ ui/src/lib/**
 ui/src/ui/**
 ui/pnpm-lock.yaml
 
-docs/**
+docs/site/**
+docs/site/imgs/**
+docs/.gitignore
+docs/mkdocs.yml
+docs/README.md
+docs/requirements.txt
 
 Testprojects/C++/Reports/Cobertura_CPPCoverage.xml
 Testprojects/FSharp/**
@@ -56,3 +47,5 @@ internal/reporter/htmlreport/**
 tree-sitter/**
 
 ui
+
+LICENSE
