@@ -89,6 +89,26 @@ func TestUnexportedHelper(t *testing.T) {
 
 // --- Test for Cyclomatic Complexity ---
 
+func TestReverseNumber(t *testing.T) {
+	testCases := []struct {
+		input    int
+		expected int
+	}{
+		{123, 321},
+		{1000, 1},
+		{1, 1},
+		{1234567, 7654321},
+	}
+
+	for _, tc := range testCases {
+		t.Run("", func(t *testing.T) {
+			if got := ReverseNumber(tc.input); got != tc.expected {
+				t.Errorf("ReverseNumber(%d) = %d; want %d", tc.input, got, tc.expected)
+			}
+		})
+	}
+}
+
 func TestGetGradeForScore(t *testing.T) {
 	testCases := []struct {
 		score    int
@@ -96,9 +116,10 @@ func TestGetGradeForScore(t *testing.T) {
 	}{
 		{101, "Invalid Score"}, // Test upper bound
 		// Note: The score < 0 case is intentionally NOT tested
-		{95, "A"},
-		{90, "A"},
-		{85, "B"},
+		{98, "A+"},
+		{92, "A"},
+		{87, "B+"},
+		{83, "B"},
 		// Note: The "C" grade (70-79) is intentionally NOT tested
 		{65, "D"},
 		{59, "F"},
