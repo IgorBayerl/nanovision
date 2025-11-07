@@ -66,3 +66,8 @@ status_bands:
   branch_coverage: "50..70"
   # methods_covered: "60..80"
   methods_fully_covered: "40..60"
+
+# Optional settings for patch coverage analysis.
+diff:
+  file: "my_changes.diff" # Path to the .diff file (can also be set via -diff flag)
+  strip: "auto"           # "auto" or an integer (0-6) to strip leading path components

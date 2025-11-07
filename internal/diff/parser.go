@@ -155,6 +155,9 @@ func Parse(path string) (*DiffData, error) {
 			case strings.HasPrefix(line, " "):
 				currentHunk.content += line + "\n"
 				pendingRemovals = 0
+			case strings.HasPrefix(line, "\\"):
+				// This handles the "\ No newline at end of file" line. Just ignore it.
+				continue
 			default:
 				return nil, fmt.Errorf("invalid line in hunk: %s", line)
 			}

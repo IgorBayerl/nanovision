@@ -232,3 +232,1774 @@ index d0d7cc8..856e7c6 100644
 +test_project_go/calculator_2/entities.go:46.16,48.3 1 1
 +test_project_go/calculator_2/entities.go:49.2,49.50 1 1
 +test_project_go/calculator_2/entities.go:54.32,56.2 1 0
+diff --git a/internal/diff/README.md b/internal/diff/README.md
+new file mode 100644
+index 0000000..65771eb
+--- /dev/null
++++ b/internal/diff/README.md
+@@ -0,0 +1,31 @@
++# Unified Diff Parser
++
++This package implements a parser for unified diff format (git/perforce style).
++
++## Supported Syntax
++
++- Git-style headers:
++  - `diff --git a/oldpath b/newpath`
++  - `--- oldpath` or `--- /dev/null` (new files)
++  - `+++ newpath`
++  - `new file mode XXXX`
++  
++- Unified diff hunks:
++  - `@@ -oldStart,oldLen +newStart,newLen @@`
++  - Context lines (space-prefixed)
++  - Removed lines (`-` prefix)
++  - Added lines (`+` prefix)
++
++## Line Classification
++
++Added lines (`+`) are classified as either:
++- **Modified**: when they immediately follow removed lines (`-`) in the same hunk
++- **Added**: when they appear without preceding removed lines
++
++## Limitations
++
++- Only tracks new-file line numbers (post-change state)
++- Treats renames as modifications (uses NewPath only)
++- Requires valid hunk headers
++- No binary file support
++- Expects UTF-8 encoded text files
+\ No newline at end of file
+diff --git a/internal/diff/parser.go b/internal/diff/parser.go
+new file mode 100644
+index 0000000..da5f39b
+--- /dev/null
++++ b/internal/diff/parser.go
+@@ -0,0 +1,177 @@
++package diff
++
++import (
++	"bufio"
++	"fmt"
++	"os"
++	"regexp"
++	"strconv"
++	"strings"
++)
++
++var (
++	// Regular expressions for parsing diff headers and hunks
++	gitDiffRE    = regexp.MustCompile(`^diff --git a/(.*) b/(.*)$`)
++	fileHeaderRE = regexp.MustCompile(`^(\+\+\+|---)\s+(.*)$`)
++	newFileRE    = regexp.MustCompile(`^new file mode \d+$`)
++	hunkHeaderRE = regexp.MustCompile(`^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@.*$`)
++)
++
++// Parse reads a unified diff file and returns a structured DiffData
++func Parse(path string) (*DiffData, error) {
++	file, err := os.Open(path)
++	if err != nil {
++		return nil, fmt.Errorf("opening diff file: %w", err)
++	}
++	defer file.Close()
++
++	data := &DiffData{}
++	scanner := bufio.NewScanner(file)
++	var currentFile *FileDiff
++	var currentHunk *Hunk
++	var pendingRemovals int
++
++	for scanner.Scan() {
++		line := scanner.Text()
++
++		// Skip empty lines
++		if line == "" {
++			continue
++		}
++
++		// Check for file header
++		if matches := gitDiffRE.FindStringSubmatch(line); matches != nil {
++			if currentFile != nil {
++				data.Files = append(data.Files, *currentFile)
++			}
++			currentFile = &FileDiff{
++				OldPath: strings.TrimPrefix(matches[1], "a/"),
++				NewPath: strings.TrimPrefix(matches[2], "b/"),
++				Kind:    "modified",
++			}
++			currentHunk = nil
++			continue
++		}
++
++		// Handle new file mode
++		if newFileRE.MatchString(line) {
++			if currentFile != nil {
++				currentFile.Kind = "added"
++				currentFile.OldPath = "/dev/null"
++			}
++			continue
++		}
++
++		// Handle file headers (---, +++)
++		if matches := fileHeaderRE.FindStringSubmatch(line); matches != nil {
++			prefix, path := matches[1], matches[2]
++			if currentFile == nil {
++				currentFile = &FileDiff{Kind: "modified"}
++			}
++			if prefix == "---" {
++				if path == "/dev/null" {
++					currentFile.Kind = "added"
++				}
++				currentFile.OldPath = strings.TrimPrefix(path, "a/")
++			} else {
++				currentFile.NewPath = strings.TrimPrefix(path, "b/")
++			}
++			continue
++		}
++
++		// Handle hunk headers
++		if strings.HasPrefix(line, "@@ ") && strings.Contains(line, " @@") {
++			// Check if it's a valid hunk header format first
++			if !hunkHeaderRE.MatchString(line) {
++				return nil, fmt.Errorf("malformed hunk header: %s", line)
++			}
++
++			matches := hunkHeaderRE.FindStringSubmatch(line)
++			if currentFile == nil {
++				return nil, fmt.Errorf("hunk header without file header")
++			}
++			if currentHunk != nil {
++				currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
++			}
++
++			oldStart, err := strconv.Atoi(matches[1])
++			if err != nil {
++				return nil, fmt.Errorf("invalid old start line number: %v", err)
++			}
++			oldLines := 1
++			if matches[2] != "" {
++				oldLines, err = strconv.Atoi(matches[2])
++				if err != nil {
++					return nil, fmt.Errorf("invalid old line count: %v", err)
++				}
++			}
++			newStart, err := strconv.Atoi(matches[3])
++			if err != nil {
++				return nil, fmt.Errorf("invalid new start line number: %v", err)
++			}
++			newLines := 1
++			if matches[4] != "" {
++				newLines, err = strconv.Atoi(matches[4])
++				if err != nil {
++					return nil, fmt.Errorf("invalid new line count: %v", err)
++				}
++			}
++
++			currentHunk = &Hunk{
++				OldStart: oldStart,
++				OldLines: oldLines,
++				NewStart: newStart,
++				NewLines: newLines,
++				content:  "",
++			}
++			pendingRemovals = 0
++			continue
++		}
++
++		// Handle content lines
++		if currentHunk != nil {
++			switch {
++			case strings.HasPrefix(line, "-"):
++				pendingRemovals++
++			case strings.HasPrefix(line, "+"):
++				// Calculate offset based on position within current hunk
++				currentLineOffset := 0
++				for _, prevLine := range strings.Split(currentHunk.content, "\n") {
++					if prevLine == "" {
++						continue
++					}
++					if strings.HasPrefix(prevLine, " ") || strings.HasPrefix(prevLine, "+") {
++						currentLineOffset++
++					}
++				}
++
++				if pendingRemovals > 0 {
++					currentHunk.ModifiedLineOffsets = append(currentHunk.ModifiedLineOffsets, currentLineOffset)
++					pendingRemovals--
++				} else {
++					currentHunk.AddedLineOffsets = append(currentHunk.AddedLineOffsets, currentLineOffset)
++				}
++				currentHunk.content += line + "\n"
++			case strings.HasPrefix(line, " "):
++				currentHunk.content += line + "\n"
++				pendingRemovals = 0
++			default:
++				return nil, fmt.Errorf("invalid line in hunk: %s", line)
++			}
++		}
++	}
++
++	// Add the last hunk and file if present
++	if currentHunk != nil {
++		currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
++	}
++	if currentFile != nil {
++		data.Files = append(data.Files, *currentFile)
++	}
++
++	if err := scanner.Err(); err != nil {
++		return nil, fmt.Errorf("scanning diff file: %w", err)
++	}
++
++	return data, nil
++}
+diff --git a/internal/diff/parser_test.go b/internal/diff/parser_test.go
+new file mode 100644
+index 0000000..019262d
+--- /dev/null
++++ b/internal/diff/parser_test.go
+@@ -0,0 +1,234 @@
++package diff
++
++import (
++	"os"
++	"path/filepath"
++	"reflect"
++	"testing"
++)
++
++// checkOffsets verifies that offsets are within valid range and don't overlap
++func checkOffsets(t *testing.T, h Hunk, prefix string) {
++	// Create a map to check for duplicate offsets
++	seen := make(map[int]bool)
++
++	// Check added lines
++	for _, offset := range h.AddedLineOffsets {
++		if offset < 0 || offset >= h.NewLines {
++			t.Errorf("%s: added line offset %d outside valid range [0,%d)", prefix, offset, h.NewLines)
++		}
++		if seen[offset] {
++			t.Errorf("%s: duplicate offset %d", prefix, offset)
++		}
++		seen[offset] = true
++	}
++
++	// Check modified lines
++	for _, offset := range h.ModifiedLineOffsets {
++		if offset < 0 || offset >= h.NewLines {
++			t.Errorf("%s: modified line offset %d outside valid range [0,%d)", prefix, offset, h.NewLines)
++		}
++		if seen[offset] {
++			t.Errorf("%s: duplicate offset %d", prefix, offset)
++		}
++		seen[offset] = true
++	}
++}
++
++func TestParse(t *testing.T) {
++	tests := []struct {
++		name     string
++		input    string
++		wantErr  bool
++		validate func(*testing.T, *DiffData)
++	}{
++		{
++			name: "new_file",
++			input: `diff --git a/test.txt b/test.txt
++new file mode 100644
++--- /dev/null
+++++ b/test.txt
++@@ -0,0 +1,3 @@
+++line1
+++line2
+++line3`,
++			validate: func(t *testing.T, d *DiffData) {
++				if len(d.Files) != 1 {
++					t.Fatalf("got %d files, want 1", len(d.Files))
++				}
++				f := d.Files[0]
++				if f.Kind != "added" {
++					t.Errorf("got kind %q, want 'added'", f.Kind)
++				}
++				if f.OldPath != "/dev/null" {
++					t.Errorf("got old path %q, want '/dev/null'", f.OldPath)
++				}
++				if f.NewPath != "test.txt" {
++					t.Errorf("got new path %q, want 'test.txt'", f.NewPath)
++				}
++
++				h := f.Hunks[0]
++				if len(h.AddedLineOffsets) != 3 {
++					t.Errorf("got %d added lines, want 3", len(h.AddedLineOffsets))
++				}
++				if len(h.ModifiedLineOffsets) != 0 {
++					t.Errorf("got %d modified lines, want 0", len(h.ModifiedLineOffsets))
++				}
++
++				// Check offsets are correct (should be 0, 1, 2 for consecutive additions)
++				want := []int{0, 1, 2}
++				if !reflect.DeepEqual(h.AddedLineOffsets, want) {
++					t.Errorf("added line offsets = %v, want %v", h.AddedLineOffsets, want)
++				}
++
++				checkOffsets(t, h, "new_file")
++			},
++		},
++		{
++			name: "modified_file",
++			input: `diff --git a/test.txt b/test.txt
++--- a/test.txt
+++++ b/test.txt
++@@ -1,3 +1,4 @@
++ unchanged1
++-old2
+++new2
++-old3
+++new3
+++added4`,
++			validate: func(t *testing.T, d *DiffData) {
++				if len(d.Files) != 1 {
++					t.Fatalf("got %d files, want 1", len(d.Files))
++				}
++				f := d.Files[0]
++				if f.Kind != "modified" {
++					t.Errorf("got kind %q, want 'modified'", f.Kind)
++				}
++				h := f.Hunks[0]
++				if len(h.ModifiedLineOffsets) != 2 {
++					t.Errorf("got %d modified lines, want 2", len(h.ModifiedLineOffsets))
++				}
++				if len(h.AddedLineOffsets) != 1 {
++					t.Errorf("got %d added lines, want 1", len(h.AddedLineOffsets))
++				}
++
++				// Modified lines should be at positions 1 and 2, added line at 3
++				wantMod := []int{1, 2}
++				wantAdd := []int{3}
++				if !reflect.DeepEqual(h.ModifiedLineOffsets, wantMod) {
++					t.Errorf("modified line offsets = %v, want %v", h.ModifiedLineOffsets, wantMod)
++				}
++				if !reflect.DeepEqual(h.AddedLineOffsets, wantAdd) {
++					t.Errorf("added line offsets = %v, want %v", h.AddedLineOffsets, wantAdd)
++				}
++
++				checkOffsets(t, h, "modified_file")
++			},
++		},
++		{
++			name: "multiple_hunks",
++			input: `diff --git a/test.txt b/test.txt
++--- a/test.txt
+++++ b/test.txt
++@@ -1,2 +1,3 @@
++ unchanged1
+++added2
++ unchanged2
++@@ -10,2 +11,3 @@
++ unchanged3
++-old4
+++new4
++ unchanged5`,
++			validate: func(t *testing.T, d *DiffData) {
++				if len(d.Files) != 1 {
++					t.Fatalf("got %d files, want 1", len(d.Files))
++				}
++				f := d.Files[0]
++				if len(f.Hunks) != 2 {
++					t.Fatalf("got %d hunks, want 2", len(f.Hunks))
++				}
++
++				// First hunk: one added line at position 1
++				h1 := f.Hunks[0]
++				if len(h1.AddedLineOffsets) != 1 {
++					t.Errorf("hunk 1: got %d added lines, want 1", len(h1.AddedLineOffsets))
++				}
++				wantAdd := []int{1}
++				if !reflect.DeepEqual(h1.AddedLineOffsets, wantAdd) {
++					t.Errorf("hunk 1: added line offsets = %v, want %v", h1.AddedLineOffsets, wantAdd)
++				}
++				checkOffsets(t, h1, "multiple_hunks[0]")
++
++				// Second hunk: one modified line at position 1
++				h2 := f.Hunks[1]
++				if len(h2.ModifiedLineOffsets) != 1 {
++					t.Errorf("hunk 2: got %d modified lines, want 1", len(h2.ModifiedLineOffsets))
++				}
++				wantMod := []int{1}
++				if !reflect.DeepEqual(h2.ModifiedLineOffsets, wantMod) {
++					t.Errorf("hunk 2: modified line offsets = %v, want %v", h2.ModifiedLineOffsets, wantMod)
++				}
++				checkOffsets(t, h2, "multiple_hunks[1]")
++			},
++		},
++		{
++			name: "renamed_file",
++			input: `diff --git a/old.txt b/new.txt
++--- a/old.txt
+++++ b/new.txt
++@@ -1,2 +1,3 @@
++ unchanged1
++-old2
+++new2
+++added3`,
++			validate: func(t *testing.T, d *DiffData) {
++				if len(d.Files) != 1 {
++					t.Fatalf("got %d files, want 1", len(d.Files))
++				}
++				f := d.Files[0]
++				if f.Kind != "modified" {
++					t.Errorf("got kind %q, want 'modified'", f.Kind)
++				}
++				if f.NewPath != "new.txt" {
++					t.Errorf("got new path %q, want 'new.txt'", f.NewPath)
++				}
++			},
++		},
++		{
++			name: "invalid_hunk_header",
++			input: `diff --git a/test.txt b/test.txt
++--- a/test.txt
+++++ b/test.txt
++@@ broken header format @@
+++new line
++@@ -1 invalid +2,3 @@
+++another line`,
++			wantErr: true,
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			// Create a temporary file with the test input
++			tmpDir := t.TempDir()
++			tmpFile := filepath.Join(tmpDir, "test.diff")
++			if err := os.WriteFile(tmpFile, []byte(tt.input), 0644); err != nil {
++				t.Fatalf("failed to write test file: %v", err)
++			}
++
++			// Parse the diff
++			diff, err := Parse(tmpFile)
++			if (err != nil) != tt.wantErr {
++				t.Fatalf("Parse() error = %v, wantErr %v", err, tt.wantErr)
++			}
++			if tt.wantErr {
++				return
++			}
++
++			// Run validation
++			if tt.validate != nil {
++				tt.validate(t, diff)
++			}
++		})
++	}
++}
+diff --git a/internal/diff/path.go b/internal/diff/path.go
+new file mode 100644
+index 0000000..b192210
+--- /dev/null
++++ b/internal/diff/path.go
+@@ -0,0 +1,34 @@
++package diff
++
++import (
++	"path/filepath"
++	"strings"
++)
++
++// Normalize converts a diff path into a normalized form:
++// - Converts backslashes to forward slashes first
++// - Strips "a/" and "b/" prefixes (git-style) - only once
++// - Cleans the path (removes "." components, etc.)
++func Normalize(p string) string {
++	// Convert to forward slashes first (handles Windows paths)
++	p = filepath.ToSlash(p)
++
++	// Strip git-style prefixes (only check once at the start)
++	if strings.HasPrefix(p, "a/") {
++		p = strings.TrimPrefix(p, "a/")
++	} else if strings.HasPrefix(p, "b/") {
++		p = strings.TrimPrefix(p, "b/")
++	}
++
++	// Clean the path to remove "." and "./" components
++	p = filepath.Clean(p)
++
++	// filepath.Clean might add "./" for relative paths, so convert back to slashes
++	// and remove any leading "./"
++	p = filepath.ToSlash(p)
++	for strings.HasPrefix(p, "./") {
++		p = strings.TrimPrefix(p, "./")
++	}
++
++	return p
++}
+diff --git a/internal/diff/path_test.go b/internal/diff/path_test.go
+new file mode 100644
+index 0000000..a100c7c
+--- /dev/null
++++ b/internal/diff/path_test.go
+@@ -0,0 +1,56 @@
++package diff
++
++import "testing"
++
++func TestNormalize(t *testing.T) {
++	tests := []struct {
++		name string
++		path string
++		want string
++	}{
++		{
++			name: "git_style_a_prefix",
++			path: "a/src/x.go",
++			want: "src/x.go",
++		},
++		{
++			name: "git_style_b_prefix",
++			path: "b/src/x.go",
++			want: "src/x.go",
++		},
++		{
++			name: "windows_backslashes",
++			path: `b\src\x.go`,
++			want: "src/x.go",
++		},
++		{
++			name: "leading_dot_slash",
++			path: "./foo/bar.go",
++			want: "foo/bar.go",
++		},
++		{
++			name: "multiple_prefixes",
++			path: "a/b/./src/x.go",
++			want: "b/src/x.go",
++		},
++		{
++			name: "clean_path",
++			path: "src/x.go",
++			want: "src/x.go",
++		},
++		{
++			name: "absolute_windows_path",
++			path: `C:\repo\src\x.go`,
++			want: "C:/repo/src/x.go",
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			got := Normalize(tt.path)
++			if got != tt.want {
++				t.Errorf("Normalize(%q) = %q, want %q", tt.path, got, tt.want)
++			}
++		})
++	}
++}
+diff --git a/internal/diff/types.go b/internal/diff/types.go
+new file mode 100644
+index 0000000..f5db19d
+--- /dev/null
++++ b/internal/diff/types.go
+@@ -0,0 +1,32 @@
++package diff
++
++// DiffData represents a complete diff, potentially containing multiple files
++type DiffData struct {
++	Files []FileDiff
++}
++
++// FileDiff represents changes to a single file
++type FileDiff struct {
++	OldPath string // Original file path, "/dev/null" for new files
++	NewPath string // New file path
++	Kind    string // "added", "modified", or "renamed"
++	Hunks   []Hunk
++}
++
++// Hunk represents a single diff hunk with line offsets
++type Hunk struct {
++	// Original file line information
++	OldStart int // Starting line in old file
++	OldLines int // Number of lines from old file
++
++	// New file line information
++	NewStart int // Starting line in new file
++	NewLines int // Number of lines in new file
++
++	// Line offsets from NewStart for added/modified lines
++	AddedLineOffsets    []int // Lines that were added (no corresponding removal)
++	ModifiedLineOffsets []int // Lines that replace removed lines
++
++	// Internal state for parsing
++	content string // Accumulated content during parsing
++}
+diff --git a/internal/diffapply/apply.go b/internal/diffapply/apply.go
+new file mode 100644
+index 0000000..17494fe
+--- /dev/null
++++ b/internal/diffapply/apply.go
+@@ -0,0 +1,86 @@
++package diffapply
++
++import (
++	"log/slog"
++
++	"github.com/IgorBayerl/nanovision/internal/diff"
++	"github.com/IgorBayerl/nanovision/internal/model"
++)
++
++// Apply annotates a model.SummaryTree with diff information.
++// It resolves paths from the diff data, finds corresponding file nodes in the tree,
++// and attaches change details like kind (added/modified) and changed line numbers.
++func Apply(tree *model.SummaryTree, dd *diff.DiffData, logger *slog.Logger) {
++	if tree == nil || tree.Root == nil || dd == nil || len(dd.Files) == 0 {
++		return
++	}
++
++	// 1. Build file index and covered set from the tree.
++	fileIndex := make(map[string]*model.FileNode)
++	coveredSet := make(map[string]bool)
++	collectFilesAndCoverage(tree.Root, fileIndex, coveredSet)
++
++	// 2. Build the resolver with heuristics.
++	resolver := BuildResolver(dd, fileIndex, coveredSet, logger)
++
++	// 3. Iterate through each file in the diff and apply its changes.
++	for _, fileDiff := range dd.Files {
++		// Resolve the diff path to a path in our coverage tree.
++		treePath, ok := resolver.Resolve(fileDiff.NewPath)
++		if !ok {
++			logger.Debug("Skipping unmapped diff file", "path", fileDiff.NewPath)
++			continue
++		}
++
++		// Find the corresponding node in the tree.
++		node, exists := fileIndex[treePath]
++		if !exists {
++			// This can happen if the resolver finds a match but the file was filtered
++			// out during the initial tree build. It's safe to skip.
++			logger.Debug("Skipping diff for file not present in final tree", "path", treePath)
++			continue
++		}
++
++		// Ensure the DiffInfo struct exists.
++		if node.Diff == nil {
++			node.Diff = &model.DiffInfo{
++				AddedLines:    make(map[int]bool),
++				ModifiedLines: make(map[int]bool),
++			}
++		}
++
++		// Set the change kind.
++		switch fileDiff.Kind {
++		case "added":
++			node.Diff.Kind = model.ChangeKindAdded
++		default:
++			node.Diff.Kind = model.ChangeKindModified
++		}
++
++		// Populate the line maps from hunks.
++		for _, hunk := range fileDiff.Hunks {
++			for _, offset := range hunk.AddedLineOffsets {
++				lineNumber := hunk.NewStart + offset
++				node.Diff.AddedLines[lineNumber] = true
++			}
++			for _, offset := range hunk.ModifiedLineOffsets {
++				lineNumber := hunk.NewStart + offset
++				node.Diff.ModifiedLines[lineNumber] = true
++			}
++		}
++	}
++}
++
++// collectFilesAndCoverage recursively traverses the tree to build a flat map of
++// file paths to FileNode pointers and a set of paths for files with coverage.
++func collectFilesAndCoverage(dir *model.DirNode, fileIndex map[string]*model.FileNode, coveredSet map[string]bool) {
++	for _, file := range dir.Files {
++		fileIndex[file.Path] = file // Use the full relative path stored in the node
++		if file.Metrics.LinesValid > 0 {
++			coveredSet[file.Path] = true
++		}
++	}
++	for _, subDir := range dir.Subdirs {
++		collectFilesAndCoverage(subDir, fileIndex, coveredSet)
++	}
++}
+diff --git a/internal/diffapply/apply_test.go b/internal/diffapply/apply_test.go
+new file mode 100644
+index 0000000..41a9e9d
+--- /dev/null
++++ b/internal/diffapply/apply_test.go
+@@ -0,0 +1,173 @@
++package diffapply
++
++import (
++	"io"
++	"log/slog"
++	"testing"
++
++	"github.com/IgorBayerl/nanovision/internal/diff"
++	"github.com/IgorBayerl/nanovision/internal/model"
++	"github.com/stretchr/testify/assert"
++	"github.com/stretchr/testify/require"
++)
++
++// createTestTree creates a simple model.SummaryTree for testing.
++func createTestTree() *model.SummaryTree {
++	root := &model.DirNode{
++		Name:    "Root",
++		Path:    ".",
++		Subdirs: make(map[string]*model.DirNode),
++		Files:   make(map[string]*model.FileNode),
++	}
++	tree := &model.SummaryTree{Root: root}
++
++	// Create src directory
++	srcDir := &model.DirNode{
++		Name:    "src",
++		Path:    "src",
++		Parent:  root,
++		Subdirs: make(map[string]*model.DirNode),
++		Files:   make(map[string]*model.FileNode),
++	}
++	root.Subdirs["src"] = srcDir
++
++	// File to be modified
++	srcDir.Files["main.go"] = &model.FileNode{
++		Name:   "main.go",
++		Path:   "src/main.go",
++		Parent: srcDir,
++		Metrics: model.CoverageMetrics{
++			LinesValid: 10, // Indicates it has coverage
++		},
++	}
++
++	// File to be added (already in tree from a previous commit, now changed)
++	srcDir.Files["new.go"] = &model.FileNode{
++		Name:   "new.go",
++		Path:   "src/new.go",
++		Parent: srcDir,
++	}
++
++	// A file not mentioned in the diff
++	srcDir.Files["untouched.go"] = &model.FileNode{
++		Name:   "untouched.go",
++		Path:   "src/untouched.go",
++		Parent: srcDir,
++	}
++
++	return tree
++}
++
++func TestApply(t *testing.T) {
++	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
++
++	t.Run("applies diff to new and modified files", func(t *testing.T) {
++		// Arrange
++		tree := createTestTree()
++		diffData := &diff.DiffData{
++			Files: []diff.FileDiff{
++				{ // A new file
++					OldPath: "/dev/null",
++					NewPath: "src/new.go",
++					Kind:    "added",
++					Hunks: []diff.Hunk{
++						{NewStart: 1, NewLines: 3, AddedLineOffsets: []int{0, 1, 2}}, // Lines 1, 2, 3
++					},
++				},
++				{ // A modified file
++					OldPath: "src/main.go",
++					NewPath: "src/main.go",
++					Kind:    "modified",
++					Hunks: []diff.Hunk{
++						{NewStart: 10, NewLines: 2, ModifiedLineOffsets: []int{0}, AddedLineOffsets: []int{1}}, // Mod line 10, Add line 11
++						{NewStart: 20, NewLines: 1, AddedLineOffsets: []int{0}},                                // Add line 20
++					},
++				},
++			},
++		}
++
++		// Act
++		Apply(tree, diffData, logger)
++
++		// Assert
++		newFileNode := tree.Root.Subdirs["src"].Files["new.go"]
++		require.NotNil(t, newFileNode.Diff, "DiffInfo should be added to new file")
++		assert.Equal(t, model.ChangeKindAdded, newFileNode.Diff.Kind)
++		assert.Equal(t, map[int]bool{1: true, 2: true, 3: true}, newFileNode.Diff.AddedLines)
++		assert.Empty(t, newFileNode.Diff.ModifiedLines)
++
++		modifiedFileNode := tree.Root.Subdirs["src"].Files["main.go"]
++		require.NotNil(t, modifiedFileNode.Diff, "DiffInfo should be added to modified file")
++		assert.Equal(t, model.ChangeKindModified, modifiedFileNode.Diff.Kind)
++		assert.Equal(t, map[int]bool{11: true, 20: true}, modifiedFileNode.Diff.AddedLines)
++		assert.Equal(t, map[int]bool{10: true}, modifiedFileNode.Diff.ModifiedLines)
++
++		untouchedFileNode := tree.Root.Subdirs["src"].Files["untouched.go"]
++		assert.Nil(t, untouchedFileNode.Diff, "Untouched file should not have DiffInfo")
++	})
++
++	t.Run("skips unmapped and filtered files", func(t *testing.T) {
++		// Arrange
++		tree := createTestTree()
++		diffData := &diff.DiffData{
++			Files: []diff.FileDiff{
++				{ // This file is in the diff but not in our tree (e.g., filtered out)
++					NewPath: "src/filtered.go",
++					Kind:    "modified",
++					Hunks:   []diff.Hunk{{NewStart: 1, AddedLineOffsets: []int{0}}},
++				},
++				{ // This file is in the tree and diff
++					NewPath: "src/main.go",
++					Kind:    "modified",
++					Hunks:   []diff.Hunk{{NewStart: 5, ModifiedLineOffsets: []int{0}}},
++				},
++			},
++		}
++
++		// Act
++		Apply(tree, diffData, logger)
++
++		// Assert
++		// No node for 'filtered.go' exists, so we just check it didn't crash
++		mainFileNode := tree.Root.Subdirs["src"].Files["main.go"]
++		require.NotNil(t, mainFileNode.Diff)
++		assert.Equal(t, map[int]bool{5: true}, mainFileNode.Diff.ModifiedLines)
++	})
++
++	t.Run("is idempotent", func(t *testing.T) {
++		// Arrange
++		tree := createTestTree()
++		diffData := &diff.DiffData{
++			Files: []diff.FileDiff{
++				{
++					NewPath: "src/main.go",
++					Kind:    "modified",
++					Hunks:   []diff.Hunk{{NewStart: 8, AddedLineOffsets: []int{0}}},
++				},
++			},
++		}
++
++		// Act
++		Apply(tree, diffData, logger)
++		firstRunDiff := *tree.Root.Subdirs["src"].Files["main.go"].Diff
++
++		// Apply a second time
++		Apply(tree, diffData, logger)
++		secondRunDiff := *tree.Root.Subdirs["src"].Files["main.go"].Diff
++
++		// Assert
++		assert.Equal(t, firstRunDiff, secondRunDiff, "Applying the same diff twice should yield the same result")
++	})
++
++	t.Run("handles nil and empty inputs gracefully", func(t *testing.T) {
++		tree := createTestTree()
++
++		// This should not panic
++		Apply(nil, &diff.DiffData{}, logger)
++		Apply(tree, nil, logger)
++		Apply(tree, &diff.DiffData{}, logger)
++
++		// Check that nothing was modified
++		assert.Nil(t, tree.Root.Subdirs["src"].Files["main.go"].Diff)
++	})
++}
+diff --git a/internal/diffapply/resolver.go b/internal/diffapply/resolver.go
+new file mode 100644
+index 0000000..d70badf
+--- /dev/null
++++ b/internal/diffapply/resolver.go
+@@ -0,0 +1,251 @@
++package diffapply
++
++import (
++	"log/slog"
++	"strings"
++
++	"github.com/IgorBayerl/nanovision/internal/diff"
++	"github.com/IgorBayerl/nanovision/internal/model"
++)
++
++// Resolver maps paths from diff files to paths in the coverage tree
++type Resolver interface {
++	// Resolve attempts to map a diff path to a tree path
++	// Returns the resolved path and whether resolution was successful
++	Resolve(diffPath string) (treeRel string, ok bool)
++}
++
++type resolverImpl struct {
++	cache       map[string]string   // Cache of resolved paths
++	warned      map[string]struct{} // Set of paths we've warned about
++	fileIndex   map[string]*model.FileNode
++	coveredSet  map[string]bool
++	logger      *slog.Logger
++	stripPrefix string   // For H2: common prefix to strip
++	stripN      int      // For H1: number of components to strip (-pN)
++	candidates  []string // For H3/H4: potential matches for suffix matching
++}
++
++// BuildResolver creates a new Resolver using multiple heuristics:
++// H1: Strip N leading components that gives most exact matches
++// H2: Remove longest common prefix from monorepo root
++// H3: Match by basename and suffix components
++// H4: Prefer paths with known coverage in ambiguous cases
++func BuildResolver(dd *diff.DiffData, fileIndex map[string]*model.FileNode, coveredSet map[string]bool, logger *slog.Logger) Resolver {
++	r := &resolverImpl{
++		cache:      make(map[string]string),
++		warned:     make(map[string]struct{}),
++		fileIndex:  fileIndex,
++		coveredSet: coveredSet,
++		logger:     logger,
++	}
++
++	// Collect all diff paths and tree paths
++	diffPaths := make([]string, 0, len(dd.Files))
++	treePaths := make([]string, 0, len(fileIndex))
++	for _, f := range dd.Files {
++		diffPaths = append(diffPaths, diff.Normalize(f.NewPath))
++	}
++	for path := range fileIndex {
++		treePaths = append(treePaths, path)
++	}
++
++	// Try H1: Strip N path components
++	bestN := r.findBestStripN(diffPaths, treePaths)
++	if bestN > 0 {
++		r.stripN = bestN
++		return r
++	}
++
++	// Try H2: Common prefix
++	if prefix := r.findCommonPrefix(diffPaths); prefix != "" {
++		r.stripPrefix = prefix
++		return r
++	}
++
++	// Store candidates for H3/H4
++	r.candidates = treePaths
++	return r
++}
++
++func (r *resolverImpl) Resolve(diffPath string) (string, bool) {
++	// Check cache first
++	if resolved, ok := r.cache[diffPath]; ok {
++		return resolved, true
++	}
++
++	// Normalize the diff path
++	diffPath = diff.Normalize(diffPath)
++
++	// Check for a direct, exact match first before trying heuristics.
++	if _, ok := r.fileIndex[diffPath]; ok {
++		r.cache[diffPath] = diffPath
++		return diffPath, true
++	}
++
++	// Try H1: Strip N components
++	if r.stripN > 0 {
++		parts := strings.Split(diffPath, "/")
++		if len(parts) > r.stripN {
++			result := strings.Join(parts[r.stripN:], "/")
++			if _, ok := r.fileIndex[result]; ok {
++				r.cache[diffPath] = result
++				return result, true
++			}
++		}
++	}
++
++	// Try H2: Strip common prefix
++	if r.stripPrefix != "" && strings.HasPrefix(diffPath, r.stripPrefix) {
++		result := strings.TrimPrefix(diffPath, r.stripPrefix)
++		if _, ok := r.fileIndex[result]; ok {
++			r.cache[diffPath] = result
++			return result, true
++		}
++	}
++
++	// Try H3/H4: Suffix matching with coverage tie-breaking
++	result, ok := r.resolveBySuffix(diffPath)
++	if ok {
++		r.cache[diffPath] = result
++		return result, true
++	}
++
++	// Log warning for unmapped paths
++	if _, warned := r.warned[diffPath]; !warned {
++		r.logger.Warn("unable to map diff path", "path", diffPath)
++		r.warned[diffPath] = struct{}{}
++	}
++
++	return "", false
++}
++
++func (r *resolverImpl) findBestStripN(diffPaths, treePaths []string) int {
++	bestN := 0
++	bestMatches := 0
++	bestDepth := 0
++
++	// Try stripping 1 to maxN components
++	maxN := 5 // Reasonable limit for monorepo nesting
++	for n := 1; n <= maxN; n++ {
++		matches := 0
++		totalDepth := 0
++
++		for _, dp := range diffPaths {
++			parts := strings.Split(dp, "/")
++			if len(parts) <= n {
++				continue
++			}
++			stripped := strings.Join(parts[n:], "/")
++			for _, tp := range treePaths {
++				if stripped == tp {
++					matches++
++					totalDepth += len(strings.Split(tp, "/"))
++				}
++			}
++		}
++
++		// Update best if we have more matches or same matches but deeper paths
++		if matches > bestMatches || (matches == bestMatches && totalDepth > bestDepth) {
++			bestN = n
++			bestMatches = matches
++			bestDepth = totalDepth
++		}
++	}
++
++	return bestN
++}
++
++func (r *resolverImpl) findCommonPrefix(paths []string) string {
++	if len(paths) == 0 {
++		return ""
++	}
++
++	// Find the shortest path
++	minLen := len(paths[0])
++	for _, p := range paths[1:] {
++		if len(p) < minLen {
++			minLen = len(p)
++		}
++	}
++
++	// Find common prefix
++	prefix := ""
++	for i := 0; i < minLen; i++ {
++		char := paths[0][i]
++		for _, p := range paths[1:] {
++			if p[i] != char {
++				return prefix
++			}
++		}
++		prefix += string(char)
++	}
++
++	// Only use prefix up to last slash
++	if lastSlash := strings.LastIndex(prefix, "/"); lastSlash != -1 {
++		return prefix[:lastSlash+1]
++	}
++	return ""
++}
++
++func (r *resolverImpl) resolveBySuffix(diffPath string) (string, bool) {
++	diffParts := strings.Split(diffPath, "/")
++	baseName := diffParts[len(diffParts)-1]
++
++	var bestMatch string
++	var bestScore int
++	var ambiguousCandidates []string
++
++	for _, candidate := range r.candidates {
++		if !strings.HasSuffix(candidate, baseName) {
++			continue
++		}
++
++		// Score based on matching suffix components
++		candParts := strings.Split(candidate, "/")
++		score := 0
++		for i := 1; i <= len(diffParts) && i <= len(candParts); i++ {
++			if diffParts[len(diffParts)-i] == candParts[len(candParts)-i] {
++				score++
++			} else {
++				break
++			}
++		}
++
++		// H4: Add bonus for covered files
++		if r.coveredSet[candidate] {
++			score++
++		}
++
++		if score > bestScore {
++			bestScore = score
++			bestMatch = candidate
++			ambiguousCandidates = []string{candidate}
++		} else if score == bestScore && bestMatch != "" {
++			// If both paths have coverage, or neither has coverage, it's truly ambiguous
++			if r.coveredSet[candidate] == r.coveredSet[bestMatch] {
++				ambiguousCandidates = append(ambiguousCandidates, candidate)
++			} else if r.coveredSet[candidate] {
++				// If the new candidate has coverage but best match doesn't, use the candidate
++				bestMatch = candidate
++				ambiguousCandidates = []string{candidate}
++			}
++			// If best match has coverage but candidate doesn't, keep best match
++		}
++	}
++
++	// Check for ambiguity: multiple candidates with same score and coverage status
++	if len(ambiguousCandidates) > 1 {
++		if _, warned := r.warned[diffPath]; !warned {
++			r.logger.Warn("ambiguous path resolution", "path", diffPath, "candidates", ambiguousCandidates)
++			r.warned[diffPath] = struct{}{}
++		}
++		return "", false
++	}
++
++	if bestMatch != "" {
++		return bestMatch, true
++	}
++
++	return "", false
++}
+diff --git a/internal/diffapply/resolver_test.go b/internal/diffapply/resolver_test.go
+new file mode 100644
+index 0000000..3d29410
+--- /dev/null
++++ b/internal/diffapply/resolver_test.go
+@@ -0,0 +1,124 @@
++package diffapply
++
++import (
++	"log/slog"
++	"testing"
++
++	"github.com/IgorBayerl/nanovision/internal/diff"
++	"github.com/IgorBayerl/nanovision/internal/model"
++)
++
++func TestBuildResolver(t *testing.T) {
++	logger := slog.Default()
++
++	tests := []struct {
++		name         string
++		diffData     *diff.DiffData
++		fileIndex    map[string]*model.FileNode
++		coveredSet   map[string]bool
++		diffPath     string
++		wantPath     string
++		wantResolved bool
++	}{
++		{
++			name: "H1: strip one component",
++			diffData: &diff.DiffData{
++				Files: []diff.FileDiff{
++					{NewPath: "backend/src/foo.go"},
++					{NewPath: "backend/src/bar.go"},
++				},
++			},
++			fileIndex: map[string]*model.FileNode{
++				"src/foo.go": {},
++				"src/bar.go": {},
++			},
++			coveredSet:   map[string]bool{},
++			diffPath:     "backend/src/foo.go",
++			wantPath:     "src/foo.go",
++			wantResolved: true,
++		},
++		{
++			name: "H2: common monorepo prefix",
++			diffData: &diff.DiffData{
++				Files: []diff.FileDiff{
++					{NewPath: "//depot/main/backend/foo.go"},
++					{NewPath: "//depot/main/backend/bar.go"},
++				},
++			},
++			fileIndex: map[string]*model.FileNode{
++				"backend/foo.go": {},
++				"backend/bar.go": {},
++			},
++			coveredSet:   map[string]bool{},
++			diffPath:     "//depot/main/backend/foo.go",
++			wantPath:     "backend/foo.go",
++			wantResolved: true,
++		},
++		{
++			name: "H3: suffix matching",
++			diffData: &diff.DiffData{
++				Files: []diff.FileDiff{
++					{NewPath: "unique/path/test.go"},
++				},
++			},
++			fileIndex: map[string]*model.FileNode{
++				"src/test.go":       {},
++				"lib/other/test.go": {},
++				"path/test.go":      {},
++			},
++			coveredSet:   map[string]bool{},
++			diffPath:     "unique/path/test.go",
++			wantPath:     "path/test.go",
++			wantResolved: true,
++		},
++		{
++			name: "H4: coverage tie-breaker",
++			diffData: &diff.DiffData{
++				Files: []diff.FileDiff{
++					{NewPath: "test.go"},
++				},
++			},
++			fileIndex: map[string]*model.FileNode{
++				"src/test.go": {},
++				"lib/test.go": {},
++			},
++			coveredSet: map[string]bool{
++				"lib/test.go": true,
++			},
++			diffPath:     "test.go",
++			wantPath:     "lib/test.go",
++			wantResolved: true,
++		},
++		{
++			name: "ambiguous path",
++			diffData: &diff.DiffData{
++				Files: []diff.FileDiff{
++					{NewPath: "test.go"},
++				},
++			},
++			fileIndex: map[string]*model.FileNode{
++				"src/test.go": {},
++				"lib/test.go": {},
++			},
++			coveredSet: map[string]bool{
++				"src/test.go": true,
++				"lib/test.go": true,
++			},
++			diffPath:     "test.go",
++			wantResolved: false,
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			resolver := BuildResolver(tt.diffData, tt.fileIndex, tt.coveredSet, logger)
++			gotPath, ok := resolver.Resolve(tt.diffPath)
++			if ok != tt.wantResolved {
++				t.Errorf("Resolve() ok = %v, want %v", ok, tt.wantResolved)
++			}
++			if ok && gotPath != tt.wantPath {
++				t.Errorf("Resolve() = %q, want %q", gotPath, tt.wantPath)
++			}
++		})
++	}
++}
+diff --git a/internal/model/diff.go b/internal/model/diff.go
+new file mode 100644
+index 0000000..f7ae72c
+--- /dev/null
++++ b/internal/model/diff.go
+@@ -0,0 +1,55 @@
++package model
++
++// ChangeKind represents the type of change detected for a file
++type ChangeKind int
++
++const (
++	// ChangeKindNone indicates no changes detected
++	ChangeKindNone ChangeKind = iota
++	// ChangeKindAdded indicates the file was added
++	ChangeKindAdded
++	// ChangeKindModified indicates the file was modified
++	ChangeKindModified
++)
++
++// String returns the string representation of ChangeKind
++func (k ChangeKind) String() string {
++	switch k {
++	case ChangeKindAdded:
++		return "added"
++	case ChangeKindModified:
++		return "modified"
++	default:
++		return ""
++	}
++}
++
++// MarshalJSON implements json.Marshaler interface
++func (k ChangeKind) MarshalJSON() ([]byte, error) {
++	return []byte(`"` + k.String() + `"`), nil
++}
++
++// UnmarshalJSON implements json.Unmarshaler interface
++func (k *ChangeKind) UnmarshalJSON(data []byte) error {
++	// Remove quotes
++	s := string(data[1 : len(data)-1])
++	switch s {
++	case "added":
++		*k = ChangeKindAdded
++	case "modified":
++		*k = ChangeKindModified
++	default:
++		*k = ChangeKindNone
++	}
++	return nil
++}
++
++// DiffInfo stores information about changes detected in a file
++type DiffInfo struct {
++	// Kind indicates the type of change detected
++	Kind ChangeKind `json:"kind,omitempty"`
++	// AddedLines maps line numbers to whether they were added (true if added)
++	AddedLines map[int]bool `json:"addedLines,omitempty"`
++	// ModifiedLines maps line numbers to whether they were modified (true if modified)
++	ModifiedLines map[int]bool `json:"modifiedLines,omitempty"`
++}
+diff --git a/internal/model/diff_test.go b/internal/model/diff_test.go
+new file mode 100644
+index 0000000..9c71c79
+--- /dev/null
++++ b/internal/model/diff_test.go
+@@ -0,0 +1,195 @@
++package model
++
++import (
++	"encoding/json"
++	"testing"
++)
++
++func TestChangeKind_String(t *testing.T) {
++	tests := []struct {
++		kind ChangeKind
++		want string
++	}{
++		{ChangeKindNone, ""},
++		{ChangeKindAdded, "added"},
++		{ChangeKindModified, "modified"},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.want, func(t *testing.T) {
++			if got := tt.kind.String(); got != tt.want {
++				t.Errorf("ChangeKind.String() = %v, want %v", got, tt.want)
++			}
++		})
++	}
++}
++
++func TestChangeKind_JSONSerialization(t *testing.T) {
++	tests := []struct {
++		name string
++		kind ChangeKind
++		want string
++	}{
++		{"none", ChangeKindNone, `""`},
++		{"added", ChangeKindAdded, `"added"`},
++		{"modified", ChangeKindModified, `"modified"`},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			// Test marshaling
++			data, err := json.Marshal(tt.kind)
++			if err != nil {
++				t.Fatalf("Marshal error: %v", err)
++			}
++			if string(data) != tt.want {
++				t.Errorf("Marshal = %v, want %v", string(data), tt.want)
++			}
++
++			// Test unmarshaling
++			var kind ChangeKind
++			if err := json.Unmarshal([]byte(tt.want), &kind); err != nil {
++				t.Fatalf("Unmarshal error: %v", err)
++			}
++			if kind != tt.kind {
++				t.Errorf("Unmarshal = %v, want %v", kind, tt.kind)
++			}
++		})
++	}
++}
++
++func TestDiffInfo_JSONSerialization(t *testing.T) {
++	tests := []struct {
++		name     string
++		node     *FileNode
++		wantDiff bool
++	}{
++		{
++			name: "file_without_diff",
++			node: &FileNode{
++				Name: "test.go",
++				Path: "/test.go",
++			},
++			wantDiff: false,
++		},
++		{
++			name: "file_with_empty_diff",
++			node: &FileNode{
++				Name: "test.go",
++				Path: "/test.go",
++				Diff: &DiffInfo{},
++			},
++			wantDiff: true,
++		},
++		{
++			name: "file_with_added_lines",
++			node: &FileNode{
++				Name: "test.go",
++				Path: "/test.go",
++				Diff: &DiffInfo{
++					Kind: ChangeKindAdded,
++					AddedLines: map[int]bool{
++						1: true,
++						5: true,
++					},
++				},
++			},
++			wantDiff: true,
++		},
++		{
++			name: "file_with_modified_lines",
++			node: &FileNode{
++				Name: "test.go",
++				Path: "/test.go",
++				Diff: &DiffInfo{
++					Kind: ChangeKindModified,
++					ModifiedLines: map[int]bool{
++						10: true,
++						20: true,
++					},
++				},
++			},
++			wantDiff: true,
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			// Test marshaling
++			data, err := json.Marshal(tt.node)
++			if err != nil {
++				t.Fatalf("Marshal error: %v", err)
++			}
++
++			// Test unmarshaling
++			var node FileNode
++			if err := json.Unmarshal(data, &node); err != nil {
++				t.Fatalf("Unmarshal error: %v", err)
++			}
++
++			// Verify diff presence
++			hasDiff := node.Diff != nil
++			if hasDiff != tt.wantDiff {
++				t.Errorf("Diff presence = %v, want %v", hasDiff, tt.wantDiff)
++			}
++
++			// If we expect a diff, verify its contents
++			if tt.wantDiff && tt.node.Diff != nil {
++				if node.Diff.Kind != tt.node.Diff.Kind {
++					t.Errorf("Kind = %v, want %v", node.Diff.Kind, tt.node.Diff.Kind)
++				}
++
++				// Check added lines
++				if len(tt.node.Diff.AddedLines) > 0 {
++					for line := range tt.node.Diff.AddedLines {
++						if !node.Diff.AddedLines[line] {
++							t.Errorf("Added line %d not found after unmarshal", line)
++						}
++					}
++				}
++
++				// Check modified lines
++				if len(tt.node.Diff.ModifiedLines) > 0 {
++					for line := range tt.node.Diff.ModifiedLines {
++						if !node.Diff.ModifiedLines[line] {
++							t.Errorf("Modified line %d not found after unmarshal", line)
++						}
++					}
++				}
++			}
++		})
++	}
++}
++
++func TestDiffInfo_NilSafety(t *testing.T) {
++	// Test nil maps don't panic
++	diff := &DiffInfo{}
++
++	// These should not panic
++	_ = diff.AddedLines[1]    // Reading from nil map
++	_ = diff.ModifiedLines[1] // Reading from nil map
++
++	// Initialize maps
++	diff.AddedLines = make(map[int]bool)
++	diff.ModifiedLines = make(map[int]bool)
++
++	// Test sparse line numbers
++	diff.AddedLines[1] = true
++	diff.AddedLines[100] = true
++	diff.ModifiedLines[50] = true
++	diff.ModifiedLines[200] = true
++
++	// Verify values
++	if !diff.AddedLines[1] {
++		t.Error("Expected line 1 to be added")
++	}
++	if !diff.AddedLines[100] {
++		t.Error("Expected line 100 to be added")
++	}
++	if !diff.ModifiedLines[50] {
++		t.Error("Expected line 50 to be modified")
++	}
++	if !diff.ModifiedLines[200] {
++		t.Error("Expected line 200 to be modified")
++	}
++}
+diff --git a/internal/model/tree.go b/internal/model/tree.go
+index 6f86f1f..0dcd5b3 100644
+--- a/internal/model/tree.go
++++ b/internal/model/tree.go
+@@ -35,4 +35,5 @@ type FileNode struct {
+ 	TotalLines int                         `json:"totalLines"`
+ 	SourceDir  string                      `json:"sourceDir"`
+ 	Statuses   map[config.MetricKey]string `json:"statuses,omitempty"`
++	Diff       *DiffInfo                   `json:"diff,omitempty"`
+ }
+diff --git a/my_changes.diff b/my_changes.diff
+new file mode 100644
+index 0000000..34dd398
+--- /dev/null
++++ b/my_changes.diff
+@@ -0,0 +1,234 @@
++diff --git a/demo_projects/go/project/calculator/calculator.go b/demo_projects/go/project/calculator/calculator.go
++index d121fd4..9f77bdf 100644
++--- a/demo_projects/go/project/calculator/calculator.go
+++++ b/demo_projects/go/project/calculator/calculator.go
++@@ -28,10 +28,30 @@ func Divide(a, b int) (int, int) {
++ 	return a / b, a % b
++ }
++ 
+++// CalculateFactorial returns the factorial of a number (not tested)
+++func CalculateFactorial(n int) int {
+++	if n <= 1 {
+++		return 1
+++	}
+++	return n * CalculateFactorial(n-1)
+++}
+++
+++// ReverseNumber reverses the digits of a number (will be tested)
+++func ReverseNumber(n int) int {
+++	reversed := 0
+++	for n > 0 {
+++		digit := n % 10
+++		reversed = reversed*10 + digit
+++		n = n / 10
+++	}
+++	return reversed
+++}
+++
++ // GetGradeForScore calculates a letter grade based on a numeric score.
++ // This function has a high cyclomatic complexity to stress test the metrics.
++ // Complexity is introduced by the initial check (with an OR) and the switch statement.
++ func GetGradeForScore(score int) string {
+++	// Modified to include extra grade levels
++ 	// Each condition adds to the complexity. The "||" operator is one decision point.
++ 	if score < 0 || score > 100 {
++ 		return "Invalid Score"
++@@ -39,8 +59,12 @@ func GetGradeForScore(score int) string {
++ 
++ 	// A switch statement is a series of decision points.
++ 	switch {
+++	case score >= 95:
+++		return "A+"
++ 	case score >= 90:
++ 		return "A"
+++	case score >= 85:
+++		return "B+"
++ 	case score >= 80:
++ 		return "B"
++ 	case score >= 70:
++@@ -50,4 +74,4 @@ func GetGradeForScore(score int) string {
++ 	default:
++ 		return "F"
++ 	}
++-}
++\ No newline at end of file
+++}
++diff --git a/demo_projects/go/project/calculator/calculator_test.go b/demo_projects/go/project/calculator/calculator_test.go
++index efbe95c..4220b07 100644
++--- a/demo_projects/go/project/calculator/calculator_test.go
+++++ b/demo_projects/go/project/calculator/calculator_test.go
++@@ -89,6 +89,26 @@ func TestUnexportedHelper(t *testing.T) {
++ 
++ // --- Test for Cyclomatic Complexity ---
++ 
+++func TestReverseNumber(t *testing.T) {
+++	testCases := []struct {
+++		input    int
+++		expected int
+++	}{
+++		{123, 321},
+++		{1000, 1},
+++		{1, 1},
+++		{1234567, 7654321},
+++	}
+++
+++	for _, tc := range testCases {
+++		t.Run("", func(t *testing.T) {
+++			if got := ReverseNumber(tc.input); got != tc.expected {
+++				t.Errorf("ReverseNumber(%d) = %d; want %d", tc.input, got, tc.expected)
+++			}
+++		})
+++	}
+++}
+++
++ func TestGetGradeForScore(t *testing.T) {
++ 	testCases := []struct {
++ 		score    int
++@@ -96,9 +116,10 @@ func TestGetGradeForScore(t *testing.T) {
++ 	}{
++ 		{101, "Invalid Score"}, // Test upper bound
++ 		// Note: The score < 0 case is intentionally NOT tested
++-		{95, "A"},
++-		{90, "A"},
++-		{85, "B"},
+++		{98, "A+"},
+++		{92, "A"},
+++		{87, "B+"},
+++		{83, "B"},
++ 		// Note: The "C" grade (70-79) is intentionally NOT tested
++ 		{65, "D"},
++ 		{59, "F"},
++@@ -112,4 +133,4 @@ func TestGetGradeForScore(t *testing.T) {
++ 			}
++ 		})
++ 	}
++-}
++\ No newline at end of file
+++}
++diff --git a/demo_projects/go/report/gocover/coverage.out b/demo_projects/go/report/gocover/coverage.out
++index d0d7cc8..856e7c6 100644
++--- a/demo_projects/go/report/gocover/coverage.out
+++++ b/demo_projects/go/report/gocover/coverage.out
++@@ -1,57 +1,65 @@
++-mode: set
++-test_project_go/calculator_2/calculator.go:4.24,6.2 1 1
++-test_project_go/calculator_2/calculator.go:9.29,11.2 1 1
++-test_project_go/calculator_2/calculator.go:15.29,16.22 1 0
++-test_project_go/calculator_2/calculator.go:16.22,18.3 1 0
++-test_project_go/calculator_2/calculator.go:19.2,19.14 1 0
++-test_project_go/calculator_2/calculator.go:24.34,25.12 1 1
++-test_project_go/calculator_2/calculator.go:25.12,27.3 1 0
++-test_project_go/calculator_2/calculator.go:28.2,28.21 1 1
++-test_project_go/calculator_2/calculator.go:34.41,36.30 1 1
++-test_project_go/calculator_2/calculator.go:36.30,38.3 1 1
++-test_project_go/calculator_2/calculator.go:41.2,41.9 1 1
++-test_project_go/calculator_2/calculator.go:42.19,43.13 1 1
++-test_project_go/calculator_2/calculator.go:44.19,45.13 1 1
++-test_project_go/calculator_2/calculator.go:46.19,47.13 1 0
++-test_project_go/calculator_2/calculator.go:48.19,49.13 1 1
++-test_project_go/calculator_2/calculator.go:50.10,51.13 1 1
++-test_project_go/calculator_2/entities.go:11.31,13.2 1 0
++-test_project_go/calculator_2/entities.go:16.30,18.2 1 0
++-test_project_go/calculator_2/entities.go:22.35,23.16 1 0
++-test_project_go/calculator_2/entities.go:23.16,26.3 1 0
++-test_project_go/calculator_2/entities.go:27.2,27.19 1 0
++-test_project_go/calculator_2/entities.go:37.57,38.20 1 0
++-test_project_go/calculator_2/entities.go:38.20,40.3 1 0
++-test_project_go/calculator_2/entities.go:41.2,41.44 1 0
++-test_project_go/calculator_2/entities.go:45.53,46.16 1 1
++-test_project_go/calculator_2/entities.go:46.16,48.3 1 1
++-test_project_go/calculator_2/entities.go:49.2,49.50 1 1
++-test_project_go/calculator_2/entities.go:54.32,56.2 1 0
++-test_project_go/calculator/calculator.go:4.24,6.2 1 1
++-test_project_go/calculator/calculator.go:9.29,11.2 1 1
++-test_project_go/calculator/calculator.go:15.29,16.22 1 1
++-test_project_go/calculator/calculator.go:16.22,18.3 1 1
++-test_project_go/calculator/calculator.go:19.2,19.14 1 0
++-test_project_go/calculator/calculator.go:24.34,25.12 1 1
++-test_project_go/calculator/calculator.go:25.12,27.3 1 0
++-test_project_go/calculator/calculator.go:28.2,28.21 1 1
++-test_project_go/calculator/calculator.go:34.41,36.30 1 1
++-test_project_go/calculator/calculator.go:36.30,38.3 1 1
++-test_project_go/calculator/calculator.go:41.2,41.9 1 1
++-test_project_go/calculator/calculator.go:42.19,43.13 1 1
++-test_project_go/calculator/calculator.go:44.19,45.13 1 1
++-test_project_go/calculator/calculator.go:46.19,47.13 1 0
++-test_project_go/calculator/calculator.go:48.19,49.13 1 1
++-test_project_go/calculator/calculator.go:50.10,51.13 1 1
++-test_project_go/calculator/entities.go:11.31,13.2 1 1
++-test_project_go/calculator/entities.go:16.30,18.2 1 1
++-test_project_go/calculator/entities.go:22.35,23.16 1 1
++-test_project_go/calculator/entities.go:23.16,26.3 1 1
++-test_project_go/calculator/entities.go:27.2,27.19 1 1
++-test_project_go/calculator/entities.go:37.57,38.20 1 0
++-test_project_go/calculator/entities.go:38.20,40.3 1 0
++-test_project_go/calculator/entities.go:41.2,41.44 1 0
++-test_project_go/calculator/entities.go:45.53,46.16 1 1
++-test_project_go/calculator/entities.go:46.16,48.3 1 1
++-test_project_go/calculator/entities.go:49.2,49.50 1 1
++-test_project_go/calculator/entities.go:54.32,56.2 1 1
+++mode: set
+++test_project_go/calculator/calculator.go:4.24,6.2 1 1
+++test_project_go/calculator/calculator.go:9.29,11.2 1 1
+++test_project_go/calculator/calculator.go:15.29,16.22 1 1
+++test_project_go/calculator/calculator.go:16.22,18.3 1 1
+++test_project_go/calculator/calculator.go:19.2,19.14 1 0
+++test_project_go/calculator/calculator.go:24.34,25.12 1 1
+++test_project_go/calculator/calculator.go:25.12,27.3 1 0
+++test_project_go/calculator/calculator.go:28.2,28.21 1 1
+++test_project_go/calculator/calculator.go:32.36,33.12 1 0
+++test_project_go/calculator/calculator.go:33.12,35.3 1 0
+++test_project_go/calculator/calculator.go:36.2,36.36 1 0
+++test_project_go/calculator/calculator.go:40.31,42.12 2 1
+++test_project_go/calculator/calculator.go:42.12,46.3 3 1
+++test_project_go/calculator/calculator.go:47.2,47.17 1 1
+++test_project_go/calculator/calculator.go:53.41,56.30 1 1
+++test_project_go/calculator/calculator.go:56.30,58.3 1 1
+++test_project_go/calculator/calculator.go:61.2,61.9 1 1
+++test_project_go/calculator/calculator.go:62.19,63.14 1 1
+++test_project_go/calculator/calculator.go:64.19,65.13 1 1
+++test_project_go/calculator/calculator.go:66.19,67.14 1 1
+++test_project_go/calculator/calculator.go:68.19,69.13 1 1
+++test_project_go/calculator/calculator.go:70.19,71.13 1 0
+++test_project_go/calculator/calculator.go:72.19,73.13 1 1
+++test_project_go/calculator/calculator.go:74.10,75.13 1 1
+++test_project_go/calculator/entities.go:11.31,13.2 1 1
+++test_project_go/calculator/entities.go:16.30,18.2 1 1
+++test_project_go/calculator/entities.go:22.35,23.16 1 1
+++test_project_go/calculator/entities.go:23.16,26.3 1 1
+++test_project_go/calculator/entities.go:27.2,27.19 1 1
+++test_project_go/calculator/entities.go:37.57,38.20 1 0
+++test_project_go/calculator/entities.go:38.20,40.3 1 0
+++test_project_go/calculator/entities.go:41.2,41.44 1 0
+++test_project_go/calculator/entities.go:45.53,46.16 1 1
+++test_project_go/calculator/entities.go:46.16,48.3 1 1
+++test_project_go/calculator/entities.go:49.2,49.50 1 1
+++test_project_go/calculator/entities.go:54.32,56.2 1 1
+++test_project_go/calculator_2/calculator.go:4.24,6.2 1 1
+++test_project_go/calculator_2/calculator.go:9.29,11.2 1 1
+++test_project_go/calculator_2/calculator.go:15.29,16.22 1 0
+++test_project_go/calculator_2/calculator.go:16.22,18.3 1 0
+++test_project_go/calculator_2/calculator.go:19.2,19.14 1 0
+++test_project_go/calculator_2/calculator.go:24.34,25.12 1 1
+++test_project_go/calculator_2/calculator.go:25.12,27.3 1 0
+++test_project_go/calculator_2/calculator.go:28.2,28.21 1 1
+++test_project_go/calculator_2/calculator.go:34.41,36.30 1 1
+++test_project_go/calculator_2/calculator.go:36.30,38.3 1 1
+++test_project_go/calculator_2/calculator.go:41.2,41.9 1 1
+++test_project_go/calculator_2/calculator.go:42.19,43.13 1 1
+++test_project_go/calculator_2/calculator.go:44.19,45.13 1 1
+++test_project_go/calculator_2/calculator.go:46.19,47.13 1 0
+++test_project_go/calculator_2/calculator.go:48.19,49.13 1 1
+++test_project_go/calculator_2/calculator.go:50.10,51.13 1 1
+++test_project_go/calculator_2/entities.go:11.31,13.2 1 0
+++test_project_go/calculator_2/entities.go:16.30,18.2 1 0
+++test_project_go/calculator_2/entities.go:22.35,23.16 1 0
+++test_project_go/calculator_2/entities.go:23.16,26.3 1 0
+++test_project_go/calculator_2/entities.go:27.2,27.19 1 0
+++test_project_go/calculator_2/entities.go:37.57,38.20 1 0
+++test_project_go/calculator_2/entities.go:38.20,40.3 1 0
+++test_project_go/calculator_2/entities.go:41.2,41.44 1 0
+++test_project_go/calculator_2/entities.go:45.53,46.16 1 1
+++test_project_go/calculator_2/entities.go:46.16,48.3 1 1
+++test_project_go/calculator_2/entities.go:49.2,49.50 1 1
+++test_project_go/calculator_2/entities.go:54.32,56.2 1 0
