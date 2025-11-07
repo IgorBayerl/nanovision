@@ -53,6 +53,7 @@ window.__NANOVISION_SUMMARY__ = {
                             },
                             statuses: { lineCoverage: 'safe', methodsCovered: 'safe', methodsFullyCovered: 'danger' },
                             targetUrl: 'analyzer_cpp_analyzer.go.html',
+                            diffStatus: 'modified',
                         },
                     ],
                     metrics: {
@@ -86,6 +87,7 @@ window.__NANOVISION_SUMMARY__ = {
                             },
                             statuses: { lineCoverage: 'safe', methodsCovered: 'safe', methodsFullyCovered: 'warning' },
                             targetUrl: 'analyzer_go_analyzer.go.html',
+                            diffStatus: 'unchanged',
                         },
                     ],
                     metrics: {
@@ -134,6 +136,7 @@ window.__NANOVISION_SUMMARY__ = {
                     },
                     statuses: { lineCoverage: 'warning', methodsCovered: 'safe', methodsFullyCovered: 'danger' },
                     targetUrl: 'cmd_main.go.html',
+                    diffStatus: 'added',
                 },
             ],
             metrics: {
@@ -243,6 +246,7 @@ window.__NANOVISION_SUMMARY__ = {
                                                 methodsFullyCovered: 'danger',
                                             },
                                             targetUrl: 'demo_projects_cpp_project_src_advanced_calculator.cpp.html',
+                                            diffStatus: 'modified',
                                         },
                                         {
                                             id: 'demo_projects/cpp/project/src/calculator.cpp',
@@ -268,6 +272,7 @@ window.__NANOVISION_SUMMARY__ = {
                                                 methodsFullyCovered: 'warning',
                                             },
                                             targetUrl: 'demo_projects_cpp_project_src_calculator.cpp.html',
+                                            diffStatus: 'added',
                                         },
                                     ],
                                     metrics: {
