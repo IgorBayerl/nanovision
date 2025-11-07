@@ -77,6 +77,12 @@ func (r *resolverImpl) Resolve(diffPath string) (string, bool) {
 	// Normalize the diff path
 	diffPath = diff.Normalize(diffPath)
 
+	// Check for a direct, exact match first before trying heuristics.
+	if _, ok := r.fileIndex[diffPath]; ok {
+		r.cache[diffPath] = diffPath
+		return diffPath, true
+	}
+
 	// Try H1: Strip N components
 	if r.stripN > 0 {
 		parts := strings.Split(diffPath, "/")
