@@ -73,6 +73,7 @@ export interface SummaryV1 {
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'
+export type DiffFilter = 'all' | 'changed'
 export type MetricKey = string
 
 export type MetricConfig = {
