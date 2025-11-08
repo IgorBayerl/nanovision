@@ -85,7 +85,7 @@ export default function MethodsTable({
                             <th className="w-full px-4 py-2 text-left text-muted-foreground">Method</th>
                             {hasNewLinesColumn && (
                                 <th className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground">
-                                    New Lines Cov.
+                                    Patch Line Cov.
                                 </th>
                             )}
                             {metricConfigs.map((mc) => (

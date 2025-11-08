@@ -63,6 +63,7 @@ type fileNode struct {
 	ComponentID   string     `json:"componentId,omitempty"`
 	ComponentName string     `json:"componentName,omitempty"`
 	TargetURL     string     `json:"targetUrl,omitempty"`
+	DiffStatus    string     `json:"diffStatus,omitempty"`
 }
 
 type metadataItem struct {
@@ -116,6 +117,7 @@ type lineDetail struct {
 	Status     lineStatus  `json:"status"`
 	Hits       []int       `json:"hits,omitempty"`
 	BranchInfo *branchInfo `json:"branchInfo,omitempty"`
+	DiffStatus string      `json:"diffStatus,omitempty"`
 }
 
 type methodMetric struct {
@@ -123,11 +125,18 @@ type methodMetric struct {
 	Status riskLevel `json:"status,omitempty"`
 }
 
+type newLinesCoverage struct {
+	Covered int `json:"covered"`
+	Total   int `json:"total"`
+}
+
 type methodDetail struct {
-	Name      string                  `json:"name"`
-	StartLine int                     `json:"startLine"`
-	EndLine   int                     `json:"endLine"`
-	Metrics   map[string]methodMetric `json:"metrics"`
+	Name             string                  `json:"name"`
+	StartLine        int                     `json:"startLine"`
+	EndLine          int                     `json:"endLine"`
+	Metrics          map[string]methodMetric `json:"metrics"`
+	DiffStatus       string                  `json:"diffStatus,omitempty"`
+	NewLinesCoverage *newLinesCoverage       `json:"newLinesCoverage,omitempty"`
 }
 
 type report struct {

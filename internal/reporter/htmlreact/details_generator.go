@@ -110,6 +110,14 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 		lineMetric, hasMetric := fileNode.Lines[lineNumber]
 		ld := lineDetail{LineNumber: lineNumber, Content: lineContent, Status: StatusNotCoverable}
 
+		if fileNode.Diff != nil {
+			if fileNode.Diff.AddedLines[lineNumber] {
+				ld.DiffStatus = "added"
+			} else if fileNode.Diff.ModifiedLines[lineNumber] {
+				ld.DiffStatus = "modified"
+			}
+		}
+
 		if hasMetric && lineMetric.Hits >= 0 {
 			// Create the dense hits array that corresponds to the filtered reportsList
 			denseHits := make([]int, 0, len(sortedIndices))
@@ -145,6 +153,52 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(fileNode *model.File
 			StartLine: method.StartLine,
 			EndLine:   method.EndLine,
 			Metrics:   make(map[string]methodMetric),
+		}
+
+		if fileNode.Diff != nil {
+			var newLinesTotal int = 0
+			var newLinesCovered int = 0
+
+			if fileNode.Diff.Kind == model.ChangeKindAdded {
+				md.DiffStatus = "added"
+				// For a new file, all coverable lines within the method are "new" by definition.
+				newLinesTotal = method.LinesValid
+				newLinesCovered = method.LinesCovered
+			} else { // This is a modified file; we must check line by line.
+				isModified := false
+				for i := method.StartLine; i <= method.EndLine; i++ {
+					isAdded := fileNode.Diff.AddedLines[i]
+					isModifiedLine := fileNode.Diff.ModifiedLines[i]
+
+					if isAdded || isModifiedLine {
+						isModified = true
+						if lineMetric, ok := fileNode.Lines[i]; ok && lineMetric.Hits >= 0 {
+							newLinesTotal++
+							if lineMetric.Hits > 0 {
+								newLinesCovered++
+							}
+						}
+					}
+				}
+
+				if isModified {
+					// If the number of changed coverable lines equals the method's total
+					// coverable lines, the method is effectively new.
+					if newLinesTotal > 0 && newLinesTotal == method.LinesValid {
+						md.DiffStatus = "added"
+					} else {
+						md.DiffStatus = "modified"
+					}
+				}
+			}
+
+			// Assign NewLinesCoverage if there were any new/modified coverable lines.
+			if newLinesTotal > 0 {
+				md.NewLinesCoverage = &newLinesCoverage{
+					Covered: newLinesCovered,
+					Total:   newLinesTotal,
+				}
+			}
 		}
 
 		lineCovPct := utils.CalculatePercentage(method.LinesCovered, method.LinesValid, 0)

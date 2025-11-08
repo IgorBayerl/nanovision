@@ -137,7 +137,7 @@ func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNod
 	for _, file := range dir.Files {
 		nodeMetrics := b.buildMetricsMap(file.Metrics)
 		detailsFileName := strings.ReplaceAll(file.Path, "/", "_") + ".html"
-		children = append(children, fileNode{
+		childNode := fileNode{
 			ID:        file.Path,
 			Name:      file.Name,
 			Type:      "file",
@@ -145,7 +145,13 @@ func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNod
 			Metrics:   nodeMetrics,
 			Statuses:  b.convertStatuses(file.Statuses),
 			TargetURL: detailsFileName,
-		})
+		}
+
+		if file.Diff != nil {
+			childNode.DiffStatus = file.Diff.Kind.String()
+		}
+
+		children = append(children, childNode)
 	}
 
 	sort.Slice(children, func(i, j int) bool {
