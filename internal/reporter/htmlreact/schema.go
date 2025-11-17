@@ -22,14 +22,12 @@ type branchCoverageDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
-// Represents the metrics for methods that have at least one line covered.
 type methodsCoveredDetail struct {
 	Covered    int     `json:"covered"`
 	Total      int     `json:"total"`
 	Percentage float64 `json:"percentage"`
 }
 
-// Represents the metrics for methods that have 100% line coverage.
 type methodsFullyCoveredDetail struct {
 	Covered    int     `json:"covered"`
 	Total      int     `json:"total"`
@@ -45,9 +43,14 @@ type totals struct {
 	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
 	MethodBranchCoverage    *branchCoverageDetail      `json:"method_branch_coverage,omitempty"`
 	MaxCyclomaticComplexity *lineCoverageDetail        `json:"max_cyclomatic_complexity,omitempty"`
-	Files                   int                        `json:"files"`
-	Folders                 int                        `json:"folders"`
-	Statuses                statuses                   `json:"statuses,omitempty"`
+
+	// Patch / diff-based metrics.
+	PatchLineCoverage   *lineCoverageDetail   `json:"patch_line_coverage,omitempty"`
+	PatchMethodsCovered *methodsCoveredDetail `json:"patch_methods_covered,omitempty"`
+
+	Files    int      `json:"files"`
+	Folders  int      `json:"folders"`
+	Statuses statuses `json:"statuses,omitempty"`
 }
 
 type statuses map[string]riskLevel
@@ -61,40 +64,9 @@ type fileNode struct {
 	Metrics       metricsMap `json:"metrics,omitempty"`
 	Statuses      statuses   `json:"statuses,omitempty"`
 	ComponentID   string     `json:"componentId,omitempty"`
-	ComponentName string     `json:"componentName,omitempty"`
 	TargetURL     string     `json:"targetUrl,omitempty"`
 	DiffStatus    string     `json:"diffStatus,omitempty"`
-}
-
-type metadataItem struct {
-	Label    string `json:"label"`
-	Value    any    `json:"value"`
-	SizeHint string `json:"sizeHint,omitempty"`
-}
-
-type subMetric struct {
-	ID    string `json:"id"`
-	Label string `json:"label"`
-	Width int    `json:"width"`
-}
-
-type metricDefinition struct {
-	Label      string      `json:"label"`
-	ShortLabel string      `json:"shortLabel,omitempty"`
-	SubMetrics []subMetric `json:"subMetrics"`
-}
-
-type metricDefinitions map[string]metricDefinition
-
-type summaryV1 struct {
-	SchemaVersion     int               `json:"schemaVersion"`
-	GeneratedAt       string            `json:"generatedAt"`
-	ReportID          string            `json:"reportId,omitempty"`
-	Title             string            `json:"title"`
-	Totals            totals            `json:"totals"`
-	Tree              []fileNode        `json:"tree"`
-	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
-	Metadata          []metadataItem    `json:"metadata,omitempty"`
+	ComponentName string     `json:"componentName,omitempty"`
 }
 
 type lineStatus string
@@ -142,6 +114,37 @@ type methodDetail struct {
 type report struct {
 	Name string `json:"name"`
 	Path string `json:"path"`
+}
+
+type metadataItem struct {
+	Label    string `json:"label"`
+	Value    any    `json:"value"`
+	SizeHint string `json:"sizeHint,omitempty"`
+}
+
+type subMetric struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Width int    `json:"width"`
+}
+
+type metricDefinition struct {
+	Label      string      `json:"label"`
+	ShortLabel string      `json:"shortLabel,omitempty"`
+	SubMetrics []subMetric `json:"subMetrics"`
+}
+
+type metricDefinitions map[string]metricDefinition
+
+type summaryV1 struct {
+	SchemaVersion     int               `json:"schemaVersion"`
+	GeneratedAt       string            `json:"generatedAt"`
+	ReportID          string            `json:"reportId,omitempty"`
+	Title             string            `json:"title"`
+	Totals            totals            `json:"totals"`
+	Tree              []fileNode        `json:"tree"`
+	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
+	Metadata          []metadataItem    `json:"metadata,omitempty"`
 }
 
 type detailsV1 struct {

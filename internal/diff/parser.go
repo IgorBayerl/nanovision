@@ -42,6 +42,9 @@ func Parse(path string) (*DiffData, error) {
 		// Check for file header
 		if matches := gitDiffRE.FindStringSubmatch(line); matches != nil {
 			if currentFile != nil {
+				if currentHunk != nil {
+					currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
+				}
 				data.Files = append(data.Files, *currentFile)
 			}
 			currentFile = &FileDiff{

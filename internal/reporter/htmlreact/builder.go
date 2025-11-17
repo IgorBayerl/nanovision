@@ -30,13 +30,16 @@ func (b *HtmlReactReportBuilder) ReportType() string {
 }
 
 func (b *HtmlReactReportBuilder) CreateReport(tree *model.SummaryTree) error {
-	b.logger.Info("Starting generation of new React HTML report.")
+	b.logger.Info("Starting generation of new React HTML report.", "directory", b.outputDir)
 
 	summaryData, err := b.transformTree(tree)
 	if err != nil {
 		return fmt.Errorf("failed to transform coverage data: %w", err)
 	}
 
+	// NOTE: GenerateSummary expects a Logger interface (with Debugf/Infof/Errorf).
+	// slog.Logger does not implement that, so we pass nil (logging inside
+	// GenerateSummary/copyDist is optional).
 	if err := GenerateSummary(b.outputDir, summaryData, nil); err != nil {
 		return fmt.Errorf("failed to generate summary files: %w", err)
 	}
@@ -123,37 +126,48 @@ func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNod
 
 	for _, subdir := range dir.Subdirs {
 		nodeMetrics := b.buildMetricsMap(subdir.Metrics)
-		children = append(children, fileNode{
+		statuses := b.convertStatuses(subdir.Statuses)
+
+		child := fileNode{
 			ID:       subdir.Path,
 			Name:     subdir.Name,
 			Type:     "folder",
 			Path:     subdir.Path,
-			Children: b.buildTreeChildren(subdir),
 			Metrics:  nodeMetrics,
-			Statuses: b.convertStatuses(subdir.Statuses),
-		})
+			Statuses: statuses,
+			Children: b.buildTreeChildren(subdir),
+		}
+		children = append(children, child)
 	}
 
 	for _, file := range dir.Files {
 		nodeMetrics := b.buildMetricsMap(file.Metrics)
-		detailsFileName := strings.ReplaceAll(file.Path, "/", "_") + ".html"
-		childNode := fileNode{
-			ID:        file.Path,
-			Name:      file.Name,
-			Type:      "file",
-			Path:      file.Path,
-			Metrics:   nodeMetrics,
-			Statuses:  b.convertStatuses(file.Statuses),
-			TargetURL: detailsFileName,
+		statuses := b.convertStatuses(file.Statuses)
+
+		target := ""
+		if file.SourceDir != "" {
+			target = fmt.Sprintf("%s.html", strings.ReplaceAll(file.Path, "/", "_"))
 		}
 
+		diffStatus := ""
 		if file.Diff != nil {
-			childNode.DiffStatus = file.Diff.Kind.String()
+			diffStatus = file.Diff.Kind.String()
 		}
 
-		children = append(children, childNode)
+		child := fileNode{
+			ID:         file.Path,
+			Name:       file.Name,
+			Type:       "file",
+			Path:       file.Path,
+			Metrics:    nodeMetrics,
+			Statuses:   statuses,
+			TargetURL:  target,
+			DiffStatus: diffStatus,
+		}
+		children = append(children, child)
 	}
 
+	// Sort children so folders come before files, then by name.
 	sort.Slice(children, func(i, j int) bool {
 		if children[i].Type != children[j].Type {
 			return children[i].Type == "folder"
@@ -166,6 +180,7 @@ func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNod
 
 func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, folders int) totals {
 	metrics := b.buildMetricsMap(tree.Metrics)
+
 	t := totals{
 		Files:   files,
 		Folders: folders,
@@ -183,6 +198,15 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 	if mfc, ok := metrics["methods_fully_covered"].(methodsFullyCoveredDetail); ok {
 		t.MethodsFullyCovered = &mfc
 	}
+
+	if plc, ok := metrics["patch_line_coverage"].(lineCoverageDetail); ok { // Changed branchCoverageDetail to lineCoverageDetail
+		t.PatchLineCoverage = &plc
+	}
+
+	if pmc, ok := metrics["patch_methods_covered"].(methodsCoveredDetail); ok {
+		t.PatchMethodsCovered = &pmc
+	}
+
 	return t
 }
 
@@ -223,6 +247,31 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 		}
 	}
 
+	// ===================== START: CORRECTED SECTION =====================
+	// Patch line coverage (diff-based).
+	// Use PatchLinesTotal to decide if the metric should be shown at all.
+	if m.PatchLinesTotal > 0 {
+		patchLinePct := utils.CalculatePercentage(m.PatchLinesCovered, m.PatchLinesValid, 2)
+		metrics["patch_line_coverage"] = lineCoverageDetail{
+			Covered:    m.PatchLinesCovered,
+			Uncovered:  m.PatchLinesValid - m.PatchLinesCovered,
+			Coverable:  m.PatchLinesValid,
+			Total:      m.PatchLinesTotal,
+			Percentage: patchLinePct,
+		}
+	}
+	// ====================== END: CORRECTED SECTION ======================
+
+	// Patch methods coverage (diff-based).
+	if m.PatchMethodsValid > 0 {
+		patchMethodsPct := utils.CalculatePercentage(m.PatchMethodsCovered, m.PatchMethodsValid, 2)
+		metrics["patch_methods_covered"] = methodsCoveredDetail{
+			Covered:    m.PatchMethodsCovered,
+			Total:      m.PatchMethodsValid,
+			Percentage: patchMethodsPct,
+		}
+	}
+
 	return metrics
 }
 
@@ -250,7 +299,7 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		},
 		"methods_covered": {
 			Label:      "Methods Covered",
-			ShortLabel: "Methods Cov.",
+			ShortLabel: "Methods",
 			SubMetrics: []subMetric{
 				{ID: "covered", Label: "Covered", Width: 80},
 				{ID: "total", Label: "Total", Width: 80},
@@ -259,7 +308,7 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		},
 		"methods_fully_covered": {
 			Label:      "Methods Fully Covered",
-			ShortLabel: "Methods Full Cov.",
+			ShortLabel: "Fully Covered",
 			SubMetrics: []subMetric{
 				{ID: "covered", Label: "Covered", Width: 80},
 				{ID: "total", Label: "Total", Width: 80},
@@ -282,6 +331,26 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "total", Label: "Value", Width: 100},
 			},
 		},
+		"patch_line_coverage": {
+			Label:      "Patch Lines",
+			ShortLabel: "Patch Lines",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "uncovered", Label: "Uncovered", Width: 100},
+				{ID: "coverable", Label: "Coverable", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
+		"patch_methods_covered": {
+			Label:      "Patch Methods",
+			ShortLabel: "Patch Methods",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 80},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
 	}
 }
 
@@ -289,7 +358,7 @@ func countNodes(nodes []fileNode) (files, folders int) {
 	for _, node := range nodes {
 		if node.Type == "file" {
 			files++
-		} else {
+		} else { // folder
 			folders++
 			f, fo := countNodes(node.Children)
 			files += f
