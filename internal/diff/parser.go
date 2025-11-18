@@ -2,7 +2,10 @@ package diff
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
+	"log/slog"
 	"os"
 	"regexp"
 	"strconv"
@@ -10,14 +13,19 @@ import (
 )
 
 var (
-	// Regular expressions for parsing diff headers and hunks
 	gitDiffRE    = regexp.MustCompile(`^diff --git a/(.*) b/(.*)$`)
 	fileHeaderRE = regexp.MustCompile(`^(\+\+\+|---)\s+(.*)$`)
 	newFileRE    = regexp.MustCompile(`^new file mode \d+$`)
 	hunkHeaderRE = regexp.MustCompile(`^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@.*$`)
 )
 
-// Parse reads a unified diff file and returns a structured DiffData
+// Parse reads a unified diff file from the given path and returns a structured
+// representation of its contents. It handles standard git diff format including
+// file additions, modifications, and the individual hunks within each file.
+//
+// The parser is resilient to malformed input - it will log warnings and continue
+// processing when encountering oversized lines or unexpected content rather than
+// failing immediately.
 func Parse(path string) (*DiffData, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -25,21 +33,21 @@ func Parse(path string) (*DiffData, error) {
 	}
 	defer file.Close()
 
+	reader := bufio.NewReader(file)
 	data := &DiffData{}
-	scanner := bufio.NewScanner(file)
 	var currentFile *FileDiff
 	var currentHunk *Hunk
 	var pendingRemovals int
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	for {
+		lineBytes, err := reader.ReadBytes('\n')
+		line := strings.TrimSuffix(string(lineBytes), "\n")
 
-		// Skip empty lines
 		if line == "" {
-			continue
+			goto nextIteration
 		}
 
-		// Check for file header
+		// Parse git diff header: "diff --git a/path b/path"
 		if matches := gitDiffRE.FindStringSubmatch(line); matches != nil {
 			if currentFile != nil {
 				if currentHunk != nil {
@@ -53,19 +61,19 @@ func Parse(path string) (*DiffData, error) {
 				Kind:    "modified",
 			}
 			currentHunk = nil
-			continue
+			goto nextIteration
 		}
 
-		// Handle new file mode
+		// Detect file additions via "new file mode" marker
 		if newFileRE.MatchString(line) {
 			if currentFile != nil {
 				currentFile.Kind = "added"
 				currentFile.OldPath = "/dev/null"
 			}
-			continue
+			goto nextIteration
 		}
 
-		// Handle file headers (---, +++)
+		// Parse "---" and "+++" file path headers
 		if matches := fileHeaderRE.FindStringSubmatch(line); matches != nil {
 			prefix, path := matches[1], matches[2]
 			if currentFile == nil {
@@ -79,16 +87,14 @@ func Parse(path string) (*DiffData, error) {
 			} else {
 				currentFile.NewPath = strings.TrimPrefix(path, "b/")
 			}
-			continue
+			goto nextIteration
 		}
 
-		// Handle hunk headers
+		// Parse hunk header: "@@ -1,5 +1,6 @@"
 		if strings.HasPrefix(line, "@@ ") && strings.Contains(line, " @@") {
-			// Check if it's a valid hunk header format first
 			if !hunkHeaderRE.MatchString(line) {
 				return nil, fmt.Errorf("malformed hunk header: %s", line)
 			}
-
 			matches := hunkHeaderRE.FindStringSubmatch(line)
 			if currentFile == nil {
 				return nil, fmt.Errorf("hunk header without file header")
@@ -96,30 +102,16 @@ func Parse(path string) (*DiffData, error) {
 			if currentHunk != nil {
 				currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
 			}
-
-			oldStart, err := strconv.Atoi(matches[1])
-			if err != nil {
-				return nil, fmt.Errorf("invalid old start line number: %v", err)
+			oldStart, _ := strconv.Atoi(matches[1])
+			oldLines, _ := strconv.Atoi(matches[2])
+			if matches[2] == "" {
+				oldLines = 1
 			}
-			oldLines := 1
-			if matches[2] != "" {
-				oldLines, err = strconv.Atoi(matches[2])
-				if err != nil {
-					return nil, fmt.Errorf("invalid old line count: %v", err)
-				}
+			newStart, _ := strconv.Atoi(matches[3])
+			newLines, _ := strconv.Atoi(matches[4])
+			if matches[4] == "" {
+				newLines = 1
 			}
-			newStart, err := strconv.Atoi(matches[3])
-			if err != nil {
-				return nil, fmt.Errorf("invalid new start line number: %v", err)
-			}
-			newLines := 1
-			if matches[4] != "" {
-				newLines, err = strconv.Atoi(matches[4])
-				if err != nil {
-					return nil, fmt.Errorf("invalid new line count: %v", err)
-				}
-			}
-
 			currentHunk = &Hunk{
 				OldStart: oldStart,
 				OldLines: oldLines,
@@ -128,16 +120,16 @@ func Parse(path string) (*DiffData, error) {
 				content:  "",
 			}
 			pendingRemovals = 0
-			continue
+			goto nextIteration
 		}
 
-		// Handle content lines
+		// Process hunk content lines (-, +, and context lines)
 		if currentHunk != nil {
 			switch {
 			case strings.HasPrefix(line, "-"):
 				pendingRemovals++
 			case strings.HasPrefix(line, "+"):
-				// Calculate offset based on position within current hunk
+				// Calculate the current line offset within the new file version
 				currentLineOffset := 0
 				for _, prevLine := range strings.Split(currentHunk.content, "\n") {
 					if prevLine == "" {
@@ -147,7 +139,7 @@ func Parse(path string) (*DiffData, error) {
 						currentLineOffset++
 					}
 				}
-
+				// Match additions with previous removals to identify modifications
 				if pendingRemovals > 0 {
 					currentHunk.ModifiedLineOffsets = append(currentHunk.ModifiedLineOffsets, currentLineOffset)
 					pendingRemovals--
@@ -158,25 +150,49 @@ func Parse(path string) (*DiffData, error) {
 			case strings.HasPrefix(line, " "):
 				currentHunk.content += line + "\n"
 				pendingRemovals = 0
-			case strings.HasPrefix(line, "\\"):
-				// This handles the "\ No newline at end of file" line. Just ignore it.
-				continue
+			case strings.HasPrefix(line, `\`):
+				// Skip "\ No newline at end of file" markers
+				goto nextIteration
 			default:
-				return nil, fmt.Errorf("invalid line in hunk: %s", line)
+				slog.Warn("Ignoring invalid line inside a diff hunk", "line", line)
 			}
+		}
+
+	nextIteration:
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+
+			if errors.Is(err, bufio.ErrBufferFull) {
+				// Line exceeded buffer capacity - skip to next parseable line
+				fileName := "unknown"
+				if currentFile != nil {
+					fileName = currentFile.NewPath
+				}
+				slog.Warn("Ignoring overly long line in diff, skipping rest of hunk.", "file", fileName)
+
+				// Consume remainder of oversized line
+				for errors.Is(err, bufio.ErrBufferFull) {
+					_, err = reader.ReadBytes('\n')
+				}
+
+				// Discard corrupted hunk state
+				currentHunk = nil
+				pendingRemovals = 0
+				continue
+			}
+
+			return nil, fmt.Errorf("reading diff file: %w", err)
 		}
 	}
 
-	// Add the last hunk and file if present
+	// Finalize any remaining hunk and file data
 	if currentHunk != nil {
 		currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
 	}
 	if currentFile != nil {
 		data.Files = append(data.Files, *currentFile)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("scanning diff file: %w", err)
 	}
 
 	return data, nil
