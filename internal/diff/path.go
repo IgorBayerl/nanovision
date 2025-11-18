@@ -10,8 +10,10 @@ import (
 // - Strips "a/" and "b/" prefixes (git-style) - only once
 // - Cleans the path (removes "." components, etc.)
 func Normalize(p string) string {
-	// Convert to forward slashes first (handles Windows paths)
-	p = filepath.ToSlash(p)
+	// Convert to forward slashes first.
+	// We use strings.ReplaceAll instead of filepath.ToSlash because valid diffs
+	// might contain Windows-style paths even when the tool is running on Linux.
+	p = strings.ReplaceAll(p, "\\", "/")
 
 	// Strip git-style prefixes (only check once at the start)
 	if strings.HasPrefix(p, "a/") {
@@ -23,8 +25,8 @@ func Normalize(p string) string {
 	// Clean the path to remove "." and "./" components
 	p = filepath.Clean(p)
 
-	// filepath.Clean might add "./" for relative paths, so convert back to slashes
-	// and remove any leading "./"
+	// filepath.Clean might add "./" for relative paths or convert back to backslashes
+	// on Windows, so we force forward slashes again and remove leading "./".
 	p = filepath.ToSlash(p)
 	for strings.HasPrefix(p, "./") {
 		p = strings.TrimPrefix(p, "./")
