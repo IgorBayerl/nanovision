@@ -217,16 +217,20 @@ def print_summary_report(results):
     print("="*80)
 
 
-def generate_diff_file():
+def generate_diff_file(explicit_target=None):
     """
     Generates a diff file and returns its path.
     Adapts the 'git diff' command for local vs. GitHub Actions environments.
+    Allows an explicit target (e.g. 'HEAD~3') to override auto-detection.
     """
     diff_file_path = os.path.join(tempfile.gettempdir(), "nanovision_e2e.diff")
     diff_target = "main"
     git_command = []
 
-    if os.environ.get("GITHUB_ACTIONS") == "true":
+    if explicit_target:
+        print(f"--- Diffing against explicit target: '{explicit_target}' ---")
+        git_command = ["git", "diff", explicit_target]
+    elif os.environ.get("GITHUB_ACTIONS") == "true":
         print("--- Detected GitHub Actions environment for diff generation ---")
         base_ref = os.environ.get("GITHUB_BASE_REF")
         if base_ref:
@@ -340,6 +344,7 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="Stream the live output from the nanovision tool during tests.")
     parser.add_argument("-sc", "--self-cover", action="store_true", help="Build with coverage and generate a coverage report for the tool itself.")
     parser.add_argument("--report-types", default="Html,TextSummary,Lcov,RawJson", help="Comma-separated list of report types to generate.")
+    parser.add_argument("--diff-target", help="Explicit git reference to diff against (e.g. HEAD~3, origin/main). Overrides auto-detection.")
     args = parser.parse_args()
 
     platform, binary_name = get_platform_and_binary_name()
@@ -373,7 +378,7 @@ def main():
                 all_results.append({"name": "Self-Coverage Workflow", "status": "⚪ SKIPPED", "details": "Skipped due to failures in primary E2E tests."})
             else:
                 self_cover_cli_args = global_cli_args.copy()
-                diff_file_path = generate_diff_file()
+                diff_file_path = generate_diff_file(args.diff_target)
                 if diff_file_path:
                     self_cover_cli_args.append(f"-diff={diff_file_path}")
 

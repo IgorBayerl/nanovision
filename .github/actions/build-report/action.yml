@@ -10,6 +10,9 @@ inputs:
   retention-days:
     description: Artifact retention (days) for non-PR runs
     default: '1'
+  diff-target:
+    description: "Optional git ref to compare against (e.g. HEAD~3)"
+    default: ""
 runs:
   using: composite
   steps:
@@ -23,7 +26,12 @@ runs:
 
     - name: Run E2E & generate self-coverage
       shell: bash
-      run: python3 scripts/e2e_test.py --self-cover --verbose
+      run: |
+        ARGS=""
+        if [ -n "${{ inputs.diff-target }}" ]; then
+          ARGS="$ARGS --diff-target=${{ inputs.diff-target }}"
+        fi
+        python3 scripts/e2e_test.py --self-cover --verbose $ARGS
 
     # Upload only when NOT a PR (saves Actions storage on PR checks)
     - name: Upload report bundle
