@@ -1,7 +1,6 @@
 vendor/
 .gitattributes
 
-.github/*
 .vscode/*
 
 **.js

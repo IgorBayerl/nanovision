@@ -12,7 +12,7 @@ Key Features:
 - Verifies command exit codes and the creation of expected output files.
 - Provides a detailed summary of PASS/FAIL for all tests.
 - Includes a '--self-cover' mode to generate a coverage report for the
-  nanovision tool itself, combining unit and E2E test coverage.
+  nanovision tool itself, which now automatically includes patch coverage analysis.
 - Use the '-v' or '--verbose' flag to see the live output from the CLI tool.
 """
 import argparse
@@ -154,23 +154,27 @@ SELF_COVERAGE_TESTS = [
 #  Helper Functions
 # ==============================================================================
 
-def run_command(command, working_dir=SCRIPT_ROOT, suppress_output=True, critical=False):
+def run_command(command, working_dir=SCRIPT_ROOT, suppress_output=True, critical=False, capture_output=False):
     """Executes a command, returns its exit code, and optionally exits on failure."""
     print(f"--- Running Command: {' '.join(command)}")
-    stdout = subprocess.DEVNULL if suppress_output else sys.stdout
-    stderr = subprocess.DEVNULL if suppress_output else sys.stderr
+    stdout = subprocess.PIPE if capture_output else (subprocess.DEVNULL if suppress_output else sys.stdout)
+    stderr = subprocess.PIPE if capture_output else (subprocess.DEVNULL if suppress_output else sys.stderr)
+
     try:
         process = subprocess.run(
-            command, cwd=working_dir, check=False, stdout=stdout, stderr=stderr
+            command, cwd=working_dir, check=False, stdout=stdout, stderr=stderr, text=True
         )
         if critical and process.returncode != 0:
             print(f"--- CRITICAL COMMAND FAILED (Code: {process.returncode}). Aborting. ---", file=sys.stderr)
+            if capture_output:
+                print(f"--- STDOUT ---\n{process.stdout}\n--- STDERR ---\n{process.stderr}", file=sys.stderr)
             sys.exit(1)
-        return process.returncode
+        return process.returncode, process.stdout, process.stderr
     except FileNotFoundError:
         print(f"--- Error: Command not found: {command[0]}", file=sys.stderr)
         if critical: sys.exit(1)
-        return -1
+        return -1, "", f"Command not found: {command[0]}"
+
 
 def clean_directory(path):
     """Removes a directory and its contents, then recreates it."""
@@ -213,6 +217,39 @@ def print_summary_report(results):
     print("="*80)
 
 
+def generate_diff_file():
+    """
+    Generates a diff file and returns its path.
+    Adapts the 'git diff' command for local vs. GitHub Actions environments.
+    """
+    diff_file_path = os.path.join(tempfile.gettempdir(), "nanovision_e2e.diff")
+    diff_target = "main"
+    git_command = []
+
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        print("--- Detected GitHub Actions environment for diff generation ---")
+        base_ref = os.environ.get("GITHUB_BASE_REF")
+        if base_ref:
+            print(f"--- Diffing against PR base branch: {base_ref} ---")
+            diff_target = f"origin/{base_ref}"
+        else:
+            print("--- Diffing against previous commit (HEAD~1) ---")
+            diff_target = "HEAD~1"
+        git_command = ["git", "diff", diff_target]
+    else:
+        print(f"--- Diffing against local branch: '{diff_target}' ---")
+        git_command = ["git", "diff", diff_target]
+
+    try:
+        with open(diff_file_path, "w") as f:
+            subprocess.run(git_command, cwd=SCRIPT_ROOT, check=True, stdout=f, text=True)
+        print(f"--- Successfully generated diff file at: {diff_file_path} ---")
+        return diff_file_path
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        print(f"--- WARNING: Failed to generate diff file. Patch coverage tests will be skipped. Error: {e}", file=sys.stderr)
+        return None
+
+
 # ==============================================================================
 #  Core E2E and Self-Coverage Functions
 # ==============================================================================
@@ -230,7 +267,7 @@ def build_tool(platform, cover=False):
     print("--- Build successful ---")
 
 
-def run_test_suite(test_cases, binary_path, global_args, title_prefix="E2E", verbose=False):
+def run_test_suite(test_cases, binary_path, cli_args, title_prefix="E2E", verbose=False):
     """Runs a suite of test cases and returns a list of detailed result dicts."""
     results = []
     for case in test_cases:
@@ -239,8 +276,8 @@ def run_test_suite(test_cases, binary_path, global_args, title_prefix="E2E", ver
         case_output_dir = os.path.join(REPORTS_OUTPUT_DIR, case.output_dir_name)
         os.makedirs(case_output_dir, exist_ok=True)
 
-        command = [binary_path] + case.args + global_args + [f"-output={case_output_dir}"]
-        return_code = run_command(command, suppress_output=not verbose)
+        command = [binary_path] + case.args + cli_args + [f"-output={case_output_dir}"]
+        return_code, _, _ = run_command(command, suppress_output=not verbose)
 
         actual_success = (return_code == 0)
         test_passed = (actual_success == case.expect_success)
@@ -267,7 +304,7 @@ def run_test_suite(test_cases, binary_path, global_args, title_prefix="E2E", ver
     return results
 
 
-def run_self_coverage_workflow(binary_path, global_args, verbose=False):
+def run_self_coverage_workflow(binary_path, cli_args, verbose=False):
     """Handles the entire self-coverage report generation process."""
     print("\n" + "="*80)
     print("--- Starting nanovision Self-Coverage Workflow ---")
@@ -294,7 +331,7 @@ def run_self_coverage_workflow(binary_path, global_args, verbose=False):
 
     # 3. Run the tool on its own coverage files.
     print("\n--- Step 3: Generating self-coverage reports ---")
-    return run_test_suite(SELF_COVERAGE_TESTS, binary_path, global_args, title_prefix="Self-Cover", verbose=verbose)
+    return run_test_suite(SELF_COVERAGE_TESTS, binary_path, cli_args, title_prefix="Self-Cover", verbose=verbose)
 
 
 def main():
@@ -335,7 +372,12 @@ def main():
                 print("\n--- SKIPPING self-coverage workflow because primary E2E tests failed. ---", file=sys.stderr)
                 all_results.append({"name": "Self-Coverage Workflow", "status": "⚪ SKIPPED", "details": "Skipped due to failures in primary E2E tests."})
             else:
-                self_cover_results = run_self_coverage_workflow(binary_path, global_cli_args, verbose=args.verbose)
+                self_cover_cli_args = global_cli_args.copy()
+                diff_file_path = generate_diff_file()
+                if diff_file_path:
+                    self_cover_cli_args.append(f"-diff={diff_file_path}")
+
+                self_cover_results = run_self_coverage_workflow(binary_path, self_cover_cli_args, verbose=args.verbose)
                 all_results.extend(self_cover_results)
 
     finally:

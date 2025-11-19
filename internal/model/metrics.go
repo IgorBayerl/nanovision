@@ -11,12 +11,27 @@ type CoverageMetrics struct {
 	MethodsCovered      int
 	MethodsFullyCovered int
 	MethodsValid        int
+	PatchLinesTotal     int
+
+	// Patch / diff-based metrics.
+	// PatchLinesValid counts the number of coverable lines that were added or
+	// modified in the diff. PatchLinesCovered counts how many of those lines
+	// were executed at least once.
+	PatchLinesCovered int
+	PatchLinesValid   int
+
+	// PatchMethodsValid counts how many methods contain at least one changed,
+	// coverable line. PatchMethodsCovered counts how many of those methods have
+	// at least one changed line that was executed at least once.
+	PatchMethodsCovered int
+	PatchMethodsValid   int
 }
 
 // LineMetrics holds the coverage data for a single line of code.
 type LineMetrics struct {
-	// Hits stores the SUM of hits from all merged reports. This is used for
-	// general aggregation and reporters that don't need per-report details.
+	// Hits is the total hit count aggregated from all coverage reports
+	// for this line. A value of -1 means the line is not coverable
+	// (e.g., comments, blank lines).
 	Hits int
 
 	// ReportHits stores the individual hit count from each report. The index

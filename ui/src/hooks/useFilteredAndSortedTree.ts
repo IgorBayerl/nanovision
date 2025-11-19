@@ -2,6 +2,7 @@ import micromatch from 'micromatch'
 import { useMemo } from 'react'
 import { useDebounce } from '@/hooks/useDebounce'
 import type {
+    DiffFilter,
     FileNode,
     FilterRange,
     MetricConfig,
@@ -19,6 +20,7 @@ interface HookParams {
     query: string
     searchMode: 'glob' | 'normal'
     riskFilter: RiskFilter
+    diffFilter: DiffFilter
     filterRanges: Record<MetricKey, FilterRange>
     sortKey: SortKey
     sortDir: SortDir
@@ -66,6 +68,7 @@ export function useFilteredAndSortedTree({
     query,
     searchMode,
     riskFilter,
+    diffFilter,
     filterRanges,
     sortKey,
     sortDir,
@@ -103,6 +106,12 @@ export function useFilteredAndSortedTree({
                 if (!rangeMatches) return false
             }
 
+            if (diffFilter === 'changed') {
+                if (file.diffStatus !== 'added' && file.diffStatus !== 'modified') {
+                    return false
+                }
+            }
+
             if (riskFilter !== 'all') {
                 const visibleStatuses = enabledMetrics
                     .map((cfg) => file.statuses?.[cfg.id])
@@ -130,7 +139,7 @@ export function useFilteredAndSortedTree({
 
             return true
         })
-    }, [allFiles, query, searchMode, debouncedFilterRanges, riskFilter, enabledMetrics])
+    }, [allFiles, query, searchMode, debouncedFilterRanges, riskFilter, diffFilter, enabledMetrics])
 
     const sortedNodes = useMemo(() => {
         const nodesToSort = viewMode === 'flat' ? filteredFiles : tree
@@ -173,7 +182,7 @@ export function useFilteredAndSortedTree({
             }
         }
 
-        if (visibleNodeIds.size === 0 && query.trim().length > 0) return []
+        if (visibleNodeIds.size === 0 && (query.trim().length > 0 || diffFilter === 'changed')) return []
 
         const result: RenderNode[] = []
         function buildRenderList(nodes: FileNode[], depth: number) {
@@ -193,5 +202,5 @@ export function useFilteredAndSortedTree({
 
         buildRenderList(sortedNodes, 0)
         return result
-    }, [viewMode, filteredFiles, sortedNodes, parentMap, expandedFolders, query])
+    }, [viewMode, filteredFiles, sortedNodes, parentMap, expandedFolders, query, diffFilter])
 }

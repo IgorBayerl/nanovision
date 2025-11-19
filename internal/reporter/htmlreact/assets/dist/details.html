@@ -4,8 +4,8 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Coverage Details</title>
-		<script defer src="./assets/details-ldPM9j3j.js"></script>
-		<link rel="stylesheet" href="./assets/details-MgKFAs6e.css">
+		<script defer src="./assets/details-CqMiOABC.js"></script>
+		<link rel="stylesheet" href="./assets/details-B2i0kkVf.css">
 	</head>
 	<body>
 		<div id="root"></div>
@@ -100,7 +100,9 @@
         "branch_coverage": { "value": "50%", "status": "danger" },
         "cyclomatic_complexity": { "value": "6" },
         "line_coverage": { "value": "75%", "status": "warning" }
-      }
+      },
+      "diffStatus": "modified",
+      "newLinesCoverage": { "covered": 2, "total": 5 }
     },
     {
       "name": "AdvancedCalculator::average(const std::vector<double>& numbers)",
@@ -110,47 +112,53 @@
         "branch_coverage": { "value": "50%", "status": "danger" },
         "cyclomatic_complexity": { "value": "2" },
         "line_coverage": { "value": "80%" }
-      }
+      },
+      "diffStatus": "added",
+      "newLinesCoverage": { "covered": 2, "total": 3 }
     }
   ],
   "lines": [
-    { "lineNumber": 1, "content": "#include \"advanced_calculator.h\"", "status": "not-coverable" },
-    { "lineNumber": 2, "content": "#include <stdexcept>", "status": "not-coverable" },
-    { "lineNumber": 3, "content": "", "status": "not-coverable" },
+    { "lineNumber": 1, "content": "#include \"advanced_calculator.h\"", "status": "not-coverable", "diffStatus": "unchanged" },
+    { "lineNumber": 2, "content": "#include <stdexcept>", "status": "not-coverable", "diffStatus": "unchanged" },
+    { "lineNumber": 3, "content": "", "status": "not-coverable", "diffStatus": "unchanged" },
     {
       "lineNumber": 4,
       "content": "double AdvancedCalculator::power(double base, int exp) {",
       "status": "covered",
-      "hits": [2]
+      "hits": [2],
+      "diffStatus": "unchanged"
     },
     {
       "lineNumber": 5,
       "content": "    if (exp == 0) {",
       "status": "covered",
       "hits": [2],
-      "branchInfo": { "covered": 2, "total": 2 }
+      "branchInfo": { "covered": 2, "total": 2 },
+      "diffStatus": "unchanged"
     },
-    { "lineNumber": 6, "content": "        return 1.0;", "status": "covered", "hits": [1] },
-    { "lineNumber": 7, "content": "    }", "status": "not-coverable" },
-    { "lineNumber": 8, "content": "", "status": "not-coverable" },
-    { "lineNumber": 9, "content": "    double result = 1.0;", "status": "covered", "hits": [1] },
-    { "lineNumber": 10, "content": "    int positive_exp = exp > 0 ? exp : -exp;", "status": "covered", "hits": [1] },
+    { "lineNumber": 6, "content": "        return 1.0;", "status": "covered", "hits": [1], "diffStatus": "unchanged" },
+    { "lineNumber": 7, "content": "    }", "status": "not-coverable", "diffStatus": "unchanged" },
+    { "lineNumber": 8, "content": "", "status": "not-coverable", "diffStatus": "removed" },
+    { "lineNumber": 9, "content": "    double result = 1.0;", "status": "covered", "hits": [1], "diffStatus": "unchanged" },
+    { "lineNumber": 10, "content": "    int positive_exp = exp > 0 ? exp : -exp;", "status": "covered", "hits": [1], "diffStatus": "added" },
     {
       "lineNumber": 11,
       "content": "    for (int i = 0; i < positive_exp; ++i) {",
       "status": "covered",
       "hits": [4],
-      "branchInfo": { "covered": 2, "total": 2 }
+      "branchInfo": { "covered": 2, "total": 2 },
+      "diffStatus": "added"
     },
-    { "lineNumber": 12, "content": "        result *= base;", "status": "covered", "hits": [3] },
-    { "lineNumber": 13, "content": "    }", "status": "not-coverable" },
-    { "lineNumber": 14, "content": "", "status": "not-coverable" },
+    { "lineNumber": 12, "content": "        result *= base;", "status": "covered", "hits": [3], "diffStatus": "added" },
+    { "lineNumber": 13, "content": "    }", "status": "not-coverable", "diffStatus": "unchanged" },
+    { "lineNumber": 14, "content": "", "status": "not-coverable", "diffStatus": "unchanged" },
     {
       "lineNumber": 15,
       "content": "    if (exp < 0) {",
       "status": "partial",
       "hits": [1],
-      "branchInfo": { "covered": 1, "total": 2 }
+      "branchInfo": { "covered": 1, "total": 2 },
+      "diffStatus": "unchanged"
     },
     {
       "lineNumber": 16,
@@ -162,49 +170,53 @@
       "content": "        if (result == 0.0) {",
       "status": "uncovered",
       "hits": [0],
-      "branchInfo": { "covered": 0, "total": 2 }
+      "branchInfo": { "covered": 0, "total": 2 },
+      "diffStatus": "added"
     },
     {
       "lineNumber": 18,
       "content": "            throw std::runtime_error(\"Division by zero in power calculation.\");",
       "status": "uncovered",
       "hits": [0],
-      "branchInfo": { "covered": 0, "total": 2 }
+      "branchInfo": { "covered": 0, "total": 2 },
+      "diffStatus": "added"
     },
-    { "lineNumber": 19, "content": "        }", "status": "not-coverable" },
-    { "lineNumber": 20, "content": "        return 1.0 / result;", "status": "uncovered", "hits": [0] },
-    { "lineNumber": 21, "content": "    }", "status": "not-coverable" },
-    { "lineNumber": 22, "content": "    return result;", "status": "covered", "hits": [1] },
-    { "lineNumber": 23, "content": "}", "status": "not-coverable" },
+    { "lineNumber": 19, "content": "        }", "status": "not-coverable", "diffStatus": "unchanged" },
+    { "lineNumber": 20, "content": "        return 1.0 / result;", "status": "uncovered", "hits": [0], "diffStatus": "unchanged" },
+    { "lineNumber": 21, "content": "    }", "status": "not-coverable", "diffStatus": "unchanged" },
+    { "lineNumber": 22, "content": "    return result;", "status": "covered", "hits": [1], "diffStatus": "unchanged" },
+    { "lineNumber": 23, "content": "}", "status": "not-coverable", "diffStatus": "unchanged" },
     { "lineNumber": 24, "content": "", "status": "not-coverable" },
     {
       "lineNumber": 25,
       "content": "double AdvancedCalculator::average(const std::vector<double>& numbers) {",
       "status": "covered",
-      "hits": [1]
+      "hits": [1],
+      "diffStatus": "added"
     },
     {
       "lineNumber": 26,
       "content": "    if (numbers.empty()) {",
       "status": "partial",
       "hits": [1],
-      "branchInfo": { "covered": 1, "total": 2 }
+      "branchInfo": { "covered": 1, "total": 2 },
+      "diffStatus": "added"
     },
-    { "lineNumber": 27, "content": "        // This branch is deliberately left untested.", "status": "not-coverable" },
-    { "lineNumber": 28, "content": "        return 0.0;", "status": "uncovered", "hits": [0] },
-    { "lineNumber": 29, "content": "    }", "status": "not-coverable" },
-    { "lineNumber": 30, "content": "    double sum = basic_calc_.sum(numbers);", "status": "covered", "hits": [1] },
+    { "lineNumber": 27, "content": "        // This branch is deliberately left untested.", "status": "not-coverable", "diffStatus": "added" },
+    { "lineNumber": 28, "content": "        return 0.0;", "status": "uncovered", "hits": [0], "diffStatus": "added" },
+    { "lineNumber": 29, "content": "    }", "status": "not-coverable", "diffStatus": "added" },
+    { "lineNumber": 30, "content": "    double sum = basic_calc_.sum(numbers);", "status": "covered", "hits": [1], "diffStatus": "added" },
     {
       "lineNumber": 31,
       "content": "    return basic_calc_.divide(sum, static_cast<double>(numbers.size()));",
       "status": "covered",
-      "hits": [1]
+      "hits": [1],
+      "diffStatus": "added"
     },
-    { "lineNumber": 32, "content": "}", "status": "not-coverable" }
+    { "lineNumber": 32, "content": "}", "status": "not-coverable", "diffStatus": "added" }
   ],
   "reports": [{ "name": "Report 3: *.gcov", "path": "demo_projects/cpp/report/gcov/branch-probabilities/*.gcov" }]
 }
-
 </script>
 
 	</body>

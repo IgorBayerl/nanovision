@@ -1,6 +1,7 @@
 import { List, ListTree } from 'lucide-react'
 import type { RefObject } from 'react'
 import ColumnsMenu from '@/components/Toolbar.ColumnsMenu'
+import DiffFilterSegment from '@/components/Toolbar.DiffFilter'
 import RiskSegment from '@/components/Toolbar.RiskSegment'
 import SearchBox from '@/components/Toolbar.SearchBox'
 import type { FileExplorerState, Setters } from '@/hooks/useFileExplorerState'
@@ -55,7 +56,10 @@ export default function FileExplorerToolbar({ state, setters, searchRef, metricC
                     mode={state.searchMode}
                     onModeChange={setters.setSearchMode}
                 />
-                <RiskSegment value={state.riskFilter} onChange={setters.setRiskFilter} />
+                <div className="flex items-center gap-2">
+                    <DiffFilterSegment value={state.diffFilter} onChange={setters.setDiffFilter} />
+                    <RiskSegment value={state.riskFilter} onChange={setters.setRiskFilter} />
+                </div>
             </div>
         </div>
     )
