@@ -20,5 +20,5 @@
   },
   "remoteUser": "vscode",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "postCreateCommand": "go mod tidy"
+  "postCreateCommand": "git config core.fileMode false && go mod tidy"
 }
