@@ -66,6 +66,8 @@ status_bands:
   branch_coverage: "50..70"
   # methods_covered: "60..80"
   methods_fully_covered: "40..60"
+  patch_line_coverage: "80..90"     
+  patch_methods_covered: "80..90"
 
 # Optional settings for patch coverage analysis.
 diff:

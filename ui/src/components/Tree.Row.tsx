@@ -135,8 +135,8 @@ export function TreeRow({
                     ) : (
                         <File className="h-4 w-4 shrink-0 text-muted-foreground" />
                     )}
-                    <DiffStatusIndicator status={node.diffStatus} />
                     <NodeName node={node} viewMode={viewMode} />
+                    <DiffStatusIndicator status={node.diffStatus} />
                 </div>
 
                 <div

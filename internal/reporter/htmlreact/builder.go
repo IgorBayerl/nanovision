@@ -247,9 +247,7 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 		}
 	}
 
-	// ===================== START: CORRECTED SECTION =====================
-	// Patch line coverage (diff-based).
-	// Use PatchLinesTotal to decide if the metric should be shown at all.
+	// Patch line coverage
 	if m.PatchLinesTotal > 0 {
 		patchLinePct := utils.CalculatePercentage(m.PatchLinesCovered, m.PatchLinesValid, 2)
 		metrics["patch_line_coverage"] = lineCoverageDetail{
@@ -260,9 +258,8 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 			Percentage: patchLinePct,
 		}
 	}
-	// ====================== END: CORRECTED SECTION ======================
 
-	// Patch methods coverage (diff-based).
+	// Patch methods coverage
 	if m.PatchMethodsValid > 0 {
 		patchMethodsPct := utils.CalculatePercentage(m.PatchMethodsCovered, m.PatchMethodsValid, 2)
 		metrics["patch_methods_covered"] = methodsCoveredDetail{

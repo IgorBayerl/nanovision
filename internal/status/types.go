@@ -38,6 +38,8 @@ const (
 	BranchCoverage      MetricKey = config.BranchCoverage
 	MethodsCovered      MetricKey = config.MethodsCovered
 	MethodsFullyCovered MetricKey = config.MethodsFullyCovered
+	PatchLineCoverage   MetricKey = config.PatchLineCoverage
+	PatchMethodsCovered MetricKey = config.PatchMethodsCovered
 )
 
 // Capabilities informs the annotation process about which metrics are semantically

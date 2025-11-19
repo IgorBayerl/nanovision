@@ -27,6 +27,8 @@ const (
 	BranchCoverage      MetricKey = "branch_coverage"
 	MethodsCovered      MetricKey = "methods_covered"
 	MethodsFullyCovered MetricKey = "methods_fully_covered"
+	PatchLineCoverage   MetricKey = "patch_line_coverage"
+	PatchMethodsCovered MetricKey = "patch_methods_covered"
 )
 
 // StatusBands supports either:
