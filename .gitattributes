@@ -10,3 +10,14 @@ ui/tsconfig.node.json linguist-vendored
 ui/vite.config.**.ts linguist-vendored
 
 tree-sitter/** linguist-vendored
+
+# Enforce LF line endings on all text files. 
+# This ensures files checked out on Windows match files in the Linux container.
+* text=auto eol=lf
+
+# If you ever add Windows batch scripts, keep them CRLF
+*.bat text eol=crlf
+
+# Binary files should not be touched
+*.png binary
+*.jpg binary
