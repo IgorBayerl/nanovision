@@ -13,12 +13,13 @@ import (
 	"time"
 
 	"github.com/IgorBayerl/fsglob"
-
 	"github.com/IgorBayerl/nanovision/internal/aggregator"
 	"github.com/IgorBayerl/nanovision/internal/analyzer"
 	cpp "github.com/IgorBayerl/nanovision/internal/analyzer/cpp"
 	golang "github.com/IgorBayerl/nanovision/internal/analyzer/go"
 	"github.com/IgorBayerl/nanovision/internal/config"
+	"github.com/IgorBayerl/nanovision/internal/diff"
+	"github.com/IgorBayerl/nanovision/internal/diffapply"
 	"github.com/IgorBayerl/nanovision/internal/enricher"
 	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/logging"
@@ -49,6 +50,8 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.StringVar(&rawInput.LogFormat, "logformat", "text", "Log output format: text (default) or json")
 	flag.StringVar(&rawInput.Verbosity, "verbosity", "Info", "Logging level: Verbose, Info, Warning, Error, Off")
 	flag.BoolVar(&rawInput.Verbose, "verbose", false, "Shortcut for Verbose logging (overridden by -verbosity)")
+	flag.StringVar(&rawInput.DiffFile, "diff", "", "Path to a unified diff file for patch coverage analysis")
+	flag.StringVar(&rawInput.DiffStrip, "diff-strip", "", "Strip N leading components from diff paths ('auto' or 0-6)")
 	return rawInput
 }
 
@@ -177,22 +180,7 @@ func deriveCapabilities(tree *model.SummaryTree) status.Capabilities {
 }
 
 // executePipeline orchestrates the report generation process from start to finish.
-//
-// The function attempts to parse each report file provided by the user. If an
-// individual file cannot be processed, the error is logged, and the pipeline
-// continues to the next file.
-//
-// To ensure accuracy, the entire process will halt if any parsing errors
-// occurred. This prevents the creation of a final report from incomplete data.
-//
-// The process follows these stages:
-//   - Component Initialization: Prepares all the tools needed for the pipeline,
-//     such as the parsers and the tree builder.
-//   - Parse: Reads the different coverage report formats into a standard structure.
-//   - Build: Combines data from all parsed reports into a single project tree.
-//   - Enrich: Gathers extra details from the source code, like method complexity.
-//   - Report: Generates the final output files, such as the HTML and text summaries.
-func executePipeline(appConfig *config.AppConfig) error {
+func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error {
 	logger := slog.Default()
 	logger.Info("Executing report generation pipeline...")
 
@@ -231,6 +219,12 @@ func executePipeline(appConfig *config.AppConfig) error {
 	logger.Info("Executing ENRICH stage...")
 	treeEnricher.EnrichTree(summaryTree)
 	logger.Info("ENRICH stage completed successfully.")
+
+	if diffData != nil {
+		logger.Info("Executing DIFF ANALYSIS stage...")
+		diffapply.Apply(summaryTree, diffData, logger)
+		logger.Info("DIFF ANALYSIS stage completed successfully.")
+	}
 
 	aggregator.AggregateMetricsAfterEnrichment(summaryTree)
 
@@ -303,7 +297,18 @@ func main() {
 		defer closer.Close()
 	}
 
-	if err := executePipeline(appConfig); err != nil {
+	var diffData *diff.DiffData
+	if appConfig.Diff.File != "" {
+		var parseErr error
+		slog.Info("Parsing diff file...", "path", appConfig.Diff.File)
+		diffData, parseErr = diff.Parse(appConfig.Diff.File)
+		if parseErr != nil {
+			slog.Warn("Failed to parse diff file; ignoring diff analysis.", "error", parseErr)
+			diffData = nil
+		}
+	}
+
+	if err := executePipeline(appConfig, diffData); err != nil {
 		slog.Error("An error occurred during report generation", "error", err)
 		os.Exit(1)
 	}

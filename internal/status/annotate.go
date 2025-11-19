@@ -83,6 +83,25 @@ func annotateNode(node *model.DirNode, bands config.StatusBands, caps Capabiliti
 			node.Statuses[MethodsFullyCovered] = string(lvl)
 		}
 	}
+
+	// Patch Line Coverage
+	// We check if PatchLinesTotal (or Valid) > 0 to ensure this file/folder was actually involved in the diff.
+	if metrics.PatchLinesValid > 0 {
+		pct := utils.CalculatePercentage(metrics.PatchLinesCovered, metrics.PatchLinesValid, 2)
+		// Use the constant PatchLineCoverage which should resolve to "patch_line_coverage"
+		if lvl, show := Classify(pct, bandPtr(bands, PatchLineCoverage)); show {
+			node.Statuses[PatchLineCoverage] = string(lvl)
+		}
+	}
+
+	// Patch Method Coverage
+	if metrics.PatchMethodsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.PatchMethodsCovered, metrics.PatchMethodsValid, 2)
+		// We check config for "patch_methods_covered" band
+		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsCovered)); show {
+			node.Statuses[PatchMethodsCovered] = string(lvl)
+		}
+	}
 }
 
 // annotateFile is a helper that calculates and attaches statuses to a single file node.
@@ -114,6 +133,22 @@ func annotateFile(node *model.FileNode, bands config.StatusBands, caps Capabilit
 		pct = utils.CalculatePercentage(metrics.MethodsFullyCovered, metrics.MethodsValid, 2)
 		if lvl, show := Classify(pct, bandPtr(bands, MethodsFullyCovered)); show {
 			node.Statuses[MethodsFullyCovered] = string(lvl)
+		}
+	}
+
+	// Patch Line Coverage
+	if metrics.PatchLinesValid > 0 {
+		pct := utils.CalculatePercentage(metrics.PatchLinesCovered, metrics.PatchLinesValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchLineCoverage)); show {
+			node.Statuses[PatchLineCoverage] = string(lvl)
+		}
+	}
+
+	// Patch Method Coverage
+	if metrics.PatchMethodsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.PatchMethodsCovered, metrics.PatchMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsCovered)); show {
+			node.Statuses[PatchMethodsCovered] = string(lvl)
 		}
 	}
 }

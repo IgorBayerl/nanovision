@@ -95,6 +95,11 @@ title: "nanovision Self-Coverage (Full Merged)"
 # Logging verbosity for the self-coverage run.
 verbosity: "Verbose"
 
+# Optional settings for patch coverage analysis.
+diff:
+  file: ""            # Path to the .diff file (can also be set via -diff flag)
+  strip: "auto"       # "auto" or an integer (0-6) to strip leading path components
+
 # A list of glob patterns for files and directories to exclude from the report.
 # This is crucial for ignoring generated files and the vendored tree-sitter grammars,
 # which are not part of the core tool's logic.

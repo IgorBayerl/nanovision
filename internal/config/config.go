@@ -27,6 +27,8 @@ const (
 	BranchCoverage      MetricKey = "branch_coverage"
 	MethodsCovered      MetricKey = "methods_covered"
 	MethodsFullyCovered MetricKey = "methods_fully_covered"
+	PatchLineCoverage   MetricKey = "patch_line_coverage"
+	PatchMethodsCovered MetricKey = "patch_methods_covered"
 )
 
 // StatusBands supports either:
@@ -91,6 +93,20 @@ type ReportInputPair struct {
 	SourceDir     string
 }
 
+// DiffPathMap defines a single path rewrite rule for diffs.
+type DiffPathMap struct {
+	From string `yaml:"from"`
+	To   string `yaml:"to"`
+}
+
+// DiffConfig holds all settings related to diff processing.
+type DiffConfig struct {
+	File         string        `yaml:"file"`
+	Strip        string        `yaml:"strip"`
+	RootOverride string        `yaml:"root_override"`
+	PathMaps     []DiffPathMap `yaml:"path_maps"`
+}
+
 type RawConfigInput struct {
 	ReportPatterns string
 	SourceDirs     string
@@ -103,6 +119,8 @@ type RawConfigInput struct {
 	LogFormat      string
 	Verbosity      string
 	Verbose        bool
+	DiffFile       string
+	DiffStrip      string
 }
 
 type AppConfig struct {
@@ -119,6 +137,7 @@ type AppConfig struct {
 	IgnoreFiles    []string    `yaml:"ignore_files"`
 	ProjectRoot    string      `yaml:"-"`
 	StatusBands    StatusBands `yaml:"status_bands"`
+	Diff           DiffConfig  `yaml:"diff"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel
@@ -189,6 +208,9 @@ func GetDefaultConfig() *AppConfig {
 		Title:       "Coverage Report",
 		LogFormat:   "text",
 		Verbosity:   "Info",
+		Diff: DiffConfig{
+			Strip: "auto",
+		},
 	}
 }
 
@@ -227,6 +249,12 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 	if cli.Verbose {
 		c.Verbosity = "Verbose"
 	}
+	if cli.DiffFile != "" {
+		c.Diff.File = cli.DiffFile
+	}
+	if cli.DiffStrip != "" {
+		c.Diff.Strip = cli.DiffStrip
+	}
 }
 
 // validate checks the final configuration for logical errors.
@@ -247,6 +275,17 @@ func (c *AppConfig) validate() error {
 	if _, err := logging.ParseVerbosity(c.Verbosity); err != nil {
 		return fmt.Errorf("invalid verbosity level '%s'", c.Verbosity)
 	}
+
+	if c.Diff.File != "" {
+		stripVal := strings.ToLower(c.Diff.Strip)
+		if stripVal != "auto" {
+			if n, err := strconv.Atoi(stripVal); err != nil || n < 0 || n > 6 {
+				// The calling code should log a warning. We revert to the safe default.
+				c.Diff.Strip = "auto"
+			}
+		}
+	}
+
 	return nil
 }
 

@@ -1,7 +1,32 @@
-import { ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
+import { ChevronDown, ChevronRight, File, Folder, FolderOpen, GitCommitHorizontal, Plus } from 'lucide-react'
 import InlineCoverage from '@/components/InlineCoverage'
 import { cn } from '@/lib/utils'
 import type { FileNode, MetricConfig, Metrics } from '@/types/summary'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
+
+const DiffStatusIndicator = ({ status }: { status: FileNode['diffStatus'] }) => {
+    if (!status || status === 'unchanged' || status === 'removed') return null
+
+    const icon =
+        status === 'added' ? (
+            <Plus className="h-3 w-3 text-covered" />
+        ) : (
+            <GitCommitHorizontal className="h-3 w-3 text-partial" />
+        )
+
+    return (
+        <TooltipProvider delayDuration={100}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <span className="flex items-center justify-center rounded-full bg-muted p-0.5">{icon}</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>File has been {status}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    )
+}
 
 const NodeName = ({ node, viewMode }: { node: FileNode; viewMode: 'tree' | 'flat' }) => {
     const isFolder = node.type === 'folder' && viewMode === 'tree'
@@ -70,7 +95,7 @@ export function TreeRow({
         : {}
 
     const totalMetricsWidth = enabledMetrics.reduce(
-        (sum, metric) => sum + metric.definition.subMetrics.reduce((s, c) => s + c.width, 0),
+        (sum, metric) => sum + (metric.definition?.subMetrics.reduce((s, c) => s + c.width, 0) ?? 0),
         0,
     )
 
@@ -111,6 +136,7 @@ export function TreeRow({
                         <File className="h-4 w-4 shrink-0 text-muted-foreground" />
                     )}
                     <NodeName node={node} viewMode={viewMode} />
+                    <DiffStatusIndicator status={node.diffStatus} />
                 </div>
 
                 <div
