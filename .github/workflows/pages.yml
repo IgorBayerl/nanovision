@@ -1,4 +1,4 @@
-name: Docs and Example
+name: Generate Pages
 
 on:
   push:
@@ -31,6 +31,8 @@ jobs:
         with: 
           fetch-depth: 0
       - uses: ./.github/actions/build-report
+        with:
+          diff-target: "HEAD~5"
 
   assemble_and_deploy:
     runs-on: ubuntu-latest
