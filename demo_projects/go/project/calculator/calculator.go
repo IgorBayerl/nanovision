@@ -28,10 +28,30 @@ func Divide(a, b int) (int, int) {
 	return a / b, a % b
 }
 
+// CalculateFactorial returns the factorial of a number (not tested)
+func CalculateFactorial(n int) int {
+	if n <= 1 {
+		return 1
+	}
+	return n * CalculateFactorial(n-1)
+}
+
+// ReverseNumber reverses the digits of a number (will be tested)
+func ReverseNumber(n int) int {
+	reversed := 0
+	for n > 0 {
+		digit := n % 10
+		reversed = reversed*10 + digit
+		n = n / 10
+	}
+	return reversed
+}
+
 // GetGradeForScore calculates a letter grade based on a numeric score.
 // This function has a high cyclomatic complexity to stress test the metrics.
 // Complexity is introduced by the initial check (with an OR) and the switch statement.
 func GetGradeForScore(score int) string {
+	// Modified to include extra grade levels
 	// Each condition adds to the complexity. The "||" operator is one decision point.
 	if score < 0 || score > 100 {
 		return "Invalid Score"
@@ -39,8 +59,12 @@ func GetGradeForScore(score int) string {
 
 	// A switch statement is a series of decision points.
 	switch {
+	case score >= 95:
+		return "A+"
 	case score >= 90:
 		return "A"
+	case score >= 85:
+		return "B+"
 	case score >= 80:
 		return "B"
 	case score >= 70:

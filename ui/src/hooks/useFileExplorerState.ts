@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useKeyboardSearch } from '@/hooks/useKeyboardSearch'
 import { useUrlState } from '@/hooks/useUrlState'
-import type { FileNode, FilterRange, MetricKey, RiskFilter, SortDir, SortKey } from '@/types/summary'
+import type { DiffFilter, FileNode, FilterRange, MetricKey, RiskFilter, SortDir, SortKey } from '@/types/summary'
 
 const getDefaultEnabledMetrics = (metrics: string[]) => metrics.slice(0, 3)
 const EXPANDED_FOLDERS_STORAGE_KEY = 'nanovision-expanded-folders'
@@ -28,6 +28,7 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
     const [query, setQuery] = useUrlState('q', '')
     const [searchMode, setSearchMode] = useUrlState<'glob' | 'normal'>('qMode', 'normal')
     const [riskFilter, setRiskFilter] = useUrlState<RiskFilter>('risk', 'all')
+    const [diffFilter, setDiffFilter] = useUrlState<DiffFilter>('diff', 'all')
     const [isNameColumnPinned, setIsNameColumnPinned] = useUrlState('pinned', true)
     const [sortKey, setSortKey] = useUrlState<SortKey>('sortKey', 'name')
     const [sortDir, setSortDir] = useUrlState<SortDir>('sortDir', 'asc')
@@ -149,6 +150,7 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
             query,
             searchMode,
             riskFilter,
+            diffFilter,
             isNameColumnPinned,
             sortKey,
             sortDir,
@@ -161,6 +163,7 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
             setQuery,
             setSearchMode,
             setRiskFilter,
+            setDiffFilter,
             setIsNameColumnPinned,
             setSortKey,
             setSortDir,

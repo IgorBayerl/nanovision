@@ -74,24 +74,30 @@ func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree
 
 	for _, result := range results {
 		for _, fileCov := range result.FileCoverage {
-			// Find the canonical absolute path of the file.
-			absoluteFilePath, err := utils.FindFileInSourceDirs(fileCov.Path, []string{result.SourceDirectory}, b.fileReader, logger)
+			// Find the canonical path of the file.
+			foundPath, err := utils.FindFileInSourceDirs(fileCov.Path, []string{result.SourceDirectory}, b.fileReader, logger)
 			if err != nil {
 				logger.Warn("Could not resolve file path, skipping file.", "path", fileCov.Path, "sourceDir", result.SourceDirectory, "error", err)
 				continue
 			}
 
-			// Make it relative to our project root.
-			relativeToProjectRoot, err := filepath.Rel(b.projectRoot, absoluteFilePath)
-			if err != nil {
-				logger.Warn("Could not make path relative to project root, using absolute.", "path", absoluteFilePath, "projectRoot", b.projectRoot, "error", err)
-				relativeToProjectRoot = absoluteFilePath // Fallback
+			// Determine the final, project-relative path for tree construction.
+			var finalPath string
+			if filepath.IsAbs(foundPath) {
+				// If we found an absolute path, make it relative to our project root.
+				relativeToProjectRoot, err := filepath.Rel(b.projectRoot, foundPath)
+				if err != nil {
+					logger.Warn("Could not make path relative to project root, using absolute as fallback.", "path", foundPath, "projectRoot", b.projectRoot, "error", err)
+					finalPath = filepath.ToSlash(foundPath) // Fallback to the absolute path
+				} else {
+					finalPath = filepath.ToSlash(relativeToProjectRoot)
+				}
+			} else {
+				// If the found path is not absolute, it's already the correct relative path we want to use.
+				finalPath = filepath.ToSlash(foundPath)
 			}
 
-			// Ensure consistent separators and use this path to build the tree.
-			finalPath := filepath.ToSlash(relativeToProjectRoot)
-
-			// Apply filtering on project relative path.
+			// Apply filtering on the final project-relative path.
 			if !b.fileFilter.IsElementIncludedInReport(finalPath) {
 				logger.Debug("File excluded by filter", "path", finalPath)
 				continue

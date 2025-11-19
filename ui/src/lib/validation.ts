@@ -18,6 +18,8 @@ const coverageDetailSchema = z.object({
 // A schema for the Metrics object, which can contain any number of coverage details
 const metricsSchema = z.record(z.string(), coverageDetailSchema)
 
+const diffStatusSchema = z.enum(['added', 'modified', 'unchanged', 'removed'])
+
 // A recursive schema for a file or folder node in the tree.
 export type FileNode = {
     id: string
@@ -28,6 +30,7 @@ export type FileNode = {
     metrics?: z.infer<typeof metricsSchema>
     statuses?: z.infer<typeof statusesSchema>
     targetUrl?: string | null
+    diffStatus?: z.infer<typeof diffStatusSchema>
 }
 
 const fileNodeSchema: z.ZodType<FileNode> = z.lazy(() =>
@@ -40,6 +43,7 @@ const fileNodeSchema: z.ZodType<FileNode> = z.lazy(() =>
         metrics: metricsSchema.optional(),
         statuses: statusesSchema,
         targetUrl: z.string().nullable().optional(),
+        diffStatus: diffStatusSchema.optional(),
     }),
 )
 
@@ -99,7 +103,6 @@ export function validateSummaryData(data: unknown) {
 
 // Schema for a single line of code
 const lineStatusSchema = z.enum(['covered', 'uncovered', 'not-coverable', 'partial'])
-const diffStatusSchema = z.enum(['added', 'removed', 'unchanged'])
 
 const reportSchema = z.object({
     name: z.string(),
@@ -126,12 +129,19 @@ const methodMetricSchema = z.object({
     status: riskLevelSchema.optional(),
 })
 
+const newLinesCoverageSchema = z.object({
+    covered: z.number().int(),
+    total: z.number().int(),
+})
+
 // A schema for a single method/function in the file
 const methodSchema = z.object({
     name: z.string(),
     startLine: z.number(),
     endLine: z.number(),
     metrics: z.record(z.string(), methodMetricSchema),
+    diffStatus: diffStatusSchema.optional(),
+    newLinesCoverage: newLinesCoverageSchema.optional(),
 })
 
 // Schema for the entire details page data object

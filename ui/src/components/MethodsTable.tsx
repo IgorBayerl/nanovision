@@ -2,7 +2,32 @@ import { useMemo } from 'react'
 import { camelCaseToTitleCase } from '@/lib/utils'
 import type { Method, MetricDefinitions } from '@/types/summary'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 import { StatusIcon } from './MetricCard'
+
+const DiffStatusBadge = ({ status }: { status: Method['diffStatus'] }) => {
+    if (!status || status === 'unchanged') return null
+
+    const content = status === 'added' ? 'New' : 'Mod'
+    const color = status === 'added' ? 'bg-covered/20 text-covered' : 'bg-partial/20 text-partial'
+
+    return (
+        <TooltipProvider delayDuration={100}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <span
+                        className={`ml-2 inline-block rounded-sm px-1.5 py-0.5 font-sans font-semibold text-xs ${color}`}
+                    >
+                        {content}
+                    </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Method was {status}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    )
+}
 
 export default function MethodsTable({
     methods,
@@ -39,6 +64,8 @@ export default function MethodsTable({
         })
     }, [methods, metricDefinitions])
 
+    const hasNewLinesColumn = useMemo(() => methods.some((m) => m.newLinesCoverage), [methods])
+
     if (!methods || methods.length === 0) {
         return null
     }
@@ -56,6 +83,11 @@ export default function MethodsTable({
                             <th className="text-nowrap px-4 py-2 text-right text-muted-foreground">Line #</th>
                             {/* --- 2. THE KEY: Tell this column to expand --- */}
                             <th className="w-full px-4 py-2 text-left text-muted-foreground">Method</th>
+                            {hasNewLinesColumn && (
+                                <th className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground">
+                                    Patch Line Cov.
+                                </th>
+                            )}
                             {metricConfigs.map((mc) => (
                                 <th
                                     key={mc.id}
@@ -73,15 +105,29 @@ export default function MethodsTable({
                                     {method.startLine}
                                 </td>
                                 <td className="px-4 py-1.5 text-left font-mono">
-                                    <button
-                                        type="button"
-                                        className="truncate text-left hover:text-primary hover:underline"
-                                        title={method.name}
-                                        onClick={() => handleGoToLine(method.startLine)}
-                                    >
-                                        {method.name}
-                                    </button>
+                                    <div className="flex items-center">
+                                        <button
+                                            type="button"
+                                            className="truncate text-left hover:text-primary hover:underline"
+                                            title={method.name}
+                                            onClick={() => handleGoToLine(method.startLine)}
+                                        >
+                                            {method.name}
+                                        </button>
+                                        <DiffStatusBadge status={method.diffStatus} />
+                                    </div>
                                 </td>
+                                {hasNewLinesColumn && (
+                                    <td className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-xs">
+                                        {method.newLinesCoverage ? (
+                                            <span>
+                                                {method.newLinesCoverage.covered} / {method.newLinesCoverage.total}
+                                            </span>
+                                        ) : (
+                                            '-'
+                                        )}
+                                    </td>
+                                )}
                                 {metricConfigs.map((mc) => {
                                     const metric = method.metrics[mc.id]
                                     return (

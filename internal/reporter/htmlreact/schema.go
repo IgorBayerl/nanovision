@@ -22,14 +22,12 @@ type branchCoverageDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
-// Represents the metrics for methods that have at least one line covered.
 type methodsCoveredDetail struct {
 	Covered    int     `json:"covered"`
 	Total      int     `json:"total"`
 	Percentage float64 `json:"percentage"`
 }
 
-// Represents the metrics for methods that have 100% line coverage.
 type methodsFullyCoveredDetail struct {
 	Covered    int     `json:"covered"`
 	Total      int     `json:"total"`
@@ -45,9 +43,14 @@ type totals struct {
 	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
 	MethodBranchCoverage    *branchCoverageDetail      `json:"method_branch_coverage,omitempty"`
 	MaxCyclomaticComplexity *lineCoverageDetail        `json:"max_cyclomatic_complexity,omitempty"`
-	Files                   int                        `json:"files"`
-	Folders                 int                        `json:"folders"`
-	Statuses                statuses                   `json:"statuses,omitempty"`
+
+	// Patch / diff-based metrics.
+	PatchLineCoverage   *lineCoverageDetail   `json:"patch_line_coverage,omitempty"`
+	PatchMethodsCovered *methodsCoveredDetail `json:"patch_methods_covered,omitempty"`
+
+	Files    int      `json:"files"`
+	Folders  int      `json:"folders"`
+	Statuses statuses `json:"statuses,omitempty"`
 }
 
 type statuses map[string]riskLevel
@@ -61,8 +64,56 @@ type fileNode struct {
 	Metrics       metricsMap `json:"metrics,omitempty"`
 	Statuses      statuses   `json:"statuses,omitempty"`
 	ComponentID   string     `json:"componentId,omitempty"`
-	ComponentName string     `json:"componentName,omitempty"`
 	TargetURL     string     `json:"targetUrl,omitempty"`
+	DiffStatus    string     `json:"diffStatus,omitempty"`
+	ComponentName string     `json:"componentName,omitempty"`
+}
+
+type lineStatus string
+
+const (
+	StatusCovered      lineStatus = "covered"
+	StatusUncovered    lineStatus = "uncovered"
+	StatusNotCoverable lineStatus = "not-coverable"
+	StatusPartial      lineStatus = "partial"
+)
+
+type branchInfo struct {
+	Covered int `json:"covered"`
+	Total   int `json:"total"`
+}
+
+type lineDetail struct {
+	LineNumber int         `json:"lineNumber"`
+	Content    string      `json:"content"`
+	Status     lineStatus  `json:"status"`
+	Hits       []int       `json:"hits,omitempty"`
+	BranchInfo *branchInfo `json:"branchInfo,omitempty"`
+	DiffStatus string      `json:"diffStatus,omitempty"`
+}
+
+type methodMetric struct {
+	Value  string    `json:"value"`
+	Status riskLevel `json:"status,omitempty"`
+}
+
+type newLinesCoverage struct {
+	Covered int `json:"covered"`
+	Total   int `json:"total"`
+}
+
+type methodDetail struct {
+	Name             string                  `json:"name"`
+	StartLine        int                     `json:"startLine"`
+	EndLine          int                     `json:"endLine"`
+	Metrics          map[string]methodMetric `json:"metrics"`
+	DiffStatus       string                  `json:"diffStatus,omitempty"`
+	NewLinesCoverage *newLinesCoverage       `json:"newLinesCoverage,omitempty"`
+}
+
+type report struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
 }
 
 type metadataItem struct {
@@ -94,45 +145,6 @@ type summaryV1 struct {
 	Tree              []fileNode        `json:"tree"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
-}
-
-type lineStatus string
-
-const (
-	StatusCovered      lineStatus = "covered"
-	StatusUncovered    lineStatus = "uncovered"
-	StatusNotCoverable lineStatus = "not-coverable"
-	StatusPartial      lineStatus = "partial"
-)
-
-type branchInfo struct {
-	Covered int `json:"covered"`
-	Total   int `json:"total"`
-}
-
-type lineDetail struct {
-	LineNumber int         `json:"lineNumber"`
-	Content    string      `json:"content"`
-	Status     lineStatus  `json:"status"`
-	Hits       []int       `json:"hits,omitempty"`
-	BranchInfo *branchInfo `json:"branchInfo,omitempty"`
-}
-
-type methodMetric struct {
-	Value  string    `json:"value"`
-	Status riskLevel `json:"status,omitempty"`
-}
-
-type methodDetail struct {
-	Name      string                  `json:"name"`
-	StartLine int                     `json:"startLine"`
-	EndLine   int                     `json:"endLine"`
-	Metrics   map[string]methodMetric `json:"metrics"`
-}
-
-type report struct {
-	Name string `json:"name"`
-	Path string `json:"path"`
 }
 
 type detailsV1 struct {

@@ -12,6 +12,8 @@ export type Metrics = Record<string, CoverageDetail>
 
 export type Statuses = Partial<Record<string, RiskLevel>>
 
+export type DiffStatus = 'added' | 'modified' | 'unchanged' | 'removed'
+
 export interface FileNode {
     id: string
     name: string
@@ -23,6 +25,7 @@ export interface FileNode {
     componentId?: string
     componentName?: string
     targetUrl?: string | null
+    diffStatus?: DiffStatus
 }
 
 export interface Totals {
@@ -70,6 +73,7 @@ export interface SummaryV1 {
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'
+export type DiffFilter = 'all' | 'changed'
 export type MetricKey = string
 
 export type MetricConfig = {
@@ -91,8 +95,6 @@ export type SortKey = 'name' | { metric: MetricKey; subMetric: SortableSubMetric
 export type SortDir = 'asc' | 'desc'
 
 export type LineStatus = 'covered' | 'uncovered' | 'not-coverable' | 'partial'
-
-export type DiffStatus = 'added' | 'removed' | 'unchanged'
 
 export interface Report {
     name: string
@@ -116,11 +118,18 @@ export type MethodMetric = {
     status?: RiskLevel
 }
 
+export type NewLinesCoverage = {
+    covered: number
+    total: number
+}
+
 export interface Method {
     name: string
     startLine: number
     endLine: number
     metrics: Record<string, MethodMetric>
+    diffStatus?: DiffStatus
+    newLinesCoverage?: NewLinesCoverage
 }
 
 export interface DetailsV1 {

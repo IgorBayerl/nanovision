@@ -46,6 +46,7 @@ export default function FileExplorer({ tree, availableMetrics, metricDefinitions
         query: state.query,
         searchMode: state.searchMode,
         riskFilter: state.riskFilter,
+        diffFilter: state.diffFilter,
         filterRanges: state.filterRanges,
         sortKey: state.sortKey,
         sortDir: state.sortDir,
