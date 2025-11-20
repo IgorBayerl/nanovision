@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/build-report
         with:
-          diff-target: "HEAD~5"
+          diff-target: "HEAD~10"
 
   assemble_and_deploy:
     runs-on: ubuntu-latest
