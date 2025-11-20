@@ -13,17 +13,24 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}Checking for latest nanovision version...${NC}"
 
-# User-Agent is required by GitHub API
+# Fetch Release Info
 LATEST_JSON=$(curl -s -H "User-Agent: nanovision-installer" https://api.github.com/repos/$REPO/releases/latest)
 
-# Check if release exists (API returns "Not Found" for drafts or bad repos)
+# Sanity Check: Did we get HTML instead of JSON?
+if [[ "$LATEST_JSON" == *"<!DOCTYPE html"* ]] || [[ "$LATEST_JSON" == *"<html"* ]]; then
+    echo -e "${RED}Error: GitHub API is currently unavailable (Server Error). Please try again later.${NC}"
+    exit 1
+fi
+
+# Check if release was not found (Drafts are hidden)
 if echo "$LATEST_JSON" | grep -q '"message": "Not Found"'; then
     echo -e "${RED}Error: No public release found.${NC}"
     echo "The latest release might still be a Draft. Publish it on GitHub to make it available."
     exit 1
 fi
 
-LATEST_VERSION=$(echo "$LATEST_JSON" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+# Robust version extraction
+LATEST_VERSION=$(echo "$LATEST_JSON" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
 
 if [ -z "$LATEST_VERSION" ]; then
     echo -e "${RED}Error: Could not parse version from GitHub response.${NC}"
