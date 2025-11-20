@@ -11,8 +11,13 @@ Write-Host "Checking for nanovision updates..." -ForegroundColor Cyan
 try {
     $LatestRelease = Invoke-RestMethod -Uri $ApiUrl -Headers @{ "User-Agent" = "nanovision-installer" } -ErrorAction Stop
 } catch {
-    Write-Error "Failed to fetch release info. If the release is a Draft, it will not be visible via the API."
-    Write-Error "GitHub API returned: $($_.Exception.Message)"
+    Write-Error "Failed to connect to GitHub API. Check your internet connection."
+    exit 1
+}
+
+# ensure we got an object with a tag_name, not an HTML error page
+if (-not $LatestRelease.tag_name) {
+    Write-Error "GitHub API returned an invalid response (possibly server error/maintenance). Please try again later."
     exit 1
 }
 
@@ -41,20 +46,31 @@ $ZipName = "nanovision_${LatestVersion}_windows_amd64.zip"
 $Asset = $LatestRelease.assets | Where-Object { $_.name -eq $ZipName }
 
 if (-not $Asset) {
-    Write-Error "Release asset $ZipName not found."
+    Write-Error "Release asset '$ZipName' not found in release $LatestVersion."
     exit 1
 }
 
 $ZipPath = "$env:TEMP\$ZipName"
 Write-Host "Downloading $LatestVersion..." -ForegroundColor Cyan
-Invoke-WebRequest -Uri $Asset.browser_download_url -OutFile $ZipPath
+try {
+    Invoke-WebRequest -Uri $Asset.browser_download_url -OutFile $ZipPath -ErrorAction Stop
+} catch {
+    Write-Error "Download failed: $($_.Exception.Message)"
+    exit 1
+}
 
-if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir | Force | Out-Null }
+# FIX: Moved -Force to be a parameter, not a pipe
+if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null }
 
 Expand-Archive -Path $ZipPath -DestinationPath $InstallDir -Force
 
-# Unblock the exe to prevent Windows 'Unknown Publisher' warnings
-Unblock-File -Path "$InstallDir\nanovision.exe"
+# Unblock the exe
+if (Test-Path "$InstallDir\nanovision.exe") {
+    Unblock-File -Path "$InstallDir\nanovision.exe"
+} else {
+    Write-Error "Extraction failed: nanovision.exe not found in $InstallDir"
+    exit 1
+}
 
 Remove-Item $ZipPath
 
