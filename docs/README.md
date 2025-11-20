@@ -30,7 +30,7 @@ pip install -r requirements.txt
 ### Run local development server
 
 ```bash
-mkdocs serve
+python -m mkdocs serve
 ```
 
 Open your browser and go to [http://localhost:8000](http://localhost:8000)
@@ -38,7 +38,7 @@ Open your browser and go to [http://localhost:8000](http://localhost:8000)
 ### Build static site
 
 ```bash
-mkdocs build
+python -m mkdocs build --strict
 ```
 
 The generated static site will be in the `site/` directory.

@@ -1,0 +1,11 @@
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      # Map current directory to /workspaces/nanovision
+      - .:/workspaces/nanovision
+    working_dir: /workspaces/nanovision
+    # Run as root to ensure we can write to the ./bin folder in CI
+    user: root
