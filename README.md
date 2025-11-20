@@ -44,24 +44,28 @@ While many CI tools give you a simple percentage, **nanovision** helps you under
 
 ## Supported Formats
 
-| Input Formats     | Output Formats              |
-|:------------------|:----------------------------|
-| Cobertura (XML)   | HTML (React SPA)            |
-| Go Cover (`.out`) | Text Summary (Console/File) |
-| GCov (`.gcov`)    | LCOV                        |
-|                   | Raw JSON                    |
+| Input Formats | Output Formats |
+|:--------------|:---------------|
+| Cobertura     | HTML           |
+| Go Cover      | Text Summary   |
+| GCov          | LCOV           |
+|               | Raw JSON       |
 
 ## Installation
 ### From Releases
 Download the pre-compiled binary for Windows or Linux from the **[Releases Page](https://github.com/IgorBayerl/nanovision/releases)**.
 
-<!-- ### Install Scripts
+### Install Scripts
 
 **Windows**
-> TODO.
+```ps1
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force; iwr https://raw.githubusercontent.com/IgorBayerl/nanovision/main/scripts/install.ps1 -UseBasicParsing | iex
+```
 
 **Linux**
-> TODO. -->
+```bash
+curl -sL https://raw.githubusercontent.com/IgorBayerl/nanovision/main/scripts/install.sh | bash
+```
 
 ## Quick Start
 

@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -34,6 +35,12 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
 	"github.com/IgorBayerl/nanovision/internal/status"
 	"github.com/IgorBayerl/nanovision/internal/tree"
+)
+
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
 )
 
 func parseAndBindFlags() *config.RawConfigInput {
@@ -263,9 +270,19 @@ func main() {
 
 	configPath := flag.String("config", "", "Path to a nanovision.yaml configuration file.")
 	watchFlag := flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes")
+	versionFlag := flag.Bool("version", false, "Print version information and exit")
 
 	rawInput := parseAndBindFlags()
 	flag.Parse()
+
+	// Handle version output
+	if *versionFlag {
+		fmt.Printf("nanovision version %s\n", version)
+		fmt.Printf("commit: %s\n", commit)
+		fmt.Printf("built at: %s\n", date)
+		fmt.Printf("os/arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
+		os.Exit(0)
+	}
 
 	if _, err := logging.ParseVerbosity(rawInput.Verbosity); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: %v. Defaulting to 'Info' level.\n", err)
