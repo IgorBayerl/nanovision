@@ -6,7 +6,13 @@ on:
     paths-ignore: 
       - '.devcontainer/**'
       - 'vendor/**'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      diff_target:
+        description: 'Diff Target (e.g. HEAD~5 or Commit SHA)'
+        required: true
+        default: 'HEAD~5'
+        type: string
 
 permissions:
   contents: read
@@ -29,10 +35,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: 
+          # fetch-depth: 0 is crucial for git diff history to be available
           fetch-depth: 0
       - uses: ./.github/actions/build-report
         with:
-          diff-target: "HEAD~10"
+          # Logic: Use manual input if available, otherwise default to HEAD~5
+          diff-target: ${{ inputs.diff_target || 'HEAD~5' }}
 
   assemble_and_deploy:
     runs-on: ubuntu-latest
