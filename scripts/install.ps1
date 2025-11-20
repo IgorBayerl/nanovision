@@ -9,20 +9,18 @@ $ApiUrl = "https://api.github.com/repos/$Repo/releases/latest"
 Write-Host "Checking for nanovision updates..." -ForegroundColor Cyan
 
 try {
-    $LatestRelease = Invoke-RestMethod -Uri $ApiUrl -ErrorAction Stop
-}
-catch {
-    Write-Error "Failed to connect to GitHub to check for updates."
+    $LatestRelease = Invoke-RestMethod -Uri $ApiUrl -Headers @{ "User-Agent" = "nanovision-installer" } -ErrorAction Stop
+} catch {
+    Write-Error "Failed to fetch release info. If the release is a Draft, it will not be visible via the API."
+    Write-Error "GitHub API returned: $($_.Exception.Message)"
     exit 1
 }
 
 $LatestVersion = $LatestRelease.tag_name
 $CurrentVersion = "none"
 
-# Check if installed
 if (Get-Command nanovision -ErrorAction SilentlyContinue) {
     $VerStr = nanovision --version
-    # Extract v0.X.X from output string
     if ($VerStr -match "(v[\d\.]+)") {
         $CurrentVersion = $matches[1]
     }
@@ -35,17 +33,10 @@ if ($CurrentVersion -eq $LatestVersion -and -not $Force) {
 
 if ($CurrentVersion -ne "none") {
     Write-Host "Update available: $CurrentVersion -> $LatestVersion" -ForegroundColor Yellow
-    $Choice = Read-Host "Do you want to read the Changelog? (y/N)"
-    if ($Choice -eq 'y') {
-        Write-Host "`n--- Changelog ---" -ForegroundColor Gray
-        Write-Host $LatestRelease.body
-        Write-Host "-----------------`n" -ForegroundColor Gray
-    }
     $Choice = Read-Host "Update now? (Y/n)"
     if ($Choice -eq 'n') { exit 0 }
 }
 
-# Download & Install
 $ZipName = "nanovision_${LatestVersion}_windows_amd64.zip"
 $Asset = $LatestRelease.assets | Where-Object { $_.name -eq $ZipName }
 
@@ -55,22 +46,18 @@ if (-not $Asset) {
 }
 
 $ZipPath = "$env:TEMP\$ZipName"
-Write-Host "Downloading..." -ForegroundColor Cyan
+Write-Host "Downloading $LatestVersion..." -ForegroundColor Cyan
 Invoke-WebRequest -Uri $Asset.browser_download_url -OutFile $ZipPath
 
-if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir | Out-Null }
+if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir | Force | Out-Null }
 
-# Unzip
 Expand-Archive -Path $ZipPath -DestinationPath $InstallDir -Force
 
-# === BYPASS UNKNOWN PUBLISHER ===
-# Unblock the exe so SmartScreen doesn't block it
+# Unblock the exe to prevent Windows 'Unknown Publisher' warnings
 Unblock-File -Path "$InstallDir\nanovision.exe"
-# ================================
 
 Remove-Item $ZipPath
 
-# Add to Path if missing
 $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if ($UserPath -notlike "*$InstallDir*") {
     [Environment]::SetEnvironmentVariable("Path", "$UserPath;$InstallDir", "User")
@@ -78,4 +65,4 @@ if ($UserPath -notlike "*$InstallDir*") {
     Write-Host "Added to PATH. You may need to restart your terminal." -ForegroundColor Yellow
 }
 
-Write-Host "nanovision $LatestVersion installed!" -ForegroundColor Green
+Write-Host "nanovision $LatestVersion installed successfully." -ForegroundColor Green
