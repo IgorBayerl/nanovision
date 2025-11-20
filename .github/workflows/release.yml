@@ -27,5 +27,7 @@ jobs:
           files: |
             bin/*.zip
             bin/*.tar.gz
+            bin/windows/nanovision.exe
+            bin/linux/nanovision
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
