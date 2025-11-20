@@ -11,13 +11,13 @@ Write-Host "Checking for nanovision updates..." -ForegroundColor Cyan
 try {
     $LatestRelease = Invoke-RestMethod -Uri $ApiUrl -Headers @{ "User-Agent" = "nanovision-installer" } -ErrorAction Stop
 } catch {
-    Write-Error "Failed to connect to GitHub API. Check your internet connection."
+    Write-Error "Failed to connect to GitHub API."
+    Write-Error "Details: $($_.Exception.Message)"
     exit 1
 }
 
-# ensure we got an object with a tag_name, not an HTML error page
 if (-not $LatestRelease.tag_name) {
-    Write-Error "GitHub API returned an invalid response (possibly server error/maintenance). Please try again later."
+    Write-Error "Invalid response from GitHub API."
     exit 1
 }
 
@@ -25,9 +25,14 @@ $LatestVersion = $LatestRelease.tag_name
 $CurrentVersion = "none"
 
 if (Get-Command nanovision -ErrorAction SilentlyContinue) {
-    $VerStr = nanovision --version
-    if ($VerStr -match "(v[\d\.]+)") {
-        $CurrentVersion = $matches[1]
+    try {
+        # Pipe to Out-String to ensure we match against a single string, not an array
+        $VerStr = nanovision --version | Out-String
+        if ($VerStr -match "(v[\d\.]+)") {
+            $CurrentVersion = $matches[1]
+        }
+    } catch {
+        $CurrentVersion = "unknown"
     }
 }
 
@@ -36,7 +41,7 @@ if ($CurrentVersion -eq $LatestVersion -and -not $Force) {
     exit 0
 }
 
-if ($CurrentVersion -ne "none") {
+if ($CurrentVersion -ne "none" -and $CurrentVersion -ne "unknown") {
     Write-Host "Update available: $CurrentVersion -> $LatestVersion" -ForegroundColor Yellow
     $Choice = Read-Host "Update now? (Y/n)"
     if ($Choice -eq 'n') { exit 0 }
@@ -46,7 +51,7 @@ $ZipName = "nanovision_${LatestVersion}_windows_amd64.zip"
 $Asset = $LatestRelease.assets | Where-Object { $_.name -eq $ZipName }
 
 if (-not $Asset) {
-    Write-Error "Release asset '$ZipName' not found in release $LatestVersion."
+    Write-Error "Release asset '$ZipName' not found."
     exit 1
 }
 
@@ -59,16 +64,16 @@ try {
     exit 1
 }
 
-# FIX: Moved -Force to be a parameter, not a pipe
-if (-not (Test-Path $InstallDir)) { New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null }
+if (-not (Test-Path $InstallDir)) { 
+    New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null 
+}
 
 Expand-Archive -Path $ZipPath -DestinationPath $InstallDir -Force
 
-# Unblock the exe
 if (Test-Path "$InstallDir\nanovision.exe") {
     Unblock-File -Path "$InstallDir\nanovision.exe"
 } else {
-    Write-Error "Extraction failed: nanovision.exe not found in $InstallDir"
+    Write-Error "Extraction failed: nanovision.exe not found."
     exit 1
 }
 
