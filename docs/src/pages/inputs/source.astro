@@ -1,0 +1,34 @@
+---
+import Layout from '../../layouts/Layout.astro'
+---
+
+<Layout title="Nanovision | Source Code">
+    <main class="pt-24 pb-16 min-h-screen bg-background">
+        <div class="max-w-4xl mx-auto px-6">
+            <h1 class="text-4xl font-bold text-foreground mb-6">Source Code</h1>
+            <p class="text-xl text-muted-foreground mb-8">
+                Accessing your source code allows Nanovision to provide context to the coverage data.
+            </p>
+
+            <div class="prose dark:prose-invert max-w-none">
+                <h3>Why is source code needed?</h3>
+                <p>
+                    While coverage reports tell us <em>which</em> lines were hit, they don't tell us <em>what</em> those
+                    lines contain. By reading your source files, Nanovision can:
+                </p>
+                <ul>
+                    <li>Display the actual code in HTML reports.</li>
+                    <li>Syntax highlight the code for better readability.</li>
+                    <li>Show context around covered/uncovered lines.</li>
+                </ul>
+
+                <h3>Configuration</h3>
+                <p>
+                    You simply need to point Nanovision to the root directory of your source code using the <code
+                        >-sourcedirs</code
+                    > flag or configuration option.
+                </p>
+            </div>
+        </div>
+    </main>
+</Layout>

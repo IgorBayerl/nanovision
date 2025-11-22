@@ -1,6 +1,6 @@
 <h1 align="center">
 
-![alt text](docs/docs/imgs/nanovision_input_output.png)
+![alt text](docs/public/nanovision_input_output.png)
 <br/>
 nanovision
 </h1>
@@ -30,7 +30,7 @@ nanovision converts coverage reports (Cobertura, GoCover, GCov) into human-reada
 
 ---
 
-![nanovision screenshot](docs/docs/imgs/nanovision_summary_screen.png)
+![nanovision screenshot](docs/public/nanovision_summary_screen.png)
 
 ## Why nanovision?
 

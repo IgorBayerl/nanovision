@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Hero from '../components/Hero.jsx'
+import TrustedBy from '../components/TrustedBy.jsx'
+import Showcase from '../components/Showcase.jsx'
+import ReportTypes from '../components/ReportTypes.jsx'
+// import Roadmap from '../components/Roadmap.jsx'
+import CTA from '../components/CTA.jsx'
+import FAQ from '../components/FAQ.jsx'
+---
+
+<Layout title="Nanovision | Code Coverage Reimagined">
+  <main>
+    <Hero client:load />
+    <Showcase client:visible />
+    <ReportTypes />
+    <!-- <TrustedBy /> -->
+    <!-- <Roadmap /> -->
+    <CTA />
+    <FAQ client:visible />
+  </main>
+</Layout>
