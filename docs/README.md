@@ -1,58 +1,43 @@
-# 📝 Project Documentation
+# Astro Starter Kit: Minimal
 
-This folder contains the documentation site for the **nanovision** project, built with [MkDocs](https://www.mkdocs.org/) and the [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) theme.
-
----
-
-## 📦 Stack Overview
-
-| Tool                                                                | Description                                                 |
-|---------------------------------------------------------------------|-------------------------------------------------------------|
-| [MkDocs](https://www.mkdocs.org/)                                   | Static site generator geared towards project documentation. |
-| [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) | A MkDocs theme.                                             |
-
----
-
-## 🚀 Getting Started
-
-### Install dependencies
-
-From the project root or the `docs/` directory:
-
-```bash
-pip install -r requirements.txt
+```sh
+npm create astro@latest -- --template minimal
 ```
 
----
+> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
-## 🛠 Usage
+## 🚀 Project Structure
 
-### Run local development server
+Inside of your Astro project, you'll see the following folders and files:
 
-```bash
-python -m mkdocs serve
+```text
+/
+├── public/
+├── src/
+│   └── pages/
+│       └── index.astro
+└── package.json
 ```
 
-Open your browser and go to [http://localhost:8000](http://localhost:8000)
+Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
 
-### Build static site
+There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
 
-```bash
-python -m mkdocs build --strict
-```
+Any static assets, like images, can be placed in the `public/` directory.
 
-The generated static site will be in the `site/` directory.
+## 🧞 Commands
 
----
+All commands are run from the root of the project, from a terminal:
 
-## 📚 References
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `npm install`             | Installs dependencies                            |
+| `npm run dev`             | Starts local dev server at `localhost:4321`      |
+| `npm run build`           | Build your production site to `./dist/`          |
+| `npm run preview`         | Preview your build locally, before deploying     |
+| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `npm run astro -- --help` | Get help using the Astro CLI                     |
 
-* [MkDocs documentation](https://www.mkdocs.org/)
-* [Material for MkDocs documentation](https://squidfunk.github.io/mkdocs-material/)
+## 👀 Want to learn more?
 
----
-
-## 🧼 Git Ignore Note
-
-This folder includes a `.gitignore` to exclude the generated `site/` directory, which is automatically created during local builds or CI deployments.
-
+Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).

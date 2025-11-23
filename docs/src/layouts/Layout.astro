@@ -1,0 +1,37 @@
+---
+import '../styles/global.css'
+import Navbar from '../components/Navbar.jsx'
+import Footer from '../components/Footer.jsx'
+
+interface Props {
+	title: string
+}
+
+const { title } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Astro description" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<script is:inline>
+			// Immediate theme application to prevent FOUC
+			const theme = localStorage.getItem('theme')
+			if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+				document.documentElement.classList.add('dark')
+			} else {
+				document.documentElement.classList.remove('dark')
+			}
+		</script>
+	</head>
+	<body class="min-h-screen flex flex-col bg-background text-foreground">
+		<Navbar client:load currentPath={Astro.url.pathname} />
+		<slot />
+		<Footer />
+	</body>
+</html>
