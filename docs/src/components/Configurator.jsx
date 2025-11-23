@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, FileOutput, Tag, GitCompare, Settings, Github, Plus, Trash2, Check, Copy, Info, ChevronDown, Terminal, Command, FileCode, FileCode2 } from 'lucide-react';
+import { Layers, FileOutput, Tag, GitCompare, Settings, Github, Plus, Trash2, Check, Copy, Info, ChevronDown, Terminal, Command, FileCode, FileCode2, Activity } from 'lucide-react';
 
 // --- Icons Helper ---
 // We are using lucide-react directly, so the helper from the prototype is not needed in the same way,
@@ -26,6 +26,16 @@ const REPORT_DESCRIPTIONS = {
   }
 };
 
+const METRICS = [
+  { id: 'line_coverage', label: 'Line Coverage' },
+  { id: 'branch_coverage', label: 'Branch Coverage' },
+  { id: 'methods_covered', label: 'Methods Covered' },
+  { id: 'methods_fully_covered', label: 'Methods Fully Covered' },
+  { id: 'method_branch_coverage', label: 'Method Branch Coverage' },
+  { id: 'patch_line_coverage', label: 'Patch Line Coverage' },
+  { id: 'patch_methods_covered', label: 'Patch Methods Covered' },
+];
+
 // --- UI Components ---
 
 const SectionHeader = ({ title, icon: Icon }) => (
@@ -35,11 +45,11 @@ const SectionHeader = ({ title, icon: Icon }) => (
   </div>
 );
 
-const InputField = ({ label, value, onChange, placeholder, help, error }) => (
+const InputField = ({ label, value, onChange, placeholder, help, error, type = "text" }) => (
   <div className="mb-5">
     <label className="block text-sm font-medium text-muted-foreground mb-1.5">{label}</label>
     <input
-      type="text"
+      type={type}
       className={`w-full px-3 py-2 bg-card border rounded-md focus:ring-2 focus:ring-offset-0 outline-none text-foreground placeholder-muted-foreground text-sm ${error
         ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
         : 'border-border focus:border-primary focus:ring-primary/20 hover:border-primary/50'
@@ -53,14 +63,14 @@ const InputField = ({ label, value, onChange, placeholder, help, error }) => (
   </div>
 );
 
-const Toggle = ({ label, checked, onChange, help }) => (
-  <div className="flex items-start justify-between mb-5 group cursor-pointer" onClick={() => onChange(!checked)}>
+const Toggle = ({ label, checked, onChange, help, className = "mb-5" }) => (
+  <div className={`flex items-start justify-between group cursor-pointer ${className}`} onClick={() => onChange(!checked)}>
     <div className="mr-4">
-      <label className="block text-sm font-medium text-muted-foreground cursor-pointer">{label}</label>
+      {label && <label className="block text-sm font-medium text-muted-foreground cursor-pointer">{label}</label>}
       {help && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{help}</p>}
     </div>
     <div
-      className={`w-11 h-6 rounded-full p-1 relative flex-shrink-0 ${checked ? 'bg-primary' : 'bg-secondary'}`}
+      className={`w-11 h-6 rounded-full p-1 relative flex-shrink-0 transition-colors ${checked ? 'bg-primary' : 'bg-secondary'}`}
     >
       <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform duration-200 ${checked ? 'translate-x-5' : ''}`}></div>
     </div>
@@ -160,6 +170,15 @@ const Configurator = () => {
     useDiff: false,
     diffFile: "",
     diffStrip: "auto",
+    thresholds: {
+      line_coverage: { min: 60, max: 80, active: false },
+      branch_coverage: { min: 50, max: 70, active: false },
+      methods_covered: { min: 50, max: 70, active: false },
+      methods_fully_covered: { min: 50, max: 70, active: false },
+      method_branch_coverage: { min: 50, max: 70, active: false },
+      patch_line_coverage: { min: 50, max: 70, active: false },
+      patch_methods_covered: { min: 50, max: 70, active: false },
+    }
   });
 
   const [activeTab, setActiveTab] = useState("cli");
@@ -171,6 +190,26 @@ const Configurator = () => {
     setConfig(prev => ({
       ...prev,
       inputs: prev.inputs.map(item => item.id === id ? { ...item, [field]: value } : item)
+    }));
+  };
+
+  const handleThresholdChange = (metricId, field, value) => {
+    setConfig(prev => ({
+      ...prev,
+      thresholds: {
+        ...prev.thresholds,
+        [metricId]: { ...prev.thresholds[metricId], [field]: value }
+      }
+    }));
+  };
+
+  const toggleThreshold = (metricId) => {
+    setConfig(prev => ({
+      ...prev,
+      thresholds: {
+        ...prev.thresholds,
+        [metricId]: { ...prev.thresholds[metricId], active: !prev.thresholds[metricId].active }
+      }
     }));
   };
 
@@ -189,11 +228,23 @@ const Configurator = () => {
   const getFiltersString = () => config.filters.map(f => f.value).filter(v => v.trim() !== "").join(";");
   const getSelectedTypes = () => Object.keys(config.reportTypes).filter(k => config.reportTypes[k]).join(",");
 
+  const getThresholdsArray = () => {
+    const parts = [];
+    Object.entries(config.thresholds).forEach(([key, t]) => {
+      if (t.active) {
+        parts.push(`${key}=${t.min}..${t.max}`);
+      }
+    });
+    return parts;
+  };
+
   const generateBash = () => {
     const parts = ["nanovision"];
     const reports = getReportsArray().join(";");
     const sources = getSourcesArray().join(";");
     const filters = getFiltersString();
+    const thresholds = getThresholdsArray();
+
     if (reports) parts.push(`-report="${reports}"`);
     if (sources) parts.push(`-sourcedirs="${sources}"`);
     if (config.outputDir) parts.push(`-output="${config.outputDir}"`);
@@ -208,6 +259,8 @@ const Configurator = () => {
       if (config.diffFile) parts.push(`-diff="${config.diffFile}"`);
       if (config.diffStrip !== "auto") parts.push(`-diff-strip="${config.diffStrip}"`);
     }
+    thresholds.forEach(t => parts.push(`-threshold="${t}"`));
+
     return parts.join(" \\\n  ");
   };
 
@@ -216,6 +269,8 @@ const Configurator = () => {
     const reports = getReportsArray().join(";");
     const sources = getSourcesArray().join(";");
     const filters = getFiltersString();
+    const thresholds = getThresholdsArray();
+
     if (reports) parts.push(`-report "${reports}"`);
     if (sources) parts.push(`-sourcedirs "${sources}"`);
     if (config.outputDir) parts.push(`-output "${config.outputDir}"`);
@@ -230,6 +285,8 @@ const Configurator = () => {
       if (config.diffFile) parts.push(`-diff "${config.diffFile}"`);
       if (config.diffStrip !== "auto") parts.push(`-diff-strip "${config.diffStrip}"`);
     }
+    thresholds.forEach(t => parts.push(`-threshold "${t}"`));
+
     return parts.join(" `\n  ");
   };
 
@@ -263,11 +320,14 @@ log_format: "${config.logFormat}"
   strip: "${config.diffStrip}"
 `;
     }
-    yaml += `\n# Thresholds for status colors
-status_bands:
-  line_coverage: "60..80"
-  branch_coverage: "50..70"
-`;
+
+    const activeThresholds = Object.entries(config.thresholds).filter(([_, t]) => t.active);
+    if (activeThresholds.length > 0) {
+      yaml += `\n# Thresholds for status colors\nstatus_bands:\n`;
+      activeThresholds.forEach(([key, t]) => {
+        yaml += `  ${key}: "${t.min}..${t.max}"\n`;
+      });
+    }
     return yaml;
   };
 
@@ -492,9 +552,72 @@ ${diffStep}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 mb-8">
                   <Select label="Verbosity" value={config.verbosity} onChange={(v) => handleChange('verbosity', v)} options={["Verbose", "Info", "Warning", "Error", "Off"]} help="Log level details." />
                   <Select label="Log Format" value={config.logFormat} onChange={(v) => handleChange('logFormat', v)} options={["text", "json"]} help="Console output format." />
+                </div>
+
+                {/* Thresholds Section moved inside Advanced */}
+                <div className="pt-6 border-t border-border">
+                  <div className="flex items-center gap-2 text-foreground mb-4">
+                    <div className="text-primary"><Activity size={16} /></div>
+                    <h4 className="font-semibold text-xs uppercase tracking-wide">Metric Thresholds</h4>
+                  </div>
+
+                  <div className="bg-card p-5 rounded-lg border border-border">
+                    <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
+                      Define thresholds to color-code your report. <br />
+                      <span className="text-red-400 font-medium">Below Min = Danger</span> •
+                      <span className="text-yellow-500 font-medium mx-1">Min to Max = Warning</span> •
+                      <span className="text-green-500 font-medium">Above Max = Safe</span>
+                    </p>
+
+                    <div className="space-y-3">
+                      {METRICS.map(metric => {
+                        const t = config.thresholds[metric.id];
+                        return (
+                          <div key={metric.id} className={`rounded-lg border transition-all duration-200 ${t.active ? 'bg-card border-primary/30 shadow-sm p-4' : 'bg-secondary/20 border-border opacity-60 p-3 hover:opacity-100'}`}>
+                            <div className={`flex items-center justify-between ${t.active ? 'mb-4' : ''}`}>
+                              <label className={`text-sm font-medium transition-colors ${t.active ? 'text-foreground' : 'text-muted-foreground'}`}>{metric.label}</label>
+                              <Toggle
+                                label=""
+                                checked={t.active}
+                                onChange={() => toggleThreshold(metric.id)}
+                                className="mb-0"
+                              />
+                            </div>
+
+                            {t.active && (
+                              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
+                                <div>
+                                  <label className="block text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1.5">Min (Warning)</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={t.min}
+                                    onChange={(e) => handleThresholdChange(metric.id, 'min', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded text-sm focus:ring-1 focus:ring-primary outline-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1.5">Max (Success)</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={t.max}
+                                    onChange={(e) => handleThresholdChange(metric.id, 'max', e.target.value)}
+                                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded text-sm focus:ring-1 focus:ring-primary outline-none"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </section>
             </div>

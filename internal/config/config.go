@@ -23,12 +23,13 @@ type Band struct {
 type MetricKey string
 
 const (
-	LineCoverage        MetricKey = "line_coverage"
-	BranchCoverage      MetricKey = "branch_coverage"
-	MethodsCovered      MetricKey = "methods_covered"
-	MethodsFullyCovered MetricKey = "methods_fully_covered"
-	PatchLineCoverage   MetricKey = "patch_line_coverage"
-	PatchMethodsCovered MetricKey = "patch_methods_covered"
+	LineCoverage         MetricKey = "line_coverage"
+	BranchCoverage       MetricKey = "branch_coverage"
+	MethodsCovered       MetricKey = "methods_covered"
+	MethodsFullyCovered  MetricKey = "methods_fully_covered"
+	PatchLineCoverage    MetricKey = "patch_line_coverage"
+	PatchMethodsCovered  MetricKey = "patch_methods_covered"
+	MethodBranchCoverage MetricKey = "method_branch_coverage"
 )
 
 // StatusBands supports either:
@@ -121,6 +122,7 @@ type RawConfigInput struct {
 	Verbose        bool
 	DiffFile       string
 	DiffStrip      string
+	StatusBands    []string
 }
 
 type AppConfig struct {
@@ -254,6 +256,21 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 	}
 	if cli.DiffStrip != "" {
 		c.Diff.Strip = cli.DiffStrip
+	}
+	if len(cli.StatusBands) > 0 {
+		if c.StatusBands == nil {
+			c.StatusBands = make(StatusBands)
+		}
+		for _, p := range cli.StatusBands {
+			kv := strings.Split(p, "=")
+			if len(kv) == 2 {
+				k := strings.TrimSpace(kv[0])
+				v := strings.TrimSpace(kv[1])
+				if band, err := parseBandString(v); err == nil {
+					c.StatusBands[MetricKey(k)] = band
+				}
+			}
+		}
 	}
 }
 
