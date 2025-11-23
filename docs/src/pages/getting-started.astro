@@ -25,7 +25,7 @@ import {
                     generate the required coverage files before you start.
                 </p>
                 <a
-                    href="/usage"
+                    href={`${import.meta.env.BASE_URL}usage`}
                     class="inline-flex items-center gap-2 bg-secondary/50 hover:bg-secondary text-secondary-foreground px-6 py-3 rounded-full font-medium transition-all border border-border hover:border-primary/50 group"
                 >
                     I already collect code coverage on my project
@@ -221,7 +221,7 @@ import {
                                     <span class="font-bold text-foreground">C / C++</span>
                                     <ExternalLink
                                         size={16}
-                                        class="text-muted-foreground group-hover:text-primary transition-colors"
+                                        className="text-muted-foreground group-hover:text-primary transition-colors"
                                     />
                                 </div>
                                 <div class="text-sm text-muted-foreground">
@@ -242,7 +242,7 @@ import {
                                     <span class="font-bold text-foreground">C# / .NET</span>
                                     <ExternalLink
                                         size={16}
-                                        class="text-muted-foreground group-hover:text-primary transition-colors"
+                                        className="text-muted-foreground group-hover:text-primary transition-colors"
                                     />
                                 </div>
                                 <div class="text-sm text-muted-foreground">
@@ -262,7 +262,7 @@ import {
                                     <span class="font-bold text-foreground">Java</span>
                                     <ExternalLink
                                         size={16}
-                                        class="text-muted-foreground group-hover:text-primary transition-colors"
+                                        className="text-muted-foreground group-hover:text-primary transition-colors"
                                     />
                                 </div>
                                 <div class="text-sm text-muted-foreground">
@@ -282,7 +282,7 @@ import {
                                     <span class="font-bold text-foreground">JS / TS</span>
                                     <ExternalLink
                                         size={16}
-                                        class="text-muted-foreground group-hover:text-primary transition-colors"
+                                        className="text-muted-foreground group-hover:text-primary transition-colors"
                                     />
                                 </div>
                                 <div class="text-sm text-muted-foreground">
@@ -315,7 +315,7 @@ import {
                         <div class="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
                             <div class="p-6 border-b border-border bg-muted/30 flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <GitBranch size={20} class="text-primary" />
+                                    <GitBranch size={20} className="text-primary" />
                                     <span class="font-bold text-foreground">Git</span>
                                 </div>
                                 <a
@@ -341,7 +341,7 @@ import {
                         <div class="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
                             <div class="p-6 border-b border-border bg-muted/30 flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <Database size={20} class="text-primary" />
+                                    <Database size={20} className="text-primary" />
                                     <span class="font-bold text-foreground">Perforce</span>
                                 </div>
                                 <a
@@ -375,7 +375,7 @@ import {
                             <p class="text-muted-foreground">Let's configure Nanovision to visualize your data.</p>
                         </div>
                         <a
-                            href="/configurator"
+                            href={`${import.meta.env.BASE_URL}configurator`}
                             class="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-bold hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 whitespace-nowrap"
                         >
                             Open Configurator

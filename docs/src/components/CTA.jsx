@@ -9,7 +9,7 @@ const CTA = () => (
             <h2 className="text-4xl font-bold mb-16 text-foreground text-center tracking-tight">READY TO DEPLOY?</h2>
 
             <div className="grid md:grid-cols-2 gap-8">
-                <a href="/configurator" className="group bg-card border border-border hover:border-primary/50 p-8 hover:-translate-y-1 shadow-lg rounded-xl transition-all duration-300">
+                <a href={`${import.meta.env.BASE_URL}configurator`} className="group bg-card border border-border hover:border-primary/50 p-8 hover:-translate-y-1 shadow-lg rounded-xl transition-all duration-300">
                     <div className="flex justify-between items-start mb-6">
                         <div className="text-primary"><Sliders size={32} /></div>
                         <ArrowUpRight size={20} className="text-muted-foreground group-hover:text-primary transition-colors duration-300" />
@@ -19,7 +19,7 @@ const CTA = () => (
                     <span className="text-primary text-sm font-bold tracking-wide uppercase group-hover:underline">Configure Now</span>
                 </a>
 
-                <a href="/getting-started" className="group bg-card border border-border hover:border-primary/50 p-8 hover:-translate-y-1 shadow-lg rounded-xl transition-all duration-300">
+                <a href={`${import.meta.env.BASE_URL}getting-started`} className="group bg-card border border-border hover:border-primary/50 p-8 hover:-translate-y-1 shadow-lg rounded-xl transition-all duration-300">
                     <div className="flex justify-between items-start mb-6">
                         <div className="text-foreground"><BookOpen size={32} /></div>
                         <ArrowUpRight size={20} className="text-muted-foreground group-hover:text-foreground transition-colors duration-300" />

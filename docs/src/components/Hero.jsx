@@ -167,7 +167,7 @@ const Hero = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-4">
-                        <a href="/getting-started" className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 shadow-lg shadow-primary/20">
+                        <a href={`${import.meta.env.BASE_URL}getting-started`} className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 shadow-lg shadow-primary/20">
                             <Play size={20} />
                             Get Started
                         </a>
