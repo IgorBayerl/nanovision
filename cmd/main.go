@@ -43,6 +43,17 @@ var (
 	date    = "unknown"
 )
 
+type repeatedStringFlag []string
+
+func (r *repeatedStringFlag) String() string {
+	return strings.Join(*r, ", ")
+}
+
+func (r *repeatedStringFlag) Set(value string) error {
+	*r = append(*r, value)
+	return nil
+}
+
 func parseAndBindFlags() *config.RawConfigInput {
 	rawInput := &config.RawConfigInput{}
 
@@ -59,6 +70,7 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.BoolVar(&rawInput.Verbose, "verbose", false, "Shortcut for Verbose logging (overridden by -verbosity)")
 	flag.StringVar(&rawInput.DiffFile, "diff", "", "Path to a unified diff file for patch coverage analysis")
 	flag.StringVar(&rawInput.DiffStrip, "diff-strip", "", "Strip N leading components from diff paths ('auto' or 0-6)")
+	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Metric threshold (e.g. 'line_coverage=60..80'). Can be repeated.")
 	return rawInput
 }
 

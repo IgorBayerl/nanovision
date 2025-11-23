@@ -120,6 +120,8 @@ DEMO_PROJECT_TESTS = [
         args=[
             f"-report={CPP_GCOV_PATTERN};{CPP_COBERTURA_XML}",
             f"-sourcedirs={CPP_PROJECT_DIR};{CPP_PROJECT_DIR}",
+            "-threshold=line_coverage=40..80",
+            "-threshold=branch_coverage=30..70",
         ],
     ),
     TestCase(
@@ -145,7 +147,7 @@ SELF_COVERAGE_TESTS = [
     TestCase(
         name="nanovision Self-Coverage (Unit + Integration Merged)",
         output_dir_name="nanovision_self_coverage_full",
-        args=[], # No args, its using config file
+        args=["-threshold=patch_methods_covered=70..90"],
     )
 ]
 

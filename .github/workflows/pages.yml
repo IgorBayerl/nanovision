@@ -1,11 +1,6 @@
 name: Generate Pages
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore: 
-      - '.devcontainer/**'
-      - 'vendor/**'
   workflow_dispatch:
     inputs:
       diff_target:
