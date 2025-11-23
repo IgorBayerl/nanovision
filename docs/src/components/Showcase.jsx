@@ -96,7 +96,7 @@ const Showcase = () => {
                                     }`}
                             >
                                 <img
-                                    src="/nanovision_srummary_screen_2.png"
+                                    src={`${import.meta.env.BASE_URL}nanovision_srummary_screen_2.png`}
                                     alt="Fully Featured HTML Report"
                                     className="w-full h-full object-cover"
                                 />
@@ -108,7 +108,7 @@ const Showcase = () => {
                                     }`}
                             >
                                 <img
-                                    src="/nanovision_details.png"
+                                    src={`${import.meta.env.BASE_URL}nanovision_details.png`}
                                     alt="Static Analysis"
                                     className="w-full h-full object-cover"
                                 />
@@ -120,7 +120,7 @@ const Showcase = () => {
                                     }`}
                             >
                                 <img
-                                    src="/nanovision_patch_coverage.png"
+                                    src={`${import.meta.env.BASE_URL}nanovision_patch_coverage.png`}
                                     alt="Patch Coverage"
                                     className="w-full h-full object-cover"
                                 />
