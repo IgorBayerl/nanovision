@@ -8,8 +8,8 @@ const Footer = () => {
         <footer className="border-t border-border bg-background py-12">
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-2">
-                    <img src={`${base}/nanovision.png`} alt="Nanovision Logo" className="w-6 h-6" />
-                    <span className="font-bold text-foreground font-mono tracking-wider">NANOVISION</span>
+                    <img src={`${base}/nanovision.png`} alt="Nanovision Logo" className="w-auto h-6" />
+                    <span className="font-bold text-foreground font-mono tracking-wider">Nanovision</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
                     &copy; {new Date().getFullYear()} Open Source under Apache 2.0.
