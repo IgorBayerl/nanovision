@@ -1,0 +1,99 @@
+version: 2
+
+project_name: nanovision
+dist: bin
+
+builds:
+  - id: linux-amd64
+    binary: nanovision
+    main: ./cmd/main.go
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  - id: linux-arm64
+    binary: nanovision
+    main: ./cmd/main.go
+    goos:
+      - linux
+    goarch:
+      - arm64
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  - id: windows-amd64
+    binary: nanovision
+    main: ./cmd/main.go
+    goos:
+      - windows
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  # Windows ARM64 is currently disabled because the goreleaser-cross image
+  # does not include the aarch64-w64-mingw32-gcc compiler by default.
+  # - id: windows-arm64
+  #   binary: nanovision
+  #   main: ./cmd/main.go
+  #   goos:
+  #     - windows
+  #   goarch:
+  #     - arm64
+  #   env:
+  #     - CGO_ENABLED=1
+  #     # goreleaser-cross uses llvm-mingw or similar for this
+  #     - CC=aarch64-w64-mingw32-gcc
+  #     - CXX=aarch64-w64-mingw32-g++
+  #   flags:
+  #     - -mod=vendor
+  #   ldflags:
+  #     - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+archives:
+  - formats:
+      - tar.gz
+    # use zip for windows
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  version_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

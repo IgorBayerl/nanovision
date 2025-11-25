@@ -52,14 +52,10 @@ While many CI tools give you a simple percentage, **nanovision** helps you under
 |               | Raw JSON       |
 
 ## Installation
-### From Releases
-Download the pre-compiled binary for Windows or Linux from the **[Releases Page](https://github.com/IgorBayerl/nanovision/releases)**.
-
-### Install Scripts
 
 **Windows**
 ```ps1
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force; iwr https://raw.githubusercontent.com/IgorBayerl/nanovision/main/scripts/install.ps1 -UseBasicParsing | iex
+winget install nanovision
 ```
 
 **Linux**
@@ -67,22 +63,30 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force; iwr https://raw.gith
 curl -sL https://raw.githubusercontent.com/IgorBayerl/nanovision/main/scripts/install.sh | bash
 ```
 
+### Or downdload From Releases
+Download the binaries for Windows or Linux from the **[Releases Page](https://github.com/IgorBayerl/nanovision/releases)**.
+
 ## Quick Start
+
+### 0. Check nanovision instalation
+```bash
+nanovision -version
+```
+
+```bash
+nanovision -help
+```
 
 ### 1. Generate a basic HTML report
 ```bash
-nanovision \
-  -report="coverage.out" \
-  -sourcedirs="."
+nanovision -report="coverage.out" -sourcedirs="."
 ```
 
 ### 2. Merge multiple reports
 Combine coverage from different languages or test suites:
 
 ```bash
-nanovision \
-  -report="cobertura.xml;gocover.out" \
-  -sourcedirs="src/csharp;src/go"
+nanovision -report="cobertura.xml;gocover.out" -sourcedirs="src/csharp;src/go"
 ```
 
 ### 3. Patch Coverage (Diff Analysis)

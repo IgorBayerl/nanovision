@@ -125,16 +125,41 @@ func Init(cfg *Config) (io.Closer, error) {
 	var handlers []slog.Handler
 	var closer io.Closer
 
-	consoleOpts := &slog.HandlerOptions{
-		Level: cfg.Verbosity.SlogLevel(),
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == slog.TimeKey {
-				return slog.Attr{}
+	// Define source handling options
+	// We use AddSource: true to get the file and line number.
+	// We use ReplaceAttr to clean up the output (shorten paths).
+	replaceAttr := func(groups []string, a slog.Attr) slog.Attr {
+		// Remove time from console output for cleaner CLI look, keep in JSON if needed
+		// (Though here we apply it generally).
+		if a.Key == slog.TimeKey && cfg.Format == "text" {
+			return slog.Attr{}
+		}
+
+		// Format source location to be relative/shorter
+		if a.Key == slog.SourceKey {
+			source, ok := a.Value.Any().(*slog.Source)
+			if !ok {
+				return a
 			}
-			return a
-		},
+			// Try to make path relative to cwd to reduce noise
+			if wd, err := os.Getwd(); err == nil {
+				if rel, err := filepath.Rel(wd, source.File); err == nil {
+					source.File = rel
+				}
+			}
+			// Reassign the modified source
+			return slog.Any(slog.SourceKey, source)
+		}
+		return a
 	}
-	handlers = append(handlers, slog.NewTextHandler(os.Stderr, consoleOpts))
+
+	handlerOpts := &slog.HandlerOptions{
+		Level:       cfg.Verbosity.SlogLevel(),
+		AddSource:   true, // This automatically adds caller info
+		ReplaceAttr: replaceAttr,
+	}
+
+	handlers = append(handlers, slog.NewTextHandler(os.Stderr, handlerOpts))
 
 	if cfg.File != "" {
 		if err := fs.MkdirAll(filepath.Dir(cfg.File), 0o755); err != nil {
@@ -147,12 +172,11 @@ func Init(cfg *Config) (io.Closer, error) {
 		}
 		closer = f
 
-		fileOpts := &slog.HandlerOptions{Level: cfg.Verbosity.SlogLevel()}
 		var fileHandler slog.Handler
 		if strings.ToLower(cfg.Format) == "json" {
-			fileHandler = slog.NewJSONHandler(f, fileOpts)
+			fileHandler = slog.NewJSONHandler(f, handlerOpts)
 		} else {
-			fileHandler = slog.NewTextHandler(f, fileOpts)
+			fileHandler = slog.NewTextHandler(f, handlerOpts)
 		}
 		handlers = append(handlers, fileHandler)
 	}

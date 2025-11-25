@@ -92,13 +92,73 @@ Native setup works on macOS/Linux/Windows:
 git clone https://github.com/IgorBayerl/nanovision.git
 cd nanovision
 
-# Build
-python ./scripts/build.py --target windows 
-python ./scripts/build.py --target linux
+# Build snapshot (binaries in bin/)
+goreleaser release --snapshot --clean
 
 # Generates many reports based on the example projects
 python ./scripts/e2e_test.py 
 ```
+
+### Building
+
+#### 1. Local Development (Fast)
+
+For daily development, use the Python script to build for your current platform (or Windows x64 if on Linux). This uses your local Go installation.
+
+```bash
+# Build for both Linux and Windows (x64 only)
+python3 scripts/build.py
+
+# Build for specific target
+python3 scripts/build.py --target linux
+```
+
+#### 2. Full Release (Cross-Platform)
+
+To build for all platforms (including ARM64) and publish a release:
+
+1. Go to the **Actions** tab in GitHub.
+2. Select the **Release** workflow.
+3. Click **Run workflow**.
+4. Enter the version (e.g., `v0.1.1`) and optional commit SHA.
+
+This triggers a cloud build using `goreleaser-cross` to generate all artifacts.
+
+#### 3. Test Release Locally (Docker)
+
+You can simulate the CI release process locally using Docker. This builds all binaries (Windows/Linux, AMD64/ARM64) and places them in the `bin/` folder.
+
+**PowerShell (Windows):**
+```powershell
+docker run --rm --privileged `
+  -v "${PWD}:/src" `
+  -w /src `
+  ghcr.io/goreleaser/goreleaser-cross:v1.25.3 `
+  release --clean --snapshot --skip=publish
+```
+
+**Bash (Linux/macOS):**
+```bash
+docker run --rm --privileged \
+  -v "$PWD:/src" \
+  -w /src \
+  ghcr.io/goreleaser/goreleaser-cross:v1.25.3 \
+  release --clean --snapshot --skip=publish
+```
+
+### 4. Winget Release Automation
+
+The project is configured to automatically submit new releases to the [Windows Package Manager Community Repository](https://github.com/microsoft/winget-pkgs).
+
+**Prerequisites:**
+- A GitHub Personal Access Token (PAT) with `public_repo` scope.
+- This token must be added as a repository secret named `WINGET_TOKEN`.
+
+**Workflow:**
+- The workflow is defined in `.github/workflows/winget.yml`.
+- It triggers automatically when a release is **published** (not drafted).
+- It uses the `vedantmgoyal2009/winget-releaser` action to create a PR against `winget-pkgs`.
+
 
 ---
 
@@ -123,8 +183,7 @@ Project automation lives under `scripts/`:
 
 | Script | Purpose |
 |--------|---------|
-| `build.py --target linux` | Build for Linux |
-| `build.py --target windows` | Build for Windows |
+| `python scripts/build.py` | Build local binaries (x64) |
 | `test.py` | Run unit tests |
 | `e2e_test.py` | Run end-to-end tests with example reports |
 | `e2e_test.py -sc` | Run E2E tests and generate self-coverage report |

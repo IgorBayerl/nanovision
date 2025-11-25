@@ -1,25 +1,33 @@
 package parsers
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+)
 
 type ParserFactory struct {
 	parsers []IParser
+	logger  *slog.Logger
 }
 
-func NewParserFactory(parsers ...IParser) *ParserFactory {
+func NewParserFactory(logger *slog.Logger, parsers ...IParser) *ParserFactory {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &ParserFactory{
 		parsers: parsers,
+		logger:  logger,
 	}
 }
 
 func (f *ParserFactory) FindParserForFile(filePath string) (IParser, error) {
 	for _, p := range f.parsers {
-		fmt.Println("[Find parser]: trying parser:", p.Name(), "...")
+		f.logger.Debug("Checking parser compatibility", "language", p.Name(), "file", filePath)
+
 		if p.SupportsFile(filePath) {
-			fmt.Println("[Find parser]: found compatible parser:", p.Name())
+			f.logger.Info("Parser found", "language", p.Name(), "file", filePath)
 			return p, nil
 		}
-		fmt.Println("[Find parser]: ", p.Name(), " not compatible")
 	}
 	return nil, fmt.Errorf("no suitable parser found for file: %s", filePath)
 }
