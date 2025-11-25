@@ -79,8 +79,12 @@ func TestApply(t *testing.T) {
 					NewPath: "src/main.go",
 					Kind:    "modified",
 					Hunks: []diff.Hunk{
-						{NewStart: 10, NewLines: 2, ModifiedLineOffsets: []int{0}, AddedLineOffsets: []int{1}}, // Mod line 10, Add line 11
-						{NewStart: 20, NewLines: 1, AddedLineOffsets: []int{0}},                                // Add line 20
+						// Hunk construction in test now assumes everything is AddedLineOffsets per new parser logic
+						// line 10 modified -> treated as Added
+						// line 11 added -> treated as Added
+						// line 20 added -> treated as Added
+						{NewStart: 10, NewLines: 2, ModifiedLineOffsets: []int{}, AddedLineOffsets: []int{0, 1}},
+						{NewStart: 20, NewLines: 1, AddedLineOffsets: []int{0}},
 					},
 				},
 			},
@@ -99,8 +103,8 @@ func TestApply(t *testing.T) {
 		modifiedFileNode := tree.Root.Subdirs["src"].Files["main.go"]
 		require.NotNil(t, modifiedFileNode.Diff, "DiffInfo should be added to modified file")
 		assert.Equal(t, model.ChangeKindModified, modifiedFileNode.Diff.Kind)
-		assert.Equal(t, map[int]bool{11: true, 20: true}, modifiedFileNode.Diff.AddedLines)
-		assert.Equal(t, map[int]bool{10: true}, modifiedFileNode.Diff.ModifiedLines)
+		assert.Equal(t, map[int]bool{10: true, 11: true, 20: true}, modifiedFileNode.Diff.AddedLines)
+		assert.Empty(t, modifiedFileNode.Diff.ModifiedLines)
 
 		untouchedFileNode := tree.Root.Subdirs["src"].Files["untouched.go"]
 		assert.Nil(t, untouchedFileNode.Diff, "Untouched file should not have DiffInfo")
@@ -119,7 +123,7 @@ func TestApply(t *testing.T) {
 				{ // This file is in the tree and diff
 					NewPath: "src/main.go",
 					Kind:    "modified",
-					Hunks:   []diff.Hunk{{NewStart: 5, ModifiedLineOffsets: []int{0}}},
+					Hunks:   []diff.Hunk{{NewStart: 5, AddedLineOffsets: []int{0}}},
 				},
 			},
 		}
@@ -131,7 +135,7 @@ func TestApply(t *testing.T) {
 		// No node for 'filtered.go' exists, so we just check it didn't crash
 		mainFileNode := tree.Root.Subdirs["src"].Files["main.go"]
 		require.NotNil(t, mainFileNode.Diff)
-		assert.Equal(t, map[int]bool{5: true}, mainFileNode.Diff.ModifiedLines)
+		assert.Equal(t, map[int]bool{5: true}, mainFileNode.Diff.AddedLines)
 	})
 
 	t.Run("is idempotent", func(t *testing.T) {

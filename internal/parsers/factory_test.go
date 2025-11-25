@@ -27,6 +27,7 @@ func Test_ParserFactory_FindParserForFile(t *testing.T) {
 
 	fileReader := filereader.NewDefaultReader()
 	factory := parsers.NewParserFactory(
+		nil,
 		parser_cobertura.NewCoberturaParser(fileReader),
 		parser_gocover.NewGoCoverParser(fileReader),
 	)

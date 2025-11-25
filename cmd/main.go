@@ -100,7 +100,6 @@ func parseReportFiles(logger *slog.Logger, appConfig *config.AppConfig, inputPai
 
 		for _, reportFile := range expandedFiles {
 			absFile, _ := filepath.Abs(reportFile)
-			logger.Info("Attempting to parse report file", "file", absFile, "sourcedir", pair.SourceDir)
 
 			parseTaskConfig := &parsers.SimpleParserConfig{
 				SrcDirs:    []string{pair.SourceDir},
@@ -116,7 +115,6 @@ func parseReportFiles(logger *slog.Logger, appConfig *config.AppConfig, inputPai
 				continue
 			}
 
-			logger.Info("Using parser for file", "parser", parserInstance.Name(), "file", absFile)
 			result, err := parserInstance.Parse(absFile, parseTaskConfig)
 			if err != nil {
 				msg := fmt.Sprintf("error parsing file %s with %s: %v", reportFile, parserInstance.Name(), err)
@@ -205,6 +203,7 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 
 	prodFileReader := filereader.NewDefaultReader()
 	parserFactory := parsers.NewParserFactory(
+		logger,
 		parser_cobertura.NewCoberturaParser(prodFileReader),
 		parser_gocover.NewGoCoverParser(prodFileReader),
 		parser_gcov.NewGCovParser(prodFileReader),
@@ -329,10 +328,11 @@ func main() {
 	var diffData *diff.DiffData
 	if appConfig.Diff.File != "" {
 		var parseErr error
-		slog.Info("Parsing diff file...", "path", appConfig.Diff.File)
-		diffData, parseErr = diff.Parse(appConfig.Diff.File)
+		diffLogger := slog.Default()
+		diffLogger.Info("Parsing diff file...", "path", appConfig.Diff.File)
+		diffData, parseErr = diff.Parse(appConfig.Diff.File, diffLogger)
 		if parseErr != nil {
-			slog.Warn("Failed to parse diff file; ignoring diff analysis.", "error", parseErr)
+			diffLogger.Warn("Failed to parse diff file; ignoring diff analysis.", "error", parseErr)
 			diffData = nil
 		}
 	}
