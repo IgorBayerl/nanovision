@@ -1,33 +1,40 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. v0.1.0)'
+        required: true
+        type: string
+      commit:
+        description: 'Commit SHA to build (default: HEAD)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Build Binaries
-        run: |
-          docker compose run --rm builder \
-          python3 scripts/build.py --target all --version ${{ github.ref_name }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
         with:
-          draft: true
-          files: |
-            bin/*.zip
-            bin/*.tar.gz
-            bin/windows/nanovision.exe
-            bin/linux/nanovision
+          fetch-depth: 0
+          ref: ${{ inputs.commit }}
+
+      - name: Tag Release
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a ${{ inputs.version }} -m "Release ${{ inputs.version }}"
+          git push origin ${{ inputs.version }}
+
+      - name: Run GoReleaser Cross
+        uses: docker://ghcr.io/goreleaser/goreleaser-cross:v1.25.3
+        with:
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
