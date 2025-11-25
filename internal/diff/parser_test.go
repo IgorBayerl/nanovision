@@ -1,6 +1,8 @@
 package diff
 
 import (
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -36,6 +38,8 @@ func checkOffsets(t *testing.T, h Hunk, prefix string) {
 }
 
 func TestParse(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
 	tests := []struct {
 		name     string
 		input    string
@@ -68,6 +72,7 @@ new file mode 100644
 				}
 
 				h := f.Hunks[0]
+				// All 3 lines are added
 				if len(h.AddedLineOffsets) != 3 {
 					t.Errorf("got %d added lines, want 3", len(h.AddedLineOffsets))
 				}
@@ -75,7 +80,6 @@ new file mode 100644
 					t.Errorf("got %d modified lines, want 0", len(h.ModifiedLineOffsets))
 				}
 
-				// Check offsets are correct (should be 0, 1, 2 for consecutive additions)
 				want := []int{0, 1, 2}
 				if !reflect.DeepEqual(h.AddedLineOffsets, want) {
 					t.Errorf("added line offsets = %v, want %v", h.AddedLineOffsets, want)
@@ -105,24 +109,53 @@ new file mode 100644
 					t.Errorf("got kind %q, want 'modified'", f.Kind)
 				}
 				h := f.Hunks[0]
-				if len(h.ModifiedLineOffsets) != 2 {
-					t.Errorf("got %d modified lines, want 2", len(h.ModifiedLineOffsets))
+				// Everything is considered "Added" for coverage reporting
+				if len(h.ModifiedLineOffsets) != 0 {
+					t.Errorf("got %d modified lines, want 0 (all should be added)", len(h.ModifiedLineOffsets))
 				}
-				if len(h.AddedLineOffsets) != 1 {
-					t.Errorf("got %d added lines, want 1", len(h.AddedLineOffsets))
+				if len(h.AddedLineOffsets) != 3 {
+					t.Errorf("got %d added lines, want 3", len(h.AddedLineOffsets))
 				}
 
-				// Modified lines should be at positions 1 and 2, added line at 3
-				wantMod := []int{1, 2}
-				wantAdd := []int{3}
-				if !reflect.DeepEqual(h.ModifiedLineOffsets, wantMod) {
-					t.Errorf("modified line offsets = %v, want %v", h.ModifiedLineOffsets, wantMod)
-				}
+				// Lines at offsets 1, 2, 3 are new/changed
+				wantAdd := []int{1, 2, 3}
 				if !reflect.DeepEqual(h.AddedLineOffsets, wantAdd) {
 					t.Errorf("added line offsets = %v, want %v", h.AddedLineOffsets, wantAdd)
 				}
 
 				checkOffsets(t, h, "modified_file")
+			},
+		},
+		{
+			name: "perforce_style_diff",
+			input: `--- //depot/main/src/App.cs#5	2023-10-25 14:00:00
++++ C:\Workspaces\Project\src\App.cs	2023-10-25 14:05:00
+@@ -10,2 +10,2 @@
+-        var x = 1;
++        var x = 2;`,
+			validate: func(t *testing.T, d *DiffData) {
+				if len(d.Files) != 1 {
+					t.Fatalf("got %d files, want 1", len(d.Files))
+				}
+				f := d.Files[0]
+
+				expectedOld := "//depot/main/src/App.cs"
+				if f.OldPath != expectedOld {
+					t.Errorf("old path mismatch: got %q, want %q", f.OldPath, expectedOld)
+				}
+
+				expectedNew := `C:\Workspaces\Project\src\App.cs`
+				if f.NewPath != expectedNew {
+					t.Errorf("new path mismatch: got %q, want %q", f.NewPath, expectedNew)
+				}
+
+				if len(f.Hunks) != 1 {
+					t.Fatalf("got %d hunks, want 1", len(f.Hunks))
+				}
+				// Update: now classified as added
+				if len(f.Hunks[0].AddedLineOffsets) != 1 {
+					t.Error("expected 1 added line")
+				}
 			},
 		},
 		{
@@ -159,14 +192,16 @@ new file mode 100644
 				}
 				checkOffsets(t, h1, "multiple_hunks[0]")
 
-				// Second hunk: one modified line at position 1
 				h2 := f.Hunks[1]
-				if len(h2.ModifiedLineOffsets) != 1 {
-					t.Errorf("hunk 2: got %d modified lines, want 1", len(h2.ModifiedLineOffsets))
+				if len(h2.ModifiedLineOffsets) != 0 {
+					t.Errorf("hunk 2: got %d modified lines, want 0", len(h2.ModifiedLineOffsets))
 				}
-				wantMod := []int{1}
-				if !reflect.DeepEqual(h2.ModifiedLineOffsets, wantMod) {
-					t.Errorf("hunk 2: modified line offsets = %v, want %v", h2.ModifiedLineOffsets, wantMod)
+				if len(h2.AddedLineOffsets) != 1 {
+					t.Errorf("hunk 2: got %d added lines, want 1", len(h2.AddedLineOffsets))
+				}
+				wantAdd2 := []int{1}
+				if !reflect.DeepEqual(h2.AddedLineOffsets, wantAdd2) {
+					t.Errorf("hunk 2: added line offsets = %v, want %v", h2.AddedLineOffsets, wantAdd2)
 				}
 				checkOffsets(t, h2, "multiple_hunks[1]")
 			},
@@ -217,7 +252,7 @@ new file mode 100644
 			}
 
 			// Parse the diff
-			diff, err := Parse(tmpFile)
+			diff, err := Parse(tmpFile, logger)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 			}

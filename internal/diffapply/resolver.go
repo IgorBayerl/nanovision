@@ -44,7 +44,11 @@ func BuildResolver(dd *diff.DiffData, fileIndex map[string]*model.FileNode, cove
 	diffPaths := make([]string, 0, len(dd.Files))
 	treePaths := make([]string, 0, len(fileIndex))
 	for _, f := range dd.Files {
-		diffPaths = append(diffPaths, diff.Normalize(f.NewPath))
+		normalized := diff.Normalize(f.NewPath)
+		if logger != nil {
+			logger.Debug("Normalized diff path", "raw", f.NewPath, "normalized", normalized)
+		}
+		diffPaths = append(diffPaths, normalized)
 	}
 	for path := range fileIndex {
 		treePaths = append(treePaths, path)

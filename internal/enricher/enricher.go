@@ -106,7 +106,7 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 		return // No analysis needed for this file type.
 	}
 
-	e.logger.Info("Analyzing file", "path", path, "analyzer", analyzer.Name())
+	e.logger.Info("Analyzing file", "language", analyzer.Name(), "file", path)
 	sourceBytes, err := e.readSourceFile(fileNode)
 	if err != nil {
 		e.logger.Warn("Could not read source file for analysis", "file", path, "error", err)
