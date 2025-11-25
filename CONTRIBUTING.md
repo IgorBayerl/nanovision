@@ -100,6 +100,17 @@ python ./scripts/build.py --target linux
 python ./scripts/e2e_test.py 
 ```
 
+### Building with Docker
+
+You can build all binaries (Windows and Linux) using Docker with a single command:
+
+```bash
+docker compose run --rm builder python3 scripts/build.py --target all
+```
+
+The artifacts will be available in the `bin/` directory.
+
+
 ---
 
 ## Using the Devcontainer
