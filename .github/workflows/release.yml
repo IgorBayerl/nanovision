@@ -35,6 +35,6 @@ jobs:
       - name: Run GoReleaser Cross
         uses: docker://ghcr.io/goreleaser/goreleaser-cross:v1.25.3
         with:
-          args: release --clean
+          args: release --clean --draft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
