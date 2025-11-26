@@ -45,11 +45,14 @@ func Parse(path string, logger *slog.Logger) (*DiffData, error) {
 	var currentFile *FileDiff
 	var currentHunk *Hunk
 	var pendingRemovals int
+	var currentFileCreatedViaDiffGit bool
 
 	for {
 		lineBytes, err := reader.ReadBytes('\n')
 		line := strings.TrimSuffix(string(lineBytes), "\n")
 		line = strings.TrimSuffix(line, "\r")
+		// Strip BOM if present (common in Windows files)
+		line = strings.TrimPrefix(line, "\uFEFF")
 
 		if line == "" {
 			goto nextIteration
@@ -75,6 +78,7 @@ func Parse(path string, logger *slog.Logger) (*DiffData, error) {
 				Kind:    "modified",
 			}
 			currentHunk = nil
+			currentFileCreatedViaDiffGit = true
 			goto nextIteration
 		}
 
@@ -110,16 +114,45 @@ func Parse(path string, logger *slog.Logger) (*DiffData, error) {
 				}
 			}
 
-			if currentFile == nil {
-				currentFile = &FileDiff{Kind: "modified"}
-			}
 			if prefix == "---" {
+				// If we encounter "---", it might be the start of a new file if:
+				// 1. We have a current file that has hunks (definitely finished).
+				// 2. We have a current file that wasn't created by "diff --git" and already has a NewPath set (finished empty file?).
+				if currentFile != nil {
+					shouldClose := false
+					if len(currentFile.Hunks) > 0 {
+						shouldClose = true
+					} else if !currentFileCreatedViaDiffGit && currentFile.NewPath != "" {
+						shouldClose = true
+					}
+
+					if shouldClose {
+						if currentHunk != nil {
+							currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
+							currentHunk = nil
+						}
+						data.Files = append(data.Files, *currentFile)
+						currentFile = nil
+						currentFileCreatedViaDiffGit = false
+					}
+				}
+
+				if currentFile == nil {
+					currentFile = &FileDiff{Kind: "modified"}
+					currentFileCreatedViaDiffGit = false
+				}
+
 				if cleanPath == "/dev/null" {
 					currentFile.Kind = "added"
 				}
 				// Git style stripping (only if it starts with a/)
 				currentFile.OldPath = strings.TrimPrefix(cleanPath, "a/")
 			} else {
+				// prefix == "+++"
+				if currentFile == nil {
+					// Should not happen in valid diffs, but handle gracefully
+					currentFile = &FileDiff{Kind: "modified"}
+				}
 				// Git style stripping (only if it starts with b/)
 				currentFile.NewPath = strings.TrimPrefix(cleanPath, "b/")
 			}
