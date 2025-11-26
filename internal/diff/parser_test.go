@@ -267,3 +267,49 @@ new file mode 100644
 		})
 	}
 }
+
+func TestParse_PerforceStyleMultiFile(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	// Minimal reproduction of the issue: multiple files without "diff --git" headers.
+	input := `--- //depot/path/to/file1.go	2025-01-01 10:00:00.000000000 0100
++++ D:\local\path\to\file1.go	2025-01-01 10:00:00.000000000 0100
+@@ -10,1 +10,1 @@
+-var x = 1
++var x = 2
+--- //depot/path/to/file2.go	2025-01-01 10:00:00.000000000 0100
++++ D:\local\path\to\file2.go	2025-01-01 10:00:00.000000000 0100
+@@ -5,1 +5,1 @@
+-func foo() {}
++func bar() {}
+`
+
+	tmpDir := t.TempDir()
+	tmpFile := filepath.Join(tmpDir, "repro_minimal.diff")
+	if err := os.WriteFile(tmpFile, []byte(input), 0644); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	diff, err := Parse(tmpFile, logger)
+	if err != nil {
+		t.Fatalf("Parse() unexpected error: %v", err)
+	}
+
+	// We expect 2 files to be parsed
+	if len(diff.Files) != 2 {
+		t.Errorf("got %d files, want 2", len(diff.Files))
+	}
+
+	if len(diff.Files) > 0 {
+		want1 := "//depot/path/to/file1.go"
+		if diff.Files[0].OldPath != want1 {
+			t.Errorf("File 1 OldPath mismatch: got %q, want %q", diff.Files[0].OldPath, want1)
+		}
+	}
+	if len(diff.Files) > 1 {
+		want2 := "//depot/path/to/file2.go"
+		if diff.Files[1].OldPath != want2 {
+			t.Errorf("File 2 OldPath mismatch: got %q, want %q", diff.Files[1].OldPath, want2)
+		}
+	}
+}
