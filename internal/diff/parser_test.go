@@ -238,7 +238,17 @@ new file mode 100644
 +new line
 @@ -1 invalid +2,3 @@
 +another line`,
-			wantErr: true,
+			// The parser is resilient and skips invalid hunks instead of returning an error.
+			wantErr: false,
+			validate: func(t *testing.T, d *DiffData) {
+				if len(d.Files) != 1 {
+					t.Fatalf("got %d files, want 1", len(d.Files))
+				}
+				// Verify that no hunks were parsed for the file
+				if len(d.Files[0].Hunks) != 0 {
+					t.Errorf("got %d hunks, want 0", len(d.Files[0].Hunks))
+				}
+			},
 		},
 	}
 
