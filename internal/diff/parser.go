@@ -1,283 +1,303 @@
 package diff
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
-	"io"
 	"log/slog"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/IgorBayerl/nanovision/internal/filereader"
 )
 
 var (
-	gitDiffRE = regexp.MustCompile(`^diff --git a/(.*) b/(.*)$`)
-	// fileHeaderRE captures the prefix (--- or +++) and the rest of the line
+	gitDiffRE    = regexp.MustCompile(`^diff --git a/(.*) b/(.*)$`)
 	fileHeaderRE = regexp.MustCompile(`^(\+\+\+|---)\s+(.*)$`)
 	newFileRE    = regexp.MustCompile(`^new file mode \d+$`)
 	hunkHeaderRE = regexp.MustCompile(`^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@.*$`)
+	ansiColorRE  = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 )
 
-// Parse reads a unified diff file from the given path and returns a structured
-// representation of its contents. It handles standard git diff format including
-// file additions, modifications, and the individual hunks within each file.
-//
-// The parser is resilient to malformed input - it will log warnings and continue
-// processing when encountering oversized lines or unexpected content rather than
-// failing immediately.
+// Parse reads a unified diff file and returns a structured representation.
+// It handles standard git diffs, file additions, modifications, and hunks.
+// It relies on internal/filereader to handle character encoding (UTF-16/BOM).
 func Parse(path string, logger *slog.Logger) (*DiffData, error) {
 	if logger == nil {
 		logger = slog.Default()
 	}
 
-	file, err := os.Open(path)
+	lines, err := filereader.ReadLinesInFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("opening diff file: %w", err)
+		return nil, fmt.Errorf("reading diff file: %w", err)
 	}
-	defer file.Close()
 
-	logger.Debug("Starting diff parse", "path", path)
+	logger.Debug("Starting diff parse", "path", path, "lines", len(lines))
 
-	reader := bufio.NewReader(file)
-	data := &DiffData{}
-	var currentFile *FileDiff
-	var currentHunk *Hunk
-	var pendingRemovals int
-	var currentFileCreatedViaDiffGit bool
+	p := newParser(logger)
+	return p.parseLines(lines)
+}
 
-	for {
-		lineBytes, err := reader.ReadBytes('\n')
-		line := strings.TrimSuffix(string(lineBytes), "\n")
-		line = strings.TrimSuffix(line, "\r")
-		// Strip BOM if present (common in Windows files)
-		line = strings.TrimPrefix(line, "\uFEFF")
+// parser encapsulates the state required during the parsing process.
+type parser struct {
+	logger *slog.Logger
+	data   *DiffData
 
+	// State variables
+	currFile        *FileDiff
+	currHunk        *Hunk
+	pendingRemovals int
+	isGitDiff       bool // Tracks if the current file started with 'diff --git'
+}
+
+func newParser(logger *slog.Logger) *parser {
+	return &parser{
+		logger: logger,
+		data:   &DiffData{},
+	}
+}
+
+func (p *parser) parseLines(lines []string) (*DiffData, error) {
+	for _, line := range lines {
+		line = p.cleanLine(line)
 		if line == "" {
-			goto nextIteration
+			continue
 		}
 
-		// Parse git diff header: "diff --git a/path b/path"
-		if matches := gitDiffRE.FindStringSubmatch(line); matches != nil {
-			if currentFile != nil {
-				if currentHunk != nil {
-					currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
-				}
-				data.Files = append(data.Files, *currentFile)
-			}
-
-			oldPath := strings.TrimPrefix(matches[1], "a/")
-			newPath := strings.TrimPrefix(matches[2], "b/")
-
-			logger.Debug("Diff found file", "raw_old", matches[1], "raw_new", matches[2])
-
-			currentFile = &FileDiff{
-				OldPath: oldPath,
-				NewPath: newPath,
-				Kind:    "modified",
-			}
-			currentHunk = nil
-			currentFileCreatedViaDiffGit = true
-			goto nextIteration
+		// Try to match headers first
+		if p.handleGitDiffHeader(line) {
+			continue
+		}
+		if p.handleNewFileMarker(line) {
+			continue
+		}
+		if p.handleFileHeader(line) {
+			continue
+		}
+		if p.handleHunkHeader(line) {
+			continue
 		}
 
-		// Detect file additions via "new file mode" marker
-		if newFileRE.MatchString(line) {
-			if currentFile != nil {
-				currentFile.Kind = "added"
-				currentFile.OldPath = "/dev/null"
-				logger.Debug("Diff file marked as added", "file", currentFile.NewPath)
-			}
-			goto nextIteration
+		// If inside a hunk, handle content lines (+, -, space)
+		p.handleContentLine(line)
+	}
+
+	// Ensure the last file/hunk is saved
+	p.finalizeHunk()
+	p.finalizeFile()
+
+	p.logger.Debug("Diff parse completed", "files_count", len(p.data.Files))
+	return p.data, nil
+}
+
+// cleanLine handles whitespace and ANSI color stripping.
+func (p *parser) cleanLine(line string) string {
+	if strings.Contains(line, "\x1b") {
+		line = ansiColorRE.ReplaceAllString(line, "")
+	}
+	return strings.TrimSuffix(line, "\r")
+}
+
+// handleGitDiffHeader handles "diff --git a/... b/..."
+func (p *parser) handleGitDiffHeader(line string) bool {
+	matches := gitDiffRE.FindStringSubmatch(line)
+	if matches == nil {
+		return false
+	}
+
+	p.finalizeHunk()
+	p.finalizeFile()
+
+	p.currFile = &FileDiff{
+		OldPath: strings.TrimPrefix(matches[1], "a/"),
+		NewPath: strings.TrimPrefix(matches[2], "b/"),
+		Kind:    "modified",
+	}
+	p.isGitDiff = true
+	p.logger.Debug("Diff found file", "old", p.currFile.OldPath, "new", p.currFile.NewPath)
+	return true
+}
+
+// handleNewFileMarker handles "new file mode 123456"
+func (p *parser) handleNewFileMarker(line string) bool {
+	if !newFileRE.MatchString(line) {
+		return false
+	}
+	if p.currFile != nil {
+		p.currFile.Kind = "added"
+		p.currFile.OldPath = "/dev/null"
+		p.logger.Debug("Diff file marked as added", "file", p.currFile.NewPath)
+	}
+	return true
+}
+
+// handleFileHeader handles "--- a/foo" or "+++ b/foo"
+func (p *parser) handleFileHeader(line string) bool {
+	matches := fileHeaderRE.FindStringSubmatch(line)
+	if matches == nil {
+		// Log warning if it looks like a header but failed regex
+		if strings.HasPrefix(line, "---") || strings.HasPrefix(line, "+++") {
+			p.logger.Warn("Line looks like file header but failed regex", "line", line)
+		}
+		return false
+	}
+
+	prefix, rawPath := matches[1], matches[2]
+	cleanPath := parsePathFromHeader(rawPath)
+
+	if prefix == "---" {
+		// Check if we need to close the previous file implicitly
+		// (Common in non-git diffs where "diff --git" header is missing)
+		if p.currFile != nil && (len(p.currFile.Hunks) > 0 || (!p.isGitDiff && p.currFile.NewPath != "")) {
+			p.finalizeHunk()
+			p.finalizeFile()
 		}
 
-		// Parse "---" and "+++" file path headers
-		if matches := fileHeaderRE.FindStringSubmatch(line); matches != nil {
-			prefix, rawPath := matches[1], matches[2]
-
-			// Clean the path:
-			// Perforce/Unified diffs separate path and timestamp with a tab
-			pathParts := strings.Split(rawPath, "\t")
-			cleanPath := strings.TrimSpace(pathParts[0])
-
-			// Strip Perforce version suffix (e.g., file.go#3) if present (common in OldPath)
-			if strings.Contains(cleanPath, "#") {
-				// Check if it looks like a version number #123
-				if idx := strings.LastIndex(cleanPath, "#"); idx > 0 {
-					// Simple heuristic: if it's #number, strip it.
-					// This prevents stripping valid filenames that happen to contain #
-					suffix := cleanPath[idx+1:]
-					if _, err := strconv.Atoi(suffix); err == nil {
-						cleanPath = cleanPath[:idx]
-					}
-				}
-			}
-
-			if prefix == "---" {
-				// If we encounter "---", it might be the start of a new file if:
-				// 1. We have a current file that has hunks (definitely finished).
-				// 2. We have a current file that wasn't created by "diff --git" and already has a NewPath set (finished empty file?).
-				if currentFile != nil {
-					shouldClose := false
-					if len(currentFile.Hunks) > 0 {
-						shouldClose = true
-					} else if !currentFileCreatedViaDiffGit && currentFile.NewPath != "" {
-						shouldClose = true
-					}
-
-					if shouldClose {
-						if currentHunk != nil {
-							currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
-							currentHunk = nil
-						}
-						data.Files = append(data.Files, *currentFile)
-						currentFile = nil
-						currentFileCreatedViaDiffGit = false
-					}
-				}
-
-				if currentFile == nil {
-					currentFile = &FileDiff{Kind: "modified"}
-					currentFileCreatedViaDiffGit = false
-				}
-
-				if cleanPath == "/dev/null" {
-					currentFile.Kind = "added"
-				}
-				// Git style stripping (only if it starts with a/)
-				currentFile.OldPath = strings.TrimPrefix(cleanPath, "a/")
-			} else {
-				// prefix == "+++"
-				if currentFile == nil {
-					// Should not happen in valid diffs, but handle gracefully
-					currentFile = &FileDiff{Kind: "modified"}
-				}
-				// Git style stripping (only if it starts with b/)
-				currentFile.NewPath = strings.TrimPrefix(cleanPath, "b/")
-			}
-
-			logger.Debug("Parsed diff header", "prefix", prefix, "raw", rawPath, "clean", cleanPath)
-			goto nextIteration
+		if p.currFile == nil {
+			p.currFile = &FileDiff{Kind: "modified"}
+			p.isGitDiff = false
 		}
 
-		// Parse hunk header: "@@ -1,5 +1,6 @@"
-		if strings.HasPrefix(line, "@@ ") && strings.Contains(line, " @@") {
-			if !hunkHeaderRE.MatchString(line) {
-				return nil, fmt.Errorf("malformed hunk header: %s", line)
-			}
-			matches := hunkHeaderRE.FindStringSubmatch(line)
-			if currentFile == nil {
-				return nil, fmt.Errorf("hunk header without file header")
-			}
-			if currentHunk != nil {
-				currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
-			}
-			oldStart, _ := strconv.Atoi(matches[1])
-			oldLines, _ := strconv.Atoi(matches[2])
-			if matches[2] == "" {
-				oldLines = 1
-			}
-			newStart, _ := strconv.Atoi(matches[3])
-			newLines, _ := strconv.Atoi(matches[4])
-			if matches[4] == "" {
-				newLines = 1
-			}
-
-			pathForLog := "unknown"
-			if currentFile != nil {
-				pathForLog = currentFile.NewPath
-			}
-			logger.Debug("Diff found hunk", "file", pathForLog, "new_start", newStart, "new_lines", newLines)
-
-			currentHunk = &Hunk{
-				OldStart: oldStart,
-				OldLines: oldLines,
-				NewStart: newStart,
-				NewLines: newLines,
-				content:  "",
-			}
-			pendingRemovals = 0
-			goto nextIteration
+		if cleanPath == "/dev/null" {
+			p.currFile.Kind = "added"
 		}
+		p.currFile.OldPath = strings.TrimPrefix(cleanPath, "a/")
 
-		// Process hunk content lines (-, +, and context lines)
-		if currentHunk != nil {
-			switch {
-			case strings.HasPrefix(line, "-"):
-				pendingRemovals++
-			case strings.HasPrefix(line, "+"):
-				// Calculate the current line offset within the new file version
-				currentLineOffset := 0
-				for _, prevLine := range strings.Split(currentHunk.content, "\n") {
-					if prevLine == "" {
-						continue
-					}
-					if strings.HasPrefix(prevLine, " ") || strings.HasPrefix(prevLine, "+") {
-						currentLineOffset++
-					}
-				}
-
-				// Simplification: Always treat '+' lines as "Added" lines.
-				// Previously, we tried to distinguish between "Modified" (replacing a -) and "Added" (pure insertion).
-				// However, for coverage reporting on the *new* file, we want to highlight ALL changed lines uniformly.
-				// This ensures the visual indicators in the report show up for all changes.
-
-				// We still consume pendingRemovals to allow for future logic if needed, but we don't map to ModifiedLineOffsets.
-				if pendingRemovals > 0 {
-					pendingRemovals--
-				}
-
-				currentHunk.AddedLineOffsets = append(currentHunk.AddedLineOffsets, currentLineOffset)
-				currentHunk.content += line + "\n"
-			case strings.HasPrefix(line, " "):
-				currentHunk.content += line + "\n"
-				pendingRemovals = 0
-			case strings.HasPrefix(line, `\`):
-				// Skip "\ No newline at end of file" markers
-				goto nextIteration
-			default:
-				logger.Warn("Ignoring invalid line inside a diff hunk", "line", line)
-			}
+	} else { // prefix == "+++"
+		if p.currFile == nil {
+			p.currFile = &FileDiff{Kind: "modified"}
 		}
+		p.currFile.NewPath = strings.TrimPrefix(cleanPath, "b/")
+	}
 
-	nextIteration:
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
+	p.logger.Debug("Parsed diff header", "prefix", prefix, "path", cleanPath)
+	return true
+}
 
-			if errors.Is(err, bufio.ErrBufferFull) {
-				// Line exceeded buffer capacity - skip to next parseable line
-				fileName := "unknown"
-				if currentFile != nil {
-					fileName = currentFile.NewPath
-				}
-				logger.Warn("Ignoring overly long line in diff, skipping rest of hunk.", "file", fileName)
+// handleHunkHeader handles "@@ -1,2 +3,4 @@"
+func (p *parser) handleHunkHeader(line string) bool {
+	if !strings.HasPrefix(line, "@@ ") {
+		return false
+	}
 
-				// Consume remainder of oversized line
-				for errors.Is(err, bufio.ErrBufferFull) {
-					_, err = reader.ReadBytes('\n')
-				}
+	matches := hunkHeaderRE.FindStringSubmatch(line)
+	if matches == nil {
+		p.logger.Warn("Malformed hunk header found", "line", line)
+		return true // Return true to consume line even if invalid
+	}
 
-				// Discard corrupted hunk state
-				currentHunk = nil
-				pendingRemovals = 0
+	if p.currFile == nil {
+		p.logger.Error("Hunk header found without active file", "line", line)
+		return true
+	}
+
+	p.finalizeHunk()
+
+	oldStart, _ := strconv.Atoi(matches[1])
+	oldLines := 1
+	if matches[2] != "" {
+		oldLines, _ = strconv.Atoi(matches[2])
+	}
+
+	newStart, _ := strconv.Atoi(matches[3])
+	newLines := 1
+	if matches[4] != "" {
+		newLines, _ = strconv.Atoi(matches[4])
+	}
+
+	p.currHunk = &Hunk{
+		OldStart: oldStart,
+		OldLines: oldLines,
+		NewStart: newStart,
+		NewLines: newLines,
+	}
+	p.pendingRemovals = 0
+
+	p.logger.Debug("Diff found hunk", "file", p.currFile.NewPath, "start", newStart)
+	return true
+}
+
+// handleContentLine handles actual code lines (+, -, space)
+func (p *parser) handleContentLine(line string) {
+	if p.currHunk == nil {
+		// Just a debug log if we encounter content outside a hunk (rare/garbage)
+		if strings.TrimSpace(line) != "" {
+			p.logger.Debug("Ignoring line outside hunk", "line", line)
+		}
+		return
+	}
+
+	switch {
+	case strings.HasPrefix(line, "-"):
+		p.pendingRemovals++
+
+	case strings.HasPrefix(line, "+"):
+		// Calculate offset relative to the new file version
+		// We count lines in our accumulated content that are meant for the new file (starts with ' ' or '+')
+		currentLineOffset := 0
+		for _, prev := range strings.Split(p.currHunk.content, "\n") {
+			if prev == "" {
 				continue
 			}
+			if strings.HasPrefix(prev, " ") || strings.HasPrefix(prev, "+") {
+				currentLineOffset++
+			}
+		}
 
-			return nil, fmt.Errorf("reading diff file: %w", err)
+		if p.pendingRemovals > 0 {
+			p.pendingRemovals--
+		}
+
+		p.currHunk.AddedLineOffsets = append(p.currHunk.AddedLineOffsets, currentLineOffset)
+		p.currHunk.content += line + "\n"
+
+	case strings.HasPrefix(line, " "):
+		p.currHunk.content += line + "\n"
+		p.pendingRemovals = 0
+
+	case strings.HasPrefix(line, `\`):
+		// Skip "\ No newline at end of file"
+		return
+
+	default:
+		// Only log if it's not just an empty line
+		if strings.TrimSpace(line) != "" {
+			p.logger.Debug("Ignoring unusual line inside hunk", "line", line)
 		}
 	}
+}
 
-	// Finalize any remaining hunk and file data
-	if currentHunk != nil {
-		currentFile.Hunks = append(currentFile.Hunks, *currentHunk)
+// finalizeHunk appends the current hunk to the current file and resets state.
+func (p *parser) finalizeHunk() {
+	if p.currHunk != nil && p.currFile != nil {
+		p.currFile.Hunks = append(p.currFile.Hunks, *p.currHunk)
 	}
-	if currentFile != nil {
-		data.Files = append(data.Files, *currentFile)
-	}
+	p.currHunk = nil
+	p.pendingRemovals = 0
+}
 
-	logger.Debug("Diff parse completed", "files_count", len(data.Files))
-	return data, nil
+// finalizeFile appends the current file to the data and resets state.
+func (p *parser) finalizeFile() {
+	if p.currFile != nil {
+		p.data.Files = append(p.data.Files, *p.currFile)
+	}
+	p.currFile = nil
+	p.isGitDiff = false
+}
+
+// parsePathFromHeader extracts clean paths from lines like "--- a/foo.txt\t2023..."
+// It handles Perforce/Unified formats (tab separated) and #rev suffixes.
+func parsePathFromHeader(rawPath string) string {
+	parts := strings.Split(rawPath, "\t")
+	path := strings.TrimSpace(parts[0])
+
+	// Strip Perforce version suffix (e.g., file.go#3)
+	if strings.Contains(path, "#") {
+		if idx := strings.LastIndex(path, "#"); idx > 0 {
+			suffix := path[idx+1:]
+			if _, err := strconv.Atoi(suffix); err == nil {
+				return path[:idx]
+			}
+		}
+	}
+	return path
 }
