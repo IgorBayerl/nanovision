@@ -3,31 +3,27 @@ import Layout from '../../layouts/Layout.astro'
 ---
 
 <Layout title="Nanovision | Coverage Reports">
-    <main class="pt-24 pb-16 min-h-screen bg-background">
-        <div class="max-w-4xl mx-auto px-6">
-            <h1 class="text-4xl font-bold text-foreground mb-6">Coverage Reports</h1>
-            <p class="text-xl text-muted-foreground mb-8">
-                Nanovision supports various coverage report formats as input.
-            </p>
+  <main class="pt-24 pb-16 min-h-screen bg-background">
+    <div class="max-w-4xl mx-auto px-6">
+      <h1 class="text-4xl font-bold text-foreground mb-6">Coverage Reports</h1>
+      <p class="text-xl text-muted-foreground mb-8">Nanovision supports various coverage report formats as input.</p>
 
-            <div class="prose dark:prose-invert max-w-none">
-                <h3>Supported Formats</h3>
-                <ul>
-                    <li><strong>Cobertura XML</strong>: A standard format used by many tools (Java, Python, etc.)</li>
-                    <li>
-                        <strong>Go Cover Profile</strong>: The native format for Go coverage (<code
-                            >go test -coverprofile</code
-                        >)
-                    </li>
-                    <li><strong>LCOV / GCov</strong>: Common in C/C++ and other environments.</li>
-                </ul>
+      <div class="prose dark:prose-invert max-w-none">
+        <h3>Supported Formats</h3>
+        <ul>
+          <li><strong>Cobertura XML</strong>: A standard format used by many tools (Java, Python, etc.)</li>
+          <li>
+            <strong>Go Cover Profile</strong>: The native format for Go coverage (<code>go test -coverprofile</code>)
+          </li>
+          <li><strong>LCOV / GCov</strong>: Common in C/C++ and other environments.</li>
+        </ul>
 
-                <h3>How it works</h3>
-                <p>
-                    Nanovision parses these reports to understand which lines of code have been executed during your
-                    tests. It normalizes this data into a common internal representation to generate unified reports.
-                </p>
-            </div>
-        </div>
-    </main>
+        <h3>How it works</h3>
+        <p>
+          Nanovision parses these reports to understand which lines of code have been executed during your tests. It
+          normalizes this data into a common internal representation to generate unified reports.
+        </p>
+      </div>
+    </div>
+  </main>
 </Layout>
