@@ -1,14 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import { Hexagon, Sun, Moon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Sun, Moon, Github } from 'lucide-react';
 
 const Navbar = ({ currentPath = "/" }) => {
     const [isDark, setIsDark] = useState(false);
-    const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL.slice(0, -1) : import.meta.env.BASE_URL;
+    const [stars, setStars] = useState(null);
+    const base = import.meta.env.BASE_URL.endsWith('/')
+        ? import.meta.env.BASE_URL.slice(0, -1)
+        : import.meta.env.BASE_URL;
 
     useEffect(() => {
-        // Initialize state from DOM or localStorage
         const isDarkMode = document.documentElement.classList.contains('dark');
         setIsDark(isDarkMode);
+
+        fetch('https://api.github.com/repos/IgorBayerl/nanovision')
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (data && typeof data.stargazers_count === 'number') {
+                    setStars(data.stargazers_count);
+                }
+            })
+            .catch(() => {
+                // ignore errors
+            });
     }, []);
 
     const toggleTheme = () => {
@@ -25,10 +38,6 @@ const Navbar = ({ currentPath = "/" }) => {
     };
 
     const isActive = (path) => {
-        // Normalize currentPath to remove base for comparison if needed, 
-        // but simpler to just check if currentPath ends with the target path
-        // or matches the full path.
-        // Let's just use the path as is since we are in a static site.
         if (path === '/') return currentPath === base || currentPath === base + '/';
         return currentPath.startsWith(`${base}${path}`);
     };
@@ -36,7 +45,7 @@ const Navbar = ({ currentPath = "/" }) => {
     const getLink = (path) => {
         if (path === '/') return `${base}/`;
         return `${base}${path}`;
-    }
+    };
 
     return (
         <nav className="sticky top-0 w-full z-50 border-b border-border bg-background/80 backdrop-blur-md">
@@ -49,31 +58,44 @@ const Navbar = ({ currentPath = "/" }) => {
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium">
                     <a
                         href={getLink('/')}
-                        className={`${isActive('/') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={isActive('/') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}
                     >
                         Home
                     </a>
                     <a
+                        href={getLink('/about-coverage')}
+                        className={
+                            isActive('/about-coverage')
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-foreground'
+                        }
+                    >
+                        About Coverage
+                    </a>
+                    <a
                         href={getLink('/getting-started')}
-                        className={`${isActive('/getting-started') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={
+                            isActive('/getting-started')
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-foreground'
+                        }
                     >
                         Getting Started
                     </a>
                     <a
-                        href={getLink('/usage')}
-                        className={`${isActive('/usage') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                        Usage
-                    </a>
-                    <a
                         href={getLink('/configurator')}
-                        className={`${isActive('/configurator') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={
+                            isActive('/configurator')
+                                ? 'text-primary'
+                                : 'text-muted-foreground hover:text-foreground'
+                        }
                     >
                         Configurator
                     </a>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+
                     <button
                         onClick={toggleTheme}
                         className="p-2 rounded-md text-muted-foreground hover:bg-secondary cursor-pointer"
@@ -81,9 +103,22 @@ const Navbar = ({ currentPath = "/" }) => {
                     >
                         {isDark ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
-                    <a href={getLink('/getting-started')} className="bg-primary text-primary-foreground px-5 py-2 text-sm font-semibold hover:opacity-90 rounded-md shadow-sm">
-                        Get Started
+
+                    <a
+                        href="https://github.com/IgorBayerl/nanovision"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-card text-xs font-mono text-muted-foreground hover:text-foreground hover:border-primary/60 hover:bg-secondary/50 cursor-pointer"
+                    >
+                        <Github size={14} className="opacity-80" />
+                        <span className="hidden sm:inline">GitHub</span>
+                        <span className="text-yellow-400">★</span>
+                        <span>Stars</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/80 text-muted-foreground tabular-nums w-12 text-center">
+                            {stars !== null ? stars.toLocaleString() : '-'}
+                        </span>
                     </a>
+
                 </div>
             </div>
         </nav>

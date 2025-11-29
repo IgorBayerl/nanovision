@@ -1,4 +1,3 @@
-import React from 'react';
 import { Layout, Terminal, FileCode2, FileJson, ArrowUpRight } from 'lucide-react';
 
 const ReportTypes = () => {

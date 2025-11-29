@@ -1,388 +1,242 @@
 ---
 import Layout from '../layouts/Layout.astro'
-import {
-    Terminal,
-    Shield,
-    Code,
-    Settings,
-    FileJson,
-    AlertTriangle,
-    ExternalLink,
-    FileDiff,
-    GitBranch,
-    Database,
-    ArrowRight,
-} from 'lucide-react'
+import { Terminal, AlertTriangle, FileText, Play, Download, ArrowLeft } from 'lucide-react'
+import CopyCode from '../components/CopyCode.jsx'
 ---
 
 <Layout title="Nanovision | Getting Started">
-    <main class="pt-32 pb-24 min-h-screen bg-background">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="mb-16 text-center">
-                <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-6 tracking-tight">Getting Started</h1>
-                <p class="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                    Nanovision visualizes your code coverage, but it doesn't run your tests. This guide shows you how to
-                    generate the required coverage files before you start.
-                </p>
-                <a
-                    href={`${import.meta.env.BASE_URL}usage`}
-                    class="inline-flex items-center gap-2 bg-secondary/50 hover:bg-secondary text-secondary-foreground px-6 py-3 rounded-full font-medium transition-all border border-border hover:border-primary/50 group"
-                >
-                    I already collect code coverage on my project
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </a>
-            </div>
+  <main class="pt-24 pb-16 min-h-screen bg-background">
+    <div class="max-w-7xl mx-auto px-6">
+      <!-- Page heading -->
+      <div class="mb-6">
+        <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">Getting Started</h1>
+        <p class="text-xl text-muted-foreground max-w-2xl">
+          Install Nanovision and generate your first coverage report.
+        </p>
+      </div>
 
-            <div class="space-y-24">
-                {/* Disclaimer */}
-                <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-6 flex items-start gap-4">
-                    <AlertTriangle className="text-amber-500 shrink-0 mt-1" size={24} />
-                    <div class="space-y-2">
-                        <h3 class="text-lg font-bold text-amber-500">Prerequisite: Generate Coverage First</h3>
-                        <p class="text-muted-foreground">
-                            Nanovision is an analysis tool. You must generate coverage files (like <code>lcov.info</code
-                            >, <code>cobertura.xml</code>, or <code>coverage.out</code>) using your language's standard
-                            testing tools first.
-                        </p>
-                    </div>
-                </div>
-
-                {/* Section 1: Why Code Coverage? */}
-                <section>
-                    <div class="flex items-center gap-3 mb-8">
-                        <div class="p-3 bg-primary/10 rounded-lg text-primary">
-                            <Shield size={24} />
-                        </div>
-                        <h2 class="text-3xl font-bold text-foreground">Why Code Coverage Matters</h2>
-                    </div>
-
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="bg-card border border-border p-6 rounded-xl">
-                            <h3 class="font-bold text-foreground mb-2">Confidence in Refactoring</h3>
-                            <p class="text-muted-foreground text-sm leading-relaxed">
-                                High coverage gives you the safety net to refactor legacy code without fear of breaking
-                                hidden functionality.
-                            </p>
-                        </div>
-                        <div class="bg-card border border-border p-6 rounded-xl">
-                            <h3 class="font-bold text-foreground mb-2">Dead Code Elimination</h3>
-                            <p class="text-muted-foreground text-sm leading-relaxed">
-                                Identify parts of your codebase that are never executed, helping you keep your project
-                                lean and maintainable.
-                            </p>
-                        </div>
-                        <div class="bg-card border border-border p-6 rounded-xl">
-                            <h3 class="font-bold text-foreground mb-2">Quality Gate</h3>
-                            <p class="text-muted-foreground text-sm leading-relaxed">
-                                Enforce minimum coverage standards in your CI/CD pipeline to prevent technical debt from
-                                accumulating.
-                            </p>
-                        </div>
-                        <div class="bg-card border border-border p-6 rounded-xl">
-                            <h3 class="font-bold text-foreground mb-2">Test Effectiveness</h3>
-                            <p class="text-muted-foreground text-sm leading-relaxed">
-                                Coverage isn't just about quantity. It highlights logical branches and edge cases your
-                                tests might be missing.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Section 2: Inputs & Configuration */}
-                <section>
-                    <div class="flex items-center gap-3 mb-8">
-                        <div class="p-3 bg-primary/10 rounded-lg text-primary">
-                            <Settings size={24} />
-                        </div>
-                        <h2 class="text-3xl font-bold text-foreground">Inputs & Configuration</h2>
-                    </div>
-
-                    <div class="space-y-8">
-                        <div class="prose prose-invert max-w-none">
-                            <p class="text-muted-foreground text-lg">
-                                Nanovision is flexible. You can pass arguments directly via the CLI or use a YAML
-                                configuration file for more complex setups.
-                            </p>
-                        </div>
-
-                        <div class="grid md:grid-cols-2 gap-8">
-                            {/* CLI Arguments */}
-                            <div class="space-y-4">
-                                <h3 class="text-xl font-semibold text-foreground flex items-center gap-2">
-                                    <Terminal size={20} /> CLI Arguments
-                                </h3>
-                                <div class="bg-card border border-border rounded-xl overflow-hidden">
-                                    <div class="p-4 border-b border-border bg-muted/30">
-                                        <code class="text-sm font-mono text-primary">nanovision [flags]</code>
-                                    </div>
-                                    <div class="p-6 space-y-4 text-sm font-mono">
-                                        <div>
-                                            <span class="text-foreground font-bold">-report</span>
-                                            <span class="text-muted-foreground"> (string)</span>
-                                            <p class="text-muted-foreground mt-1 pl-4 border-l-2 border-border">
-                                                Path to the coverage file (e.g., coverage.out, lcov.info).
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <span class="text-foreground font-bold">-sourcedirs</span>
-                                            <span class="text-muted-foreground"> (string)</span>
-                                            <p class="text-muted-foreground mt-1 pl-4 border-l-2 border-border">
-                                                Comma-separated paths to source code directories.
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <span class="text-foreground font-bold">-conf</span>
-                                            <span class="text-muted-foreground"> (string)</span>
-                                            <p class="text-muted-foreground mt-1 pl-4 border-l-2 border-border">
-                                                Path to a specific config file (default: nanovision.yaml).
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* YAML Config */}
-                            <div class="space-y-4">
-                                <h3 class="text-xl font-semibold text-foreground flex items-center gap-2">
-                                    <FileJson size={20} /> Configuration File
-                                </h3>
-                                <div class="bg-card border border-border rounded-xl overflow-hidden h-full">
-                                    <div class="p-4 border-b border-border bg-muted/30">
-                                        <code class="text-sm font-mono text-primary">nanovision.yaml</code>
-                                    </div>
-                                    <div class="p-6">
-                                        <pre
-                                            class="text-sm font-mono text-muted-foreground overflow-x-auto">
-<span class="text-purple-400">reports:</span>
-  - <span class="text-green-400">"coverage.out"</span>
-  - <span class="text-green-400">"coverage.xml"</span>
-
-<span class="text-purple-400">source_dirs:</span>
-  - <span class="text-green-400">"./src"</span>
-  - <span class="text-green-400">"./lib"</span>
-
-<span class="text-purple-400">output_dir:</span> <span class="text-green-400">"coverage-report"</span>
-
-<span class="text-purple-400">report_types:</span>
-  - <span class="text-green-400">"Html"</span>
-  - <span class="text-green-400">"TextSummary"</span>
-                    </pre>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Section 3: Generating Coverage Files */}
-                <section>
-                    <div class="flex items-center gap-3 mb-8">
-                        <div class="p-3 bg-primary/10 rounded-lg text-primary">
-                            <Code size={24} />
-                        </div>
-                        <h2 class="text-3xl font-bold text-foreground">Generating Coverage Files</h2>
-                    </div>
-
-                    <div class="space-y-8">
-                        {/* GO Special Block */}
-                        <div class="bg-card border border-border rounded-xl p-8">
-                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                                <div>
-                                    <h3 class="text-2xl font-bold text-foreground">Go (Golang)</h3>
-                                    <p class="text-muted-foreground mt-1">Native support built into the toolchain.</p>
-                                </div>
-                                <a
-                                    href="https://go.dev/blog/cover"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors text-sm font-medium"
-                                >
-                                    Official Docs <ExternalLink size={14} />
-                                </a>
-                            </div>
-                            <p class="text-sm text-muted-foreground mb-4">
-                                Simply pass the coverprofile flag when running your tests to generate the required file.
-                            </p>
-                            <div class="bg-background border border-border rounded-lg p-4 font-mono text-sm">
-                                go test ./... -coverprofile=coverage.out
-                            </div>
-                        </div>
-
-                        {/* Other Languages Grid */}
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {/* C++ */}
-                            <a
-                                href="https://gcc.gnu.org/onlinedocs/gcc/Gcov.html"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="group bg-card border border-border hover:border-primary/50 p-6 rounded-xl transition-all"
-                            >
-                                <div class="flex justify-between items-start mb-4">
-                                    <span class="font-bold text-foreground">C / C++</span>
-                                    <ExternalLink
-                                        size={16}
-                                        className="text-muted-foreground group-hover:text-primary transition-colors"
-                                    />
-                                </div>
-                                <div class="text-sm text-muted-foreground">
-                                    Use <span class="text-foreground font-mono">gcov</span> / <span
-                                        class="text-foreground font-mono">lcov</span
-                                    > to generate coverage from compiled binaries.
-                                </div>
-                            </a>
-
-                            {/* C# */}
-                            <a
-                                href="https://github.com/coverlet-coverage/coverlet"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="group bg-card border border-border hover:border-primary/50 p-6 rounded-xl transition-all"
-                            >
-                                <div class="flex justify-between items-start mb-4">
-                                    <span class="font-bold text-foreground">C# / .NET</span>
-                                    <ExternalLink
-                                        size={16}
-                                        className="text-muted-foreground group-hover:text-primary transition-colors"
-                                    />
-                                </div>
-                                <div class="text-sm text-muted-foreground">
-                                    Use <span class="text-foreground font-mono">Coverlet</span> to generate Cobertura XML
-                                    reports.
-                                </div>
-                            </a>
-
-                            {/* Java */}
-                            <a
-                                href="https://www.jacoco.org/jacoco/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="group bg-card border border-border hover:border-primary/50 p-6 rounded-xl transition-all"
-                            >
-                                <div class="flex justify-between items-start mb-4">
-                                    <span class="font-bold text-foreground">Java</span>
-                                    <ExternalLink
-                                        size={16}
-                                        className="text-muted-foreground group-hover:text-primary transition-colors"
-                                    />
-                                </div>
-                                <div class="text-sm text-muted-foreground">
-                                    Use <span class="text-foreground font-mono">JaCoCo</span> or Cobertura to output XML
-                                    coverage.
-                                </div>
-                            </a>
-
-                            {/* JS / TS */}
-                            <a
-                                href="https://jestjs.io/docs/code-coverage"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="group bg-card border border-border hover:border-primary/50 p-6 rounded-xl transition-all"
-                            >
-                                <div class="flex justify-between items-start mb-4">
-                                    <span class="font-bold text-foreground">JS / TS</span>
-                                    <ExternalLink
-                                        size={16}
-                                        className="text-muted-foreground group-hover:text-primary transition-colors"
-                                    />
-                                </div>
-                                <div class="text-sm text-muted-foreground">
-                                    Use <span class="text-foreground font-mono">Jest</span> or Istanbul to generate LCOV
-                                    reports.
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Section 4: Diff Support */}
-                <section>
-                    <div class="flex items-center gap-3 mb-8">
-                        <div class="p-3 bg-primary/10 rounded-lg text-primary">
-                            <FileDiff size={24} />
-                        </div>
-                        <h2 class="text-3xl font-bold text-foreground">Diff Support</h2>
-                    </div>
-
-                    <div class="prose prose-invert max-w-none mb-8">
-                        <p class="text-muted-foreground text-lg">
-                            Nanovision can add extra information to the report if it knows what changed. To do this, you
-                            must provide a unified diff file.
-                        </p>
-                    </div>
-
-                    <div class="grid md:grid-cols-2 gap-8">
-                        {/* Git Card */}
-                        <div class="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
-                            <div class="p-6 border-b border-border bg-muted/30 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <GitBranch size={20} className="text-primary" />
-                                    <span class="font-bold text-foreground">Git</span>
-                                </div>
-                                <a
-                                    href="https://git-scm.com/docs/git-diff"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="text-xs flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
-                                >
-                                    Docs <ExternalLink size={12} />
-                                </a>
-                            </div>
-                            <div class="p-6 flex-1 flex flex-col justify-between">
-                                <p class="text-sm text-muted-foreground mb-4">
-                                    Generate a diff between your branch and the target branch (e.g., main).
-                                </p>
-                                <div class="bg-background border border-border rounded-lg p-4 font-mono text-sm">
-                                    git diff origin/main...HEAD > changes.diff
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Perforce Card */}
-                        <div class="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
-                            <div class="p-6 border-b border-border bg-muted/30 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <Database size={20} className="text-primary" />
-                                    <span class="font-bold text-foreground">Perforce</span>
-                                </div>
-                                <a
-                                    href="https://www.perforce.com/manuals/cmdref/Content/CmdRef/p4_diff.html"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="text-xs flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
-                                >
-                                    Docs <ExternalLink size={12} />
-                                </a>
-                            </div>
-                            <div class="p-6 flex-1 flex flex-col justify-between">
-                                <p class="text-sm text-muted-foreground mb-4">
-                                    Generate a unified diff for your pending changelist.
-                                </p>
-                                <div class="bg-background border border-border rounded-lg p-4 font-mono text-sm">
-                                    p4 diff -du > changes.diff
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Call to Action */}
-                <section class="py-12">
-                    <div
-                        class="bg-gradient-to-r from-primary/10 via-transparent to-transparent border border-primary/20 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8"
-                    >
-                        <div>
-                            <h3 class="text-2xl font-bold text-foreground mb-2">Have your files ready?</h3>
-                            <p class="text-muted-foreground">Let's configure Nanovision to visualize your data.</p>
-                        </div>
-                        <a
-                            href={`${import.meta.env.BASE_URL}configurator`}
-                            class="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-bold hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 whitespace-nowrap"
-                        >
-                            Open Configurator
-                        </a>
-                    </div>
-                </section>
-            </div>
+      <!-- Unified step alert (backward: previous step is About Coverage) -->
+      <div
+        class="mb-10 bg-primary/5 border border-primary/30 rounded-xl p-4 md:p-5 flex flex-col md:flex-row items-center justify-between gap-4"
+      >
+        <div class="text-left">
+          <p class="text-sm font-semibold text-primary mb-1">New to coverage?</p>
+          <p class="text-sm text-muted-foreground">
+            If you are new to code coverage, it is often worth taking a step back and reading
+            <span class="font-medium text-foreground"> About Coverage</span> first.
+          </p>
         </div>
-    </main>
+        <a
+          href={`${import.meta.env.BASE_URL}about-coverage`}
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-colors whitespace-nowrap"
+        >
+          Back to About Coverage
+          <ArrowLeft size={16} />
+        </a>
+      </div>
+
+      <div class="space-y-12">
+        <!-- Disclaimer -->
+        <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-6 flex items-start gap-4">
+          <AlertTriangle className="text-amber-500 shrink-0 mt-1" size={24} />
+          <div class="space-y-2">
+            <h3 class="text-lg font-bold text-amber-500">Prerequisite: Generate Coverage First</h3>
+            <p class="text-muted-foreground">
+              Nanovision is an analysis tool. You must generate coverage files (like
+              <code> lcov.info</code>, <code>cobertura.xml</code>, or <code>coverage.out</code>) using your language's
+              standard testing tools first.
+            </p>
+          </div>
+        </div>
+        <!-- Installation -->
+        <section class="space-y-4">
+          <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <Download className="text-primary" />
+            Installation
+          </h2>
+          <p class="text-muted-foreground">
+            Nanovision is distributed as a single binary. Choose the installation method for your platform.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <!-- Windows -->
+            <div class="bg-card border border-border rounded-xl p-6 space-y-3">
+              <h3 class="text-lg font-semibold text-foreground">Windows (winget)</h3>
+              <p class="text-sm text-muted-foreground">Install Nanovision using the Windows Package Manager:</p>
+              <CopyCode client:load code="winget install nanovision" singleLine />
+            </div>
+
+            <!-- Linux -->
+            <div class="bg-card border border-border rounded-xl p-6 space-y-3">
+              <h3 class="text-lg font-semibold text-foreground">Linux (install script)</h3>
+              <p class="text-sm text-muted-foreground">
+                Use the official install script to download and place the binary:
+              </p>
+              <CopyCode
+                client:load
+                code="curl -sL https://raw.githubusercontent.com/IgorBayerl/nanovision/main/scripts/install.sh | bash"
+                singleLine
+              />
+              <p class="text-xs text-muted-foreground">
+                This script downloads the latest release and installs it on your system.
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-secondary/20 border border-border rounded-xl p-4 text-sm text-muted-foreground">
+            Prefer manual installation? Download the binaries for Windows or Linux from the
+            <a
+              href="https://github.com/IgorBayerl/nanovision/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary hover:underline"
+            >
+              Releases page
+            </a>
+            and add the binary to your <code>PATH</code>.
+          </div>
+        </section>
+
+        <!-- Quickstart -->
+        <section class="space-y-4">
+          <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <Terminal className="text-primary" />
+            Quickstart: First Report
+          </h2>
+          <p class="text-muted-foreground">
+            Once you have coverage files and Nanovision installed, the simplest command is:
+          </p>
+          <CopyCode client:load code="nanovision -report coverage.out -sourcedirs ." singleLine />
+          <p class="text-muted-foreground text-sm">
+            This reads <code>coverage.out</code>, scans the current directory for source files, and writes an HTML
+            report to the default output directory (typically <code>coverage-report</code>).
+          </p>
+        </section>
+
+        <!-- Inputs & Configuration -->
+        <section>
+          <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2 mb-4">
+            <FileText className="text-primary" />
+            Inputs &amp; Configuration
+          </h2>
+          <p class="text-muted-foreground mb-6">
+            Nanovision is flexible. You can pass arguments directly via the CLI or use a YAML configuration file for
+            more complex setups.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <!-- CLI Arguments -->
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold text-foreground">CLI Arguments</h3>
+              <p class="text-sm text-muted-foreground mb-2">
+                These are the flags for basic usage. For the full set of options, advanced features, and CI generators,
+                use the
+                <a href={`${import.meta.env.BASE_URL}configurator`} class="text-primary hover:underline ml-1">
+                  Configurator
+                </a>.
+              </p>
+
+              <div class="bg-card border border-border rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-border bg-muted/30">
+                  <code class="text-sm font-mono text-primary">nanovision [flags]</code>
+                </div>
+                <div class="p-6 space-y-4 text-sm font-mono">
+                  <div>
+                    <span class="text-foreground font-bold">-report</span>
+                    <span class="text-muted-foreground"> (string)</span>
+                    <p class="text-muted-foreground mt-1 pl-4 border-l-2 border-border">
+                      Path to the coverage file (e.g., <code>coverage.out</code>, <code>lcov.info</code>).
+                    </p>
+                  </div>
+                  <div>
+                    <span class="text-foreground font-bold">-sourcedirs</span>
+                    <span class="text-muted-foreground"> (string)</span>
+                    <p class="text-muted-foreground mt-1 pl-4 border-l-2 border-border">
+                      Comma-separated paths to source code directories.
+                    </p>
+                  </div>
+                  <div>
+                    <span class="text-foreground font-bold">-output</span>
+                    <span class="text-muted-foreground"> (string)</span>
+                    <p class="text-muted-foreground mt-1 pl-4 border-l-2 border-border">
+                      Directory where the report will be written (for example <code>coverage-report</code>).
+                    </p>
+                  </div>
+                  <div>
+                    <span class="text-foreground font-bold">-conf</span>
+                    <span class="text-muted-foreground"> (string)</span>
+                    <p class="text-muted-foreground mt-1 pl-4 border-l-2 border-border">
+                      Path to a specific config file (default: <code>nanovision.yaml</code> in the current directory).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- YAML Config -->
+            <div class="space-y-4">
+              <h3 class="text-lg font-semibold text-foreground">Configuration File</h3>
+              <p class="text-sm text-muted-foreground">
+                For repeatable setups it is recommended to use a <code>nanovision.yaml</code> file. You can also
+                <a href={`${import.meta.env.BASE_URL}configurator`} class="text-primary hover:underline">
+                  generate this file with the Configurator
+                </a>.
+              </p>
+              <CopyCode
+                client:load
+                code={`reports:
+  - "coverage.out"
+
+source_dirs:
+  - "."
+
+output_dir: "coverage-report"
+
+report_types:
+  - "Html"
+  - "TextSummary"`}
+              />
+            </div>
+          </div>
+
+          <p class="text-muted-foreground mt-4 text-sm">
+            When a <code>nanovision.yaml</code> file is present in the current directory, you can simply run
+            <code> nanovision</code> with no arguments and the configuration will be picked up automatically.
+          </p>
+        </section>
+
+        <!-- CI/CD Integration -->
+        <section class="space-y-4">
+          <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <Play className="text-primary" />
+            CI/CD Integration
+          </h2>
+          <p class="text-muted-foreground">
+            Nanovision is designed to run in your CI pipeline after your tests complete and coverage files are written.
+            It returns a non-zero exit code if coverage thresholds are not met, so you can fail the build when coverage
+            drops below your standards.
+          </p>
+          <p class="text-muted-foreground text-sm">
+            For complex setups (multiple inputs, filters, thresholds, and GitHub Actions workflows), use the
+            <a href={`${import.meta.env.BASE_URL}configurator`} class="text-primary hover:underline"> Configurator </a>
+            to generate ready-to-use commands and config files.
+          </p>
+        </section>
+      </div>
+
+      <div class="mt-16 p-6 bg-secondary/20 rounded-xl border border-border">
+        <h3 class="text-lg font-bold text-foreground mb-2">Need a configuration file or CI workflow?</h3>
+        <p class="text-muted-foreground mb-4">
+          Use the interactive configurator to generate a CLI command, <code>nanovision.yaml</code>, or GitHub Actions
+          workflow tailored to your project.
+        </p>
+        <a
+          href={`${import.meta.env.BASE_URL}configurator`}
+          class="inline-block bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium hover:opacity-90"
+        >
+          Open Configurator
+        </a>
+      </div>
+    </div>
+  </main>
 </Layout>

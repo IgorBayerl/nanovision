@@ -3,27 +3,26 @@ import Layout from '../../layouts/Layout.astro'
 ---
 
 <Layout title="Nanovision | Diff / Patch">
-    <main class="pt-24 pb-16 min-h-screen bg-background">
-        <div class="max-w-4xl mx-auto px-6">
-            <h1 class="text-4xl font-bold text-foreground mb-6">Diff / Patch</h1>
-            <p class="text-xl text-muted-foreground mb-8">Focus your coverage analysis on the changes that matter.</p>
+  <main class="pt-24 pb-16 min-h-screen bg-background">
+    <div class="max-w-4xl mx-auto px-6">
+      <h1 class="text-4xl font-bold text-foreground mb-6">Diff / Patch</h1>
+      <p class="text-xl text-muted-foreground mb-8">Focus your coverage analysis on the changes that matter.</p>
 
-            <div class="prose dark:prose-invert max-w-none">
-                <h3>Patch Coverage</h3>
-                <p>
-                    When working on a pull request or a feature branch, you often only care about the coverage of the
-                    code you just wrote or modified. Nanovision can accept a unified diff (patch) file to filter the
-                    coverage report.
-                </p>
+      <div class="prose dark:prose-invert max-w-none">
+        <h3>Patch Coverage</h3>
+        <p>
+          When working on a pull request or a feature branch, you often only care about the coverage of the code you
+          just wrote or modified. Nanovision can accept a unified diff (patch) file to filter the coverage report.
+        </p>
 
-                <h3>How to use</h3>
-                <p>Generate a diff file using git:</p>
-                <pre class="bg-secondary/50 p-4 rounded-md"><code>git diff main > my-changes.patch</code></pre>
-                <p>Then pass it to Nanovision:</p>
-                <pre class="bg-secondary/50 p-4 rounded-md"><code>nanovision -diff my-changes.patch ...</code></pre>
+        <h3>How to use</h3>
+        <p>Generate a diff file using git:</p>
+        <pre class="bg-secondary/50 p-4 rounded-md"><code>git diff main > my-changes.patch</code></pre>
+        <p>Then pass it to Nanovision:</p>
+        <pre class="bg-secondary/50 p-4 rounded-md"><code>nanovision -diff my-changes.patch ...</code></pre>
 
-                <p>The resulting report will highlight coverage specifically for the lines changed in your patch.</p>
-            </div>
-        </div>
-    </main>
+        <p>The resulting report will highlight coverage specifically for the lines changed in your patch.</p>
+      </div>
+    </div>
+  </main>
 </Layout>
