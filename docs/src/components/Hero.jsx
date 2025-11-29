@@ -24,50 +24,101 @@ const DynamicCoverageCard = ({ title, percentage, colorClass, subtext }) => {
     );
 };
 
+// ===== Autoplay configuration (easy to tweak) =====
+const AUTOPLAY_INTERVAL_MS = 2800; // time between patterns
+const IDLE_TIMEOUT_MS = 8000;      // time without user interaction before autoplay resumes
+const MAX_AUTO_COVERAGE_RATIO = 0.85; // never cover more than 85% automatically
+
+// simple pattern generator that always leaves at least one word uncovered
+function computeAutoStates(step, titleWordCount, patchWordCount, totalWords) {
+    if (totalWords === 0) return {};
+
+    const maxCoverable = Math.max(
+        1,
+        Math.min(totalWords - 1, Math.floor(totalWords * MAX_AUTO_COVERAGE_RATIO))
+    );
+
+    const indices = [];
+    const pattern = step % 3;
+
+    if (pattern === 0) {
+        // cover first part of title
+        const count = Math.min(maxCoverable, Math.ceil(titleWordCount * 0.6));
+        for (let i = 0; i < count; i++) indices.push(i);
+    } else if (pattern === 1) {
+        // cover whole title + bit of patch
+        const titleEnd = titleWordCount;
+        for (let i = 0; i < titleEnd && indices.length < maxCoverable; i++) {
+            indices.push(i);
+        }
+        let i = titleWordCount;
+        while (i < titleWordCount + patchWordCount && indices.length < maxCoverable) {
+            indices.push(i);
+            i++;
+        }
+    } else {
+        // cover some middle patch words
+        const start = titleWordCount;
+        const end = titleWordCount + patchWordCount;
+        const span = Math.max(1, Math.min(end - start, maxCoverable));
+        const offset = Math.max(0, Math.floor((end - start - span) / 2));
+        for (let i = start + offset; i < start + offset + span; i++) {
+            indices.push(i);
+        }
+    }
+
+    // build state object with only "covered" entries
+    const newStates = {};
+    indices.forEach((idx) => {
+        newStates[idx] = 'covered';
+    });
+    return newStates;
+}
+
 const Hero = () => {
     const [version, setVersion] = useState('Latest Release');
 
-    const titleText = 'Fancy coverage reports ;)';
+    const titleText = 'See your coverage clearly';
     const patchText =
-        'It takes your coverage files (LCOV, Cobertura, GoCover, GCov), crunches the numbers, do some static analysis, and spits out many report formats. Simple as that.';
+        'It takes your coverage files (LCOV, Cobertura, GoCover, GCov), enriches them with static analysis, and outputs powerful reports in multiple formats..';
 
     const titleWords = useMemo(() => titleText.split(' ').filter((w) => w.length > 0), []);
     const patchWords = useMemo(() => patchText.split(' ').filter((w) => w.length > 0), []);
 
     const allWords = [...titleWords, ...patchWords];
-
     const titleWordCount = titleWords.length;
     const patchWordCount = patchWords.length;
     const totalWords = allWords.length;
 
+    // state: index -> 'covered' | undefined (no 'uncovered' class anymore)
     const [wordStates, setWordStates] = useState({});
-    const resetTimerRef = React.useRef(null);
+    const [isAuto, setIsAuto] = useState(true);
+    const [autoStep, setAutoStep] = useState(0);
+
+    const idleTimeoutRef = React.useRef(null);
 
     const handleHover = (globalIndex) => {
-        if (resetTimerRef.current) {
-            clearTimeout(resetTimerRef.current);
-        }
+        // disable autoplay on user interaction
+        setIsAuto(false);
 
+        // restart autoplay after some idle time
+        if (idleTimeoutRef.current) {
+            window.clearTimeout(idleTimeoutRef.current);
+        }
+        idleTimeoutRef.current = window.setTimeout(() => {
+            setIsAuto(true);
+            setAutoStep((prev) => prev + 1); // go to next pattern
+        }, IDLE_TIMEOUT_MS);
+
+        // toggle covered/normal on hover
         setWordStates((prev) => {
             const currentState = prev[globalIndex];
-            let newState;
-
-            if (!currentState) {
-                newState = 'covered';
-            } else if (currentState === 'covered') {
-                newState = 'uncovered';
-            } else {
-                newState = 'covered';
-            }
-
-            return { ...prev, [globalIndex]: newState };
+            const nextState = currentState === 'covered' ? undefined : 'covered';
+            return { ...prev, [globalIndex]: nextState };
         });
-
-        resetTimerRef.current = setTimeout(() => {
-            setWordStates({});
-        }, 5000);
     };
 
+    // derived metrics
     const coveredCount = Object.values(wordStates).filter((s) => s === 'covered').length;
     const lineCoverage =
         totalWords > 0 ? Math.min(100, Math.round((coveredCount / totalWords) * 100)) : 0;
@@ -93,6 +144,7 @@ const Hero = () => {
     const patchCoverage =
         patchWordCount > 0 ? Math.min(100, Math.round((patchWordsCovered / patchWordCount) * 100)) : 0;
 
+    // fetch latest release
     useEffect(() => {
         fetch('https://api.github.com/repos/IgorBayerl/nanovision/releases/latest')
             .then((res) => res.json())
@@ -104,30 +156,61 @@ const Hero = () => {
             });
 
         return () => {
-            if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+            if (idleTimeoutRef.current) window.clearTimeout(idleTimeoutRef.current);
         };
     }, []);
 
+    // autoplay: increment step on interval
     useEffect(() => {
-        if (lineCoverage === 100) {
+        if (!isAuto) return;
+
+        const intervalId = window.setInterval(() => {
+            setAutoStep((prev) => prev + 1);
+        }, AUTOPLAY_INTERVAL_MS);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [isAuto]);
+
+    // derive wordStates from autoStep when autoplay is active
+    useEffect(() => {
+        if (!isAuto) return;
+
+        const newStates = computeAutoStates(
+            autoStep,
+            titleWordCount,
+            patchWordCount,
+            totalWords
+        );
+        setWordStates(newStates);
+    }, [autoStep, isAuto, titleWordCount, patchWordCount, totalWords]);
+
+    // confetti only when user (not autoplay) reaches 100%
+    useEffect(() => {
+        if (!isAuto && lineCoverage === 100) {
             confetti({
                 particleCount: 100,
                 spread: 70,
                 origin: { y: 0.6 },
             });
         }
-    }, [lineCoverage]);
+    }, [lineCoverage, isAuto]);
 
     const renderInteractiveWords = (words, offset) => {
         return words.map((word, i) => {
             const globalIndex = offset + i;
             const state = wordStates[globalIndex];
+            const isCovered = state === 'covered';
 
             return (
                 <span
                     key={globalIndex}
                     onMouseEnter={() => handleHover(globalIndex)}
-                    className={`hover-word ${state || ''}`}
+                    className={
+                        'hover-word font-semibold ' +
+                        (isCovered ? 'text-green-400' : 'text-foreground')
+                    }
                 >
                     {word}
                     {i < words.length - 1 ? ' ' : ''}
@@ -182,16 +265,15 @@ const Hero = () => {
                         </a>
 
                         <a
-                            href="https://your-domain.com/example-report/index.html"
+                            href="https://igorbayerl.github.io/nanovision/reports/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full sm:w-auto border border-border bg-background text-foreground px-8 py-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-secondary transition-colors"
+                            className="w-full sm:w-auto border border-border bg-background text-foreground px-8 py-4 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-secondary"
                         >
                             <FileText size={20} />
                             View Example Report
                         </a>
                     </div>
-
                 </div>
 
                 <div className="relative perspective-1000">
@@ -213,7 +295,11 @@ const Hero = () => {
                                     title="Line Coverage"
                                     percentage={lineCoverage}
                                     colorClass="bg-covered"
-                                    subtext={<span>{coveredCount} / {totalWords} Words</span>}
+                                    subtext={
+                                        <span>
+                                            {coveredCount} / {totalWords} Words
+                                        </span>
+                                    }
                                 />
 
                                 <div className="grid grid-cols-2 gap-4">

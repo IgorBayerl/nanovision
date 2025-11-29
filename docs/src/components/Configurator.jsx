@@ -39,9 +39,16 @@ const SectionHeader = ({ title, icon: Icon }) => (
     </div>
 );
 
-const InputField = ({ label, value, onChange, placeholder, help, error, type = "text" }) => (
+const InputField = ({ label, value, onChange, placeholder, help, error, type = "text", labelRight }) => (
     <div className="mb-5">
-        <label className="block text-sm font-medium text-muted-foreground mb-1.5">{label}</label>
+        <label className="block text-sm font-medium text-muted-foreground mb-1.5 flex items-center justify-between gap-2">
+            <span>{label}</span>
+            {labelRight && (
+                <span className="text-xs">
+                    {labelRight}
+                </span>
+            )}
+        </label>
         <input
             type={type}
             className={`w-full px-3 py-2 bg-card border rounded-md focus:ring-2 focus:ring-offset-0 outline-none text-foreground placeholder-muted-foreground text-sm ${error
@@ -56,6 +63,7 @@ const InputField = ({ label, value, onChange, placeholder, help, error, type = "
         {error && <p className="text-xs text-red-400 mt-1.5">This field is required.</p>}
     </div>
 );
+
 
 const Toggle = ({ label, checked, onChange, help, className = "mb-5" }) => (
     <div className={`flex items-start justify-between group cursor-pointer ${className}`} onClick={() => onChange(!checked)}>
@@ -98,14 +106,14 @@ const ReportOption = ({ id, label, description, link, selected, onChange }) => (
             : 'bg-card border-border hover:border-primary/50 hover:bg-secondary/50'
             }`}
     >
-        <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${selected ? 'bg-primary border-primary' : 'border-muted-foreground bg-card'
+        <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary' : 'border-muted-foreground bg-card'
             }`}>
             {selected && <Check size={12} className="text-white" />}
         </div>
         <div className="flex-1">
             <div className="flex justify-between items-center mb-1">
                 <span className={`text-sm font-medium ${selected ? 'text-primary' : 'text-foreground'}`}>{label}</span>
-                <a href={link} onClick={(e) => e.stopPropagation()} className="text-[10px] text-primary hover:text-primary/80 hover:underline">Example</a>
+                <a target="_blank" href={link} onClick={(e) => e.stopPropagation()} className="text-[10px] text-primary hover:text-primary/80 hover:underline">Example</a>
             </div>
             <p className="text-xs text-muted-foreground leading-snug">{description}</p>
         </div>
@@ -494,6 +502,17 @@ ${diffStep}
                                         <div className="mt-5 space-y-5 pt-5 border-t border-border animate-in fade-in slide-in-from-top-2">
                                             <InputField
                                                 label="Diff File Path"
+                                                labelRight={
+                                                    <a
+                                                        href={`${import.meta.env.BASE_URL}about-coverage#diff-support`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-primary hover:text-primary/80 hover:underline"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        How to generate diff file
+                                                    </a>
+                                                }
                                                 value={config.diffFile}
                                                 onChange={(v) => handleChange('diffFile', v)}
                                                 placeholder="changes.diff"
