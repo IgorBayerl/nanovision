@@ -17,6 +17,9 @@ For more details check the [docs](https://igorbayerl.github.io/nanovision/docs/)
 [![Build Status](https://github.com/IgorBayerl/nanovision/actions/workflows/pages.yml/badge.svg)](https://github.com/IgorBayerl/nanovision/actions/workflows/pages.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/IgorBayerl/nanovision)](https://goreportcard.com/report/github.com/IgorBayerl/nanovision)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/IgorBayerl/nanovision/total?link=https%3A%2F%2Fgithub.com%2FIgorBayerl%2Fnanovision%2Freleases%2Flatest)
+
+
 
 </div>
 
@@ -66,9 +69,12 @@ curl -sL https://raw.githubusercontent.com/IgorBayerl/nanovision/main/scripts/in
 ### Or downdload From Releases
 Download the binaries for Windows or Linux from the **[Releases Page](https://github.com/IgorBayerl/nanovision/releases)**.
 
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/IgorBayerl/nanovision/total?link=https%3A%2F%2Fgithub.com%2FIgorBayerl%2Fnanovision%2Freleases%2Flatest)
+
+
 ## Quick Start
 
-### 0. Check nanovision instalation
+### 0. Check nanovision instalation 
 ```bash
 nanovision -version
 ```
