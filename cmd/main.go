@@ -29,6 +29,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_cobertura"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gcov"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gocover"
+	"github.com/IgorBayerl/nanovision/internal/parsers/parser_lcov"
 	"github.com/IgorBayerl/nanovision/internal/reporter/htmlreact"
 	"github.com/IgorBayerl/nanovision/internal/reporter/lcov"
 	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
@@ -207,6 +208,7 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 		parser_cobertura.NewCoberturaParser(prodFileReader),
 		parser_gocover.NewGoCoverParser(prodFileReader),
 		parser_gcov.NewGCovParser(prodFileReader),
+		parser_lcov.NewLcovParser(prodFileReader),
 	)
 	treeBuilder := tree.NewBuilder(appConfig.ProjectRoot, appConfig.FileFilterInstance)
 
