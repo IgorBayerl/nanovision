@@ -70,6 +70,7 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.BoolVar(&rawInput.Verbose, "verbose", false, "Shortcut for Verbose logging (overridden by -verbosity)")
 	flag.StringVar(&rawInput.DiffFile, "diff", "", "Path to a unified diff file for patch coverage analysis")
 	flag.StringVar(&rawInput.DiffStrip, "diff-strip", "", "Strip N leading components from diff paths ('auto' or 0-6)")
+	flag.BoolVar(&rawInput.IgnoreCache, "ignore-cache", false, "Ignore existing cache and force re-analysis")
 	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Metric threshold (e.g. 'line_coverage=60..80'). Can be repeated.")
 	return rawInput
 }
@@ -214,7 +215,20 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 		golang.New(),
 		cpp.New(),
 	}
-	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger)
+
+	// Determine a safe cache location.
+	// We try the user's standard cache dir (e.g. ~/.cache/nanovision)
+	userCacheDir, err := os.UserCacheDir()
+	if err != nil {
+		logger.Warn("Could not determine user cache directory; caching will be disabled.")
+		userCacheDir = ""
+	}
+	cachePath := ""
+	if userCacheDir != "" {
+		cachePath = filepath.Join(userCacheDir, "nanovision")
+	}
+
+	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger, cachePath, appConfig.IgnoreCache)
 
 	if len(appConfig.InputPairs) == 0 {
 		return fmt.Errorf("no valid report pattern and source directory pairs were provided")
