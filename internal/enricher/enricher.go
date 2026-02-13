@@ -1,30 +1,77 @@
-// Package enricher is responsible for augmenting the primary coverage data with
-// additional metrics gathered from static analysis of the source code.
+// Package cache provides a content-addressed in-memory cache for static analysis results,
+// backed by optional disk persistence.
+//
+// Cache keys are derived from file content hashes (SHA-256), meaning identical
+// file contents always produce a cache hit regardless of filename or path. This
+// makes it well-suited for incremental enrichment pipelines where source files
+// rarely change between runs.
+//
+// # Basic Usage
+//
+//	manager, err := cache.NewManager("/path/to/cache/dir")
+//	if err != nil { ... }
+//
+//	content, _ := os.ReadFile(path)
+//
+//	if cached, hit := manager.Get(content); hit {
+//	    // use cached.TotalLines, cached.Result
+//	} else {
+//	    manager.Put(content, cache.CachedData{
+//	        TotalLines: countLines(content),
+//	        Result:     runAnalysis(content),
+//	    })
+//	}
+//
+//	// Persist to disk at the end of the run
+//	if err := manager.Save(); err != nil { ... }
+//
+// # Persistence
+//
+// If a cache directory is provided to NewManager, the cache is loaded from disk
+// on startup and can be flushed back via Save. If no directory is provided, or
+// if initialization fails, the Manager operates as a pure in-memory cache with
+// no persistence — callers should treat it as optional and non-fatal.
 package enricher
 
 import (
+	"bytes"
 	"log/slog"
 	"os"
 	"runtime"
 	"sync"
 
 	"github.com/IgorBayerl/nanovision/internal/analyzer"
+	"github.com/IgorBayerl/nanovision/internal/cache"
 	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 type Enricher struct {
-	analyzers  []analyzer.Analyzer
-	fileReader filereader.Reader
-	logger     *slog.Logger
+	analyzers    []analyzer.Analyzer
+	fileReader   filereader.Reader
+	logger       *slog.Logger
+	cacheManager *cache.Manager
+	ignoreCache  bool
 }
 
-func New(analyzers []analyzer.Analyzer, fileReader filereader.Reader, logger *slog.Logger) *Enricher {
+func New(analyzers []analyzer.Analyzer, fileReader filereader.Reader, logger *slog.Logger, cacheDir string, ignoreCache bool) *Enricher {
+	var cm *cache.Manager
+
+	if cacheDir != "" && !ignoreCache {
+		var err error
+		cm, err = cache.NewManager(cacheDir)
+		if err != nil {
+			logger.Warn("Failed to initialize cache, proceeding without it", "error", err)
+		}
+	}
+
 	return &Enricher{
-		analyzers:  analyzers,
-		fileReader: fileReader,
-		logger:     logger,
+		analyzers:    analyzers,
+		fileReader:   fileReader,
+		logger:       logger,
+		cacheManager: cm,
+		ignoreCache:  ignoreCache,
 	}
 }
 
@@ -60,7 +107,6 @@ func (e *Enricher) EnrichTree(tree *model.SummaryTree) {
 	jobs := make(chan *model.FileNode, len(fileNodeMap))
 	var wg sync.WaitGroup
 
-	// Start worker goroutines
 	for i := 0; i < numWorkers; i++ {
 		go func() {
 			for fileNode := range jobs {
@@ -79,6 +125,14 @@ func (e *Enricher) EnrichTree(tree *model.SummaryTree) {
 
 	// Wait for all jobs to complete
 	wg.Wait()
+
+	if e.cacheManager != nil {
+		if err := e.cacheManager.Save(); err != nil {
+			e.logger.Warn("Failed to persist analysis cache", "error", err)
+		} else {
+			e.logger.Debug("Analysis cache saved successfully")
+		}
+	}
 }
 
 // enrichFileNode performs the enrichment process for a single file.
@@ -87,39 +141,75 @@ func (e *Enricher) EnrichTree(tree *model.SummaryTree) {
 func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 	path := fileNode.Path
 
-	// Count the total number of lines in the source file.
-	if abs, err := utils.FindFileInSourceDirs(path, []string{fileNode.SourceDir}, e.fileReader, e.logger); err == nil {
-		if n, err := e.fileReader.CountLines(abs); err == nil {
-			// Set the total lines. Aggregation is handled later, so no need to update parents here.
-			fileNode.TotalLines = n
-			fileNode.Metrics.TotalLines = n
-		} else {
-			e.logger.Warn("Could not count lines", "file", abs, "error", err)
+	sourceDirs := []string{fileNode.SourceDir}
+	absPath, err := utils.FindFileInSourceDirs(path, sourceDirs, e.fileReader, e.logger)
+	if err != nil {
+		e.logger.Warn("Source file not found", "file", path)
+		return
+	}
+
+	// Read Content ONCE (needed for both hash and analysis)
+	content, err := os.ReadFile(absPath)
+	if err != nil {
+		e.logger.Warn("Could not read source file", "file", path, "error", err)
+		return
+	}
+
+	// CACHE CHECK
+	if e.cacheManager != nil {
+		if cached, hit := e.cacheManager.Get(content); hit {
+			// CACHE HIT: Apply cached data and return
+			fileNode.TotalLines = cached.TotalLines
+			fileNode.Metrics.TotalLines = cached.TotalLines
+			e.applyAnalysisToFileNode(fileNode, cached.Result)
+			return
 		}
+	}
+
+	// CACHE MISS: Perform Calculations
+
+	// Calculate Total Lines (simple implementation matching standard text editors)
+	totalLines := 0
+	if len(content) > 0 {
+		totalLines = bytes.Count(content, []byte{'\n'})
+		if content[len(content)-1] != '\n' {
+			totalLines++
+		}
+	}
+	fileNode.TotalLines = totalLines
+	fileNode.Metrics.TotalLines = totalLines
+
+	// Run Static Analysis
+	activeAnalyzer := e.findAnalyzerForFile(path)
+	var analysisResult analyzer.AnalysisResult
+
+	if activeAnalyzer != nil {
+		e.logger.Info("Analyzing file", "language", activeAnalyzer.Name(), "file", path)
+
+		// Use the renamed variable here
+		var err error
+		analysisResult, err = activeAnalyzer.Analyze(content)
+
+		if err != nil {
+			e.logger.Warn("Static analysis failed", "file", path, "error", err)
+			return
+		}
+		e.applyAnalysisToFileNode(fileNode, analysisResult)
 	} else {
-		e.logger.Warn("Source file not found for line counting", "file", path, "error", err)
-	}
-
-	// Find a suitable analyzer for the file.
-	analyzer := e.findAnalyzerForFile(path)
-	if analyzer == nil {
-		return // No analysis needed for this file type.
-	}
-
-	e.logger.Info("Analyzing file", "language", analyzer.Name(), "file", path)
-	sourceBytes, err := e.readSourceFile(fileNode)
-	if err != nil {
-		e.logger.Warn("Could not read source file for analysis", "file", path, "error", err)
+		// If no analyzer found, cache just the line count to avoid re-reading file later
+		if e.cacheManager != nil {
+			e.cacheManager.Put(content, cache.CachedData{TotalLines: totalLines})
+		}
 		return
 	}
 
-	analysis, err := analyzer.Analyze(sourceBytes)
-	if err != nil {
-		e.logger.Warn("Static analysis failed for file", "file", path, "error", err)
-		return
+	// UPDATE CACHE
+	if e.cacheManager != nil {
+		e.cacheManager.Put(content, cache.CachedData{
+			TotalLines: totalLines,
+			Result:     analysisResult,
+		})
 	}
-
-	e.applyAnalysisToFileNode(fileNode, analysis)
 }
 
 // readSourceFile locates and reads the content of a source file from disk.

@@ -123,6 +123,7 @@ type RawConfigInput struct {
 	DiffFile       string
 	DiffStrip      string
 	StatusBands    []string
+	IgnoreCache    bool
 }
 
 type AppConfig struct {
@@ -139,6 +140,7 @@ type AppConfig struct {
 	IgnoreFiles    []string    `yaml:"ignore_files"`
 	ProjectRoot    string      `yaml:"-"`
 	StatusBands    StatusBands `yaml:"status_bands"`
+	IgnoreCache    bool        `yaml:"ignore_cache"`
 	Diff           DiffConfig  `yaml:"diff"`
 
 	FileFilterInstance filtering.IFilter
@@ -256,6 +258,9 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 	}
 	if cli.DiffStrip != "" {
 		c.Diff.Strip = cli.DiffStrip
+	}
+	if cli.IgnoreCache {
+		c.IgnoreCache = true
 	}
 	if len(cli.StatusBands) > 0 {
 		if c.StatusBands == nil {
