@@ -31,3 +31,11 @@ func (f *ParserFactory) FindParserForFile(filePath string) (IParser, error) {
 	}
 	return nil, fmt.Errorf("no suitable parser found for file: %s", filePath)
 }
+
+func (f *ParserFactory) RegisteredParsers() []string {
+	var names []string
+	for _, p := range f.parsers {
+		names = append(names, p.Name())
+	}
+	return names
+}

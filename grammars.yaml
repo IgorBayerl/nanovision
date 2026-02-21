@@ -7,3 +7,6 @@ packages:
   - name: go
     url: https://github.com/tree-sitter/tree-sitter-go
     ref: v0.25.0
+  - name: gdscript
+    url: https://github.com/PrestonKnopp/tree-sitter-gdscript
+    ref: v6.1.0
