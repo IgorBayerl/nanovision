@@ -1,0 +1,372 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDScript Tree-Sitter Playground</title>
+    <script src="https://cdn.jsdelivr.net/npm/web-tree-sitter@0.20.8/tree-sitter.js"></script>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #252526;
+            --text-color: #d4d4d4;
+            --accent-color: #4797ff;
+            --border-color: #3e3e42;
+            --success-color: #4ec9b0;
+            --error-color: #f44747;
+            --font-mono: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 10px 20px;
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button, .file-upload-label {
+            background-color: #333;
+            color: white;
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        button:hover, .file-upload-label:hover {
+            background-color: #444;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #status {
+            font-size: 0.85rem;
+            margin-right: 15px;
+            color: #888;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            min-width: 0;
+        }
+
+        .column:last-child {
+            border-right: none;
+        }
+
+        .panel-header {
+            padding: 8px 15px;
+            background-color: var(--panel-bg);
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #888;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        textarea {
+            flex: 1;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: none;
+            resize: none;
+            padding: 15px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            line-height: 1.5;
+            outline: none;
+        }
+
+        .output-area {
+            flex: 1;
+            background-color: #1a1a1a;
+            padding: 15px;
+            overflow: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        .match-entry {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .match-name {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .match-content {
+            color: #ce9178;
+        }
+
+        .match-range {
+            color: #888;
+            font-size: 0.8em;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            padding: 10px;
+            background: rgba(244, 71, 71, 0.1);
+            border-left: 3px solid var(--error-color);
+        }
+
+        .success-message {
+            color: var(--success-color);
+        }
+
+        #query-status {
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+        
+        .helper-text {
+            font-size: 0.8rem;
+            color: #aaa;
+            padding: 10px;
+            background: #2a2a2a;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Resizer handles could be added here for a better split view */
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <h1>GDScript Tree-Sitter Playground</h1>
+    </div>
+    <div class="controls">
+        <span id="status">Waiting for Grammar...</span>
+        
+        <!-- Auto fetch attempt -->
+        <button id="btn-auto-fetch" title="Attempt to fetch from Unpkg">Try Auto-Fetch</button>
+        
+        <!-- Manual Upload -->
+        <label for="file-input" class="file-upload-label">Upload .wasm</label>
+        <input type="file" id="file-input" accept=".wasm">
+    </div>
+</header>
+
+<div class="helper-text">
+    <strong>Instructions:</strong> To use this playground, you need the <code>tree-sitter-gdscript.wasm</code> file. 
+    <br>1. Try the "Try Auto-Fetch" button first.
+    <br>2. If that fails, upload the file manually. You can generate it locally using <code>tree-sitter build-wasm</code> or find it in the NPM package.
+</div>
+
+<div class="main-container">
+    <!-- Code Input -->
+    <div class="column">
+        <div class="panel-header">Code (GDScript)</div>
+        <textarea id="code-input" spellcheck="false">
+extends Node
+
+func _ready():
+    var x = 10
+    print("Hello World")
+    
+func add(a, b):
+    return a + b
+        </textarea>
+    </div>
+
+    <!-- Query Input -->
+    <div class="column">
+        <div class="panel-header" style="display:flex;">
+            Query (S-Expression)
+            <span id="query-status"></span>
+        </div>
+        <textarea id="query-input" spellcheck="false">
+(function_definition
+  name: (identifier) @func.name)
+        </textarea>
+    </div>
+
+    <!-- Output -->
+    <div class="column">
+        <div class="panel-header">Matches / Output</div>
+        <div id="output" class="output-area">Load a grammar to start...</div>
+    </div>
+</div>
+
+<script>
+    // --- State ---
+    let parser = null;
+    let language = null;
+    let tree = null;
+    
+    // --- Elements ---
+    const codeInput = document.getElementById('code-input');
+    const queryInput = document.getElementById('query-input');
+    const outputDiv = document.getElementById('output');
+    const statusSpan = document.getElementById('status');
+    const queryStatusSpan = document.getElementById('query-status');
+    const fileInput = document.getElementById('file-input');
+    const btnAutoFetch = document.getElementById('btn-auto-fetch');
+
+    // --- Initialization ---
+    (async () => {
+        try {
+            await TreeSitter.init();
+            parser = new TreeSitter();
+            statusSpan.innerText = "WebTreeSitter initialized. Load Grammar.";
+        } catch (e) {
+            statusSpan.innerText = "Error initializing WebTreeSitter: " + e;
+            console.error(e);
+        }
+    })();
+
+    // --- Event Listeners ---
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const url = URL.createObjectURL(file);
+        await loadLanguage(url, file.name);
+    });
+
+    btnAutoFetch.addEventListener('click', async () => {
+        // Attempt to fetch from a common CDN location for tree-sitter-gdscript
+        // Note: This url might change or version might differ.
+        const cdnUrl = 'https://unpkg.com/tree-sitter-gdscript@latest/tree-sitter-gdscript.wasm';
+        statusSpan.innerText = "Fetching from CDN...";
+        await loadLanguage(cdnUrl, "CDN");
+    });
+
+    codeInput.addEventListener('input', update);
+    queryInput.addEventListener('input', update);
+
+    // --- Core Logic ---
+
+    async function loadLanguage(url, sourceName) {
+        try {
+            statusSpan.innerText = `Loading ${sourceName}...`;
+            language = await TreeSitter.Language.load(url);
+            parser.setLanguage(language);
+            statusSpan.innerText = `Active Grammar: GDScript (${sourceName})`;
+            statusSpan.style.color = "var(--success-color)";
+            update();
+        } catch (e) {
+            console.error(e);
+            statusSpan.innerText = `Failed to load grammar: ${e.message}`;
+            statusSpan.style.color = "var(--error-color)";
+        }
+    }
+
+    function update() {
+        if (!parser || !language) return;
+
+        const sourceCode = codeInput.value;
+        const querySource = queryInput.value;
+
+        // 1. Parse Code
+        if (tree) tree.delete();
+        tree = parser.parse(sourceCode);
+
+        // 2. Parse Query
+        outputDiv.innerHTML = '';
+        queryStatusSpan.innerText = '';
+        
+        try {
+            const query = language.query(querySource);
+            queryStatusSpan.innerText = "Query Valid";
+            queryStatusSpan.style.color = "var(--success-color)";
+            
+            // 3. Run Query
+            const matches = query.matches(tree.rootNode);
+            
+            if (matches.length === 0) {
+                outputDiv.innerText = "No matches found.";
+            } else {
+                renderMatches(matches, sourceCode);
+            }
+            
+            query.delete();
+        } catch (e) {
+            queryStatusSpan.innerText = "Query Error";
+            queryStatusSpan.style.color = "var(--error-color)";
+            
+            const errDiv = document.createElement('div');
+            errDiv.className = 'error-message';
+            errDiv.innerText = e.message;
+            outputDiv.appendChild(errDiv);
+        }
+    }
+
+    function renderMatches(matches, sourceCode) {
+        // Group captures by match index is common, but here we just list them
+        // Tree-sitter matches are array of { pattern, captures: [{name, node}] }
+        
+        matches.forEach((match, i) => {
+            match.captures.forEach(capture => {
+                const node = capture.node;
+                const text = sourceCode.substring(node.startIndex, node.endIndex);
+                
+                const div = document.createElement('div');
+                div.className = 'match-entry';
+                div.innerHTML = `
+                    <div><span class="match-name">@${capture.name}</span> <span class="match-range">[${node.startPosition.row}:${node.startPosition.column} - ${node.endPosition.row}:${node.endPosition.column}]</span></div>
+                    <div class="match-content">${escapeHtml(text)}</div>
+                    <div style="color: #666; font-size: 0.75rem; margin-top: 2px;">Node Type: ${node.type}</div>
+                `;
+                outputDiv.appendChild(div);
+            });
+        });
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+</script>
+</body>
+</html>

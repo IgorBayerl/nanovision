@@ -107,10 +107,10 @@ For daily development, use the Python script to build for your current platform 
 
 ```bash
 # Build for both Linux and Windows (x64 only)
-python3 scripts/build.py
+python scripts/build.py
 
 # Build for specific target
-python3 scripts/build.py --target linux
+python scripts/build.py --target linux
 ```
 
 #### 2. Full Release (Cross-Platform)
@@ -181,12 +181,12 @@ We ship a **.devcontainer** configuration (VS Code compatible) so contributors c
 
 Project automation lives under `scripts/`:
 
-| Script | Purpose |
-|--------|---------|
-| `python scripts/build.py` | Build local binaries (x64) |
-| `test.py` | Run unit tests |
-| `e2e_test.py` | Run end-to-end tests with example reports |
-| `e2e_test.py -sc` | Run E2E tests and generate self-coverage report |
+| Script                    | Purpose                                         |
+|---------------------------|-------------------------------------------------|
+| `python scripts/build.py` | Build local binaries (x64)                      |
+| `test.py`                 | Run unit tests                                  |
+| `e2e_test.py`             | Run end-to-end tests with example reports       |
+| `e2e_test.py -sc`         | Run E2E tests and generate self-coverage report |
 
 ---
 
