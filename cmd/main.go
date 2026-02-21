@@ -17,6 +17,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/aggregator"
 	"github.com/IgorBayerl/nanovision/internal/analyzer"
 	cpp "github.com/IgorBayerl/nanovision/internal/analyzer/cpp"
+	"github.com/IgorBayerl/nanovision/internal/analyzer/gdscript"
 	golang "github.com/IgorBayerl/nanovision/internal/analyzer/go"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/diff"
@@ -204,18 +205,13 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 	logger.Info("Executing report generation pipeline...")
 
 	prodFileReader := filereader.NewDefaultReader()
-	parserFactory := parsers.NewParserFactory(
-		logger,
-		parser_cobertura.NewCoberturaParser(prodFileReader),
-		parser_gocover.NewGoCoverParser(prodFileReader),
-		parser_gcov.NewGCovParser(prodFileReader),
-		parser_lcov.NewLcovParser(prodFileReader),
-	)
+	parserFactory := createParserFactory(logger, prodFileReader)
 	treeBuilder := tree.NewBuilder(appConfig.ProjectRoot, appConfig.FileFilterInstance)
 
 	allAnalyzers := []analyzer.Analyzer{
 		golang.New(),
 		cpp.New(),
+		gdscript.New(),
 	}
 
 	// Determine a safe cache location.
@@ -298,9 +294,22 @@ func main() {
 	configPath := flag.String("config", "", "Path to a nanovision.yaml configuration file.")
 	watchFlag := flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes")
 	versionFlag := flag.Bool("version", false, "Print version information and exit")
+	listParsersFlag := flag.Bool("list-parsers", false, "List supported coverage report parsers and exit")
 
 	rawInput := parseAndBindFlags()
 	flag.Parse()
+
+	if *listParsersFlag {
+		logger := slog.Default()
+		prodFileReader := filereader.NewDefaultReader()
+		factory := createParserFactory(logger, prodFileReader)
+
+		fmt.Println("Supported Coverage Parsers:")
+		for _, name := range factory.RegisteredParsers() {
+			fmt.Printf(" - %s\n", name)
+		}
+		os.Exit(0)
+	}
 
 	// Handle version output
 	if *versionFlag {
@@ -367,4 +376,14 @@ func main() {
 	}
 
 	slog.Info("Report generation completed successfully", "duration", time.Since(start).Round(time.Millisecond))
+}
+
+func createParserFactory(logger *slog.Logger, reader filereader.Reader) *parsers.ParserFactory {
+	return parsers.NewParserFactory(
+		logger,
+		parser_cobertura.NewCoberturaParser(reader),
+		parser_gocover.NewGoCoverParser(reader),
+		parser_gcov.NewGCovParser(reader),
+		parser_lcov.NewLcovParser(reader),
+	)
 }
