@@ -4,6 +4,17 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Coverage Details</title>
+    <script>
+      try {
+        var theme = localStorage.getItem('nanovision-ui-theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (theme === 'dark' || (!theme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.add('light');
+        }
+      } catch (e) {}
+    </script>
 		<script defer src="./assets/details-C8YsIjFW.js"></script>
 		<link rel="stylesheet" href="./assets/details-DwoQY1Wf.css">
 	</head>
