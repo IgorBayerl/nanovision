@@ -13,6 +13,54 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDetermineCacheDir_SuccessFirst(t *testing.T) {
+	logger := slog.Default()
+	originalFn := ensureWritableFn
+	t.Cleanup(func() { ensureWritableFn = originalFn })
+
+	ensureWritableFn = func(dir string) error {
+		return nil // Everything is writable
+	}
+
+	dir, err := DetermineCacheDir(logger)
+	require.NoError(t, err)
+	assert.NotEmpty(t, dir)
+}
+
+func TestDetermineCacheDir_Fallback(t *testing.T) {
+	logger := slog.Default()
+	originalFn := ensureWritableFn
+	t.Cleanup(func() { ensureWritableFn = originalFn })
+
+	callCount := 0
+	ensureWritableFn = func(dir string) error {
+		callCount++
+		// Simulate first two paths failing, third succeeding
+		if callCount <= 2 {
+			return errors.New("simulated permission denied")
+		}
+		return nil
+	}
+
+	dir, err := DetermineCacheDir(logger)
+	require.NoError(t, err)
+	assert.Equal(t, ".nanovision_cache", dir)
+}
+
+func TestDetermineCacheDir_AllFail(t *testing.T) {
+	logger := slog.Default()
+	originalFn := ensureWritableFn
+	t.Cleanup(func() { ensureWritableFn = originalFn })
+
+	ensureWritableFn = func(dir string) error {
+		return errors.New("simulated permission denied")
+	}
+
+	dir, err := DetermineCacheDir(logger)
+	require.Error(t, err)
+	assert.Empty(t, dir)
+}
+
 func TestNewManager_Initialization(t *testing.T) {
 	tmpDir := t.TempDir()
 	logger := slog.Default()
@@ -29,47 +77,20 @@ func TestNewManager_Initialization(t *testing.T) {
 	assert.NoError(t, statErr, "Cache directory should have been created")
 }
 
-func TestNewManager_FallbackOnUnwritableDir(t *testing.T) {
-	logger := slog.Default()
-	tmpDir := t.TempDir()
-	preferredDir := filepath.Join(tmpDir, "preferred")
-
-	// Simulate the preferred directory being unwritable by failing the first call only
-	callCount := 0
-	originalFn := ensureWritableFn
-	t.Cleanup(func() { ensureWritableFn = originalFn })
-
-	ensureWritableFn = func(dir string) error {
-		callCount++
-		if callCount == 1 {
-			return errors.New("simulated permission denied")
-		}
-		return originalFn(dir)
-	}
-
-	m, err := NewManager(preferredDir, logger)
-
-	require.NoError(t, err, "Manager should succeed by falling back")
-	require.NotNil(t, m)
-	assert.NotContains(t, m.filePath, preferredDir,
-		"Manager should have fallen back away from the preferred directory")
-}
-
-func TestNewManager_FallbackAlsoFails(t *testing.T) {
+func TestNewManager_UnwritableDir(t *testing.T) {
 	logger := slog.Default()
 	tmpDir := t.TempDir()
 
 	originalFn := ensureWritableFn
 	t.Cleanup(func() { ensureWritableFn = originalFn })
 
-	// Both preferred and fallback fail
 	ensureWritableFn = func(dir string) error {
 		return errors.New("simulated permission denied")
 	}
 
 	m, err := NewManager(tmpDir, logger)
 
-	require.Error(t, err, "Manager should return error if both directories are unwritable")
+	require.Error(t, err, "Manager should return error if directory is unwritable")
 	assert.Nil(t, m)
 }
 

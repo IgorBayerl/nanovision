@@ -52,26 +52,16 @@ type Enricher struct {
 	fileReader   filereader.Reader
 	logger       *slog.Logger
 	cacheManager *cache.Manager
-	ignoreCache  bool
 }
 
-func New(analyzers []analyzer.Analyzer, fileReader filereader.Reader, logger *slog.Logger, cacheDir string, ignoreCache bool) *Enricher {
-	var cm *cache.Manager
-
-	if cacheDir != "" && !ignoreCache {
-		var err error
-		cm, err = cache.NewManager(cacheDir, logger)
-		if err != nil {
-			logger.Warn("Failed to initialize cache, proceeding without it", "error", err)
-		}
-	}
-
+// New injects all dependencies for the Enricher.
+// If cacheManager is nil, caching is safely disabled.
+func New(analyzers []analyzer.Analyzer, fileReader filereader.Reader, logger *slog.Logger, cacheManager *cache.Manager) *Enricher {
 	return &Enricher{
 		analyzers:    analyzers,
 		fileReader:   fileReader,
 		logger:       logger,
-		cacheManager: cm,
-		ignoreCache:  ignoreCache,
+		cacheManager: cacheManager,
 	}
 }
 
@@ -210,19 +200,6 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 			Result:     analysisResult,
 		})
 	}
-}
-
-// readSourceFile locates and reads the content of a source file from disk.
-// It uses the file's associated source directory to resolve its absolute path
-// via utils.FindFileInSourceDirs. The file content is returned as a byte slice,
-// which is the required input for the static code analyzers.
-func (e *Enricher) readSourceFile(fileNode *model.FileNode) ([]byte, error) {
-	sourceDirs := []string{fileNode.SourceDir}
-	absPath, err := utils.FindFileInSourceDirs(fileNode.Path, sourceDirs, e.fileReader, e.logger)
-	if err != nil {
-		return nil, err
-	}
-	return os.ReadFile(absPath)
 }
 
 // applyAnalysisToFileNode translates the generic results from an analyzer into

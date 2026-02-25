@@ -19,6 +19,7 @@ import (
 	cpp "github.com/IgorBayerl/nanovision/internal/analyzer/cpp"
 	"github.com/IgorBayerl/nanovision/internal/analyzer/gdscript"
 	golang "github.com/IgorBayerl/nanovision/internal/analyzer/go"
+	"github.com/IgorBayerl/nanovision/internal/cache"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/diff"
 	"github.com/IgorBayerl/nanovision/internal/diffapply"
@@ -201,6 +202,32 @@ func deriveCapabilities(tree *model.SummaryTree) status.Capabilities {
 	return caps
 }
 
+// Try to find a cache directory, if it cant will continue anyway without cache
+// Fail soft, cache is not necessary for the application to work, its just good
+// But we throw a warning
+func setupCacheManager(appConfig *config.AppConfig, logger *slog.Logger) *cache.Manager {
+	if appConfig.IgnoreCache {
+		logger.Debug("Cache ignored by user configuration.")
+		return nil
+	}
+
+	// Ask the cache package to find the best writable directory (3-path fallback)
+	cacheDir, err := cache.DetermineCacheDir(logger)
+	if err != nil {
+		logger.Warn("Could not determine a writable cache directory; caching will be disabled.", "error", err)
+		return nil
+	}
+
+	// Initialize the manager at that directory
+	manager, err := cache.NewManager(cacheDir, logger)
+	if err != nil {
+		logger.Warn("Failed to initialize cache manager; proceeding without cache.", "error", err)
+		return nil
+	}
+
+	return manager
+}
+
 // executePipeline orchestrates the report generation process from start to finish.
 func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error {
 	logger := slog.Default()
@@ -216,19 +243,8 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 		gdscript.New(),
 	}
 
-	// Determine a safe cache location.
-	// We try the user's standard cache dir (e.g. ~/.cache/nanovision)
-	userCacheDir, err := os.UserCacheDir()
-	if err != nil {
-		logger.Warn("Could not determine user cache directory; caching will be disabled.")
-		userCacheDir = ""
-	}
-	cachePath := ""
-	if userCacheDir != "" {
-		cachePath = filepath.Join(userCacheDir, "nanovision")
-	}
-
-	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger, cachePath, appConfig.IgnoreCache)
+	cacheManager := setupCacheManager(appConfig, logger)
+	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger, cacheManager)
 
 	if len(appConfig.InputPairs) == 0 {
 		return fmt.Errorf("no valid report pattern and source directory pairs were provided")

@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -33,31 +34,40 @@ type Manager struct {
 // ensureWritableFn is a variable so tests can replace it to simulate failures.
 var ensureWritableFn = ensureWritable
 
-// NewManager initializes the cache from a binary file.
-// It performs a write-permission check on cacheDir. If the directory is not writable,
-// it falls back to the system temp directory to ensure the application doesn't crash.
-func NewManager(cacheDir string, logger *slog.Logger) (*Manager, error) {
-	finalDir := cacheDir
+// DetermineCacheDir tries 3 different locations for the cache and returns the first writable one.
+func DetermineCacheDir(logger *slog.Logger) (string, error) {
+	var candidates []string
 
-	// Check if the requested cache directory is writable
-	if err := ensureWritableFn(finalDir); err != nil {
-		logger.Warn("Default cache directory is not writable or accessible",
-			"dir", finalDir,
-			"error", err,
-		)
+	// Try the user's standard cache dir (e.g. ~/.cache/nanovision)
+	if userCache, err := os.UserCacheDir(); err == nil {
+		candidates = append(candidates, filepath.Join(userCache, "nanovision"))
+	}
 
-		// Fallback to system temp directory
-		fallbackDir := filepath.Join(os.TempDir(), "nanovision_cache")
-		logger.Info("Attempting to use fallback cache directory", "dir", fallbackDir)
+	// Fallback to system temp directory
+	candidates = append(candidates, filepath.Join(os.TempDir(), "nanovision_cache"))
 
-		if err := ensureWritableFn(fallbackDir); err != nil {
-			return nil, errors.New("failed to initialize cache: neither default nor fallback directories are writable")
+	// Last resort: current working directory
+	candidates = append(candidates, ".nanovision_cache")
+
+	for _, dir := range candidates {
+		if err := ensureWritableFn(dir); err == nil {
+			return dir, nil
+		} else if logger != nil {
+			logger.Debug("Candidate cache directory is not writable", "dir", dir, "error", err)
 		}
-		finalDir = fallbackDir
+	}
+
+	return "", errors.New("no writable cache directory found among candidates")
+}
+
+// NewManager initializes the cache from a binary file in the given directory.
+func NewManager(cacheDir string, logger *slog.Logger) (*Manager, error) {
+	if err := ensureWritableFn(cacheDir); err != nil {
+		return nil, fmt.Errorf("cache directory %s is not writable: %w", cacheDir, err)
 	}
 
 	fileName := "analysis_v1.bin" // Versioned filename to avoid conflicts in future updates
-	path := filepath.Join(finalDir, fileName)
+	path := filepath.Join(cacheDir, fileName)
 
 	m := &Manager{
 		filePath: path,
