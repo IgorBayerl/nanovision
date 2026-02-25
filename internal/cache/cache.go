@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -26,26 +27,80 @@ type Manager struct {
 	// entries maps ContentHash -> Analysis Data
 	entries map[string]CachedData
 	dirty   bool
+	logger  *slog.Logger
 }
 
-// initializes the cache from a binary file.
-func NewManager(cacheDir string) (*Manager, error) {
+// ensureWritableFn is a variable so tests can replace it to simulate failures.
+var ensureWritableFn = ensureWritable
+
+// NewManager initializes the cache from a binary file.
+// It performs a write-permission check on cacheDir. If the directory is not writable,
+// it falls back to the system temp directory to ensure the application doesn't crash.
+func NewManager(cacheDir string, logger *slog.Logger) (*Manager, error) {
+	finalDir := cacheDir
+
+	// Check if the requested cache directory is writable
+	if err := ensureWritableFn(finalDir); err != nil {
+		logger.Warn("Default cache directory is not writable or accessible",
+			"dir", finalDir,
+			"error", err,
+		)
+
+		// Fallback to system temp directory
+		fallbackDir := filepath.Join(os.TempDir(), "nanovision_cache")
+		logger.Info("Attempting to use fallback cache directory", "dir", fallbackDir)
+
+		if err := ensureWritableFn(fallbackDir); err != nil {
+			return nil, errors.New("failed to initialize cache: neither default nor fallback directories are writable")
+		}
+		finalDir = fallbackDir
+	}
+
 	fileName := "analysis_v1.bin" // Versioned filename to avoid conflicts in future updates
-	path := filepath.Join(cacheDir, fileName)
+	path := filepath.Join(finalDir, fileName)
 
 	m := &Manager{
 		filePath: path,
 		entries:  make(map[string]CachedData),
+		logger:   logger,
 	}
 
 	if err := m.load(); err != nil {
-		// If load fails (e.g., file doesn't exist or corruption), start with empty cache
+		if os.IsNotExist(err) {
+			m.logger.Debug("No existing cache file found, starting with empty cache", "path", path)
+		} else {
+			m.logger.Warn("Failed to load existing cache (file may be corrupted), starting fresh",
+				"path", path,
+				"error", err,
+			)
+		}
 		return m, nil
 	}
+
+	m.logger.Debug("Cache loaded successfully", "entries", len(m.entries), "path", path)
 	return m, nil
 }
 
-// reads the GOB encoded file from disk.
+// ensureWritable checks if a directory exists and is writable.
+// If it doesn't exist, it tries to create it.
+func ensureWritable(dir string) error {
+	// Try to create the directory if it doesn't exist
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	// Try to write a temporary file to verify actual write permissions
+	// (MkdirAll might succeed if dir exists, but we might not have write access to files inside)
+	testFile := filepath.Join(dir, ".permcheck")
+	f, err := os.Create(testFile)
+	if err != nil {
+		return err
+	}
+	f.Close()
+	return os.Remove(testFile)
+}
+
+// load reads the GOB encoded file from disk.
 func (m *Manager) load() error {
 	f, err := os.Open(m.filePath)
 	if err != nil {
@@ -53,7 +108,6 @@ func (m *Manager) load() error {
 	}
 	defer f.Close()
 
-	// Use a buffered reader for performance
 	decoder := gob.NewDecoder(f)
 	if err := decoder.Decode(&m.entries); err != nil {
 		if errors.Is(err, io.EOF) {
@@ -64,14 +118,17 @@ func (m *Manager) load() error {
 	return nil
 }
 
-// persists the current cache state to disk using GOB encoding.
+// Save persists the current cache state to disk using GOB encoding.
 func (m *Manager) Save() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	if !m.dirty {
+		m.logger.Debug("Cache is clean, skipping save")
 		return nil
 	}
+
+	m.logger.Debug("Persisting cache to disk", "path", m.filePath, "entries", len(m.entries))
 
 	if err := os.MkdirAll(filepath.Dir(m.filePath), 0755); err != nil {
 		return err
@@ -84,10 +141,9 @@ func (m *Manager) Save() error {
 		return err
 	}
 
-	// ENCODE
 	encoder := gob.NewEncoder(f)
 	if err := encoder.Encode(m.entries); err != nil {
-		f.Close() // Close if encoding fails
+		f.Close()
 		return err
 	}
 
@@ -96,10 +152,15 @@ func (m *Manager) Save() error {
 		return err
 	}
 
-	return os.Rename(tmpPath, m.filePath)
+	if err := os.Rename(tmpPath, m.filePath); err != nil {
+		return err
+	}
+
+	m.dirty = false
+	return nil
 }
 
-// retrieves analysis data if the content hash exists.
+// Get retrieves analysis data if the content hash exists.
 func (m *Manager) Get(content []byte) (CachedData, bool) {
 	hash := computeHash(content)
 
@@ -110,7 +171,7 @@ func (m *Manager) Get(content []byte) (CachedData, bool) {
 	return val, ok
 }
 
-// stores analysis data for the given content.
+// Put stores analysis data for the given content.
 func (m *Manager) Put(content []byte, data CachedData) {
 	hash := computeHash(content)
 
