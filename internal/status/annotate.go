@@ -1,6 +1,8 @@
 package status
 
 import (
+	"math"
+
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/utils"
@@ -59,6 +61,9 @@ func annotateNode(node *model.DirNode, bands config.StatusBands, caps Capabiliti
 
 	// Line Coverage
 	pct := utils.CalculatePercentage(metrics.LinesCovered, metrics.LinesValid, 2)
+	if math.IsNaN(pct) {
+		pct = 0.0
+	}
 	if lvl, show := Classify(pct, bandPtr(bands, LineCoverage)); show {
 		node.Statuses[LineCoverage] = string(lvl)
 	}
