@@ -60,7 +60,7 @@ func New(analyzers []analyzer.Analyzer, fileReader filereader.Reader, logger *sl
 
 	if cacheDir != "" && !ignoreCache {
 		var err error
-		cm, err = cache.NewManager(cacheDir)
+		cm, err = cache.NewManager(cacheDir, logger)
 		if err != nil {
 			logger.Warn("Failed to initialize cache, proceeding without it", "error", err)
 		}
