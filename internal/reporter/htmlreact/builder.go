@@ -14,23 +14,32 @@ import (
 )
 
 type HtmlReactReportBuilder struct {
-	outputDir string
-	logger    *slog.Logger
+	outputDir  string
+	logger     *slog.Logger
+	singleFile bool
 }
 
-func NewHtmlReactReportBuilder(outputDir string, logger *slog.Logger) reporter.ReportBuilder {
+func NewHtmlReactReportBuilder(outputDir string, logger *slog.Logger, singleFile bool) reporter.ReportBuilder {
 	return &HtmlReactReportBuilder{
-		outputDir: outputDir,
-		logger:    logger,
+		outputDir:  outputDir,
+		logger:     logger,
+		singleFile: singleFile,
 	}
 }
 
 func (b *HtmlReactReportBuilder) ReportType() string {
+	if b.singleFile {
+		return "HtmlUnified"
+	}
 	return "Html"
 }
 
 func (b *HtmlReactReportBuilder) CreateReport(tree *model.SummaryTree) error {
-	b.logger.Info("Starting generation of new React HTML report.", "directory", b.outputDir)
+	b.logger.Info("Starting generation of new React HTML report.", "directory", b.outputDir, "single_file", b.singleFile)
+
+	if b.singleFile {
+		return b.createSingleFileReport(tree)
+	}
 
 	summaryData, err := b.transformTree(tree)
 	if err != nil {
@@ -49,6 +58,34 @@ func (b *HtmlReactReportBuilder) CreateReport(tree *model.SummaryTree) error {
 	}
 
 	b.logger.Info("Successfully generated React HTML report.", "directory", b.outputDir)
+	return nil
+}
+
+func (b *HtmlReactReportBuilder) createSingleFileReport(tree *model.SummaryTree) error {
+	summaryData, err := b.transformTree(tree)
+	if err != nil {
+		return fmt.Errorf("failed to transform summary data: %w", err)
+	}
+
+	allDetails := make(map[string]*detailsV1)
+	fileMap := make(map[string]*model.FileNode)
+
+	collectFiles(tree.Root, fileMap)
+
+	for path, fileNode := range fileMap {
+		details, err := b.transformFileNodeToDetails(tree, fileNode)
+		if err != nil {
+			b.logger.Warn("Failed to generate details for file", "path", path, "error", err)
+			continue
+		}
+		allDetails[path] = details
+	}
+
+	if err := GenerateSingleFile(b.outputDir, summaryData, allDetails, nil); err != nil {
+		return fmt.Errorf("failed to generate single file report: %w", err)
+	}
+
+	b.logger.Info("Successfully generated React HTML report (Single File Mode).", "directory", b.outputDir)
 	return nil
 }
 
@@ -146,7 +183,11 @@ func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNod
 
 		target := ""
 		if file.SourceDir != "" {
-			target = fmt.Sprintf("%s.html", strings.ReplaceAll(file.Path, "/", "_"))
+			if b.singleFile {
+				target = fmt.Sprintf("#/details/%s", file.Path)
+			} else {
+				target = fmt.Sprintf("%s.html", strings.ReplaceAll(file.Path, "/", "_"))
+			}
 		}
 
 		diffStatus := ""

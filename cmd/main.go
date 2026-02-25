@@ -160,7 +160,9 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 		case "TextSummary":
 			err = textsummary.NewTextReportBuilder(outputDir, logger).CreateReport(summaryTree)
 		case "Html":
-			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger).CreateReport(summaryTree)
+			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, false).CreateReport(summaryTree)
+		case "HtmlUnified":
+			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, true).CreateReport(summaryTree)
 		case "Lcov":
 			err = lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree)
 		case "RawJson":

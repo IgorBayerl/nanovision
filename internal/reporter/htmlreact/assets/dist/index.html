@@ -4,8 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coverage Report</title>
-    <script defer src="./assets/main-BOyIf250.js"></script>
-    <link rel="stylesheet" href="./assets/main-B2i0kkVf.css">
+    <script>
+      try {
+        var theme = localStorage.getItem('nanovision-ui-theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (theme === 'dark' || (!theme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.add('light');
+        }
+      } catch (e) {}
+    </script>
+    <script defer src="./assets/main-DxquBtFb.js"></script>
+    <link rel="stylesheet" href="./assets/main-DwoQY1Wf.css">
   </head>
   <body>
     <div id="root"></div>
