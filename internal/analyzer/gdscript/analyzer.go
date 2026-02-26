@@ -43,14 +43,13 @@ const (
 	`
 
 	statementQueryString = `
+		(expression_statement) @stmt
 		(assignment) @stmt
-		(call) @stmt
 		(return_statement) @stmt
 		(if_statement) @stmt
 		(for_statement) @stmt
 		(while_statement) @stmt
 		(match_statement) @stmt
-		(expression_statement) @stmt
 		(break_statement) @stmt
 		(continue_statement) @stmt
 		(pass_statement) @stmt

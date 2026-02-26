@@ -226,7 +226,7 @@ func addMetrics(dest *model.CoverageMetrics, src model.CoverageMetrics) {
 	dest.PatchLinesTotal += src.PatchLinesTotal
 	dest.PatchMethodsCovered += src.PatchMethodsCovered
 	dest.PatchMethodsValid += src.PatchMethodsValid
-	
+
 	dest.StatementsValid += src.StatementsValid
 	dest.StatementsCovered += src.StatementsCovered
 	dest.PatchStatementsValid += src.PatchStatementsValid

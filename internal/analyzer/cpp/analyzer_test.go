@@ -18,7 +18,7 @@ int main() {
 `
 	analyzer := New()
 	result, err := analyzer.Analyze([]byte(code))
-	
+
 	assert.NoError(t, err)
 
 	var types []string
@@ -30,7 +30,7 @@ int main() {
 	assert.Contains(t, types, "while_statement")
 	assert.Contains(t, types, "expression_statement")
 	assert.Contains(t, types, "return_statement")
-	
+
 	foundReturn := false
 	for _, s := range result.Statements {
 		if s.Type == "return_statement" {
