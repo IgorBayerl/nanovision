@@ -22,7 +22,7 @@ type branchCoverageDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
-type methodsCoveredDetail struct {
+type methodsHitDetail struct {
 	Covered    int     `json:"covered"`
 	Total      int     `json:"total"`
 	Percentage float64 `json:"percentage"`
@@ -40,15 +40,15 @@ type totals struct {
 	StatementCoverage       *lineCoverageDetail        `json:"statement_coverage,omitempty"`
 	LineCoverage            *lineCoverageDetail        `json:"line_coverage,omitempty"`
 	BranchCoverage          *branchCoverageDetail      `json:"branch_coverage,omitempty"`
-	MethodsCovered          *methodsCoveredDetail      `json:"methods_covered,omitempty"`
+	MethodsHit              *methodsHitDetail          `json:"methods_hit,omitempty"`
 	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
 	MethodBranchCoverage    *branchCoverageDetail      `json:"method_branch_coverage,omitempty"`
 	MaxCyclomaticComplexity *lineCoverageDetail        `json:"max_cyclomatic_complexity,omitempty"`
 
 	// Patch / diff-based metrics.
-	PatchStatementCoverage *lineCoverageDetail   `json:"patch_statement_coverage,omitempty"`
-	PatchLineCoverage      *lineCoverageDetail   `json:"patch_line_coverage,omitempty"`
-	PatchMethodsCovered    *methodsCoveredDetail `json:"patch_methods_covered,omitempty"`
+	PatchStatementCoverage *lineCoverageDetail `json:"patch_statement_coverage,omitempty"`
+	PatchLineCoverage      *lineCoverageDetail `json:"patch_line_coverage,omitempty"`
+	PatchMethodsHit        *methodsHitDetail   `json:"patch_methods_hit,omitempty"`
 
 	Files    int      `json:"files"`
 	Folders  int      `json:"folders"`

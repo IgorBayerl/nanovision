@@ -327,8 +327,8 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 	if bc, ok := fileMetrics["branch_coverage"].(branchCoverageDetail); ok {
 		totalsData.BranchCoverage = &bc
 	}
-	if mc, ok := fileMetrics["methods_covered"].(methodsCoveredDetail); ok {
-		totalsData.MethodsCovered = &mc
+	if mc, ok := fileMetrics["methods_hit"].(methodsHitDetail); ok {
+		totalsData.MethodsHit = &mc
 	}
 	if mfc, ok := fileMetrics["methods_fully_covered"].(methodsFullyCoveredDetail); ok {
 		totalsData.MethodsFullyCovered = &mfc
@@ -340,8 +340,8 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 	if plc, ok := fileMetrics["patch_line_coverage"].(lineCoverageDetail); ok {
 		totalsData.PatchLineCoverage = &plc
 	}
-	if pmc, ok := fileMetrics["patch_methods_covered"].(methodsCoveredDetail); ok {
-		totalsData.PatchMethodsCovered = &pmc
+	if pmc, ok := fileMetrics["patch_methods_hit"].(methodsHitDetail); ok {
+		totalsData.PatchMethodsHit = &pmc
 	}
 
 	if totalMethodBranches > 0 {

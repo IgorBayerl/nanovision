@@ -25,16 +25,16 @@ type MetricKey string
 const (
 	LineCoverage                 MetricKey = "line_coverage"
 	BranchCoverage               MetricKey = "branch_coverage"
-	MethodsCovered               MetricKey = "methods_covered"
+	MethodsHit                   MetricKey = "methods_hit"
 	MethodsFullyCovered          MetricKey = "methods_fully_covered"
 	PatchLineCoverage            MetricKey = "patch_line_coverage"
-	PatchMethodsCovered          MetricKey = "patch_methods_covered"
+	PatchMethodsHit              MetricKey = "patch_methods_hit"
 	MethodBranchCoverage         MetricKey = "method_branch_coverage"
 	StatementCoverage            MetricKey = "statement_coverage"
 	PatchStatementCoverage       MetricKey = "patch_statement_coverage"
-	StatementMethodsCovered      MetricKey = "statement_methods_covered"
+	StatementMethodsHit          MetricKey = "statement_methods_hit"
 	StatementMethodsFullyCovered MetricKey = "statement_methods_fully_covered"
-	PatchStatementMethodsCovered MetricKey = "patch_statement_methods_covered"
+	PatchStatementMethodsHit     MetricKey = "patch_statement_methods_hit"
 )
 
 // StatusBands supports either:

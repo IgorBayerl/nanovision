@@ -23,11 +23,11 @@ const REPORT_DESCRIPTIONS = {
 const METRICS = [
     { id: 'line_coverage', label: 'Line Coverage' },
     { id: 'branch_coverage', label: 'Branch Coverage' },
-    { id: 'methods_covered', label: 'Methods Covered' },
+    { id: 'methods_hit', label: 'Methods Hit' },
     { id: 'methods_fully_covered', label: 'Methods Fully Covered' },
     { id: 'method_branch_coverage', label: 'Method Branch Coverage' },
     { id: 'patch_line_coverage', label: 'Patch Line Coverage' },
-    { id: 'patch_methods_covered', label: 'Patch Methods Covered' },
+    { id: 'patch_methods_hit', label: 'Patch Methods Hit' },
 ];
 
 // --- UI Components ---
@@ -175,11 +175,11 @@ const Configurator = () => {
         thresholds: {
             line_coverage: { min: 60, max: 80, active: false },
             branch_coverage: { min: 50, max: 70, active: false },
-            methods_covered: { min: 50, max: 70, active: false },
+            methods_hit: { min: 50, max: 70, active: false },
             methods_fully_covered: { min: 50, max: 70, active: false },
             method_branch_coverage: { min: 50, max: 70, active: false },
             patch_line_coverage: { min: 50, max: 70, active: false },
-            patch_methods_covered: { min: 50, max: 70, active: false },
+            patch_methods_hit: { min: 50, max: 70, active: false },
         }
     });
 
