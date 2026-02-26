@@ -236,8 +236,8 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 	if bc, ok := metrics["branch_coverage"].(branchCoverageDetail); ok {
 		t.BranchCoverage = &bc
 	}
-	if mc, ok := metrics["methods_covered"].(methodsCoveredDetail); ok {
-		t.MethodsCovered = &mc
+	if mc, ok := metrics["methods_hit"].(methodsHitDetail); ok {
+		t.MethodsHit = &mc
 	}
 	if mfc, ok := metrics["methods_fully_covered"].(methodsFullyCoveredDetail); ok {
 		t.MethodsFullyCovered = &mfc
@@ -250,8 +250,8 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 		t.PatchLineCoverage = &plc
 	}
 
-	if pmc, ok := metrics["patch_methods_covered"].(methodsCoveredDetail); ok {
-		t.PatchMethodsCovered = &pmc
+	if pmc, ok := metrics["patch_methods_hit"].(methodsHitDetail); ok {
+		t.PatchMethodsHit = &pmc
 	}
 
 	return t
@@ -287,11 +287,11 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 	}
 
 	if m.MethodsValid > 0 {
-		methodsCoveredPct := utils.CalculatePercentage(m.MethodsCovered, m.MethodsValid, 2)
-		metrics["methods_covered"] = methodsCoveredDetail{
-			Covered:    m.MethodsCovered,
+		methodsHitPct := utils.CalculatePercentage(m.MethodsHit, m.MethodsValid, 2)
+		metrics["methods_hit"] = methodsHitDetail{
+			Covered:    m.MethodsHit,
 			Total:      m.MethodsValid,
-			Percentage: methodsCoveredPct,
+			Percentage: methodsHitPct,
 		}
 
 		methodsFullyCoveredPct := utils.CalculatePercentage(m.MethodsFullyCovered, m.MethodsValid, 2)
@@ -328,9 +328,9 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 
 	// Patch methods coverage
 	if m.PatchMethodsValid > 0 {
-		patchMethodsPct := utils.CalculatePercentage(m.PatchMethodsCovered, m.PatchMethodsValid, 2)
-		metrics["patch_methods_covered"] = methodsCoveredDetail{
-			Covered:    m.PatchMethodsCovered,
+		patchMethodsPct := utils.CalculatePercentage(m.PatchMethodsHit, m.PatchMethodsValid, 2)
+		metrics["patch_methods_hit"] = methodsHitDetail{
+			Covered:    m.PatchMethodsHit,
 			Total:      m.PatchMethodsValid,
 			Percentage: patchMethodsPct,
 		}
@@ -411,11 +411,11 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "total", Label: "Value", Width: 100},
 			},
 		},
-		"methods_covered": {
-			Label:      "Methods Covered",
-			ShortLabel: "Methods",
+		"methods_hit": {
+			Label:      "Methods Hit",
+			ShortLabel: "Methods Hit",
 			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 80},
+				{ID: "covered", Label: "Hit", Width: 80},
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
@@ -429,11 +429,11 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
 		},
-		"patch_methods_covered": {
-			Label:      "Patch Methods",
-			ShortLabel: "Patch Methods",
+		"patch_methods_hit": {
+			Label:      "Patch Methods Hit",
+			ShortLabel: "Patch Methods Hit",
 			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 80},
+				{ID: "covered", Label: "Hit", Width: 80},
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},

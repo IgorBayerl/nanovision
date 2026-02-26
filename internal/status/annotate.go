@@ -78,9 +78,9 @@ func annotateNode(node *model.DirNode, bands config.StatusBands, caps Capabiliti
 
 	// Method Coverage (only if applicable)
 	if caps.HasMethodCoverage && metrics.MethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.MethodsCovered, metrics.MethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, MethodsCovered)); show {
-			node.Statuses[MethodsCovered] = string(lvl)
+		pct := utils.CalculatePercentage(metrics.MethodsHit, metrics.MethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, MethodsHit)); show {
+			node.Statuses[MethodsHit] = string(lvl)
 		}
 
 		pct = utils.CalculatePercentage(metrics.MethodsFullyCovered, metrics.MethodsValid, 2)
@@ -101,10 +101,10 @@ func annotateNode(node *model.DirNode, bands config.StatusBands, caps Capabiliti
 
 	// Patch Method Coverage
 	if metrics.PatchMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchMethodsCovered, metrics.PatchMethodsValid, 2)
-		// We check config for "patch_methods_covered" band
-		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsCovered)); show {
-			node.Statuses[PatchMethodsCovered] = string(lvl)
+		pct := utils.CalculatePercentage(metrics.PatchMethodsHit, metrics.PatchMethodsValid, 2)
+		// We check config for "patch_methods_hit" band
+		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsHit)); show {
+			node.Statuses[PatchMethodsHit] = string(lvl)
 		}
 	}
 
@@ -126,9 +126,9 @@ func annotateNode(node *model.DirNode, bands config.StatusBands, caps Capabiliti
 
 	// Statement Method Coverage (only if applicable)
 	if caps.HasStatementCoverage && metrics.StatementMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.StatementMethodsCovered, metrics.StatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsCovered)); show {
-			node.Statuses[StatementMethodsCovered] = string(lvl)
+		pct := utils.CalculatePercentage(metrics.StatementMethodsHit, metrics.StatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsHit)); show {
+			node.Statuses[StatementMethodsHit] = string(lvl)
 		}
 
 		pct = utils.CalculatePercentage(metrics.StatementMethodsFullyCovered, metrics.StatementMethodsValid, 2)
@@ -139,9 +139,9 @@ func annotateNode(node *model.DirNode, bands config.StatusBands, caps Capabiliti
 
 	// Patch Statement Method Coverage
 	if metrics.PatchStatementMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchStatementMethodsCovered, metrics.PatchStatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementMethodsCovered)); show {
-			node.Statuses[PatchStatementMethodsCovered] = string(lvl)
+		pct := utils.CalculatePercentage(metrics.PatchStatementMethodsHit, metrics.PatchStatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementMethodsHit)); show {
+			node.Statuses[PatchStatementMethodsHit] = string(lvl)
 		}
 	}
 }
@@ -167,9 +167,9 @@ func annotateFile(node *model.FileNode, bands config.StatusBands, caps Capabilit
 
 	// Method Coverage (only if applicable)
 	if caps.HasMethodCoverage && metrics.MethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.MethodsCovered, metrics.MethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, MethodsCovered)); show {
-			node.Statuses[MethodsCovered] = string(lvl)
+		pct := utils.CalculatePercentage(metrics.MethodsHit, metrics.MethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, MethodsHit)); show {
+			node.Statuses[MethodsHit] = string(lvl)
 		}
 
 		pct = utils.CalculatePercentage(metrics.MethodsFullyCovered, metrics.MethodsValid, 2)
@@ -188,9 +188,9 @@ func annotateFile(node *model.FileNode, bands config.StatusBands, caps Capabilit
 
 	// Patch Method Coverage
 	if metrics.PatchMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchMethodsCovered, metrics.PatchMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsCovered)); show {
-			node.Statuses[PatchMethodsCovered] = string(lvl)
+		pct := utils.CalculatePercentage(metrics.PatchMethodsHit, metrics.PatchMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsHit)); show {
+			node.Statuses[PatchMethodsHit] = string(lvl)
 		}
 	}
 
@@ -212,9 +212,9 @@ func annotateFile(node *model.FileNode, bands config.StatusBands, caps Capabilit
 
 	// Statement Method Coverage (only if applicable)
 	if caps.HasStatementCoverage && metrics.StatementMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.StatementMethodsCovered, metrics.StatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsCovered)); show {
-			node.Statuses[StatementMethodsCovered] = string(lvl)
+		pct := utils.CalculatePercentage(metrics.StatementMethodsHit, metrics.StatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsHit)); show {
+			node.Statuses[StatementMethodsHit] = string(lvl)
 		}
 
 		pct = utils.CalculatePercentage(metrics.StatementMethodsFullyCovered, metrics.StatementMethodsValid, 2)
@@ -225,9 +225,9 @@ func annotateFile(node *model.FileNode, bands config.StatusBands, caps Capabilit
 
 	// Patch Statement Method Coverage
 	if metrics.PatchStatementMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchStatementMethodsCovered, metrics.PatchStatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementMethodsCovered)); show {
-			node.Statuses[PatchStatementMethodsCovered] = string(lvl)
+		pct := utils.CalculatePercentage(metrics.PatchStatementMethodsHit, metrics.PatchStatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementMethodsHit)); show {
+			node.Statuses[PatchStatementMethodsHit] = string(lvl)
 		}
 	}
 }

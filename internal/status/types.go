@@ -36,15 +36,15 @@ type MetricKey = config.MetricKey
 const (
 	LineCoverage                 MetricKey = config.LineCoverage
 	BranchCoverage               MetricKey = config.BranchCoverage
-	MethodsCovered               MetricKey = config.MethodsCovered
+	MethodsHit                   MetricKey = config.MethodsHit
 	MethodsFullyCovered          MetricKey = config.MethodsFullyCovered
 	PatchLineCoverage            MetricKey = config.PatchLineCoverage
-	PatchMethodsCovered          MetricKey = config.PatchMethodsCovered
+	PatchMethodsHit              MetricKey = config.PatchMethodsHit
 	StatementCoverage            MetricKey = config.StatementCoverage
 	PatchStatementCoverage       MetricKey = config.PatchStatementCoverage
-	StatementMethodsCovered      MetricKey = config.StatementMethodsCovered
+	StatementMethodsHit          MetricKey = config.StatementMethodsHit
 	StatementMethodsFullyCovered MetricKey = config.StatementMethodsFullyCovered
-	PatchStatementMethodsCovered MetricKey = config.PatchStatementMethodsCovered
+	PatchStatementMethodsHit     MetricKey = config.PatchStatementMethodsHit
 )
 
 // Capabilities informs the annotation process about which metrics are semantically

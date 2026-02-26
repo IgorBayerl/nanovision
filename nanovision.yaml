@@ -64,10 +64,16 @@ ignore_files:
 status_bands:
   line_coverage: "60..75"
   branch_coverage: "50..70"
-  # methods_covered: "60..80"
+  # statement_coverage: "60..75"
+  # methods_hit: "60..80"
   methods_fully_covered: "40..60"
-  patch_line_coverage: "80..90"     
-  patch_methods_covered: "80..90"
+  # method_branch_coverage: "50..70"
+  # statement_methods_hit: "60..80"
+  # statement_methods_fully_covered: "40..60"
+  patch_line_coverage: "80..90"
+  # patch_statement_coverage: "80..90"
+  patch_methods_hit: "80..90"
+  # patch_statement_methods_hit: "80..90"
 
 # Optional settings for patch coverage analysis.
 diff:
