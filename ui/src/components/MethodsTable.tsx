@@ -84,9 +84,14 @@ export default function MethodsTable({
                             {/* --- 2. THE KEY: Tell this column to expand --- */}
                             <th className="w-full px-4 py-2 text-left text-muted-foreground">Method</th>
                             {hasNewLinesColumn && (
-                                <th className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground">
-                                    Patch Line Cov.
-                                </th>
+                                <>
+                                    <th className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground">
+                                        Patch Stmt Cov.
+                                    </th>
+                                    <th className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground">
+                                        Patch Line Cov.
+                                    </th>
+                                </>
                             )}
                             {metricConfigs.map((mc) => (
                                 <th
@@ -118,15 +123,26 @@ export default function MethodsTable({
                                     </div>
                                 </td>
                                 {hasNewLinesColumn && (
-                                    <td className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-xs">
-                                        {method.newLinesCoverage ? (
-                                            <span>
-                                                {method.newLinesCoverage.covered} / {method.newLinesCoverage.total}
-                                            </span>
-                                        ) : (
-                                            '-'
-                                        )}
-                                    </td>
+                                    <>
+                                        <td className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-xs">
+                                            {method.newStatementsCoverage ? (
+                                                <span>
+                                                    {method.newStatementsCoverage.covered} / {method.newStatementsCoverage.total}
+                                                </span>
+                                            ) : (
+                                                '-'
+                                            )}
+                                        </td>
+                                        <td className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-xs">
+                                            {method.newLinesCoverage ? (
+                                                <span>
+                                                    {method.newLinesCoverage.covered} / {method.newLinesCoverage.total}
+                                                </span>
+                                            ) : (
+                                                '-'
+                                            )}
+                                        </td>
+                                    </>
                                 )}
                                 {metricConfigs.map((mc) => {
                                     const metric = method.metrics[mc.id]

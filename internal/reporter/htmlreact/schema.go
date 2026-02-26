@@ -105,12 +105,13 @@ type newLinesCoverage struct {
 }
 
 type methodDetail struct {
-	Name             string                  `json:"name"`
-	StartLine        int                     `json:"startLine"`
-	EndLine          int                     `json:"endLine"`
-	Metrics          map[string]methodMetric `json:"metrics"`
-	DiffStatus       string                  `json:"diffStatus,omitempty"`
-	NewLinesCoverage *newLinesCoverage       `json:"newLinesCoverage,omitempty"`
+	Name                  string                  `json:"name"`
+	StartLine             int                     `json:"startLine"`
+	EndLine               int                     `json:"endLine"`
+	Metrics               map[string]methodMetric `json:"metrics"`
+	DiffStatus            string                  `json:"diffStatus,omitempty"`
+	NewLinesCoverage      *newLinesCoverage       `json:"newLinesCoverage,omitempty"`
+	NewStatementsCoverage *newLinesCoverage       `json:"newStatementsCoverage,omitempty"`
 }
 
 type report struct {

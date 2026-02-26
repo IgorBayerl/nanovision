@@ -273,6 +273,10 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 			}
 
 			if patchStmtsTotal > 0 {
+				md.NewStatementsCoverage = &newLinesCoverage{
+					Covered: patchStmtsCovered,
+					Total:   patchStmtsTotal,
+				}
 				md.Metrics["c_patch_statement_coverage"] = methodMetric{
 					Value: fmt.Sprintf("%d / %d", patchStmtsCovered, patchStmtsTotal),
 				}
