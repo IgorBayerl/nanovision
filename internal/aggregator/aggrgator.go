@@ -59,6 +59,16 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 	file.Metrics.PatchMethodsCovered = 0
 	file.Metrics.PatchMethodsValid = 0
 
+	file.Metrics.PatchStatementsCovered = 0
+	file.Metrics.PatchStatementsValid = 0
+
+	file.Metrics.StatementMethodsValid = 0
+	file.Metrics.StatementMethodsCovered = 0
+	file.Metrics.StatementMethodsFullyCovered = 0
+
+	file.Metrics.PatchStatementMethodsCovered = 0
+	file.Metrics.PatchStatementMethodsValid = 0
+
 	// --- Patch line metrics (per file) ---
 	// We only consider coverable lines (Hits >= 0). A "patch line" is any
 	// coverable line that was added or modified according to DiffInfo.
@@ -84,6 +94,35 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 				}
 			}
 		}
+
+		// Patch Statements
+		if file.Diff.Kind == model.ChangeKindAdded {
+			file.Metrics.PatchStatementsValid = file.Metrics.StatementsValid
+			file.Metrics.PatchStatementsCovered = file.Metrics.StatementsCovered
+		} else {
+			for _, stmt := range file.Statements {
+				inPatch := false
+				for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+					if file.Diff.AddedLines[i] || file.Diff.ModifiedLines[i] {
+						inPatch = true
+						break
+					}
+				}
+				if inPatch {
+					file.Metrics.PatchStatementsValid++
+					covered := false
+					for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+						if line, ok := file.Lines[i]; ok && line.Hits > 0 {
+							covered = true
+							break
+						}
+					}
+					if covered {
+						file.Metrics.PatchStatementsCovered++
+					}
+				}
+			}
+		}
 	}
 
 	hasDiff := file.Diff != nil
@@ -100,6 +139,16 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 			}
 		}
 
+		if method.StatementsValid > 0 {
+			file.Metrics.StatementMethodsValid++
+			if method.StatementsCovered > 0 {
+				file.Metrics.StatementMethodsCovered++
+			}
+			if method.StatementsCovered == method.StatementsValid {
+				file.Metrics.StatementMethodsFullyCovered++
+			}
+		}
+
 		// If there is no diff associated with this file, there can be no
 		// patch-level method metrics.
 		if !hasDiff {
@@ -113,6 +162,12 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 				file.Metrics.PatchMethodsValid++
 				if method.LinesCovered > 0 {
 					file.Metrics.PatchMethodsCovered++
+				}
+			}
+			if method.StatementsValid > 0 {
+				file.Metrics.PatchStatementMethodsValid++
+				if method.StatementsCovered > 0 {
+					file.Metrics.PatchStatementMethodsCovered++
 				}
 			}
 			continue
@@ -144,6 +199,13 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 			if patchLinesCovered > 0 {
 				file.Metrics.PatchMethodsCovered++
 			}
+
+			if method.StatementsValid > 0 {
+				file.Metrics.PatchStatementMethodsValid++
+				if method.StatementsCovered > 0 {
+					file.Metrics.PatchStatementMethodsCovered++
+				}
+			}
 		}
 	}
 }
@@ -164,4 +226,15 @@ func addMetrics(dest *model.CoverageMetrics, src model.CoverageMetrics) {
 	dest.PatchLinesTotal += src.PatchLinesTotal
 	dest.PatchMethodsCovered += src.PatchMethodsCovered
 	dest.PatchMethodsValid += src.PatchMethodsValid
+	
+	dest.StatementsValid += src.StatementsValid
+	dest.StatementsCovered += src.StatementsCovered
+	dest.PatchStatementsValid += src.PatchStatementsValid
+	dest.PatchStatementsCovered += src.PatchStatementsCovered
+
+	dest.StatementMethodsValid += src.StatementMethodsValid
+	dest.StatementMethodsCovered += src.StatementMethodsCovered
+	dest.StatementMethodsFullyCovered += src.StatementMethodsFullyCovered
+	dest.PatchStatementMethodsValid += src.PatchStatementMethodsValid
+	dest.PatchStatementMethodsCovered += src.PatchStatementMethodsCovered
 }

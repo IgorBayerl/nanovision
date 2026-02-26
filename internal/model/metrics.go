@@ -30,6 +30,12 @@ type CoverageMetrics struct {
 	StatementsValid        int
 	PatchStatementsCovered int
 	PatchStatementsValid   int
+
+	StatementMethodsCovered      int
+	StatementMethodsFullyCovered int
+	StatementMethodsValid        int
+	PatchStatementMethodsCovered int
+	PatchStatementMethodsValid   int
 }
 
 // LineMetrics holds the coverage data for a single line of code.

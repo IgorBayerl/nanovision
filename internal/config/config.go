@@ -23,13 +23,18 @@ type Band struct {
 type MetricKey string
 
 const (
-	LineCoverage         MetricKey = "line_coverage"
-	BranchCoverage       MetricKey = "branch_coverage"
-	MethodsCovered       MetricKey = "methods_covered"
-	MethodsFullyCovered  MetricKey = "methods_fully_covered"
-	PatchLineCoverage    MetricKey = "patch_line_coverage"
-	PatchMethodsCovered  MetricKey = "patch_methods_covered"
-	MethodBranchCoverage MetricKey = "method_branch_coverage"
+	LineCoverage                 MetricKey = "line_coverage"
+	BranchCoverage               MetricKey = "branch_coverage"
+	MethodsCovered               MetricKey = "methods_covered"
+	MethodsFullyCovered          MetricKey = "methods_fully_covered"
+	PatchLineCoverage            MetricKey = "patch_line_coverage"
+	PatchMethodsCovered          MetricKey = "patch_methods_covered"
+	MethodBranchCoverage         MetricKey = "method_branch_coverage"
+	StatementCoverage            MetricKey = "statement_coverage"
+	PatchStatementCoverage       MetricKey = "patch_statement_coverage"
+	StatementMethodsCovered      MetricKey = "statement_methods_covered"
+	StatementMethodsFullyCovered MetricKey = "statement_methods_fully_covered"
+	PatchStatementMethodsCovered MetricKey = "patch_statement_methods_covered"
 )
 
 // StatusBands supports either:
