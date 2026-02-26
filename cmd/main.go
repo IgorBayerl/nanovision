@@ -384,6 +384,8 @@ func main() {
 			diffLogger.Warn("Failed to parse diff file; ignoring diff analysis.", "error", parseErr)
 			diffData = nil
 		}
+	} else {
+		slog.Info("No diff file specified in configuration, skipping diff analysis")
 	}
 
 	if err := executePipeline(appConfig, diffData); err != nil {
