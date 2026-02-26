@@ -56,6 +56,20 @@ const (
     (binary_expression operator: "&&") @op
     (binary_expression operator: "||") @op
   `
+
+	statementQueryString = `
+		(assignment_statement) @stmt
+		(call_expression) @stmt
+		(return_statement) @stmt
+		(if_statement) @stmt
+		(for_statement) @stmt
+		(expression_switch_statement) @stmt
+		(var_declaration) @stmt
+		(short_var_declaration) @stmt
+		(expression_statement) @stmt
+		(break_statement) @stmt
+		(continue_statement) @stmt
+	`
 )
 
 func (a *GoAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, error) {
@@ -80,6 +94,12 @@ func (a *GoAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, error)
 		return analyzer.AnalysisResult{}, fmt.Errorf("compile function query: %w", qerr)
 	}
 	defer q.Close()
+
+	stmtQ, stmtQErr := sitter.NewQuery(lang, statementQueryString)
+	if stmtQErr != nil {
+		return analyzer.AnalysisResult{}, fmt.Errorf("compile statement query: %w", stmtQErr)
+	}
+	defer stmtQ.Close()
 
 	qc := sitter.NewQueryCursor()
 	defer qc.Close()
@@ -124,6 +144,23 @@ func (a *GoAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, error)
 			Position:             analyzer.Position{StartLine: int(start), EndLine: int(end)},
 			CyclomaticComplexity: &complexity,
 		})
+	}
+
+	stmtQc := sitter.NewQueryCursor()
+	defer stmtQc.Close()
+	stmtMatches := stmtQc.Matches(stmtQ, root, sourceCode)
+
+	for m := stmtMatches.Next(); m != nil; m = stmtMatches.Next() {
+		for _, capture := range m.Captures {
+			node := capture.Node
+			start := node.StartPosition().Row + 1
+			end := node.EndPosition().Row + 1
+			result.Statements = append(result.Statements, analyzer.StatementMetric{
+				StartLine: int(start),
+				EndLine:   int(end),
+				Type:      node.Kind(),
+			})
+		}
 	}
 
 	return result, nil

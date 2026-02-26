@@ -41,6 +41,20 @@ const (
 	(binary_operator "&&")  @op
 	(binary_operator "||")  @op
 	`
+
+	statementQueryString = `
+		(assignment) @stmt
+		(call) @stmt
+		(return_statement) @stmt
+		(if_statement) @stmt
+		(for_statement) @stmt
+		(while_statement) @stmt
+		(match_statement) @stmt
+		(expression_statement) @stmt
+		(break_statement) @stmt
+		(continue_statement) @stmt
+		(pass_statement) @stmt
+	`
 )
 
 // Analyze performs static analysis on the provided source code
@@ -67,6 +81,12 @@ func (a *GdScriptAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, 
 		return analyzer.AnalysisResult{}, fmt.Errorf("compile function query: %w", qerr)
 	}
 	defer q.Close()
+
+	stmtQ, stmtQErr := sitter.NewQuery(lang, statementQueryString)
+	if stmtQErr != nil {
+		return analyzer.AnalysisResult{}, fmt.Errorf("compile statement query: %w", stmtQErr)
+	}
+	defer stmtQ.Close()
 
 	qc := sitter.NewQueryCursor()
 	defer qc.Close()
@@ -107,6 +127,23 @@ func (a *GdScriptAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, 
 			Position:             analyzer.Position{StartLine: int(start), EndLine: int(end)},
 			CyclomaticComplexity: &complexity,
 		})
+	}
+
+	stmtQc := sitter.NewQueryCursor()
+	defer stmtQc.Close()
+	stmtMatches := stmtQc.Matches(stmtQ, root, sourceCode)
+
+	for m := stmtMatches.Next(); m != nil; m = stmtMatches.Next() {
+		for _, capture := range m.Captures {
+			node := capture.Node
+			start := node.StartPosition().Row + 1
+			end := node.EndPosition().Row + 1
+			result.Statements = append(result.Statements, analyzer.StatementMetric{
+				StartLine: int(start),
+				EndLine:   int(end),
+				Type:      node.Kind(),
+			})
+		}
 	}
 
 	return result, nil
