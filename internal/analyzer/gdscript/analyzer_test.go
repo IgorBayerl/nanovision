@@ -14,14 +14,14 @@ func TestGdScriptAnalyzer_Statements(t *testing.T) {
 `
 	analyzer := New()
 	result, err := analyzer.Analyze([]byte(code))
-	
+
 	assert.NoError(t, err)
 
 	assert.NotEmpty(t, result.Statements)
-	
+
 	foundIf := false
 	foundReturn := false
-	
+
 	for _, s := range result.Statements {
 		if s.Type == "if_statement" {
 			foundIf = true
@@ -32,7 +32,7 @@ func TestGdScriptAnalyzer_Statements(t *testing.T) {
 			assert.Equal(t, 4, s.StartLine)
 		}
 	}
-	
+
 	assert.True(t, foundIf, "should find if_statement")
 	assert.True(t, foundReturn, "should find return_statement")
 }

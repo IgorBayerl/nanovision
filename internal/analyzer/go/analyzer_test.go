@@ -18,7 +18,7 @@ func main() {
 `
 	analyzer := New()
 	result, err := analyzer.Analyze([]byte(code))
-	
+
 	assert.NoError(t, err)
 
 	// we expect 3 statements inside main

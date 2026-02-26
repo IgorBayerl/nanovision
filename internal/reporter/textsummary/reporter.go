@@ -52,6 +52,12 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		fmt.Fprintf(f, "  Parser: %s\n", strings.Join(tree.ParserNames, " | "))
 	}
 
+	statementCoverage := utils.CalculatePercentage(tree.Metrics.StatementsCovered, tree.Metrics.StatementsValid, 1)
+	fmt.Fprintf(f, "  Statement coverage: %s\n", utils.FormatPercentage(statementCoverage, 0))
+	fmt.Fprintf(f, "  Covered statements: %d\n", tree.Metrics.StatementsCovered)
+	fmt.Fprintf(f, "  Uncovered statements: %d\n", tree.Metrics.StatementsValid-tree.Metrics.StatementsCovered)
+	fmt.Fprintf(f, "  Coverable statements: %d\n", tree.Metrics.StatementsValid)
+
 	lineCoverage := utils.CalculatePercentage(tree.Metrics.LinesCovered, tree.Metrics.LinesValid, 1)
 	fmt.Fprintf(f, "  Line coverage: %s\n", utils.FormatPercentage(lineCoverage, 0))
 	fmt.Fprintf(f, "  Covered lines: %d\n", tree.Metrics.LinesCovered)
@@ -98,14 +104,16 @@ func printNode(tw *tabwriter.Writer, dir *model.DirNode, indentLevel int) {
 
 	// Print subdirectories first.
 	for _, sub := range sortedSubdirs {
+		stmtCov := utils.CalculatePercentage(sub.Metrics.StatementsCovered, sub.Metrics.StatementsValid, 1)
 		lineCov := utils.CalculatePercentage(sub.Metrics.LinesCovered, sub.Metrics.LinesValid, 1)
-		fmt.Fprintf(tw, "%s%s/\t  %s\n", indent, sub.Name, utils.FormatPercentage(lineCov, 0))
+		fmt.Fprintf(tw, "%s%s/\t  %s (Stmt) | %s (Line)\n", indent, sub.Name, utils.FormatPercentage(stmtCov, 0), utils.FormatPercentage(lineCov, 0))
 		printNode(tw, sub, indentLevel+1)
 	}
 
 	// Then print files in the current directory.
 	for _, file := range sortedFiles {
+		stmtCov := utils.CalculatePercentage(file.Metrics.StatementsCovered, file.Metrics.StatementsValid, 1)
 		lineCov := utils.CalculatePercentage(file.Metrics.LinesCovered, file.Metrics.LinesValid, 1)
-		fmt.Fprintf(tw, "%s%s\t  %s\n", indent, file.Name, utils.FormatPercentage(lineCov, 0))
+		fmt.Fprintf(tw, "%s%s\t  %s (Stmt) | %s (Line)\n", indent, file.Name, utils.FormatPercentage(stmtCov, 0), utils.FormatPercentage(lineCov, 0))
 	}
 }

@@ -85,6 +85,7 @@ const (
 		(continue_statement) @stmt
 		(goto_statement) @stmt
 		(throw_statement) @stmt
+		(try_statement) @stmt
 	`
 )
 

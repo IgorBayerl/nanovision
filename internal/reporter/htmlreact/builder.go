@@ -227,6 +227,9 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 		Folders: folders,
 	}
 
+	if sc, ok := metrics["statement_coverage"].(lineCoverageDetail); ok {
+		t.StatementCoverage = &sc
+	}
 	if lc, ok := metrics["line_coverage"].(lineCoverageDetail); ok {
 		t.LineCoverage = &lc
 	}
@@ -240,6 +243,9 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 		t.MethodsFullyCovered = &mfc
 	}
 
+	if psc, ok := metrics["patch_statement_coverage"].(lineCoverageDetail); ok {
+		t.PatchStatementCoverage = &psc
+	}
 	if plc, ok := metrics["patch_line_coverage"].(lineCoverageDetail); ok { // Changed branchCoverageDetail to lineCoverageDetail
 		t.PatchLineCoverage = &plc
 	}
@@ -252,8 +258,16 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 }
 
 func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metricsMap {
+	statementPct := utils.CalculatePercentage(m.StatementsCovered, m.StatementsValid, 2)
 	linePct := utils.CalculatePercentage(m.LinesCovered, m.LinesValid, 2)
 	metrics := metricsMap{
+		"statement_coverage": lineCoverageDetail{
+			Covered:    m.StatementsCovered,
+			Uncovered:  m.StatementsValid - m.StatementsCovered,
+			Coverable:  m.StatementsValid,
+			Total:      m.StatementsValid,
+			Percentage: statementPct,
+		},
 		"line_coverage": lineCoverageDetail{
 			Covered:    m.LinesCovered,
 			Uncovered:  m.LinesValid - m.LinesCovered,
@@ -288,6 +302,18 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 		}
 	}
 
+	// Patch statement coverage
+	if m.PatchStatementsValid > 0 {
+		patchStatementPct := utils.CalculatePercentage(m.PatchStatementsCovered, m.PatchStatementsValid, 2)
+		metrics["patch_statement_coverage"] = lineCoverageDetail{
+			Covered:    m.PatchStatementsCovered,
+			Uncovered:  m.PatchStatementsValid - m.PatchStatementsCovered,
+			Coverable:  m.PatchStatementsValid,
+			Total:      m.PatchStatementsValid,
+			Percentage: patchStatementPct,
+		}
+	}
+
 	// Patch line coverage
 	if m.PatchLinesTotal > 0 {
 		patchLinePct := utils.CalculatePercentage(m.PatchLinesCovered, m.PatchLinesValid, 2)
@@ -315,6 +341,18 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 
 func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 	return metricDefinitions{
+		// Original keys (required by Frontend Summary / File rendering)
+		"statement_coverage": {
+			Label:      "Statements",
+			ShortLabel: "Statements",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "uncovered", Label: "Uncovered", Width: 100},
+				{ID: "coverable", Label: "Coverable", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
 		"line_coverage": {
 			Label:      "Lines",
 			ShortLabel: "Lines",
@@ -335,6 +373,44 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
 		},
+		"method_branch_coverage": {
+			Label:      "Method Branches",
+			ShortLabel: "Method Branches",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
+		"patch_statement_coverage": {
+			Label:      "Patch Statements",
+			ShortLabel: "Patch Statements",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "uncovered", Label: "Uncovered", Width: 100},
+				{ID: "coverable", Label: "Coverable", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
+		"patch_line_coverage": {
+			Label:      "Patch Lines",
+			ShortLabel: "Patch Lines",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "uncovered", Label: "Uncovered", Width: 100},
+				{ID: "coverable", Label: "Coverable", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		},
+		"max_cyclomatic_complexity": {
+			Label:      "Max Cyclomatic Complexity",
+			ShortLabel: "Max Complexity",
+			SubMetrics: []subMetric{
+				{ID: "total", Label: "Value", Width: 100},
+			},
+		},
 		"methods_covered": {
 			Label:      "Methods Covered",
 			ShortLabel: "Methods",
@@ -353,33 +429,6 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
 		},
-		"method_branch_coverage": {
-			Label:      "Method Branches",
-			ShortLabel: "Method Branches",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 100},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		},
-		"max_cyclomatic_complexity": {
-			Label:      "Max Cyclomatic Complexity",
-			ShortLabel: "Max Complexity",
-			SubMetrics: []subMetric{
-				{ID: "total", Label: "Value", Width: 100},
-			},
-		},
-		"patch_line_coverage": {
-			Label:      "Patch Lines",
-			ShortLabel: "Patch Lines",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 100},
-				{ID: "uncovered", Label: "Uncovered", Width: 100},
-				{ID: "coverable", Label: "Coverable", Width: 100},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		},
 		"patch_methods_covered": {
 			Label:      "Patch Methods",
 			ShortLabel: "Patch Methods",
@@ -388,6 +437,38 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
+		},
+
+		// Alphabetical keys (used by Method metrics table only for layout/ordering)
+		"a_statement_coverage": {
+			Label:      "Statements",
+			ShortLabel: "Statements",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		},
+		"b_line_coverage": {
+			Label:      "Lines",
+			ShortLabel: "Lines",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		},
+		"c_patch_statement_coverage": {
+			Label:      "Patch Statements",
+			ShortLabel: "Patch Stmts",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		},
+		"d_patch_line_coverage": {
+			Label:      "Patch Lines",
+			ShortLabel: "Patch Lines",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		},
+		"e_branch_coverage": {
+			Label:      "Branches",
+			ShortLabel: "Branches",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		},
+		"f_cyclomatic_complexity": {
+			Label:      "Cyclomatic Complexity",
+			ShortLabel: "Complexity",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
 		},
 	}
 }

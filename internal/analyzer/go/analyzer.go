@@ -58,17 +58,24 @@ const (
   `
 
 	statementQueryString = `
+		(expression_statement) @stmt
+		(send_statement) @stmt
+		(inc_statement) @stmt
+		(dec_statement) @stmt
 		(assignment_statement) @stmt
-		(call_expression) @stmt
+		(short_var_declaration) @stmt
 		(return_statement) @stmt
 		(if_statement) @stmt
 		(for_statement) @stmt
 		(expression_switch_statement) @stmt
-		(var_declaration) @stmt
-		(short_var_declaration) @stmt
-		(expression_statement) @stmt
+		(type_switch_statement) @stmt
+		(select_statement) @stmt
+		(go_statement) @stmt
+		(defer_statement) @stmt
 		(break_statement) @stmt
 		(continue_statement) @stmt
+		(fallthrough_statement) @stmt
+		(goto_statement) @stmt
 	`
 )
 
