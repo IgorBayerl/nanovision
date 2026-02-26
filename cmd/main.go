@@ -186,6 +186,9 @@ func deriveCapabilities(tree *model.SummaryTree) status.Capabilities {
 		if n.Metrics.MethodsValid > 0 {
 			caps.HasMethodCoverage = true
 		}
+		if n.Metrics.StatementsValid > 0 {
+			caps.HasStatementCoverage = true
+		}
 		for _, c := range n.Subdirs {
 			walk(c)
 		}
@@ -195,6 +198,9 @@ func deriveCapabilities(tree *model.SummaryTree) status.Capabilities {
 			}
 			if f.Metrics.MethodsValid > 0 {
 				caps.HasMethodCoverage = true
+			}
+			if f.Metrics.StatementsValid > 0 {
+				caps.HasStatementCoverage = true
 			}
 		}
 	}

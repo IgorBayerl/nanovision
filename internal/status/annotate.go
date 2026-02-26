@@ -107,6 +107,43 @@ func annotateNode(node *model.DirNode, bands config.StatusBands, caps Capabiliti
 			node.Statuses[PatchMethodsCovered] = string(lvl)
 		}
 	}
+
+	// Statement Coverage
+	if caps.HasStatementCoverage && metrics.StatementsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.StatementsCovered, metrics.StatementsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, StatementCoverage)); show {
+			node.Statuses[StatementCoverage] = string(lvl)
+		}
+	}
+
+	// Patch Statement Coverage
+	if metrics.PatchStatementsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.PatchStatementsCovered, metrics.PatchStatementsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementCoverage)); show {
+			node.Statuses[PatchStatementCoverage] = string(lvl)
+		}
+	}
+
+	// Statement Method Coverage (only if applicable)
+	if caps.HasStatementCoverage && metrics.StatementMethodsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.StatementMethodsCovered, metrics.StatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsCovered)); show {
+			node.Statuses[StatementMethodsCovered] = string(lvl)
+		}
+
+		pct = utils.CalculatePercentage(metrics.StatementMethodsFullyCovered, metrics.StatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsFullyCovered)); show {
+			node.Statuses[StatementMethodsFullyCovered] = string(lvl)
+		}
+	}
+
+	// Patch Statement Method Coverage
+	if metrics.PatchStatementMethodsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.PatchStatementMethodsCovered, metrics.PatchStatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementMethodsCovered)); show {
+			node.Statuses[PatchStatementMethodsCovered] = string(lvl)
+		}
+	}
 }
 
 // annotateFile is a helper that calculates and attaches statuses to a single file node.
@@ -154,6 +191,43 @@ func annotateFile(node *model.FileNode, bands config.StatusBands, caps Capabilit
 		pct := utils.CalculatePercentage(metrics.PatchMethodsCovered, metrics.PatchMethodsValid, 2)
 		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsCovered)); show {
 			node.Statuses[PatchMethodsCovered] = string(lvl)
+		}
+	}
+
+	// Statement Coverage
+	if caps.HasStatementCoverage && metrics.StatementsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.StatementsCovered, metrics.StatementsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, StatementCoverage)); show {
+			node.Statuses[StatementCoverage] = string(lvl)
+		}
+	}
+
+	// Patch Statement Coverage
+	if metrics.PatchStatementsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.PatchStatementsCovered, metrics.PatchStatementsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementCoverage)); show {
+			node.Statuses[PatchStatementCoverage] = string(lvl)
+		}
+	}
+
+	// Statement Method Coverage (only if applicable)
+	if caps.HasStatementCoverage && metrics.StatementMethodsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.StatementMethodsCovered, metrics.StatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsCovered)); show {
+			node.Statuses[StatementMethodsCovered] = string(lvl)
+		}
+
+		pct = utils.CalculatePercentage(metrics.StatementMethodsFullyCovered, metrics.StatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsFullyCovered)); show {
+			node.Statuses[StatementMethodsFullyCovered] = string(lvl)
+		}
+	}
+
+	// Patch Statement Method Coverage
+	if metrics.PatchStatementMethodsValid > 0 {
+		pct := utils.CalculatePercentage(metrics.PatchStatementMethodsCovered, metrics.PatchStatementMethodsValid, 2)
+		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementMethodsCovered)); show {
+			node.Statuses[PatchStatementMethodsCovered] = string(lvl)
 		}
 	}
 }
