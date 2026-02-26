@@ -25,6 +25,11 @@ type CoverageMetrics struct {
 	// at least one changed line that was executed at least once.
 	PatchMethodsCovered int
 	PatchMethodsValid   int
+
+	StatementsCovered      int
+	StatementsValid        int
+	PatchStatementsCovered int
+	PatchStatementsValid   int
 }
 
 // LineMetrics holds the coverage data for a single line of code.
@@ -55,4 +60,7 @@ type MethodMetrics struct {
 	LinesCovered    int
 	BranchesValid   int
 	BranchesCovered int
+
+	StatementsValid   int
+	StatementsCovered int
 }
