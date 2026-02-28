@@ -79,3 +79,21 @@ status_bands:
 diff:
   file: "my_changes.diff" # Path to the .diff file (can also be set via -diff flag)
   strip: "auto"           # "auto" or an integer (0-6) to strip leading path components
+
+# Explicit Display List for UI Reports
+# Specifies which metrics should be included in generated reports.
+# See internal/config/config.go for the full list of supported metrics.
+display_metrics:
+  # - "line_coverage"
+  - "statement_coverage"
+  - "branch_coverage"
+  - "methods_hit"
+  - "methods_fully_covered"
+  # - "patch_line_coverage"
+  - "patch_methods_hit"
+  - "method_branch_coverage"
+  - "patch_statement_coverage"
+  - "statement_methods_hit"
+  - "statement_methods_fully_covered"
+  - "patch_statement_methods_hit"
+  - "max_cyclomatic_complexity"

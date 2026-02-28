@@ -34,6 +34,16 @@ type methodsFullyCoveredDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
+// UI specific method metric keys to enforce alphabetical sorting
+const (
+	MethodUIStmtCoverage         = "a_statement_coverage"
+	MethodUILineCoverage         = "b_line_coverage"
+	MethodUIPatchStmtCoverage    = "c_patch_statement_coverage"
+	MethodUIPatchLineCoverage    = "d_patch_line_coverage"
+	MethodUIBranchCoverage       = "e_branch_coverage"
+	MethodUICyclomaticComplexity = "f_cyclomatic_complexity"
+)
+
 type metricsMap map[string]any
 
 type totals struct {

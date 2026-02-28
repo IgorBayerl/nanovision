@@ -75,6 +75,7 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.StringVar(&rawInput.DiffStrip, "diff-strip", "", "Strip N leading components from diff paths ('auto' or 0-6)")
 	flag.BoolVar(&rawInput.IgnoreCache, "ignore-cache", false, "Ignore existing cache and force re-analysis")
 	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Metric threshold (e.g. 'line_coverage=60..80'). Can be repeated.")
+	flag.StringVar(&rawInput.DisplayMetrics, "display-metrics", "", "Comma-separated list of metrics to display (e.g., 'line_coverage,branch_coverage')")
 	return rawInput
 }
 
@@ -159,11 +160,11 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 		var err error
 		switch trimmedType {
 		case "TextSummary":
-			err = textsummary.NewTextReportBuilder(outputDir, logger).CreateReport(summaryTree)
+			err = textsummary.NewTextReportBuilder(outputDir, logger, appConfig).CreateReport(summaryTree)
 		case "Html":
-			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, false).CreateReport(summaryTree)
+			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, false, appConfig).CreateReport(summaryTree)
 		case "HtmlUnified":
-			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, true).CreateReport(summaryTree)
+			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, true, appConfig).CreateReport(summaryTree)
 		case "Lcov":
 			err = lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree)
 		case "RawJson":
