@@ -130,6 +130,7 @@ export interface Method {
     metrics: Record<string, MethodMetric>
     diffStatus?: DiffStatus
     newLinesCoverage?: NewLinesCoverage
+    newStatementsCoverage?: NewLinesCoverage
 }
 
 export interface DetailsV1 {

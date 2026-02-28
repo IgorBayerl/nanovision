@@ -17,13 +17,15 @@ type HtmlReactReportBuilder struct {
 	outputDir  string
 	logger     *slog.Logger
 	singleFile bool
+	config     *config.AppConfig
 }
 
-func NewHtmlReactReportBuilder(outputDir string, logger *slog.Logger, singleFile bool) reporter.ReportBuilder {
+func NewHtmlReactReportBuilder(outputDir string, logger *slog.Logger, singleFile bool, cfg *config.AppConfig) reporter.ReportBuilder {
 	return &HtmlReactReportBuilder{
 		outputDir:  outputDir,
 		logger:     logger,
 		singleFile: singleFile,
+		config:     cfg,
 	}
 }
 
@@ -227,45 +229,64 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 		Folders: folders,
 	}
 
-	if lc, ok := metrics["line_coverage"].(lineCoverageDetail); ok {
+	if sc, ok := metrics[string(config.StatementCoverage)].(lineCoverageDetail); ok {
+		t.StatementCoverage = &sc
+	}
+	if lc, ok := metrics[string(config.LineCoverage)].(lineCoverageDetail); ok {
 		t.LineCoverage = &lc
 	}
-	if bc, ok := metrics["branch_coverage"].(branchCoverageDetail); ok {
+	if bc, ok := metrics[string(config.BranchCoverage)].(branchCoverageDetail); ok {
 		t.BranchCoverage = &bc
 	}
-	if mc, ok := metrics["methods_covered"].(methodsCoveredDetail); ok {
-		t.MethodsCovered = &mc
+	if mc, ok := metrics[string(config.MethodsHit)].(methodsHitDetail); ok {
+		t.MethodsHit = &mc
 	}
-	if mfc, ok := metrics["methods_fully_covered"].(methodsFullyCoveredDetail); ok {
+	if mfc, ok := metrics[string(config.MethodsFullyCovered)].(methodsFullyCoveredDetail); ok {
 		t.MethodsFullyCovered = &mfc
 	}
 
-	if plc, ok := metrics["patch_line_coverage"].(lineCoverageDetail); ok { // Changed branchCoverageDetail to lineCoverageDetail
+	if psc, ok := metrics[string(config.PatchStatementCoverage)].(lineCoverageDetail); ok {
+		t.PatchStatementCoverage = &psc
+	}
+	if plc, ok := metrics[string(config.PatchLineCoverage)].(lineCoverageDetail); ok { // Changed branchCoverageDetail to lineCoverageDetail
 		t.PatchLineCoverage = &plc
 	}
 
-	if pmc, ok := metrics["patch_methods_covered"].(methodsCoveredDetail); ok {
-		t.PatchMethodsCovered = &pmc
+	if pmc, ok := metrics[string(config.PatchMethodsHit)].(methodsHitDetail); ok {
+		t.PatchMethodsHit = &pmc
 	}
 
 	return t
 }
 
 func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metricsMap {
-	linePct := utils.CalculatePercentage(m.LinesCovered, m.LinesValid, 2)
-	metrics := metricsMap{
-		"line_coverage": lineCoverageDetail{
+	metrics := metricsMap{}
+
+	if b.config.ActiveMetrics[config.StatementCoverage] {
+		statementPct := utils.CalculatePercentage(m.StatementsCovered, m.StatementsValid, 2)
+		metrics[string(config.StatementCoverage)] = lineCoverageDetail{
+			Covered:    m.StatementsCovered,
+			Uncovered:  m.StatementsValid - m.StatementsCovered,
+			Coverable:  m.StatementsValid,
+			Total:      m.StatementsValid,
+			Percentage: statementPct,
+		}
+	}
+
+	if b.config.ActiveMetrics[config.LineCoverage] {
+		linePct := utils.CalculatePercentage(m.LinesCovered, m.LinesValid, 2)
+		metrics[string(config.LineCoverage)] = lineCoverageDetail{
 			Covered:    m.LinesCovered,
 			Uncovered:  m.LinesValid - m.LinesCovered,
 			Coverable:  m.LinesValid,
 			Total:      m.TotalLines,
 			Percentage: linePct,
-		},
+		}
 	}
 
-	if m.BranchesValid > 0 {
+	if m.BranchesValid > 0 && b.config.ActiveMetrics[config.BranchCoverage] {
 		branchPct := utils.CalculatePercentage(m.BranchesCovered, m.BranchesValid, 2)
-		metrics["branch_coverage"] = branchCoverageDetail{
+		metrics[string(config.BranchCoverage)] = branchCoverageDetail{
 			Covered:    m.BranchesCovered,
 			Total:      m.BranchesValid,
 			Percentage: branchPct,
@@ -273,25 +294,41 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 	}
 
 	if m.MethodsValid > 0 {
-		methodsCoveredPct := utils.CalculatePercentage(m.MethodsCovered, m.MethodsValid, 2)
-		metrics["methods_covered"] = methodsCoveredDetail{
-			Covered:    m.MethodsCovered,
-			Total:      m.MethodsValid,
-			Percentage: methodsCoveredPct,
+		if b.config.ActiveMetrics[config.MethodsHit] {
+			methodsHitPct := utils.CalculatePercentage(m.MethodsHit, m.MethodsValid, 2)
+			metrics[string(config.MethodsHit)] = methodsHitDetail{
+				Covered:    m.MethodsHit,
+				Total:      m.MethodsValid,
+				Percentage: methodsHitPct,
+			}
 		}
 
-		methodsFullyCoveredPct := utils.CalculatePercentage(m.MethodsFullyCovered, m.MethodsValid, 2)
-		metrics["methods_fully_covered"] = methodsFullyCoveredDetail{
-			Covered:    m.MethodsFullyCovered,
-			Total:      m.MethodsValid,
-			Percentage: methodsFullyCoveredPct,
+		if b.config.ActiveMetrics[config.MethodsFullyCovered] {
+			methodsFullyCoveredPct := utils.CalculatePercentage(m.MethodsFullyCovered, m.MethodsValid, 2)
+			metrics[string(config.MethodsFullyCovered)] = methodsFullyCoveredDetail{
+				Covered:    m.MethodsFullyCovered,
+				Total:      m.MethodsValid,
+				Percentage: methodsFullyCoveredPct,
+			}
+		}
+	}
+
+	// Patch statement coverage
+	if m.PatchStatementsValid > 0 && b.config.ActiveMetrics[config.PatchStatementCoverage] {
+		patchStatementPct := utils.CalculatePercentage(m.PatchStatementsCovered, m.PatchStatementsValid, 2)
+		metrics[string(config.PatchStatementCoverage)] = lineCoverageDetail{
+			Covered:    m.PatchStatementsCovered,
+			Uncovered:  m.PatchStatementsValid - m.PatchStatementsCovered,
+			Coverable:  m.PatchStatementsValid,
+			Total:      m.PatchStatementsValid,
+			Percentage: patchStatementPct,
 		}
 	}
 
 	// Patch line coverage
-	if m.PatchLinesTotal > 0 {
+	if m.PatchLinesTotal > 0 && b.config.ActiveMetrics[config.PatchLineCoverage] {
 		patchLinePct := utils.CalculatePercentage(m.PatchLinesCovered, m.PatchLinesValid, 2)
-		metrics["patch_line_coverage"] = lineCoverageDetail{
+		metrics[string(config.PatchLineCoverage)] = lineCoverageDetail{
 			Covered:    m.PatchLinesCovered,
 			Uncovered:  m.PatchLinesValid - m.PatchLinesCovered,
 			Coverable:  m.PatchLinesValid,
@@ -301,10 +338,10 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 	}
 
 	// Patch methods coverage
-	if m.PatchMethodsValid > 0 {
-		patchMethodsPct := utils.CalculatePercentage(m.PatchMethodsCovered, m.PatchMethodsValid, 2)
-		metrics["patch_methods_covered"] = methodsCoveredDetail{
-			Covered:    m.PatchMethodsCovered,
+	if m.PatchMethodsValid > 0 && b.config.ActiveMetrics[config.PatchMethodsHit] {
+		patchMethodsPct := utils.CalculatePercentage(m.PatchMethodsHit, m.PatchMethodsValid, 2)
+		metrics[string(config.PatchMethodsHit)] = methodsHitDetail{
+			Covered:    m.PatchMethodsHit,
 			Total:      m.PatchMethodsValid,
 			Percentage: patchMethodsPct,
 		}
@@ -314,8 +351,28 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 }
 
 func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
-	return metricDefinitions{
-		"line_coverage": {
+	defs := metricDefinitions{}
+
+	if b.config.ActiveMetrics[config.StatementCoverage] {
+		defs[string(config.StatementCoverage)] = metricDefinition{
+			Label:      "Statements",
+			ShortLabel: "Statements",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "uncovered", Label: "Uncovered", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		}
+		defs[MethodUIStmtCoverage] = metricDefinition{
+			Label:      "Statements",
+			ShortLabel: "Statements",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMetrics[config.LineCoverage] {
+		defs[string(config.LineCoverage)] = metricDefinition{
 			Label:      "Lines",
 			ShortLabel: "Lines",
 			SubMetrics: []subMetric{
@@ -325,8 +382,16 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
-		},
-		"branch_coverage": {
+		}
+		defs[MethodUILineCoverage] = metricDefinition{
+			Label:      "Lines",
+			ShortLabel: "Lines",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMetrics[config.BranchCoverage] {
+		defs[string(config.BranchCoverage)] = metricDefinition{
 			Label:      "Branches",
 			ShortLabel: "Branches",
 			SubMetrics: []subMetric{
@@ -334,26 +399,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
-		},
-		"methods_covered": {
-			Label:      "Methods Covered",
-			ShortLabel: "Methods",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 80},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		},
-		"methods_fully_covered": {
-			Label:      "Methods Fully Covered",
-			ShortLabel: "Fully Covered",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 80},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		},
-		"method_branch_coverage": {
+		}
+		defs[string(config.MethodBranchCoverage)] = metricDefinition{
 			Label:      "Method Branches",
 			ShortLabel: "Method Branches",
 			SubMetrics: []subMetric{
@@ -361,15 +408,34 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
-		},
-		"max_cyclomatic_complexity": {
-			Label:      "Max Cyclomatic Complexity",
-			ShortLabel: "Max Complexity",
+		}
+		defs[MethodUIBranchCoverage] = metricDefinition{
+			Label:      "Branches",
+			ShortLabel: "Branches",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMetrics[config.PatchStatementCoverage] {
+		defs[string(config.PatchStatementCoverage)] = metricDefinition{
+			Label:      "Patch Statements",
+			ShortLabel: "Patch Statements",
 			SubMetrics: []subMetric{
-				{ID: "total", Label: "Value", Width: 100},
+				{ID: "covered", Label: "Covered", Width: 100},
+				{ID: "uncovered", Label: "Uncovered", Width: 100},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
-		},
-		"patch_line_coverage": {
+		}
+		defs[MethodUIPatchStmtCoverage] = metricDefinition{
+			Label:      "Patch Statements",
+			ShortLabel: "Patch Stmts",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMetrics[config.PatchLineCoverage] {
+		defs[string(config.PatchLineCoverage)] = metricDefinition{
 			Label:      "Patch Lines",
 			ShortLabel: "Patch Lines",
 			SubMetrics: []subMetric{
@@ -379,17 +445,66 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
-		},
-		"patch_methods_covered": {
-			Label:      "Patch Methods",
-			ShortLabel: "Patch Methods",
+		}
+		defs[MethodUIPatchLineCoverage] = metricDefinition{
+			Label:      "Patch Lines",
+			ShortLabel: "Patch Lines",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMetrics[config.MaxCyclomaticComplexity] {
+		defs[string(config.MaxCyclomaticComplexity)] = metricDefinition{
+			Label:      "Max Cyclomatic Complexity",
+			ShortLabel: "Max Complexity",
+			SubMetrics: []subMetric{
+				{ID: "total", Label: "Value", Width: 100},
+			},
+		}
+		defs[MethodUICyclomaticComplexity] = metricDefinition{
+			Label:      "Cyclomatic Complexity",
+			ShortLabel: "Complexity",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMetrics[config.MethodsHit] {
+		defs[string(config.MethodsHit)] = metricDefinition{
+			Label:      "Methods Hit",
+			ShortLabel: "Methods Hit",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Hit", Width: 80},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		}
+	}
+
+	if b.config.ActiveMetrics[config.MethodsFullyCovered] {
+		defs[string(config.MethodsFullyCovered)] = metricDefinition{
+			Label:      "Methods Fully Covered",
+			ShortLabel: "Fully Covered",
 			SubMetrics: []subMetric{
 				{ID: "covered", Label: "Covered", Width: 80},
 				{ID: "total", Label: "Total", Width: 80},
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
-		},
+		}
 	}
+
+	if b.config.ActiveMetrics[config.PatchMethodsHit] {
+		defs[string(config.PatchMethodsHit)] = metricDefinition{
+			Label:      "Patch Methods Hit",
+			ShortLabel: "Patch Methods Hit",
+			SubMetrics: []subMetric{
+				{ID: "covered", Label: "Hit", Width: 80},
+				{ID: "total", Label: "Total", Width: 80},
+				{ID: "percentage", Label: "Percentage %", Width: 160},
+			},
+		}
+	}
+
+	return defs
 }
 
 func countNodes(nodes []fileNode) (files, folders int) {

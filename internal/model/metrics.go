@@ -8,7 +8,7 @@ type CoverageMetrics struct {
 	BranchesValid   int
 	TotalLines      int
 
-	MethodsCovered      int
+	MethodsHit          int
 	MethodsFullyCovered int
 	MethodsValid        int
 	PatchLinesTotal     int
@@ -21,10 +21,21 @@ type CoverageMetrics struct {
 	PatchLinesValid   int
 
 	// PatchMethodsValid counts how many methods contain at least one changed,
-	// coverable line. PatchMethodsCovered counts how many of those methods have
+	// coverable line. PatchMethodsHit counts how many of those methods have
 	// at least one changed line that was executed at least once.
-	PatchMethodsCovered int
-	PatchMethodsValid   int
+	PatchMethodsHit   int
+	PatchMethodsValid int
+
+	StatementsCovered      int
+	StatementsValid        int
+	PatchStatementsCovered int
+	PatchStatementsValid   int
+
+	StatementMethodsHit          int
+	StatementMethodsFullyCovered int
+	StatementMethodsValid        int
+	PatchStatementMethodsHit     int
+	PatchStatementMethodsValid   int
 }
 
 // LineMetrics holds the coverage data for a single line of code.
@@ -55,4 +66,7 @@ type MethodMetrics struct {
 	LinesCovered    int
 	BranchesValid   int
 	BranchesCovered int
+
+	StatementsValid   int
+	StatementsCovered int
 }

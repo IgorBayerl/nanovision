@@ -2,6 +2,7 @@ package filereader
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -11,6 +12,9 @@ import (
 	"golang.org/x/text/encoding/htmlindex"
 	"golang.org/x/text/transform"
 )
+
+// maxLineLength defines the maximum capacity for a single line string to support minified bundles.
+const maxLineLength = 50 * 1024 * 1024 // 50MB
 
 type Reader interface {
 	ReadFile(path string) ([]string, error)
@@ -55,11 +59,23 @@ func CountLinesInFile(filePath string) (int, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
+
+	// Override default buffer capacity to prevent "token too long" for minified assets
+	buf := make([]byte, bufio.MaxScanTokenSize)
+	scanner.Buffer(buf, maxLineLength)
+
 	lineCount := 0
 	for scanner.Scan() {
 		lineCount++
 	}
-	return lineCount, scanner.Err()
+
+	if err := scanner.Err(); err != nil {
+		if errors.Is(err, bufio.ErrTooLong) {
+			return 0, fmt.Errorf("line exceeds maximum allowed length of 50MB: %w", err)
+		}
+		return 0, err
+	}
+	return lineCount, nil
 }
 
 func ReadLinesInFile(filePath string) ([]string, error) {
@@ -87,8 +103,20 @@ func ReadLinesInFile(filePath string) ([]string, error) {
 
 	var lines []string
 	scanner := bufio.NewScanner(reader)
+
+	// Override default buffer capacity to prevent "token too long" for minified assets
+	buf := make([]byte, bufio.MaxScanTokenSize)
+	scanner.Buffer(buf, maxLineLength)
+
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	return lines, scanner.Err()
+
+	if err := scanner.Err(); err != nil {
+		if errors.Is(err, bufio.ErrTooLong) {
+			return nil, fmt.Errorf("line exceeds maximum allowed length of 50MB: %w", err)
+		}
+		return nil, err
+	}
+	return lines, nil
 }

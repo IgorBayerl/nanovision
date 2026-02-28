@@ -24,6 +24,12 @@ type DirNode struct {
 	Statuses map[config.MetricKey]string `json:"statuses,omitempty"`
 }
 
+type Statement struct {
+	StartLine int    `json:"startLine"`
+	EndLine   int    `json:"endLine"`
+	Type      string `json:"type,omitempty"`
+}
+
 // FileNode represents a single source code file in the tree.
 type FileNode struct {
 	Name       string                      `json:"name"`
@@ -31,6 +37,7 @@ type FileNode struct {
 	Metrics    CoverageMetrics             `json:"metrics"`
 	Lines      map[int]LineMetrics         `json:"lines,omitempty"`
 	Methods    []MethodMetrics             `json:"methods,omitempty"`
+	Statements []Statement                 `json:"statements,omitempty"`
 	Parent     *DirNode                    `json:"-"`
 	TotalLines int                         `json:"totalLines"`
 	SourceDir  string                      `json:"sourceDir"`
