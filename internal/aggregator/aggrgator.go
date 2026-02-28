@@ -50,14 +50,24 @@ func aggregateNodeMetrics(dir *model.DirNode) model.CoverageMetrics {
 func calculateFileMethodMetrics(file *model.FileNode) {
 	// Reset method-level and patch/diff-based counters before recalculating to ensure freshness.
 	file.Metrics.MethodsValid = 0
-	file.Metrics.MethodsCovered = 0
+	file.Metrics.MethodsHit = 0
 	file.Metrics.MethodsFullyCovered = 0
 
 	file.Metrics.PatchLinesCovered = 0
 	file.Metrics.PatchLinesValid = 0
 	file.Metrics.PatchLinesTotal = 0
-	file.Metrics.PatchMethodsCovered = 0
+	file.Metrics.PatchMethodsHit = 0
 	file.Metrics.PatchMethodsValid = 0
+
+	file.Metrics.PatchStatementsCovered = 0
+	file.Metrics.PatchStatementsValid = 0
+
+	file.Metrics.StatementMethodsValid = 0
+	file.Metrics.StatementMethodsHit = 0
+	file.Metrics.StatementMethodsFullyCovered = 0
+
+	file.Metrics.PatchStatementMethodsHit = 0
+	file.Metrics.PatchStatementMethodsValid = 0
 
 	// --- Patch line metrics (per file) ---
 	// We only consider coverable lines (Hits >= 0). A "patch line" is any
@@ -84,6 +94,35 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 				}
 			}
 		}
+
+		// Patch Statements
+		if file.Diff.Kind == model.ChangeKindAdded {
+			file.Metrics.PatchStatementsValid = file.Metrics.StatementsValid
+			file.Metrics.PatchStatementsCovered = file.Metrics.StatementsCovered
+		} else {
+			for _, stmt := range file.Statements {
+				inPatch := false
+				for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+					if file.Diff.AddedLines[i] || file.Diff.ModifiedLines[i] {
+						inPatch = true
+						break
+					}
+				}
+				if inPatch {
+					file.Metrics.PatchStatementsValid++
+					covered := false
+					for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+						if line, ok := file.Lines[i]; ok && line.Hits > 0 {
+							covered = true
+							break
+						}
+					}
+					if covered {
+						file.Metrics.PatchStatementsCovered++
+					}
+				}
+			}
+		}
 	}
 
 	hasDiff := file.Diff != nil
@@ -93,10 +132,20 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 		if method.LinesValid > 0 {
 			file.Metrics.MethodsValid++
 			if method.LinesCovered > 0 {
-				file.Metrics.MethodsCovered++
+				file.Metrics.MethodsHit++
 			}
 			if method.LinesCovered == method.LinesValid {
 				file.Metrics.MethodsFullyCovered++
+			}
+		}
+
+		if method.StatementsValid > 0 {
+			file.Metrics.StatementMethodsValid++
+			if method.StatementsCovered > 0 {
+				file.Metrics.StatementMethodsHit++
+			}
+			if method.StatementsCovered == method.StatementsValid {
+				file.Metrics.StatementMethodsFullyCovered++
 			}
 		}
 
@@ -112,7 +161,13 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 			if method.LinesValid > 0 {
 				file.Metrics.PatchMethodsValid++
 				if method.LinesCovered > 0 {
-					file.Metrics.PatchMethodsCovered++
+					file.Metrics.PatchMethodsHit++
+				}
+			}
+			if method.StatementsValid > 0 {
+				file.Metrics.PatchStatementMethodsValid++
+				if method.StatementsCovered > 0 {
+					file.Metrics.PatchStatementMethodsHit++
 				}
 			}
 			continue
@@ -142,7 +197,14 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 			// "Covered" for patch methods means: at least one changed, coverable
 			// line in the method was executed.
 			if patchLinesCovered > 0 {
-				file.Metrics.PatchMethodsCovered++
+				file.Metrics.PatchMethodsHit++
+			}
+
+			if method.StatementsValid > 0 {
+				file.Metrics.PatchStatementMethodsValid++
+				if method.StatementsCovered > 0 {
+					file.Metrics.PatchStatementMethodsHit++
+				}
 			}
 		}
 	}
@@ -156,12 +218,23 @@ func addMetrics(dest *model.CoverageMetrics, src model.CoverageMetrics) {
 	dest.BranchesValid += src.BranchesValid
 	dest.TotalLines += src.TotalLines
 	dest.MethodsValid += src.MethodsValid
-	dest.MethodsCovered += src.MethodsCovered
+	dest.MethodsHit += src.MethodsHit
 	dest.MethodsFullyCovered += src.MethodsFullyCovered
 
 	dest.PatchLinesCovered += src.PatchLinesCovered
 	dest.PatchLinesValid += src.PatchLinesValid
 	dest.PatchLinesTotal += src.PatchLinesTotal
-	dest.PatchMethodsCovered += src.PatchMethodsCovered
+	dest.PatchMethodsHit += src.PatchMethodsHit
 	dest.PatchMethodsValid += src.PatchMethodsValid
+
+	dest.StatementsValid += src.StatementsValid
+	dest.StatementsCovered += src.StatementsCovered
+	dest.PatchStatementsValid += src.PatchStatementsValid
+	dest.PatchStatementsCovered += src.PatchStatementsCovered
+
+	dest.StatementMethodsValid += src.StatementMethodsValid
+	dest.StatementMethodsHit += src.StatementMethodsHit
+	dest.StatementMethodsFullyCovered += src.StatementMethodsFullyCovered
+	dest.PatchStatementMethodsValid += src.PatchStatementMethodsValid
+	dest.PatchStatementMethodsHit += src.PatchStatementMethodsHit
 }

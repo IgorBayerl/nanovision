@@ -22,7 +22,7 @@ type branchCoverageDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
-type methodsCoveredDetail struct {
+type methodsHitDetail struct {
 	Covered    int     `json:"covered"`
 	Total      int     `json:"total"`
 	Percentage float64 `json:"percentage"`
@@ -34,19 +34,31 @@ type methodsFullyCoveredDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
+// UI specific method metric keys to enforce alphabetical sorting
+const (
+	MethodUIStmtCoverage         = "a_statement_coverage"
+	MethodUILineCoverage         = "b_line_coverage"
+	MethodUIPatchStmtCoverage    = "c_patch_statement_coverage"
+	MethodUIPatchLineCoverage    = "d_patch_line_coverage"
+	MethodUIBranchCoverage       = "e_branch_coverage"
+	MethodUICyclomaticComplexity = "f_cyclomatic_complexity"
+)
+
 type metricsMap map[string]any
 
 type totals struct {
+	StatementCoverage       *lineCoverageDetail        `json:"statement_coverage,omitempty"`
 	LineCoverage            *lineCoverageDetail        `json:"line_coverage,omitempty"`
 	BranchCoverage          *branchCoverageDetail      `json:"branch_coverage,omitempty"`
-	MethodsCovered          *methodsCoveredDetail      `json:"methods_covered,omitempty"`
+	MethodsHit              *methodsHitDetail          `json:"methods_hit,omitempty"`
 	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
 	MethodBranchCoverage    *branchCoverageDetail      `json:"method_branch_coverage,omitempty"`
 	MaxCyclomaticComplexity *lineCoverageDetail        `json:"max_cyclomatic_complexity,omitempty"`
 
 	// Patch / diff-based metrics.
-	PatchLineCoverage   *lineCoverageDetail   `json:"patch_line_coverage,omitempty"`
-	PatchMethodsCovered *methodsCoveredDetail `json:"patch_methods_covered,omitempty"`
+	PatchStatementCoverage *lineCoverageDetail `json:"patch_statement_coverage,omitempty"`
+	PatchLineCoverage      *lineCoverageDetail `json:"patch_line_coverage,omitempty"`
+	PatchMethodsHit        *methodsHitDetail   `json:"patch_methods_hit,omitempty"`
 
 	Files    int      `json:"files"`
 	Folders  int      `json:"folders"`
@@ -103,12 +115,13 @@ type newLinesCoverage struct {
 }
 
 type methodDetail struct {
-	Name             string                  `json:"name"`
-	StartLine        int                     `json:"startLine"`
-	EndLine          int                     `json:"endLine"`
-	Metrics          map[string]methodMetric `json:"metrics"`
-	DiffStatus       string                  `json:"diffStatus,omitempty"`
-	NewLinesCoverage *newLinesCoverage       `json:"newLinesCoverage,omitempty"`
+	Name                  string                  `json:"name"`
+	StartLine             int                     `json:"startLine"`
+	EndLine               int                     `json:"endLine"`
+	Metrics               map[string]methodMetric `json:"metrics"`
+	DiffStatus            string                  `json:"diffStatus,omitempty"`
+	NewLinesCoverage      *newLinesCoverage       `json:"newLinesCoverage,omitempty"`
+	NewStatementsCoverage *newLinesCoverage       `json:"newStatementsCoverage,omitempty"`
 }
 
 type report struct {

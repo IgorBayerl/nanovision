@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/utils"
@@ -237,18 +238,73 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 					Covered: newLinesCovered,
 					Total:   newLinesTotal,
 				}
+				if b.config.ActiveMetrics[config.PatchLineCoverage] {
+					// Show patch lines as a fraction
+					md.Metrics[MethodUIPatchLineCoverage] = methodMetric{
+						Value: fmt.Sprintf("%d / %d", newLinesCovered, newLinesTotal),
+					}
+				}
+			}
+
+			// Compute Patch Statements for this method
+			patchStmtsTotal := 0
+			patchStmtsCovered := 0
+
+			for _, stmt := range fileNode.Statements {
+				if stmt.StartLine >= method.StartLine && stmt.EndLine <= method.EndLine {
+					inPatch := false
+					for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+						if fileNode.Diff.AddedLines[i] || fileNode.Diff.ModifiedLines[i] {
+							inPatch = true
+							break
+						}
+					}
+					if inPatch {
+						patchStmtsTotal++
+						stmtCovered := false
+						for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+							if lm, ok := fileNode.Lines[i]; ok && lm.Hits > 0 {
+								stmtCovered = true
+								break
+							}
+						}
+						if stmtCovered {
+							patchStmtsCovered++
+						}
+					}
+				}
+			}
+
+			if patchStmtsTotal > 0 {
+				md.NewStatementsCoverage = &newLinesCoverage{
+					Covered: patchStmtsCovered,
+					Total:   patchStmtsTotal,
+				}
+				if b.config.ActiveMetrics[config.PatchStatementCoverage] {
+					md.Metrics[MethodUIPatchStmtCoverage] = methodMetric{
+						Value: fmt.Sprintf("%d / %d", patchStmtsCovered, patchStmtsTotal),
+					}
+				}
 			}
 		}
 
-		lineCovPct := utils.CalculatePercentage(method.LinesCovered, method.LinesValid, 0)
-		md.Metrics["line_coverage"] = methodMetric{
-			Value: utils.FormatPercentage(lineCovPct, 0),
+		if b.config.ActiveMetrics[config.StatementCoverage] {
+			md.Metrics[MethodUIStmtCoverage] = methodMetric{
+				Value: fmt.Sprintf("%d / %d", method.StatementsCovered, method.StatementsValid),
+			}
+		}
+
+		if b.config.ActiveMetrics[config.LineCoverage] {
+			md.Metrics[MethodUILineCoverage] = methodMetric{
+				Value: fmt.Sprintf("%d / %d", method.LinesCovered, method.LinesValid),
+			}
 		}
 
 		if method.BranchesValid > 0 {
-			branchCovPct := utils.CalculatePercentage(method.BranchesCovered, method.BranchesValid, 0)
-			md.Metrics["branch_coverage"] = methodMetric{
-				Value: utils.FormatPercentage(branchCovPct, 0),
+			if b.config.ActiveMetrics[config.BranchCoverage] {
+				md.Metrics[MethodUIBranchCoverage] = methodMetric{
+					Value: fmt.Sprintf("%d / %d", method.BranchesCovered, method.BranchesValid),
+				}
 			}
 			totalMethodBranches += method.BranchesValid
 			coveredMethodBranches += method.BranchesCovered
@@ -258,8 +314,10 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 			if *method.CyclomaticComplexity > maxCyclo {
 				maxCyclo = *method.CyclomaticComplexity
 			}
-			md.Metrics["cyclomatic_complexity"] = methodMetric{
-				Value: fmt.Sprintf("%d", *method.CyclomaticComplexity),
+			if b.config.ActiveMetrics[config.MaxCyclomaticComplexity] {
+				md.Metrics[MethodUICyclomaticComplexity] = methodMetric{
+					Value: fmt.Sprintf("%d", *method.CyclomaticComplexity),
+				}
 			}
 		}
 
@@ -277,27 +335,33 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 		Statuses: b.convertStatuses(fileNode.Statuses),
 	}
 
+	if sc, ok := fileMetrics["statement_coverage"].(lineCoverageDetail); ok {
+		totalsData.StatementCoverage = &sc
+	}
 	if lc, ok := fileMetrics["line_coverage"].(lineCoverageDetail); ok {
 		totalsData.LineCoverage = &lc
 	}
 	if bc, ok := fileMetrics["branch_coverage"].(branchCoverageDetail); ok {
 		totalsData.BranchCoverage = &bc
 	}
-	if mc, ok := fileMetrics["methods_covered"].(methodsCoveredDetail); ok {
-		totalsData.MethodsCovered = &mc
+	if mc, ok := fileMetrics["methods_hit"].(methodsHitDetail); ok {
+		totalsData.MethodsHit = &mc
 	}
 	if mfc, ok := fileMetrics["methods_fully_covered"].(methodsFullyCoveredDetail); ok {
 		totalsData.MethodsFullyCovered = &mfc
 	}
 
+	if psc, ok := fileMetrics["patch_statement_coverage"].(lineCoverageDetail); ok {
+		totalsData.PatchStatementCoverage = &psc
+	}
 	if plc, ok := fileMetrics["patch_line_coverage"].(lineCoverageDetail); ok {
 		totalsData.PatchLineCoverage = &plc
 	}
-	if pmc, ok := fileMetrics["patch_methods_covered"].(methodsCoveredDetail); ok {
-		totalsData.PatchMethodsCovered = &pmc
+	if pmc, ok := fileMetrics["patch_methods_hit"].(methodsHitDetail); ok {
+		totalsData.PatchMethodsHit = &pmc
 	}
 
-	if totalMethodBranches > 0 {
+	if totalMethodBranches > 0 && b.config.ActiveMetrics[config.BranchCoverage] {
 		methodBranchPct := utils.CalculatePercentage(coveredMethodBranches, totalMethodBranches, 2)
 		totalsData.MethodBranchCoverage = &branchCoverageDetail{
 			Covered:    coveredMethodBranches,
@@ -306,7 +370,7 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 		}
 	}
 
-	if maxCyclo > 0 {
+	if maxCyclo > 0 && b.config.ActiveMetrics[config.MaxCyclomaticComplexity] {
 		totalsData.MaxCyclomaticComplexity = &lineCoverageDetail{
 			Total: maxCyclo,
 		}

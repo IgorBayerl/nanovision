@@ -13,8 +13,15 @@ type FunctionMetric struct {
 	CyclomaticComplexity *int
 }
 
+type StatementMetric struct {
+	StartLine int
+	EndLine   int
+	Type      string // The tree-sitter node type (e.g., "assignment_statement")
+}
+
 type AnalysisResult struct {
-	Functions []FunctionMetric
+	Functions  []FunctionMetric
+	Statements []StatementMetric
 }
 
 type Analyzer interface {

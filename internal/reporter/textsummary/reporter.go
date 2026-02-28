@@ -10,6 +10,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/reporter"
 	"github.com/IgorBayerl/nanovision/internal/utils"
@@ -18,12 +19,24 @@ import (
 type TextReportBuilder struct {
 	outputDir string
 	logger    *slog.Logger
+	config    *config.AppConfig
 }
 
-func NewTextReportBuilder(outputDir string, logger *slog.Logger) reporter.ReportBuilder {
+func NewTextReportBuilder(outputDir string, logger *slog.Logger, cfg *config.AppConfig) reporter.ReportBuilder {
+	// Guarantee we always have a config and ActiveMetrics map, even in tests
+	if cfg == nil {
+		cfg = config.GetDefaultConfig()
+		cfg.DisplayMetrics = config.DefaultDisplayMetrics
+		cfg.ActiveMetrics = make(map[config.MetricKey]bool)
+		for _, m := range cfg.DisplayMetrics {
+			cfg.ActiveMetrics[m] = true
+		}
+	}
+
 	return &TextReportBuilder{
 		outputDir: outputDir,
 		logger:    logger,
+		config:    cfg,
 	}
 }
 
@@ -52,13 +65,23 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		fmt.Fprintf(f, "  Parser: %s\n", strings.Join(tree.ParserNames, " | "))
 	}
 
-	lineCoverage := utils.CalculatePercentage(tree.Metrics.LinesCovered, tree.Metrics.LinesValid, 1)
-	fmt.Fprintf(f, "  Line coverage: %s\n", utils.FormatPercentage(lineCoverage, 0))
-	fmt.Fprintf(f, "  Covered lines: %d\n", tree.Metrics.LinesCovered)
-	fmt.Fprintf(f, "  Uncovered lines: %d\n", tree.Metrics.LinesValid-tree.Metrics.LinesCovered)
-	fmt.Fprintf(f, "  Coverable lines: %d\n", tree.Metrics.LinesValid)
+	if b.config.ActiveMetrics[config.StatementCoverage] {
+		statementCoverage := utils.CalculatePercentage(tree.Metrics.StatementsCovered, tree.Metrics.StatementsValid, 1)
+		fmt.Fprintf(f, "  Statement coverage: %s\n", utils.FormatPercentage(statementCoverage, 0))
+		fmt.Fprintf(f, "  Covered statements: %d\n", tree.Metrics.StatementsCovered)
+		fmt.Fprintf(f, "  Uncovered statements: %d\n", tree.Metrics.StatementsValid-tree.Metrics.StatementsCovered)
+		fmt.Fprintf(f, "  Total statements: %d\n", tree.Metrics.StatementsValid)
+	}
 
-	if tree.Metrics.BranchesValid > 0 {
+	if b.config.ActiveMetrics[config.LineCoverage] {
+		lineCoverage := utils.CalculatePercentage(tree.Metrics.LinesCovered, tree.Metrics.LinesValid, 1)
+		fmt.Fprintf(f, "  Line coverage: %s\n", utils.FormatPercentage(lineCoverage, 0))
+		fmt.Fprintf(f, "  Covered lines: %d\n", tree.Metrics.LinesCovered)
+		fmt.Fprintf(f, "  Uncovered lines: %d\n", tree.Metrics.LinesValid-tree.Metrics.LinesCovered)
+		fmt.Fprintf(f, "  Coverable lines: %d\n", tree.Metrics.LinesValid)
+	}
+
+	if tree.Metrics.BranchesValid > 0 && b.config.ActiveMetrics[config.BranchCoverage] {
 		branchCoverage := utils.CalculatePercentage(tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid, 1)
 		fmt.Fprintf(f, "  Branch coverage: %s (%d of %d)\n", utils.FormatPercentage(branchCoverage, 0), tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid)
 	}
@@ -69,13 +92,13 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 
 	fmt.Fprintln(tw) // Newline before the table
 	// Start the recursive walk from the root's children.
-	printNode(tw, tree.Root, 0)
+	b.printNode(tw, tree.Root, 0)
 
 	return nil
 }
 
 // printNode is a recursive helper to print the tree hierarchy.
-func printNode(tw *tabwriter.Writer, dir *model.DirNode, indentLevel int) {
+func (b *TextReportBuilder) printNode(tw *tabwriter.Writer, dir *model.DirNode, indentLevel int) {
 	indent := strings.Repeat("  ", indentLevel)
 
 	// Sort subdirectories by name for consistent output.
@@ -98,14 +121,34 @@ func printNode(tw *tabwriter.Writer, dir *model.DirNode, indentLevel int) {
 
 	// Print subdirectories first.
 	for _, sub := range sortedSubdirs {
+		stmtCov := utils.CalculatePercentage(sub.Metrics.StatementsCovered, sub.Metrics.StatementsValid, 1)
 		lineCov := utils.CalculatePercentage(sub.Metrics.LinesCovered, sub.Metrics.LinesValid, 1)
-		fmt.Fprintf(tw, "%s%s/\t  %s\n", indent, sub.Name, utils.FormatPercentage(lineCov, 0))
-		printNode(tw, sub, indentLevel+1)
+
+		var parts []string
+		if b.config.ActiveMetrics[config.StatementCoverage] {
+			parts = append(parts, fmt.Sprintf("%s (Stmt)", utils.FormatPercentage(stmtCov, 0)))
+		}
+		if b.config.ActiveMetrics[config.LineCoverage] {
+			parts = append(parts, fmt.Sprintf("%s (Line)", utils.FormatPercentage(lineCov, 0)))
+		}
+
+		fmt.Fprintf(tw, "%s%s/\t  %s\n", indent, sub.Name, strings.Join(parts, " | "))
+		b.printNode(tw, sub, indentLevel+1)
 	}
 
 	// Then print files in the current directory.
 	for _, file := range sortedFiles {
+		stmtCov := utils.CalculatePercentage(file.Metrics.StatementsCovered, file.Metrics.StatementsValid, 1)
 		lineCov := utils.CalculatePercentage(file.Metrics.LinesCovered, file.Metrics.LinesValid, 1)
-		fmt.Fprintf(tw, "%s%s\t  %s\n", indent, file.Name, utils.FormatPercentage(lineCov, 0))
+
+		var parts []string
+		if b.config.ActiveMetrics[config.StatementCoverage] {
+			parts = append(parts, fmt.Sprintf("%s (Stmt)", utils.FormatPercentage(stmtCov, 0)))
+		}
+		if b.config.ActiveMetrics[config.LineCoverage] {
+			parts = append(parts, fmt.Sprintf("%s (Line)", utils.FormatPercentage(lineCov, 0)))
+		}
+
+		fmt.Fprintf(tw, "%s%s\t  %s\n", indent, file.Name, strings.Join(parts, " | "))
 	}
 }

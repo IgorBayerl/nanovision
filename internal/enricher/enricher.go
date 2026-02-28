@@ -209,6 +209,18 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 // model.MethodMetrics, calculates their specific code coverage, and attaches
 // them to the FileNode.
 func (e *Enricher) applyAnalysisToFileNode(fileNode *model.FileNode, analysis analyzer.AnalysisResult) {
+	calculateStatementCoverage(fileNode, analysis.Statements)
+
+	// Store statements on the FileNode for later use by the aggregator (e.g., patch coverage)
+	fileNode.Statements = make([]model.Statement, len(analysis.Statements))
+	for i, stmt := range analysis.Statements {
+		fileNode.Statements[i] = model.Statement{
+			StartLine: stmt.StartLine,
+			EndLine:   stmt.EndLine,
+			Type:      stmt.Type,
+		}
+	}
+
 	var methodMetrics []model.MethodMetrics
 	for _, funcMetric := range analysis.Functions {
 		metric := model.MethodMetrics{
@@ -218,9 +230,44 @@ func (e *Enricher) applyAnalysisToFileNode(fileNode *model.FileNode, analysis an
 			CyclomaticComplexity: funcMetric.CyclomaticComplexity,
 		}
 		calculateMethodCoverage(fileNode, &metric)
+
+		for _, stmt := range analysis.Statements {
+			if stmt.StartLine >= metric.StartLine && stmt.EndLine <= metric.EndLine {
+				metric.StatementsValid++
+				covered := false
+				for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+					if line, ok := fileNode.Lines[i]; ok && line.Hits > 0 {
+						covered = true
+						break
+					}
+				}
+				if covered {
+					metric.StatementsCovered++
+				}
+			}
+		}
+
 		methodMetrics = append(methodMetrics, metric)
 	}
 	fileNode.Methods = methodMetrics
+}
+
+// calculateStatementCoverage computes statement-level coverage for the entire file.
+func calculateStatementCoverage(fileNode *model.FileNode, statements []analyzer.StatementMetric) {
+	for _, stmt := range statements {
+		fileNode.Metrics.StatementsValid++
+
+		covered := false
+		for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+			if line, ok := fileNode.Lines[i]; ok && line.Hits > 0 {
+				covered = true
+				break
+			}
+		}
+		if covered {
+			fileNode.Metrics.StatementsCovered++
+		}
+	}
 }
 
 // calculateMethodCoverage computes the line and branch coverage for a single method

@@ -34,12 +34,17 @@ const (
 type MetricKey = config.MetricKey
 
 const (
-	LineCoverage        MetricKey = config.LineCoverage
-	BranchCoverage      MetricKey = config.BranchCoverage
-	MethodsCovered      MetricKey = config.MethodsCovered
-	MethodsFullyCovered MetricKey = config.MethodsFullyCovered
-	PatchLineCoverage   MetricKey = config.PatchLineCoverage
-	PatchMethodsCovered MetricKey = config.PatchMethodsCovered
+	LineCoverage                 MetricKey = config.LineCoverage
+	BranchCoverage               MetricKey = config.BranchCoverage
+	MethodsHit                   MetricKey = config.MethodsHit
+	MethodsFullyCovered          MetricKey = config.MethodsFullyCovered
+	PatchLineCoverage            MetricKey = config.PatchLineCoverage
+	PatchMethodsHit              MetricKey = config.PatchMethodsHit
+	StatementCoverage            MetricKey = config.StatementCoverage
+	PatchStatementCoverage       MetricKey = config.PatchStatementCoverage
+	StatementMethodsHit          MetricKey = config.StatementMethodsHit
+	StatementMethodsFullyCovered MetricKey = config.StatementMethodsFullyCovered
+	PatchStatementMethodsHit     MetricKey = config.PatchStatementMethodsHit
 )
 
 // Capabilities informs the annotation process about which metrics are semantically
@@ -54,6 +59,7 @@ const (
 // This struct is populated by the `deriveCapabilities` function in `main.go` after
 // all data has been aggregated.
 type Capabilities struct {
-	HasBranchCoverage bool
-	HasMethodCoverage bool
+	HasBranchCoverage    bool
+	HasMethodCoverage    bool
+	HasStatementCoverage bool
 }

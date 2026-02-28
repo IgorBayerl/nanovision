@@ -23,14 +23,55 @@ type Band struct {
 type MetricKey string
 
 const (
-	LineCoverage         MetricKey = "line_coverage"
-	BranchCoverage       MetricKey = "branch_coverage"
-	MethodsCovered       MetricKey = "methods_covered"
-	MethodsFullyCovered  MetricKey = "methods_fully_covered"
-	PatchLineCoverage    MetricKey = "patch_line_coverage"
-	PatchMethodsCovered  MetricKey = "patch_methods_covered"
-	MethodBranchCoverage MetricKey = "method_branch_coverage"
+	LineCoverage                 MetricKey = "line_coverage"
+	BranchCoverage               MetricKey = "branch_coverage"
+	MethodsHit                   MetricKey = "methods_hit"
+	MethodsFullyCovered          MetricKey = "methods_fully_covered"
+	PatchLineCoverage            MetricKey = "patch_line_coverage"
+	PatchMethodsHit              MetricKey = "patch_methods_hit"
+	MethodBranchCoverage         MetricKey = "method_branch_coverage"
+	StatementCoverage            MetricKey = "statement_coverage"
+	PatchStatementCoverage       MetricKey = "patch_statement_coverage"
+	StatementMethodsHit          MetricKey = "statement_methods_hit"
+	StatementMethodsFullyCovered MetricKey = "statement_methods_fully_covered"
+	PatchStatementMethodsHit     MetricKey = "patch_statement_methods_hit"
+	MaxCyclomaticComplexity      MetricKey = "max_cyclomatic_complexity"
 )
+
+var DefaultDisplayMetrics = []MetricKey{
+	// LineCoverage,
+	BranchCoverage,
+	MethodsHit,
+	MethodsFullyCovered,
+	// PatchLineCoverage,
+	PatchMethodsHit,
+	MethodBranchCoverage,
+	StatementCoverage,
+	PatchStatementCoverage,
+	StatementMethodsHit,
+	StatementMethodsFullyCovered,
+	PatchStatementMethodsHit,
+}
+
+func isValidMetric(m MetricKey) bool {
+	switch m {
+	case LineCoverage,
+		BranchCoverage,
+		MethodsHit,
+		MethodsFullyCovered,
+		PatchLineCoverage,
+		PatchMethodsHit,
+		MethodBranchCoverage,
+		StatementCoverage,
+		PatchStatementCoverage,
+		StatementMethodsHit,
+		StatementMethodsFullyCovered,
+		PatchStatementMethodsHit,
+		MaxCyclomaticComplexity:
+		return true
+	}
+	return false
+}
 
 // StatusBands supports either:
 // 1) map form:    { "line_coverage": "60..75", ... }
@@ -123,25 +164,28 @@ type RawConfigInput struct {
 	DiffFile       string
 	DiffStrip      string
 	StatusBands    []string
+	DisplayMetrics string
 	IgnoreCache    bool
 }
 
 type AppConfig struct {
-	ReportPatterns []string    `yaml:"reports"`
-	SourceDirs     []string    `yaml:"source_dirs"`
-	ReportTypes    []string    `yaml:"report_types"`
-	FileFilters    []string    `yaml:"file_filters"`
-	OutputDir      string      `yaml:"output_dir"`
-	Tag            string      `yaml:"tag"`
-	Title          string      `yaml:"title"`
-	LogFile        string      `yaml:"log_file"`
-	LogFormat      string      `yaml:"log_format"`
-	Verbosity      string      `yaml:"verbosity"`
-	IgnoreFiles    []string    `yaml:"ignore_files"`
-	ProjectRoot    string      `yaml:"-"`
-	StatusBands    StatusBands `yaml:"status_bands"`
-	IgnoreCache    bool        `yaml:"ignore_cache"`
-	Diff           DiffConfig  `yaml:"diff"`
+	ReportPatterns []string           `yaml:"reports"`
+	SourceDirs     []string           `yaml:"source_dirs"`
+	ReportTypes    []string           `yaml:"report_types"`
+	FileFilters    []string           `yaml:"file_filters"`
+	OutputDir      string             `yaml:"output_dir"`
+	Tag            string             `yaml:"tag"`
+	Title          string             `yaml:"title"`
+	LogFile        string             `yaml:"log_file"`
+	LogFormat      string             `yaml:"log_format"`
+	Verbosity      string             `yaml:"verbosity"`
+	IgnoreFiles    []string           `yaml:"ignore_files"`
+	ProjectRoot    string             `yaml:"-"`
+	StatusBands    StatusBands        `yaml:"status_bands"`
+	DisplayMetrics []MetricKey        `yaml:"display_metrics"`
+	ActiveMetrics  map[MetricKey]bool `yaml:"-"`
+	IgnoreCache    bool               `yaml:"ignore_cache"`
+	Diff           DiffConfig         `yaml:"diff"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel
@@ -277,6 +321,17 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 			}
 		}
 	}
+	if cli.DisplayMetrics != "" {
+		parts := strings.Split(cli.DisplayMetrics, ",")
+		var keys []MetricKey
+		for _, p := range parts {
+			trimmed := strings.TrimSpace(p)
+			if trimmed != "" {
+				keys = append(keys, MetricKey(trimmed))
+			}
+		}
+		c.DisplayMetrics = keys
+	}
 }
 
 // validate checks the final configuration for logical errors.
@@ -308,6 +363,12 @@ func (c *AppConfig) validate() error {
 		}
 	}
 
+	for _, m := range c.DisplayMetrics {
+		if !isValidMetric(m) {
+			return fmt.Errorf("configuration error: unknown display metric '%s'", m)
+		}
+	}
+
 	return nil
 }
 
@@ -327,6 +388,14 @@ func (c *AppConfig) computeDerivedFields() error {
 	c.VerbosityLevel, _ = logging.ParseVerbosity(c.Verbosity)
 
 	c.InputPairs = resolveInputPairs(c.ReportPatterns, c.SourceDirs)
+
+	if len(c.DisplayMetrics) == 0 {
+		c.DisplayMetrics = DefaultDisplayMetrics
+	}
+	c.ActiveMetrics = make(map[MetricKey]bool, len(c.DisplayMetrics))
+	for _, m := range c.DisplayMetrics {
+		c.ActiveMetrics[m] = true
+	}
 
 	return nil
 }
