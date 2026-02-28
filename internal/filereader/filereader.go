@@ -59,7 +59,7 @@ func CountLinesInFile(filePath string) (int, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	
+
 	// Override default buffer capacity to prevent "token too long" for minified assets
 	buf := make([]byte, bufio.MaxScanTokenSize)
 	scanner.Buffer(buf, maxLineLength)
@@ -68,7 +68,7 @@ func CountLinesInFile(filePath string) (int, error) {
 	for scanner.Scan() {
 		lineCount++
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		if errors.Is(err, bufio.ErrTooLong) {
 			return 0, fmt.Errorf("line exceeds maximum allowed length of 50MB: %w", err)
@@ -103,7 +103,7 @@ func ReadLinesInFile(filePath string) ([]string, error) {
 
 	var lines []string
 	scanner := bufio.NewScanner(reader)
-	
+
 	// Override default buffer capacity to prevent "token too long" for minified assets
 	buf := make([]byte, bufio.MaxScanTokenSize)
 	scanner.Buffer(buf, maxLineLength)
@@ -111,7 +111,7 @@ func ReadLinesInFile(filePath string) ([]string, error) {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		if errors.Is(err, bufio.ErrTooLong) {
 			return nil, fmt.Errorf("line exceeds maximum allowed length of 50MB: %w", err)
