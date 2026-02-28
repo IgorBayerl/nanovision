@@ -233,12 +233,13 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 				}
 			}
 
+			// 1. Guard the Lines assignment with ActiveMetrics
 			if newLinesTotal > 0 {
-				md.NewLinesCoverage = &newLinesCoverage{
-					Covered: newLinesCovered,
-					Total:   newLinesTotal,
-				}
 				if b.config.ActiveMetrics[config.PatchLineCoverage] {
+					md.NewLinesCoverage = &newLinesCoverage{
+						Covered: newLinesCovered,
+						Total:   newLinesTotal,
+					}
 					// Show patch lines as a fraction
 					md.Metrics[MethodUIPatchLineCoverage] = methodMetric{
 						Value: fmt.Sprintf("%d / %d", newLinesCovered, newLinesTotal),
@@ -250,37 +251,49 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 			patchStmtsTotal := 0
 			patchStmtsCovered := 0
 
-			for _, stmt := range fileNode.Statements {
-				if stmt.StartLine >= method.StartLine && stmt.EndLine <= method.EndLine {
-					inPatch := false
-					for i := stmt.StartLine; i <= stmt.EndLine; i++ {
-						if fileNode.Diff.AddedLines[i] || fileNode.Diff.ModifiedLines[i] {
-							inPatch = true
-							break
-						}
-					}
-					if inPatch {
-						patchStmtsTotal++
-						stmtCovered := false
+			// 2. Properly handle newly added files for Patch Statements
+			if fileNode.Diff.Kind == model.ChangeKindAdded {
+				patchStmtsTotal = method.StatementsValid
+				patchStmtsCovered = method.StatementsCovered
+			} else {
+				for _, stmt := range fileNode.Statements {
+					if stmt.StartLine >= method.StartLine && stmt.EndLine <= method.EndLine {
+						inPatch := false
 						for i := stmt.StartLine; i <= stmt.EndLine; i++ {
-							if lm, ok := fileNode.Lines[i]; ok && lm.Hits > 0 {
-								stmtCovered = true
+							if fileNode.Diff.AddedLines[i] || fileNode.Diff.ModifiedLines[i] {
+								inPatch = true
 								break
 							}
 						}
-						if stmtCovered {
-							patchStmtsCovered++
+						if inPatch {
+							patchStmtsTotal++
+							stmtCovered := false
+							for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+								if lm, ok := fileNode.Lines[i]; ok && lm.Hits > 0 {
+									if fileNode.Diff.AddedLines[i] || fileNode.Diff.ModifiedLines[i] {
+										stmtCovered = true
+										break
+									}
+								}
+							}
+							if stmtCovered {
+								patchStmtsCovered++
+							}
 						}
 					}
 				}
 			}
 
-			if patchStmtsTotal > 0 {
-				md.NewStatementsCoverage = &newLinesCoverage{
-					Covered: patchStmtsCovered,
-					Total:   patchStmtsTotal,
-				}
+			// 3. Fallback to 0/0 if lines changed but no statements were caught (e.g. function signature changed)
+			// and Guard the Statements assignment with ActiveMetrics
+			if patchStmtsTotal > 0 || newLinesTotal > 0 {
 				if b.config.ActiveMetrics[config.PatchStatementCoverage] {
+					cov := &newLinesCoverage{
+						Covered: patchStmtsCovered,
+						Total:   patchStmtsTotal,
+					}
+					md.NewStatementsCoverage = cov
+					md.NewStatementCoverage = cov
 					md.Metrics[MethodUIPatchStmtCoverage] = methodMetric{
 						Value: fmt.Sprintf("%d / %d", patchStmtsCovered, patchStmtsTotal),
 					}

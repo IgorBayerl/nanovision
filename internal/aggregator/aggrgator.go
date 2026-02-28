@@ -113,8 +113,10 @@ func calculateFileMethodMetrics(file *model.FileNode) {
 					covered := false
 					for i := stmt.StartLine; i <= stmt.EndLine; i++ {
 						if line, ok := file.Lines[i]; ok && line.Hits > 0 {
-							covered = true
-							break
+							if file.Diff.AddedLines[i] || file.Diff.ModifiedLines[i] {
+								covered = true
+								break
+							}
 						}
 					}
 					if covered {

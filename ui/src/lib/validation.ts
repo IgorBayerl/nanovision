@@ -142,6 +142,7 @@ const methodSchema = z.object({
     metrics: z.record(z.string(), methodMetricSchema),
     diffStatus: diffStatusSchema.optional(),
     newLinesCoverage: newLinesCoverageSchema.optional(),
+    newStatementsCoverage: newLinesCoverageSchema.optional(),
 })
 
 // Schema for the entire details page data object

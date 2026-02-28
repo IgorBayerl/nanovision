@@ -121,6 +121,7 @@ type methodDetail struct {
 	Metrics               map[string]methodMetric `json:"metrics"`
 	DiffStatus            string                  `json:"diffStatus,omitempty"`
 	NewLinesCoverage      *newLinesCoverage       `json:"newLinesCoverage,omitempty"`
+	NewStatementCoverage  *newLinesCoverage       `json:"newStatementCoverage,omitempty"`
 	NewStatementsCoverage *newLinesCoverage       `json:"newStatementsCoverage,omitempty"`
 }
 
