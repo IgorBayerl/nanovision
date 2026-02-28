@@ -147,7 +147,7 @@ SELF_COVERAGE_TESTS = [
     TestCase(
         name="nanovision Self-Coverage (Unit + Integration Merged)",
         output_dir_name="nanovision_self_coverage_full",
-        args=["-threshold=patch_methods_covered=70..90"],
+        args=["-threshold=patch_statement_methods_hit=70..90"],
     )
 ]
 
@@ -225,7 +225,9 @@ def generate_diff_file(explicit_target=None):
     Adapts the 'git diff' command for local vs. GitHub Actions environments.
     Allows an explicit target (e.g. 'HEAD~3') to override auto-detection.
     """
-    diff_file_path = os.path.join(tempfile.gettempdir(), "nanovision_e2e.diff")
+    temp_dir = os.path.join(REPORTS_OUTPUT_DIR, "temp")
+    os.makedirs(temp_dir, exist_ok=True)
+    diff_file_path = os.path.join(temp_dir, "nanovision_e2e.diff")
     diff_target = "main"
     git_command = []
 
