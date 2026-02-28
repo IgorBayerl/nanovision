@@ -62,16 +62,16 @@ ignore_files:
 # If a metric is not listed here, it will not have a status indicator.
 #
 status_bands:
-  line_coverage: "60..75"
+  # line_coverage: "60..75"
+  statement_coverage: "60..75"
   branch_coverage: "50..70"
-  # statement_coverage: "60..75"
   # methods_hit: "60..80"
   methods_fully_covered: "40..60"
   # method_branch_coverage: "50..70"
   # statement_methods_hit: "60..80"
   # statement_methods_fully_covered: "40..60"
-  patch_line_coverage: "80..90"
-  # patch_statement_coverage: "80..90"
+  # patch_line_coverage: "80..90"
+  patch_statement_coverage: "80..90"
   patch_methods_hit: "80..90"
   # patch_statement_methods_hit: "80..90"
 
