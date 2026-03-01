@@ -69,4 +69,11 @@ type MethodMetrics struct {
 
 	StatementsValid   int
 	StatementsCovered int
+
+	// Patch-specific metrics directly on the method
+	PatchLinesValid        int
+	PatchLinesCovered      int
+	PatchStatementsValid   int
+	PatchStatementsCovered int
+	DiffStatus             string // "added", "modified", or ""
 }

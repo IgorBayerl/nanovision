@@ -45,171 +45,227 @@ func aggregateNodeMetrics(dir *model.DirNode) model.CoverageMetrics {
 	return currentDirTotals
 }
 
-// calculateFileMethodMetrics updates a single file's metrics struct with method coverage
-// statistics based on the enriched data, and computes patch/diff-based metrics as well.
+// -----------------------------------------------------------------------------
+// Core Pipeline
+// -----------------------------------------------------------------------------
+
+// calculateFileMethodMetrics orchestrates the calculation of standard and patch metrics
+// for both the file and its enclosed methods. Cyclomatic Complexity is now 1.
 func calculateFileMethodMetrics(file *model.FileNode) {
-	// Reset method-level and patch/diff-based counters before recalculating to ensure freshness.
+	resetFileMetrics(file)
+
+	if file.Diff != nil {
+		calculateFilePatchMetrics(file)
+	}
+
+	calculateAllMethodMetrics(file)
+}
+
+// -----------------------------------------------------------------------------
+// Pipeline Stage 1: File-Level Patch Metrics
+// -----------------------------------------------------------------------------
+
+func calculateFilePatchMetrics(file *model.FileNode) {
+	file.Metrics.PatchLinesTotal = len(file.Diff.AddedLines) + len(file.Diff.ModifiedLines)
+
+	// Optimization: If the whole file is new, copy standard metrics directly.
+	if file.Diff.Kind == model.ChangeKindAdded {
+		file.Metrics.PatchLinesValid = file.Metrics.LinesValid
+		file.Metrics.PatchLinesCovered = file.Metrics.LinesCovered
+		file.Metrics.PatchStatementsValid = file.Metrics.StatementsValid
+		file.Metrics.PatchStatementsCovered = file.Metrics.StatementsCovered
+		return
+	}
+
+	// 1. Calculate Patch Lines
+	for ln, lm := range file.Lines {
+		if lm.Hits >= 0 && isLineInPatch(ln, file.Diff) {
+			file.Metrics.PatchLinesValid++
+			if lm.Hits > 0 {
+				file.Metrics.PatchLinesCovered++
+			}
+		}
+	}
+
+	// 2. Calculate Patch Statements
+	for _, stmt := range file.Statements {
+		inPatch, isCovered := evaluateStatementPatchStatus(stmt, file)
+		if inPatch {
+			file.Metrics.PatchStatementsValid++
+			if isCovered {
+				file.Metrics.PatchStatementsCovered++
+			}
+		}
+	}
+}
+
+// -----------------------------------------------------------------------------
+// Pipeline Stage 2: Method-Level Metrics (Standard & Patch)
+// -----------------------------------------------------------------------------
+
+func calculateAllMethodMetrics(file *model.FileNode) {
+	for i := range file.Methods {
+		method := &file.Methods[i]
+
+		resetMethodMetrics(method)
+		aggregateStandardMethodMetrics(file, method)
+
+		if file.Diff != nil {
+			calculateMethodPatchMetrics(file, method)
+			aggregatePatchMethodMetrics(file, method)
+		}
+	}
+}
+
+func aggregateStandardMethodMetrics(file *model.FileNode, method *model.MethodMetrics) {
+	if method.LinesValid > 0 {
+		file.Metrics.MethodsValid++
+		if method.LinesCovered > 0 {
+			file.Metrics.MethodsHit++
+		}
+		if method.LinesCovered == method.LinesValid {
+			file.Metrics.MethodsFullyCovered++
+		}
+	}
+
+	if method.StatementsValid > 0 {
+		file.Metrics.StatementMethodsValid++
+		if method.StatementsCovered > 0 {
+			file.Metrics.StatementMethodsHit++
+		}
+		if method.StatementsCovered == method.StatementsValid {
+			file.Metrics.StatementMethodsFullyCovered++
+		}
+	}
+}
+
+func calculateMethodPatchMetrics(file *model.FileNode, method *model.MethodMetrics) {
+	if file.Diff.Kind == model.ChangeKindAdded {
+		method.DiffStatus = "added"
+		method.PatchLinesValid = method.LinesValid
+		method.PatchLinesCovered = method.LinesCovered
+		method.PatchStatementsValid = method.StatementsValid
+		method.PatchStatementsCovered = method.StatementsCovered
+		return
+	}
+
+	isModified := false
+
+	// 1. Calculate Patch Lines for Method
+	for ln := method.StartLine; ln <= method.EndLine; ln++ {
+		if isLineInPatch(ln, file.Diff) {
+			isModified = true
+			if lm, ok := file.Lines[ln]; ok && lm.Hits >= 0 {
+				method.PatchLinesValid++
+				if lm.Hits > 0 {
+					method.PatchLinesCovered++
+				}
+			}
+		}
+	}
+
+	if isModified {
+		if method.PatchLinesValid > 0 && method.PatchLinesValid == method.LinesValid {
+			method.DiffStatus = "added"
+		} else {
+			method.DiffStatus = "modified"
+		}
+	}
+
+	// 2. Calculate Patch Statements for Method
+	for _, stmt := range file.Statements {
+		if stmt.StartLine >= method.StartLine && stmt.EndLine <= method.EndLine {
+			inPatch, isCovered := evaluateStatementPatchStatus(stmt, file)
+			if inPatch {
+				method.PatchStatementsValid++
+				if isCovered {
+					method.PatchStatementsCovered++
+				}
+			}
+		}
+	}
+}
+
+func aggregatePatchMethodMetrics(file *model.FileNode, method *model.MethodMetrics) {
+	if file.Diff.Kind == model.ChangeKindAdded {
+		if method.LinesValid > 0 {
+			file.Metrics.PatchMethodsValid++
+			if method.LinesCovered > 0 {
+				file.Metrics.PatchMethodsHit++
+			}
+		}
+		if method.StatementsValid > 0 {
+			file.Metrics.PatchStatementMethodsValid++
+			if method.StatementsCovered > 0 {
+				file.Metrics.PatchStatementMethodsHit++
+			}
+		}
+		return
+	}
+
+	// For modified files, a method is in the patch if it has patch lines
+	if method.PatchLinesValid > 0 {
+		file.Metrics.PatchMethodsValid++
+		if method.PatchLinesCovered > 0 {
+			file.Metrics.PatchMethodsHit++
+		}
+
+		if method.StatementsValid > 0 {
+			file.Metrics.PatchStatementMethodsValid++
+			// Original logic check: if ANY standard statements are covered while the method was in the patch
+			if method.StatementsCovered > 0 {
+				file.Metrics.PatchStatementMethodsHit++
+			}
+		}
+	}
+}
+
+// -----------------------------------------------------------------------------
+// Core Helpers & Resetters
+// -----------------------------------------------------------------------------
+
+func isLineInPatch(line int, diff *model.DiffInfo) bool {
+	return diff != nil && (diff.AddedLines[line] || diff.ModifiedLines[line])
+}
+
+// evaluateStatementPatchStatus checks if a statement intersects with a diff
+// and if any of those modified lines were successfully hit. (Single-pass optimization)
+func evaluateStatementPatchStatus(stmt model.Statement, file *model.FileNode) (inPatch bool, isCovered bool) {
+	for i := stmt.StartLine; i <= stmt.EndLine; i++ {
+		if isLineInPatch(i, file.Diff) {
+			inPatch = true
+			if lm, ok := file.Lines[i]; ok && lm.Hits > 0 {
+				isCovered = true
+			}
+		}
+	}
+	return inPatch, isCovered
+}
+
+func resetFileMetrics(file *model.FileNode) {
 	file.Metrics.MethodsValid = 0
 	file.Metrics.MethodsHit = 0
 	file.Metrics.MethodsFullyCovered = 0
-
 	file.Metrics.PatchLinesCovered = 0
 	file.Metrics.PatchLinesValid = 0
 	file.Metrics.PatchLinesTotal = 0
 	file.Metrics.PatchMethodsHit = 0
 	file.Metrics.PatchMethodsValid = 0
-
 	file.Metrics.PatchStatementsCovered = 0
 	file.Metrics.PatchStatementsValid = 0
-
 	file.Metrics.StatementMethodsValid = 0
 	file.Metrics.StatementMethodsHit = 0
 	file.Metrics.StatementMethodsFullyCovered = 0
-
 	file.Metrics.PatchStatementMethodsHit = 0
 	file.Metrics.PatchStatementMethodsValid = 0
+}
 
-	// --- Patch line metrics (per file) ---
-	// We only consider coverable lines (Hits >= 0). A "patch line" is any
-	// coverable line that was added or modified according to DiffInfo.
-	if file.Diff != nil {
-		// Set the total number of changed lines regardless of type.
-		file.Metrics.PatchLinesTotal = len(file.Diff.AddedLines) + len(file.Diff.ModifiedLines)
-
-		if file.Diff.Kind == model.ChangeKindAdded {
-			// For added files, all coverable lines are considered part of the patch.
-			file.Metrics.PatchLinesValid = file.Metrics.LinesValid
-			file.Metrics.PatchLinesCovered = file.Metrics.LinesCovered
-		} else {
-			for lineNumber, lineMetric := range file.Lines {
-				// Not coverable => not part of the patch coverage denominator.
-				if lineMetric.Hits < 0 {
-					continue
-				}
-				if file.Diff.AddedLines[lineNumber] || file.Diff.ModifiedLines[lineNumber] {
-					file.Metrics.PatchLinesValid++
-					if lineMetric.Hits > 0 {
-						file.Metrics.PatchLinesCovered++
-					}
-				}
-			}
-		}
-
-		// Patch Statements
-		if file.Diff.Kind == model.ChangeKindAdded {
-			file.Metrics.PatchStatementsValid = file.Metrics.StatementsValid
-			file.Metrics.PatchStatementsCovered = file.Metrics.StatementsCovered
-		} else {
-			for _, stmt := range file.Statements {
-				inPatch := false
-				for i := stmt.StartLine; i <= stmt.EndLine; i++ {
-					if file.Diff.AddedLines[i] || file.Diff.ModifiedLines[i] {
-						inPatch = true
-						break
-					}
-				}
-				if inPatch {
-					file.Metrics.PatchStatementsValid++
-					covered := false
-					for i := stmt.StartLine; i <= stmt.EndLine; i++ {
-						if line, ok := file.Lines[i]; ok && line.Hits > 0 {
-							if file.Diff.AddedLines[i] || file.Diff.ModifiedLines[i] {
-								covered = true
-								break
-							}
-						}
-					}
-					if covered {
-						file.Metrics.PatchStatementsCovered++
-					}
-				}
-			}
-		}
-	}
-
-	hasDiff := file.Diff != nil
-
-	for _, method := range file.Methods {
-		// A method is only valid if it has at least one coverable line.
-		if method.LinesValid > 0 {
-			file.Metrics.MethodsValid++
-			if method.LinesCovered > 0 {
-				file.Metrics.MethodsHit++
-			}
-			if method.LinesCovered == method.LinesValid {
-				file.Metrics.MethodsFullyCovered++
-			}
-		}
-
-		if method.StatementsValid > 0 {
-			file.Metrics.StatementMethodsValid++
-			if method.StatementsCovered > 0 {
-				file.Metrics.StatementMethodsHit++
-			}
-			if method.StatementsCovered == method.StatementsValid {
-				file.Metrics.StatementMethodsFullyCovered++
-			}
-		}
-
-		// If there is no diff associated with this file, there can be no
-		// patch-level method metrics.
-		if !hasDiff {
-			continue
-		}
-
-		// For added files, every method with coverable lines is considered a
-		// "patch method". It is "covered" if any of its lines are covered.
-		if file.Diff.Kind == model.ChangeKindAdded {
-			if method.LinesValid > 0 {
-				file.Metrics.PatchMethodsValid++
-				if method.LinesCovered > 0 {
-					file.Metrics.PatchMethodsHit++
-				}
-			}
-			if method.StatementsValid > 0 {
-				file.Metrics.PatchStatementMethodsValid++
-				if method.StatementsCovered > 0 {
-					file.Metrics.PatchStatementMethodsHit++
-				}
-			}
-			continue
-		}
-
-		// For modified files, determine if this method contains any changed,
-		// coverable lines, and whether any of those changed lines were executed.
-		patchLinesTotal := 0
-		patchLinesCovered := 0
-
-		for line := method.StartLine; line <= method.EndLine; line++ {
-			if !file.Diff.AddedLines[line] && !file.Diff.ModifiedLines[line] {
-				continue
-			}
-
-			if lm, ok := file.Lines[line]; ok && lm.Hits >= 0 {
-				patchLinesTotal++
-				if lm.Hits > 0 {
-					patchLinesCovered++
-				}
-			}
-		}
-
-		if patchLinesTotal > 0 {
-			// This method is affected by the patch.
-			file.Metrics.PatchMethodsValid++
-			// "Covered" for patch methods means: at least one changed, coverable
-			// line in the method was executed.
-			if patchLinesCovered > 0 {
-				file.Metrics.PatchMethodsHit++
-			}
-
-			if method.StatementsValid > 0 {
-				file.Metrics.PatchStatementMethodsValid++
-				if method.StatementsCovered > 0 {
-					file.Metrics.PatchStatementMethodsHit++
-				}
-			}
-		}
-	}
+func resetMethodMetrics(method *model.MethodMetrics) {
+	method.PatchLinesValid = 0
+	method.PatchLinesCovered = 0
+	method.PatchStatementsValid = 0
+	method.PatchStatementsCovered = 0
+	method.DiffStatus = ""
 }
 
 // addMetrics is a helper function to safely sum two CoverageMetrics structs.
