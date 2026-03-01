@@ -11,7 +11,7 @@ import (
 func writeSummaryDataJS(outDir string, data summaryV1) error {
 	var jsonBuf bytes.Buffer
 	enc := json.NewEncoder(&jsonBuf)
-	enc.SetEscapeHTML(false)
+	enc.SetEscapeHTML(true)
 	if err := enc.Encode(data); err != nil {
 		return fmt.Errorf("marshal summary JSON: %w", err)
 	}

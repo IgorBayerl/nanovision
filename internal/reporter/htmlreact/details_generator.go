@@ -344,7 +344,7 @@ func assignMethodFullMetric(target **methodsFullyCoveredDetail, fm metricsMap, k
 func writeDetailsPage(outDir, logicalPath string, template []byte, detailsData *detailsV1) error {
 	var jsonBuf bytes.Buffer
 	enc := json.NewEncoder(&jsonBuf)
-	enc.SetEscapeHTML(false)
+	enc.SetEscapeHTML(true)
 	if err := enc.Encode(detailsData); err != nil {
 		return fmt.Errorf("failed to marshal details data to JSON: %w", err)
 	}

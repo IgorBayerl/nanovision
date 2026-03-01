@@ -47,7 +47,7 @@ func GenerateSingleFile(outDir string, summary summaryV1, details map[string]*de
 
 	var jsonBuf bytes.Buffer
 	enc := json.NewEncoder(&jsonBuf)
-	enc.SetEscapeHTML(false)
+	enc.SetEscapeHTML(true)
 	if err := enc.Encode(fullData); err != nil {
 		return fmt.Errorf("encode full report data: %w", err)
 	}
