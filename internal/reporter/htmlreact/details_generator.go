@@ -18,7 +18,10 @@ import (
 	"golang.org/x/net/html"
 )
 
-// generateDetailsPages iterates through all file nodes and creates a separate HTML page for each.
+// -----------------------------------------------------------------------------
+// Orchestration
+// -----------------------------------------------------------------------------
+
 func generateDetailsPages(b *HtmlReactReportBuilder, tree *model.SummaryTree) error {
 	fileMap := make(map[string]*model.FileNode)
 	collectFiles(tree.Root, fileMap)
@@ -43,94 +46,119 @@ func generateDetailsPages(b *HtmlReactReportBuilder, tree *model.SummaryTree) er
 	return nil
 }
 
-// writeDetailsPage renders the details HTML file with embedded JSON data.
-func writeDetailsPage(outDir, logicalPath string, template []byte, detailsData *detailsV1) error {
-	var jsonBuf bytes.Buffer
-	enc := json.NewEncoder(&jsonBuf)
-	enc.SetEscapeHTML(false) // Prevent characters like '<' from being escaped.
-	if err := enc.Encode(detailsData); err != nil {
-		return fmt.Errorf("failed to marshal details data to JSON: %w", err)
-	}
-	scriptContent := "window.__NANOVISION_DETAILS__ = " + jsonBuf.String()
+// transformFileNodeToDetails executes a clean pipeline to assemble the view model.
+// Cyclomatic Complexity: 1
+func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryTree, fileNode *model.FileNode) (*detailsV1, error) {
+	// 1. I/O Phase
+	sourceLines := b.readSourceLines(fileNode)
 
-	modifiedHTML, err := injectDataIntoHTML(template, scriptContent)
-	if err != nil {
-		return err
-	}
+	// 2. Data Filtering Phase
+	reportsList, globalToLocalMap := b.buildReportFilter(tree, fileNode)
 
-	detailsFileName := strings.ReplaceAll(logicalPath, "/", "_") + ".html"
-	detailsFilePath := filepath.Join(outDir, detailsFileName)
+	// 3. Line & Method Mapping Phase
+	detailsLines := b.buildLineDetails(fileNode, sourceLines, reportsList, globalToLocalMap, len(tree.ReportNames))
+	detailsMethods, totalBranches, coveredBranches, maxCyclo := b.buildMethodDetails(fileNode)
 
-	return os.WriteFile(detailsFilePath, []byte(modifiedHTML), 0o644)
+	// 4. Totals Calculation Phase
+	totalsData := b.buildFileTotals(fileNode, totalBranches, coveredBranches, maxCyclo)
+
+	return &detailsV1{
+		SchemaVersion:     1,
+		GeneratedAt:       time.Now().UTC().Format(time.RFC3339),
+		Title:             strings.Join(tree.ParserNames, " | "),
+		FileName:          fileNode.Path,
+		Metadata:          []metadataItem{},
+		Totals:            totalsData,
+		MetricDefinitions: b.buildMetricDefinitions(),
+		Methods:           detailsMethods,
+		Lines:             detailsLines,
+		Reports:           reportsList,
+	}, nil
 }
 
-// transformFileNodeToDetails converts a model.FileNode into the rich detailsV1 structure.
-func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryTree, fileNode *model.FileNode) (*detailsV1, error) {
+// -----------------------------------------------------------------------------
+// Pipeline Stage 1: I/O & Source Resolution
+// -----------------------------------------------------------------------------
+
+func (b *HtmlReactReportBuilder) readSourceLines(fileNode *model.FileNode) []string {
+	if fileNode.SourceDir == "" {
+		return generateEmptyLines(fileNode)
+	}
+
 	reader := filereader.NewDefaultReader()
-
-	var sourceLines []string
-	if fileNode.SourceDir != "" {
-		if absPath, err := utils.FindFileInSourceDirs(fileNode.Path, []string{fileNode.SourceDir}, reader, b.logger); err == nil {
-			if lines, err := reader.ReadFile(absPath); err == nil {
-				sourceLines = lines
-			} else {
-				b.logger.Warn("Could not read source file for details page", "file", absPath, "error", err)
-			}
-		} else {
-			b.logger.Warn("Could not find source file for details page", "file", fileNode.Path, "error", err)
-		}
+	absPath, err := utils.FindFileInSourceDirs(fileNode.Path, []string{fileNode.SourceDir}, reader, b.logger)
+	if err != nil {
+		b.logger.Warn("Could not find source file for details page", "file", fileNode.Path, "error", err)
+		return generateEmptyLines(fileNode)
 	}
 
-	if len(sourceLines) == 0 {
-		maxLine := 0
-		for ln := range fileNode.Lines {
-			if ln > maxLine {
-				maxLine = ln
-			}
-		}
-		sourceLines = make([]string, maxLine)
+	lines, err := reader.ReadFile(absPath)
+	if err != nil {
+		b.logger.Warn("Could not read source file for details page", "file", absPath, "error", err)
+		return generateEmptyLines(fileNode)
 	}
 
-	// 1. Identify which reports have coverage data for this specific file.
-	isReportRelevant := make([]bool, len(tree.ReportNames))
+	return lines
+}
+
+func generateEmptyLines(fileNode *model.FileNode) []string {
+	maxLine := 0
+	for ln := range fileNode.Lines {
+		if ln > maxLine {
+			maxLine = ln
+		}
+	}
+	return make([]string, maxLine)
+}
+
+// -----------------------------------------------------------------------------
+// Pipeline Stage 2: Report Filtering
+// -----------------------------------------------------------------------------
+
+func (b *HtmlReactReportBuilder) buildReportFilter(tree *model.SummaryTree, fileNode *model.FileNode) ([]report, map[int]int) {
+	isReportRelevant := make(map[int]bool)
 	for _, line := range fileNode.Lines {
 		for reportIdx, hits := range line.ReportHits {
-			// A report is relevant if it results in at least one covered line.
 			if hits > 0 {
 				isReportRelevant[reportIdx] = true
 			}
 		}
 	}
 
-	// 2. Build the filtered list of reports and create a mapping from the
-	// old global report index to the new local index for this page.
-	globalToLocalIndexMap := make(map[int]int)
-	reportsList := make([]report, 0)
+	globalToLocalMap := make(map[int]int)
+	var reportsList []report
+
 	for globalIdx, name := range tree.ReportNames {
 		if isReportRelevant[globalIdx] {
-			localIdx := len(reportsList)
-			globalToLocalIndexMap[globalIdx] = localIdx
+			globalToLocalMap[globalIdx] = len(reportsList)
 			reportsList = append(reportsList, report{
-				// Use globalIdx+1 for consistent "Report X" numbering across the site.
 				Name: fmt.Sprintf("Report %d: %s", globalIdx+1, filepath.Base(name)),
 				Path: name,
 			})
 		}
 	}
 
-	// Fallback: If no report has covered lines (e.g., file is fully uncovered),
-	// show all reports to avoid a confusing empty list.
+	// Fallback: If no report has covered lines, show all reports to avoid empty UI
 	if len(reportsList) == 0 {
-		globalToLocalIndexMap = nil // Signal to use the global list
 		for i, name := range tree.ReportNames {
 			reportsList = append(reportsList, report{
 				Name: fmt.Sprintf("Report %d: %s", i+1, filepath.Base(name)),
 				Path: name,
 			})
 		}
+		return reportsList, nil
 	}
 
+	return reportsList, globalToLocalMap
+}
+
+// -----------------------------------------------------------------------------
+// Pipeline Stage 3: Data Mapping (Lines & Methods)
+// -----------------------------------------------------------------------------
+
+func (b *HtmlReactReportBuilder) buildLineDetails(fileNode *model.FileNode, sourceLines []string, reportsList []report, globalToLocalMap map[int]int, totalReports int) []lineDetail {
 	detailsLines := make([]lineDetail, len(sourceLines))
+
 	for i, content := range sourceLines {
 		lineNumber := i + 1
 		ld := lineDetail{
@@ -153,34 +181,10 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 				ld.Status = StatusCovered
 			}
 
-			// 3. Build the dense `Hits` array for the UI, mapping global hits to the local, filtered list.
-			if len(lm.ReportHits) > 0 {
-				if globalToLocalIndexMap != nil {
-					// Create a dense hits array that matches the filtered reportsList.
-					localHits := make([]int, len(reportsList))
-					for globalIdx, hitCount := range lm.ReportHits {
-						if localIdx, ok := globalToLocalIndexMap[globalIdx]; ok {
-							localHits[localIdx] = hitCount
-						}
-					}
-					ld.Hits = localHits
-				} else {
-					// Fallback case: use the full, original list.
-					n := len(tree.ReportNames)
-					if len(lm.ReportHits) < n {
-						n = len(lm.ReportHits)
-					}
-					dense := make([]int, n)
-					copy(dense, lm.ReportHits[:n])
-					ld.Hits = dense
-				}
-			}
+			ld.Hits = mapHitsToLocal(lm.ReportHits, reportsList, globalToLocalMap, totalReports)
 
 			if lm.TotalBranches > 0 {
-				ld.BranchInfo = &branchInfo{
-					Covered: lm.CoveredBranches,
-					Total:   lm.TotalBranches,
-				}
+				ld.BranchInfo = &branchInfo{Covered: lm.CoveredBranches, Total: lm.TotalBranches}
 				if lm.CoveredBranches > 0 && lm.CoveredBranches < lm.TotalBranches {
 					ld.Status = StatusPartial
 				}
@@ -190,148 +194,68 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 		detailsLines[i] = ld
 	}
 
-	detailsMethods := make([]methodDetail, 0, len(fileNode.Methods))
-	var totalMethodBranches, coveredMethodBranches int
-	maxCyclo := 0
+	return detailsLines
+}
+
+func mapHitsToLocal(reportHits []int, reportsList []report, globalToLocal map[int]int, totalReports int) []int {
+	if len(reportHits) == 0 {
+		return nil
+	}
+	if globalToLocal != nil {
+		localHits := make([]int, len(reportsList))
+		for globalIdx, hitCount := range reportHits {
+			if localIdx, ok := globalToLocal[globalIdx]; ok {
+				localHits[localIdx] = hitCount
+			}
+		}
+		return localHits
+	}
+
+	n := min(totalReports, len(reportHits))
+	dense := make([]int, n)
+	copy(dense, reportHits[:n])
+	return dense
+}
+
+func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([]methodDetail, int, int, int) {
+	allProviders := []MethodMetricProvider{
+		LineCoverageProvider{},
+		StatementCoverageProvider{},
+		BranchCoverageProvider{},
+		PatchStatementProvider{},
+		PatchLineCoverageProvider{},
+		CyclomaticComplexityProvider{},
+	}
+
+	var activeProviders []MethodMetricProvider
+	for _, p := range allProviders {
+		if b.config.ActiveMetrics[p.Key()] {
+			activeProviders = append(activeProviders, p)
+		}
+	}
+
+	var detailsMethods []methodDetail
+	var totalMethodBranches, coveredMethodBranches, maxCyclo int
 
 	for _, method := range fileNode.Methods {
 		md := methodDetail{
-			Name:      method.Name,
-			StartLine: method.StartLine,
-			EndLine:   method.EndLine,
-			Metrics:   make(map[string]methodMetric),
+			Name:       method.Name,
+			StartLine:  method.StartLine,
+			EndLine:    method.EndLine,
+			DiffStatus: method.DiffStatus,
+			Metrics:    make(map[string]methodMetric),
 		}
 
-		if fileNode.Diff != nil {
-			newLinesTotal := 0
-			newLinesCovered := 0
-
-			if fileNode.Diff.Kind == model.ChangeKindAdded {
-				md.DiffStatus = "added"
-				newLinesTotal = method.LinesValid
-				newLinesCovered = method.LinesCovered
-			} else {
-				isModified := false
-				for ln := method.StartLine; ln <= method.EndLine; ln++ {
-					if fileNode.Diff.AddedLines[ln] || fileNode.Diff.ModifiedLines[ln] {
-						isModified = true
-						if lm, ok := fileNode.Lines[ln]; ok && lm.Hits >= 0 {
-							newLinesTotal++
-							if lm.Hits > 0 {
-								newLinesCovered++
-							}
-						}
-					}
-				}
-
-				if isModified {
-					if newLinesTotal > 0 && newLinesTotal == method.LinesValid {
-						md.DiffStatus = "added"
-					} else {
-						md.DiffStatus = "modified"
-					}
-				}
-			}
-
-			// 1. Guard the Lines assignment with ActiveMetrics
-			if b.config.ActiveMetrics[config.PatchLineCoverage] && fileNode.Diff != nil {
-				if newLinesTotal > 0 {
-					md.NewLinesCoverage = &newLinesCoverage{
-						Covered: newLinesCovered,
-						Total:   newLinesTotal,
-					}
-				}
-				md.Metrics[MethodUIPatchLineCoverage] = methodMetric{
-					Value: fmt.Sprintf("%d / %d", newLinesCovered, newLinesTotal),
-				}
-			}
-
-			// Compute Patch Statements for this method
-			patchStmtsTotal := 0
-			patchStmtsCovered := 0
-
-			// 2. Properly handle newly added files for Patch Statements
-			if fileNode.Diff.Kind == model.ChangeKindAdded {
-				patchStmtsTotal = method.StatementsValid
-				patchStmtsCovered = method.StatementsCovered
-			} else {
-				for _, stmt := range fileNode.Statements {
-					if stmt.StartLine >= method.StartLine && stmt.EndLine <= method.EndLine {
-						inPatch := false
-						for i := stmt.StartLine; i <= stmt.EndLine; i++ {
-							if fileNode.Diff.AddedLines[i] || fileNode.Diff.ModifiedLines[i] {
-								inPatch = true
-								break
-							}
-						}
-						if inPatch {
-							patchStmtsTotal++
-							stmtCovered := false
-							for i := stmt.StartLine; i <= stmt.EndLine; i++ {
-								if lm, ok := fileNode.Lines[i]; ok && lm.Hits > 0 {
-									if fileNode.Diff.AddedLines[i] || fileNode.Diff.ModifiedLines[i] {
-										stmtCovered = true
-										break
-									}
-								}
-							}
-							if stmtCovered {
-								patchStmtsCovered++
-							}
-						}
-					}
-				}
-			}
-
-			// 3. Fallback to 0/0 if lines changed but no statements were caught (e.g. function signature changed)
-			// and Guard the Statements assignment with ActiveMetrics
-			if b.config.ActiveMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil {
-				// Populate struct if we have actual data, otherwise leaves nil (but sets Metrics value below)
-				if patchStmtsTotal > 0 || newLinesTotal > 0 {
-					cov := &newLinesCoverage{
-						Covered: patchStmtsCovered,
-						Total:   patchStmtsTotal,
-					}
-					md.NewStatementsCoverage = cov
-					md.NewStatementCoverage = cov
-				}
-				md.Metrics[MethodUIPatchStmtCoverage] = methodMetric{
-					Value: fmt.Sprintf("%d / %d", patchStmtsCovered, patchStmtsTotal),
-				}
-			}
-		}
-
-		if b.config.ActiveMetrics[config.StatementCoverage] {
-			md.Metrics[MethodUIStmtCoverage] = methodMetric{
-				Value: fmt.Sprintf("%d / %d", method.StatementsCovered, method.StatementsValid),
-			}
-		}
-
-		if b.config.ActiveMetrics[config.LineCoverage] {
-			md.Metrics[MethodUILineCoverage] = methodMetric{
-				Value: fmt.Sprintf("%d / %d", method.LinesCovered, method.LinesValid),
-			}
+		for _, provider := range activeProviders {
+			provider.Apply(&method, &md)
 		}
 
 		if method.BranchesValid > 0 {
-			if b.config.ActiveMetrics[config.BranchCoverage] {
-				md.Metrics[MethodUIBranchCoverage] = methodMetric{
-					Value: fmt.Sprintf("%d / %d", method.BranchesCovered, method.BranchesValid),
-				}
-			}
 			totalMethodBranches += method.BranchesValid
 			coveredMethodBranches += method.BranchesCovered
 		}
-
-		if method.CyclomaticComplexity != nil {
-			if *method.CyclomaticComplexity > maxCyclo {
-				maxCyclo = *method.CyclomaticComplexity
-			}
-			if b.config.ActiveMetrics[config.MaxCyclomaticComplexity] {
-				md.Metrics[MethodUICyclomaticComplexity] = methodMetric{
-					Value: fmt.Sprintf("%d", *method.CyclomaticComplexity),
-				}
-			}
+		if method.CyclomaticComplexity != nil && *method.CyclomaticComplexity > maxCyclo {
+			maxCyclo = *method.CyclomaticComplexity
 		}
 
 		detailsMethods = append(detailsMethods, md)
@@ -341,78 +265,100 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 		return detailsMethods[i].StartLine < detailsMethods[j].StartLine
 	})
 
+	return detailsMethods, totalMethodBranches, coveredMethodBranches, maxCyclo
+}
+
+// -----------------------------------------------------------------------------
+// Pipeline Stage 4: Totals Assembly
+// -----------------------------------------------------------------------------
+
+func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, totalBranches, coveredBranches, maxCyclo int) totals {
 	fileMetrics := b.buildMetricsMap(fileNode.Metrics)
-	totalsData := totals{
+
+	t := totals{
 		Files:    1,
 		Folders:  0,
 		Statuses: b.convertStatuses(fileNode.Statuses),
 	}
 
-	if sc, ok := fileMetrics["statement_coverage"].(lineCoverageDetail); ok {
-		totalsData.StatementCoverage = &sc
-	}
-	if lc, ok := fileMetrics["line_coverage"].(lineCoverageDetail); ok {
-		totalsData.LineCoverage = &lc
-	}
-	if bc, ok := fileMetrics["branch_coverage"].(branchCoverageDetail); ok {
-		totalsData.BranchCoverage = &bc
-	}
-	if mc, ok := fileMetrics["methods_hit"].(methodsHitDetail); ok {
-		totalsData.MethodsHit = &mc
-	}
-	if mfc, ok := fileMetrics["methods_fully_covered"].(methodsFullyCoveredDetail); ok {
-		totalsData.MethodsFullyCovered = &mfc
+	// Dynamic assignment helpers heavily reduce Cyclomatic Complexity here
+	assignLineMetric(&t.StatementCoverage, fileMetrics, string(config.StatementCoverage))
+	assignLineMetric(&t.LineCoverage, fileMetrics, string(config.LineCoverage))
+	assignBranchMetric(&t.BranchCoverage, fileMetrics, string(config.BranchCoverage))
+	assignMethodHitMetric(&t.MethodsHit, fileMetrics, string(config.MethodsHit))
+	assignMethodFullMetric(&t.MethodsFullyCovered, fileMetrics, string(config.MethodsFullyCovered))
+	assignLineMetric(&t.PatchStatementCoverage, fileMetrics, string(config.PatchStatementCoverage))
+	assignLineMetric(&t.PatchLineCoverage, fileMetrics, string(config.PatchLineCoverage))
+	assignMethodHitMetric(&t.PatchMethodsHit, fileMetrics, string(config.PatchMethodsHit))
+
+	// Overrides for specific edge cases
+	if b.config.ActiveMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil && t.PatchStatementCoverage == nil {
+		t.PatchStatementCoverage = &lineCoverageDetail{Percentage: 100.0} // Fallback to safe when modified but no statements changed
 	}
 
-	if b.config.ActiveMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil {
-		if psc, ok := fileMetrics["patch_statement_coverage"].(lineCoverageDetail); ok {
-			totalsData.PatchStatementCoverage = &psc
-		} else {
-			// Force display of 0/0 (100%) when file is modified but no statements were affected
-			totalsData.PatchStatementCoverage = &lineCoverageDetail{
-				Covered:    0,
-				Total:      0,
-				Percentage: 100.0, // Success (Green) because no statements were broken/missed.
-			}
-		}
-	}
-	if plc, ok := fileMetrics["patch_line_coverage"].(lineCoverageDetail); ok {
-		totalsData.PatchLineCoverage = &plc
-	}
-	if pmc, ok := fileMetrics["patch_methods_hit"].(methodsHitDetail); ok {
-		totalsData.PatchMethodsHit = &pmc
-	}
-
-	if totalMethodBranches > 0 && b.config.ActiveMetrics[config.BranchCoverage] {
-		methodBranchPct := utils.CalculatePercentage(coveredMethodBranches, totalMethodBranches, 2)
-		totalsData.MethodBranchCoverage = &branchCoverageDetail{
-			Covered:    coveredMethodBranches,
-			Total:      totalMethodBranches,
-			Percentage: methodBranchPct,
+	if totalBranches > 0 && b.config.ActiveMetrics[config.BranchCoverage] {
+		t.MethodBranchCoverage = &branchCoverageDetail{
+			Covered:    coveredBranches,
+			Total:      totalBranches,
+			Percentage: utils.CalculatePercentage(coveredBranches, totalBranches, 2),
 		}
 	}
 
 	if maxCyclo > 0 && b.config.ActiveMetrics[config.MaxCyclomaticComplexity] {
-		totalsData.MaxCyclomaticComplexity = &lineCoverageDetail{
-			Total: maxCyclo,
-		}
+		t.MaxCyclomaticComplexity = &lineCoverageDetail{Total: maxCyclo}
 	}
 
-	return &detailsV1{
-		SchemaVersion:     1,
-		GeneratedAt:       time.Now().UTC().Format(time.RFC3339),
-		Title:             strings.Join(tree.ParserNames, " | "),
-		FileName:          fileNode.Path,
-		Metadata:          []metadataItem{},
-		Totals:            totalsData,
-		MetricDefinitions: b.buildMetricDefinitions(),
-		Methods:           detailsMethods,
-		Lines:             detailsLines,
-		Reports:           reportsList,
-	}, nil
+	return t
 }
 
-// readEmbeddedDetailsHTML reads the content of the details.html file from the embedded file system.
+// --- Reflection-free Dynamic Assignment Helpers ---
+
+func assignLineMetric(target **lineCoverageDetail, fm metricsMap, key string) {
+	if val, ok := fm[key].(lineCoverageDetail); ok {
+		*target = &val
+	}
+}
+
+func assignBranchMetric(target **branchCoverageDetail, fm metricsMap, key string) {
+	if val, ok := fm[key].(branchCoverageDetail); ok {
+		*target = &val
+	}
+}
+
+func assignMethodHitMetric(target **methodsHitDetail, fm metricsMap, key string) {
+	if val, ok := fm[key].(methodsHitDetail); ok {
+		*target = &val
+	}
+}
+
+func assignMethodFullMetric(target **methodsFullyCoveredDetail, fm metricsMap, key string) {
+	if val, ok := fm[key].(methodsFullyCoveredDetail); ok {
+		*target = &val
+	}
+}
+
+// -----------------------------------------------------------------------------
+// HTML & File Writing Utilities
+// -----------------------------------------------------------------------------
+
+func writeDetailsPage(outDir, logicalPath string, template []byte, detailsData *detailsV1) error {
+	var jsonBuf bytes.Buffer
+	enc := json.NewEncoder(&jsonBuf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(detailsData); err != nil {
+		return fmt.Errorf("failed to marshal details data to JSON: %w", err)
+	}
+	scriptContent := "window.__NANOVISION_DETAILS__ = " + jsonBuf.String()
+
+	modifiedHTML, err := injectDataIntoHTML(template, scriptContent)
+	if err != nil {
+		return err
+	}
+
+	detailsFileName := strings.ReplaceAll(logicalPath, "/", "_") + ".html"
+	return os.WriteFile(filepath.Join(outDir, detailsFileName), []byte(modifiedHTML), 0o644)
+}
+
 func readEmbeddedDetailsHTML() ([]byte, error) {
 	distFS, err := getReactDist()
 	if err != nil {
@@ -428,7 +374,6 @@ func readEmbeddedDetailsHTML() ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-// injectDataIntoHTML parses the HTML, finds the placeholder script, and replaces its content.
 func injectDataIntoHTML(htmlContent []byte, scriptContent string) (string, error) {
 	doc, err := html.Parse(bytes.NewReader(htmlContent))
 	if err != nil {
@@ -455,7 +400,7 @@ func injectDataIntoHTML(htmlContent []byte, scriptContent string) (string, error
 	traverse(doc)
 
 	if !found {
-		return "", fmt.Errorf("placeholder script 'window.__NANOVISION_DETAILS__' not found in details.html template")
+		return "", fmt.Errorf("placeholder script 'window.__NANOVISION_DETAILS__' not found")
 	}
 
 	var buf bytes.Buffer
@@ -466,7 +411,6 @@ func injectDataIntoHTML(htmlContent []byte, scriptContent string) (string, error
 	return buf.String(), nil
 }
 
-// collectFiles is a helper function to recursively gather all file nodes from the directory tree.
 func collectFiles(dir *model.DirNode, fileMap map[string]*model.FileNode) {
 	for _, file := range dir.Files {
 		fileMap[file.Path] = file
