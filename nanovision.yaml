@@ -26,7 +26,7 @@ output_dir: "reports/nanovision_self_coverage_full"
 
 # The types of reports to generate.
 report_types:
-  - "Html"
+  - "HtmlUnified"
   - "TextSummary"
   - "Lcov"
   - "RawJson"
