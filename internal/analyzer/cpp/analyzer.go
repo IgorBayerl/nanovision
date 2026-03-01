@@ -73,19 +73,48 @@ const (
   `
 
 	statementQueryString = `
+		; --- ATOMIC ACTIONS ---
 		(expression_statement) @stmt
 		(declaration) @stmt
 		(return_statement) @stmt
-		(if_statement) @stmt
-		(for_statement) @stmt
-		(while_statement) @stmt
-		(do_statement) @stmt
-		(switch_statement) @stmt
 		(break_statement) @stmt
 		(continue_statement) @stmt
 		(goto_statement) @stmt
 		(throw_statement) @stmt
-		(try_statement) @stmt
+
+		; --- CONTROL FLOW LOGIC (No Containers) ---
+		
+		; IF: Capture the condition expression
+		(if_statement 
+			condition: (_) @stmt)
+
+		; WHILE: Capture the condition
+		(while_statement 
+			condition: (_) @stmt)
+		
+		; DO-WHILE: Capture the condition
+		(do_statement 
+			condition: (_) @stmt)
+
+		; FOR: Capture the initializer or condition (standard loop)
+		; We target the 'init' part as the anchor for the loop's existence.
+		(for_statement 
+			[
+				(declaration)
+				(expression_statement)
+			] @stmt
+		)
+
+		; FOR-RANGE: Capture the container expression
+		(for_range_loop 
+			initializer: (_) @stmt)
+
+		; SWITCH: Capture the condition
+		(switch_statement 
+			condition: (_) @stmt)
+
+		; TRY: Capture the 'try' keyword
+		(try_statement "try" @stmt)
 	`
 )
 

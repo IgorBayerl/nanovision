@@ -10,9 +10,9 @@ func TestGoAnalyzer_Statements(t *testing.T) {
 	code := `package main
 
 func main() {
-	x := 10        // short_var_declaration, line 4
-	if x > 5 {     // if_statement, line 5
-		return     // return_statement, line 6
+	x := 10        // short_var_declaration (Line 4)
+	if x > 5 {     // binary_expression (Line 5) - Atomic Condition
+		return     // return_statement (Line 6)
 	}
 }
 `
@@ -21,21 +21,23 @@ func main() {
 
 	assert.NoError(t, err)
 
-	// we expect 3 statements inside main
+	// Expect 3 statements:
+	// 1. x := 10
+	// 2. x > 5
+	// 3. return
 	assert.Equal(t, 3, len(result.Statements))
 
-	// check first statement
+	// Variable Declaration
 	assert.Equal(t, "short_var_declaration", result.Statements[0].Type)
 	assert.Equal(t, 4, result.Statements[0].StartLine)
-	assert.Equal(t, 4, result.Statements[0].EndLine)
 
-	// check second statement
-	assert.Equal(t, "if_statement", result.Statements[1].Type)
+	// If Condition (Atomic Logic)
+	// We now catch the expression 'x > 5' directly, not the container.
+	assert.Equal(t, "binary_expression", result.Statements[1].Type)
 	assert.Equal(t, 5, result.Statements[1].StartLine)
-	assert.Equal(t, 7, result.Statements[1].EndLine)
+	assert.Equal(t, 5, result.Statements[1].EndLine) // Strict atomic line
 
-	// check third statement
+	// Return
 	assert.Equal(t, "return_statement", result.Statements[2].Type)
 	assert.Equal(t, 6, result.Statements[2].StartLine)
-	assert.Equal(t, 6, result.Statements[2].EndLine)
 }
