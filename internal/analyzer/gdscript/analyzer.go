@@ -43,16 +43,39 @@ const (
 	`
 
 	statementQueryString = `
+		; --- ATOMIC ACTIONS ---
 		(expression_statement) @stmt
 		(assignment) @stmt
+		(variable_statement) @stmt
+		(onready_variable_statement) @stmt
+		(const_statement) @stmt
 		(return_statement) @stmt
-		(if_statement) @stmt
-		(for_statement) @stmt
-		(while_statement) @stmt
-		(match_statement) @stmt
 		(break_statement) @stmt
 		(continue_statement) @stmt
 		(pass_statement) @stmt
+
+		; --- CONTROL FLOW LOGIC (No Containers) ---
+
+		; IF: Capture condition
+		(if_statement 
+			condition: (_) @stmt)
+
+		; ELIF: Capture condition
+		(elif_clause 
+			condition: (_) @stmt)
+
+		; WHILE: Capture condition
+		(while_statement 
+			condition: (_) @stmt)
+
+		; FOR: Capture loop variable (the 'i' in 'for i in ...')
+		; This acts as the anchor for the loop's logic.
+		(for_statement 
+			left: (_) @stmt)
+
+		; MATCH: Capture the expression being matched
+		(match_statement 
+			value: (_) @stmt)
 	`
 )
 

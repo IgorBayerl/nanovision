@@ -24,10 +24,6 @@ func (a *GoAnalyzer) SupportsFile(filePath string) bool {
 }
 
 const (
-	// -------- function & method names --------
-	// Captures:
-	//   @name     -> function or method name
-	//   @receiver -> receiver TYPE only (e.g. T or *pkg.T), not "(x T)"
 	funcQueryString = `
     (function_declaration
       name: (identifier) @name)
@@ -39,25 +35,20 @@ const (
       name: (field_identifier) @name)
   `
 
-	// -------- cyclomatic complexity drivers --------
-	// Start at 1, then +1 for each capture here.
-	// We capture only non-default cases (default is its own node type).
 	complexityQueryString = `
-    ;; branches / loops
     (if_statement)  @decision
     (for_statement) @decision
-
-    ;; switch/type-switch/select non-default arms
     (expression_case)     @case
     (type_case)           @case
     (communication_case)  @case
-
-    ;; short-circuit boolean ops (anywhere in the body)
     (binary_expression operator: "&&") @op
     (binary_expression operator: "||") @op
   `
 
+	// Precision Query for Atomic Statements
 	statementQueryString = `
+		; --- ATOMIC STATEMENTS ---
+		; These are always statements, regardless of where they are.
 		(expression_statement) @stmt
 		(send_statement) @stmt
 		(inc_statement) @stmt
@@ -65,17 +56,57 @@ const (
 		(assignment_statement) @stmt
 		(short_var_declaration) @stmt
 		(return_statement) @stmt
-		(if_statement) @stmt
-		(for_statement) @stmt
-		(expression_switch_statement) @stmt
-		(type_switch_statement) @stmt
-		(select_statement) @stmt
 		(go_statement) @stmt
 		(defer_statement) @stmt
 		(break_statement) @stmt
 		(continue_statement) @stmt
 		(fallthrough_statement) @stmt
 		(goto_statement) @stmt
+
+		; --- CONTROL FLOW LOGIC (No Field Names) ---
+		
+		; IF Conditions: Capture logic expressions inside 'if'
+		; We explicitly list expression types to avoid capturing the 'block' or 'init' statement (which is already caught above).
+		(if_statement 
+			[
+				(binary_expression)
+				(unary_expression)
+				(call_expression)
+				(identifier)
+				(parenthesized_expression)
+				(selector_expression)
+				(index_expression)
+			] @stmt
+		)
+
+		; FOR Conditions: While-style loops
+		(for_statement 
+			[
+				(binary_expression)
+				(unary_expression)
+				(call_expression)
+				(identifier)
+			] @stmt
+		)
+
+		; FOR Clauses: Standard (i=0; i<n; i++) and Range (i := range x)
+		; These are specific nodes in the grammar, so we capture the node itself.
+		(for_clause) @stmt
+		(range_clause) @stmt
+
+		; SWITCH Value: The expression being switched on
+		(expression_switch_statement 
+			[
+				(binary_expression)
+				(call_expression)
+				(identifier)
+				(selector_expression)
+				(index_expression)
+			] @stmt
+		)
+
+		; SELECT: Capture the keyword as the anchor
+		(select_statement "select" @stmt)
 	`
 )
 

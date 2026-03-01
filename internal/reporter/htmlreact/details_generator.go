@@ -234,16 +234,15 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 			}
 
 			// 1. Guard the Lines assignment with ActiveMetrics
-			if newLinesTotal > 0 {
-				if b.config.ActiveMetrics[config.PatchLineCoverage] {
+			if b.config.ActiveMetrics[config.PatchLineCoverage] && fileNode.Diff != nil {
+				if newLinesTotal > 0 {
 					md.NewLinesCoverage = &newLinesCoverage{
 						Covered: newLinesCovered,
 						Total:   newLinesTotal,
 					}
-					// Show patch lines as a fraction
-					md.Metrics[MethodUIPatchLineCoverage] = methodMetric{
-						Value: fmt.Sprintf("%d / %d", newLinesCovered, newLinesTotal),
-					}
+				}
+				md.Metrics[MethodUIPatchLineCoverage] = methodMetric{
+					Value: fmt.Sprintf("%d / %d", newLinesCovered, newLinesTotal),
 				}
 			}
 
@@ -286,17 +285,18 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 
 			// 3. Fallback to 0/0 if lines changed but no statements were caught (e.g. function signature changed)
 			// and Guard the Statements assignment with ActiveMetrics
-			if patchStmtsTotal > 0 || newLinesTotal > 0 {
-				if b.config.ActiveMetrics[config.PatchStatementCoverage] {
+			if b.config.ActiveMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil {
+				// Populate struct if we have actual data, otherwise leaves nil (but sets Metrics value below)
+				if patchStmtsTotal > 0 || newLinesTotal > 0 {
 					cov := &newLinesCoverage{
 						Covered: patchStmtsCovered,
 						Total:   patchStmtsTotal,
 					}
 					md.NewStatementsCoverage = cov
 					md.NewStatementCoverage = cov
-					md.Metrics[MethodUIPatchStmtCoverage] = methodMetric{
-						Value: fmt.Sprintf("%d / %d", patchStmtsCovered, patchStmtsTotal),
-					}
+				}
+				md.Metrics[MethodUIPatchStmtCoverage] = methodMetric{
+					Value: fmt.Sprintf("%d / %d", patchStmtsCovered, patchStmtsTotal),
 				}
 			}
 		}
@@ -364,8 +364,17 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 		totalsData.MethodsFullyCovered = &mfc
 	}
 
-	if psc, ok := fileMetrics["patch_statement_coverage"].(lineCoverageDetail); ok {
-		totalsData.PatchStatementCoverage = &psc
+	if b.config.ActiveMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil {
+		if psc, ok := fileMetrics["patch_statement_coverage"].(lineCoverageDetail); ok {
+			totalsData.PatchStatementCoverage = &psc
+		} else {
+			// Force display of 0/0 (100%) when file is modified but no statements were affected
+			totalsData.PatchStatementCoverage = &lineCoverageDetail{
+				Covered:    0,
+				Total:      0,
+				Percentage: 100.0, // Success (Green) because no statements were broken/missed.
+			}
+		}
 	}
 	if plc, ok := fileMetrics["patch_line_coverage"].(lineCoverageDetail); ok {
 		totalsData.PatchLineCoverage = &plc

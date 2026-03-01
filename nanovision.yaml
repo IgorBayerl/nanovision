@@ -97,3 +97,5 @@ display_metrics:
   - "statement_methods_fully_covered"
   - "patch_statement_methods_hit"
   - "max_cyclomatic_complexity"
+
+ignore_cache: true
