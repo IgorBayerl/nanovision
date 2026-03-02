@@ -229,16 +229,45 @@ func isLineInPatch(line int, diff *model.DiffInfo) bool {
 }
 
 // evaluateStatementPatchStatus checks if a statement intersects with a diff
-// and if any of those modified lines were successfully hit. (Single-pass optimization)
+// and if the statement is covered. It ensures that statements are only considered
+// "in patch" if the patch modifies a semantically meaningful (coverable) line,
+// preventing trailing empty lines from falsely pulling adjacent statements into the patch.
 func evaluateStatementPatchStatus(stmt model.Statement, file *model.FileNode) (inPatch bool, isCovered bool) {
+	statementHasCoverableLines := false
+	patchIntersectsCoverableLine := false
+	patchIntersectsAnyLine := false
+
 	for i := stmt.StartLine; i <= stmt.EndLine; i++ {
-		if isLineInPatch(i, file.Diff) {
-			inPatch = true
-			if lm, ok := file.Lines[i]; ok && lm.Hits > 0 {
+		lm, ok := file.Lines[i]
+		isCoverable := ok && lm.Hits >= 0
+
+		if isCoverable {
+			statementHasCoverableLines = true
+			if lm.Hits > 0 {
 				isCovered = true
 			}
 		}
+
+		if isLineInPatch(i, file.Diff) {
+			patchIntersectsAnyLine = true
+			if isCoverable {
+				patchIntersectsCoverableLine = true
+			}
+		}
 	}
+
+	// A statement is only part of the patch if a coverable line was modified.
+	// If the statement has no coverable lines at all, we fallback to any line match.
+	if statementHasCoverableLines {
+		inPatch = patchIntersectsCoverableLine
+	} else {
+		inPatch = patchIntersectsAnyLine
+	}
+
+	if !inPatch {
+		isCovered = false
+	}
+
 	return inPatch, isCovered
 }
 
