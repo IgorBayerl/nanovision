@@ -20,15 +20,17 @@ import (
 type CachedData struct {
 	TotalLines int
 	Result     analyzer.AnalysisResult
+	Metadata   CacheMetadata
 }
 
 type Manager struct {
-	mu       sync.RWMutex
-	filePath string
+	mu        sync.RWMutex
+	filePath  string
 	// entries maps ContentHash -> Analysis Data
-	entries map[string]CachedData
-	dirty   bool
-	logger  *slog.Logger
+	entries   map[string]CachedData
+	validator CacheValidator
+	dirty     bool
+	logger    *slog.Logger
 }
 
 // ensureWritableFn is a variable so tests can replace it to simulate failures.
@@ -61,7 +63,7 @@ func DetermineCacheDir(logger *slog.Logger) (string, error) {
 }
 
 // NewManager initializes the cache from a binary file in the given directory.
-func NewManager(cacheDir string, logger *slog.Logger) (*Manager, error) {
+func NewManager(cacheDir string, logger *slog.Logger, validator CacheValidator) (*Manager, error) {
 	if err := ensureWritableFn(cacheDir); err != nil {
 		return nil, fmt.Errorf("cache directory %s is not writable: %w", cacheDir, err)
 	}
@@ -70,9 +72,10 @@ func NewManager(cacheDir string, logger *slog.Logger) (*Manager, error) {
 	path := filepath.Join(cacheDir, fileName)
 
 	m := &Manager{
-		filePath: path,
-		entries:  make(map[string]CachedData),
-		logger:   logger,
+		filePath:  path,
+		entries:   make(map[string]CachedData),
+		validator: validator,
+		logger:    logger,
 	}
 
 	if err := m.load(); err != nil {
@@ -178,7 +181,17 @@ func (m *Manager) Get(content []byte) (CachedData, bool) {
 	defer m.mu.RUnlock()
 
 	val, ok := m.entries[hash]
-	return val, ok
+	if !ok {
+		return CachedData{}, false
+	}
+
+	// Validate metadata
+	if m.validator != nil && !m.validator.IsValid(val.Metadata, BuildMetadata{}) {
+		m.logger.Debug("Cache entry invalid due to metadata mismatch", "hash", hash)
+		return CachedData{}, false
+	}
+
+	return val, true
 }
 
 // Put stores analysis data for the given content.
@@ -187,6 +200,10 @@ func (m *Manager) Put(content []byte, data CachedData) {
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	if data.Metadata.CommitHash == "" && m.logger != nil {
+		m.logger.Warn("Putting cache entry without commit metadata")
+	}
 
 	m.entries[hash] = data
 	m.dirty = true

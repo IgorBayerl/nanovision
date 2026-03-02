@@ -212,7 +212,7 @@ func deriveCapabilities(tree *model.SummaryTree) status.Capabilities {
 // Try to find a cache directory, if it cant will continue anyway without cache
 // Fail soft, cache is not necessary for the application to work, its just good
 // But we throw a warning
-func setupCacheManager(appConfig *config.AppConfig, logger *slog.Logger) *cache.Manager {
+func setupCacheManager(appConfig *config.AppConfig, logger *slog.Logger, buildMeta cache.BuildMetadata) *cache.Manager {
 	if appConfig.IgnoreCache {
 		logger.Debug("Cache ignored by user configuration.")
 		return nil
@@ -225,8 +225,18 @@ func setupCacheManager(appConfig *config.AppConfig, logger *slog.Logger) *cache.
 		return nil
 	}
 
+	// SELECT VALIDATOR BASED ON BUILD TYPE
+	var validator cache.CacheValidator
+	if commit == "dev" || commit == "none" {
+		validator = &cache.DevValidator{}  // Always invalidate in dev
+		logger.Info("Dev mode: cache will be invalidated on each run")
+	} else {
+		validator = &cache.StrictValidator{CurrentBuildMetadata: buildMeta}
+		logger.Info("Production mode: cache validated by commit hash and analyzer version")
+	}
+
 	// Initialize the manager at that directory
-	manager, err := cache.NewManager(cacheDir, logger)
+	manager, err := cache.NewManager(cacheDir, logger, validator)
 	if err != nil {
 		logger.Warn("Failed to initialize cache manager; proceeding without cache.", "error", err)
 		return nil
@@ -250,8 +260,14 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 		gdscript.New(),
 	}
 
-	cacheManager := setupCacheManager(appConfig, logger)
-	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger, cacheManager)
+	// CREATE BUILD METADATA
+	buildMeta := cache.BuildMetadata{
+		CommitHash:      commit,
+		AnalyzerVersion: version,
+	}
+
+	cacheManager := setupCacheManager(appConfig, logger, buildMeta)
+	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger, cacheManager, buildMeta)
 
 	if len(appConfig.InputPairs) == 0 {
 		return fmt.Errorf("no valid report pattern and source directory pairs were provided")
