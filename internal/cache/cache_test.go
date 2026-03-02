@@ -67,7 +67,7 @@ func TestNewManager_Initialization(t *testing.T) {
 
 	// Test initializing in a non-existent subdirectory (should create it)
 	cacheDir := filepath.Join(tmpDir, "nested", "cache")
-	m, err := NewManager(cacheDir, logger)
+	m, err := NewManager(cacheDir, logger, nil)
 
 	require.NoError(t, err)
 	require.NotNil(t, m)
@@ -88,7 +88,7 @@ func TestNewManager_UnwritableDir(t *testing.T) {
 		return errors.New("simulated permission denied")
 	}
 
-	m, err := NewManager(tmpDir, logger)
+	m, err := NewManager(tmpDir, logger, nil)
 
 	require.Error(t, err, "Manager should return error if directory is unwritable")
 	assert.Nil(t, m)
@@ -99,7 +99,7 @@ func TestNewManager_StartsFreshOnMissingFile(t *testing.T) {
 	logger := slog.Default()
 
 	// Point to a dir with no existing cache file
-	m, err := NewManager(tmpDir, logger)
+	m, err := NewManager(tmpDir, logger, nil)
 
 	require.NoError(t, err)
 	require.NotNil(t, m)
@@ -114,7 +114,7 @@ func TestNewManager_StartsFreshOnCorruptFile(t *testing.T) {
 	corruptPath := filepath.Join(tmpDir, "analysis_v1.bin")
 	require.NoError(t, os.WriteFile(corruptPath, []byte("not valid gob data!!!"), 0644))
 
-	m, err := NewManager(tmpDir, logger)
+	m, err := NewManager(tmpDir, logger, nil)
 
 	// Should recover gracefully with an empty cache
 	require.NoError(t, err)
@@ -125,7 +125,7 @@ func TestNewManager_StartsFreshOnCorruptFile(t *testing.T) {
 func TestManager_PutAndGet(t *testing.T) {
 	tmpDir := t.TempDir()
 	logger := slog.Default()
-	m, err := NewManager(tmpDir, logger)
+	m, err := NewManager(tmpDir, logger, nil)
 	require.NoError(t, err)
 
 	content := []byte("function main() { return 0; }")
@@ -176,7 +176,7 @@ func TestManager_Persistence(t *testing.T) {
 
 	// Create manager, populate, and save
 	func() {
-		m1, err := NewManager(tmpDir, logger)
+		m1, err := NewManager(tmpDir, logger, nil)
 		require.NoError(t, err)
 
 		m1.Put(contentA, dataA)
@@ -192,7 +192,7 @@ func TestManager_Persistence(t *testing.T) {
 
 	// Create a NEW manager and verify it loads the persisted data
 	func() {
-		m2, err := NewManager(tmpDir, logger)
+		m2, err := NewManager(tmpDir, logger, nil)
 		require.NoError(t, err)
 
 		gotA, hit := m2.Get(contentA)
@@ -212,7 +212,7 @@ func TestManager_SaveClearsDirtyFlag(t *testing.T) {
 	tmpDir := t.TempDir()
 	logger := slog.Default()
 
-	m, err := NewManager(tmpDir, logger)
+	m, err := NewManager(tmpDir, logger, nil)
 	require.NoError(t, err)
 
 	m.Put([]byte("some content"), CachedData{TotalLines: 42})
@@ -231,7 +231,7 @@ func TestManager_SaveWhenClean(t *testing.T) {
 	tmpDir := t.TempDir()
 	logger := slog.Default()
 
-	m, err := NewManager(tmpDir, logger)
+	m, err := NewManager(tmpDir, logger, nil)
 	require.NoError(t, err)
 
 	// Save without putting anything — dirty flag is false
@@ -246,7 +246,7 @@ func TestManager_SaveWhenClean(t *testing.T) {
 func TestManager_Concurrency(t *testing.T) {
 	tmpDir := t.TempDir()
 	logger := slog.Default()
-	m, err := NewManager(tmpDir, logger)
+	m, err := NewManager(tmpDir, logger, nil)
 	require.NoError(t, err)
 
 	var wg sync.WaitGroup
@@ -275,7 +275,7 @@ func TestManager_ConcurrentSave(t *testing.T) {
 	tmpDir := t.TempDir()
 	logger := slog.Default()
 
-	m, err := NewManager(tmpDir, logger)
+	m, err := NewManager(tmpDir, logger, nil)
 	require.NoError(t, err)
 
 	m.Put([]byte("data"), CachedData{TotalLines: 1})
@@ -291,7 +291,7 @@ func TestManager_ConcurrentSave(t *testing.T) {
 	wg.Wait()
 
 	// After all concurrent saves, the file should exist and be loadable
-	m2, err := NewManager(tmpDir, logger)
+	m2, err := NewManager(tmpDir, logger, nil)
 	require.NoError(t, err)
 	_, hit := m2.Get([]byte("data"))
 	assert.True(t, hit, "Data should have been persisted by one of the concurrent saves")

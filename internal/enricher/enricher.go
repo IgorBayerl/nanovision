@@ -39,6 +39,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/IgorBayerl/nanovision/internal/analyzer"
 	"github.com/IgorBayerl/nanovision/internal/cache"
@@ -48,20 +49,22 @@ import (
 )
 
 type Enricher struct {
-	analyzers    []analyzer.Analyzer
-	fileReader   filereader.Reader
-	logger       *slog.Logger
-	cacheManager *cache.Manager
+	analyzers     []analyzer.Analyzer
+	fileReader    filereader.Reader
+	logger        *slog.Logger
+	cacheManager  *cache.Manager
+	buildMetadata cache.BuildMetadata
 }
 
 // New injects all dependencies for the Enricher.
 // If cacheManager is nil, caching is safely disabled.
-func New(analyzers []analyzer.Analyzer, fileReader filereader.Reader, logger *slog.Logger, cacheManager *cache.Manager) *Enricher {
+func New(analyzers []analyzer.Analyzer, fileReader filereader.Reader, logger *slog.Logger, cacheManager *cache.Manager, buildMetadata cache.BuildMetadata) *Enricher {
 	return &Enricher{
-		analyzers:    analyzers,
-		fileReader:   fileReader,
-		logger:       logger,
-		cacheManager: cacheManager,
+		analyzers:     analyzers,
+		fileReader:    fileReader,
+		logger:        logger,
+		cacheManager:  cacheManager,
+		buildMetadata: buildMetadata,
 	}
 }
 
@@ -188,7 +191,14 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 	} else {
 		// If no analyzer found, cache just the line count to avoid re-reading file later
 		if e.cacheManager != nil {
-			e.cacheManager.Put(content, cache.CachedData{TotalLines: totalLines})
+			e.cacheManager.Put(content, cache.CachedData{
+				TotalLines: totalLines,
+				Metadata: cache.CacheMetadata{
+					CommitHash:      e.buildMetadata.CommitHash,
+					AnalyzerVersion: e.buildMetadata.AnalyzerVersion,
+					CachedAt:        time.Now(),
+				},
+			})
 		}
 		return
 	}
@@ -198,6 +208,11 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 		e.cacheManager.Put(content, cache.CachedData{
 			TotalLines: totalLines,
 			Result:     analysisResult,
+			Metadata: cache.CacheMetadata{
+				CommitHash:      e.buildMetadata.CommitHash,
+				AnalyzerVersion: e.buildMetadata.AnalyzerVersion,
+				CachedAt:        time.Now(),
+			},
 		})
 	}
 }
