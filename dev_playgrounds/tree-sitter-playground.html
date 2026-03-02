@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nanovision Tree-sitter Analyzer Playground</title>
+  
+  <!-- CodeMirror CSS and Theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/vscode-dark.min.css">
+  
+  <style>
+    :root {
+      --bg: #1e1e1e;
+      --panel-bg: #252526;
+      --border: #3c3c3c;
+      --text: #d4d4d4;
+      --accent: #0e639c;
+    }
+    
+    body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+    
+    /* Header Toolbar */
+    .header { height: 45px; display: flex; align-items: center; padding: 0 15px; background: var(--panel-bg); border-bottom: 1px solid var(--border); }
+    .header h1 { font-size: 16px; margin: 0; font-weight: 600; flex: 1; letter-spacing: 0.5px; }
+    .header label { font-size: 13px; margin-left: 15px; margin-right: 5px; color: #aaa; }
+    .header select, .header input { background: #3c3c3c; color: #fff; border: 1px solid #555; padding: 5px; border-radius: 3px; outline: none; }
+    .header input { width: 350px; font-family: monospace; font-size: 12px; }
+    .header button { background: var(--accent); color: #fff; border: none; padding: 6px 14px; margin-left: 10px; border-radius: 3px; cursor: pointer; font-weight: 600; }
+    .header button:hover { background: #1177bb; }
+
+    /* Grid Layout */
+    .container { display: flex; height: calc(100% - 46px); }
+    .col { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border); min-width: 0; }
+    .col:last-child { border-right: none; }
+    .panel { flex: 1; display: flex; flex-direction: column; border-bottom: 1px solid var(--border); min-height: 0; }
+    .panel:last-child { border-bottom: none; }
+    
+    .panel-header { background: #2d2d30; padding: 6px 12px; font-size: 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); text-transform: uppercase; color: #ccc;}
+    
+    /* Editors */
+    .editor-container { flex: 1; position: relative; }
+    .CodeMirror { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100%; font-family: 'Consolas', 'Courier New', monospace; font-size: 14px; }
+    
+    /* Output Console */
+    .output-container { flex: 1; overflow-y: auto; padding: 10px 15px; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; background: #1e1e1e; white-space: pre-wrap; line-height: 1.5; }
+    .log-error { color: #f14c4c; }
+    .log-info { color: #d4d4d4; }
+    .log-warn { color: #cca700; }
+    .log-success { color: #89d185; }
+    .log-bold { font-weight: bold; color: #4ec9b0; margin-top: 10px; }
+
+    /* Statement Coverage Gutter */
+    .coverage-gutter { width: 25px; background: #1e1e1e; border-right: 1px solid #3c3c3c; }
+    .cov-marker { color: #89d185; font-size: 11px; font-weight: bold; text-align: center; line-height: 1.5; cursor: help; }
+    .cov-marker.inflated { color: #f14c4c; background: rgba(241, 76, 76, 0.2); border-radius: 3px; }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #424242; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: #4f4f4f; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Nanovision AST Playground</h1>
+    
+    <label>Language:</label>
+    <select id="lang-select">
+      <option value="go">Go</option>
+      <option value="cpp">C++</option>
+      <option value="gdscript">GDScript</option>
+    </select>
+    
+    <label>WASM URL:</label>
+    <input type="text" id="wasm-url" value="https://unpkg.com/tree-sitter-wasms/out/tree-sitter-go.wasm">
+    <button id="btn-load">Reload Parser</button>
+  </div>
+
+  <div class="container">
+    <div class="col">
+      <div class="panel">
+        <div class="panel-header">1. Source Code</div>
+        <div class="editor-container"><div id="editor-source"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">3. Custom JS Script (Metrics & Bounds)</div>
+        <div class="editor-container"><div id="editor-script"></div></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <div class="panel-header">2. Main Query (Statements)</div>
+        <div class="editor-container"><div id="editor-query"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">4. Metrics & Console Output</div>
+        <div id="console-output" class="output-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/go/go.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/scheme/scheme.min.js"></script>
+  
+  <!-- Tree-sitter Web -->
+  <script src="https://unpkg.com/web-tree-sitter@0.22.6/tree-sitter.js"></script>
+
+  <script>
+    const WASM_URLS = {
+      go: "https://unpkg.com/tree-sitter-wasms/out/tree-sitter-go.wasm",
+      cpp: "https://unpkg.com/tree-sitter-wasms/out/tree-sitter-cpp.wasm",
+      gdscript: "tree-sitter-gdscript.wasm" 
+    };
+
+    const PALETTE =["#3794ff", "#89d185", "#cca700", "#c586c0", "#4ec9b0", "#ce9178", "#9cdcfe"];
+
+    let Parser, language, parser;
+    let currentMarks = [];
+    let currentWidgets =[];
+
+    // CodeMirror Init
+    const cmSource = CodeMirror(document.getElementById("editor-source"), {
+      value: `package main\n\nimport "fmt"\n\nfunc calculate(x int) int {\n\tresult := 0\n\tif x > 5 {\n\t\tresult = x * 2\n\t} else {\n\t\tresult = x / 2\n\t}\n\t\n\tfor i := 0; i < 10; i++ {\n\t\tresult++\n\t}\n\t\n\treturn result\n}\n\nfunc main() {\n\tfmt.Println(calculate(10))\n}`,
+      mode: "go", theme: "vscode-dark", lineNumbers: true,
+      gutters: ["CodeMirror-linenumbers", "coverage-gutter"] // Added gutter for coverage metric
+    });
+
+    const cmQuery = CodeMirror(document.getElementById("editor-query"), {
+      value: `; --- ATOMIC STATEMENTS ---
+(expression_statement) @stmt
+(send_statement) @stmt
+(inc_statement) @stmt
+(dec_statement) @stmt
+(assignment_statement) @stmt
+(short_var_declaration) @stmt
+(return_statement) @stmt
+(go_statement) @stmt
+(defer_statement) @stmt
+(break_statement) @stmt
+(continue_statement) @stmt
+(fallthrough_statement) @stmt
+(goto_statement) @stmt
+
+; --- CONTROL FLOW LOGIC ---
+(if_statement [(binary_expression) (unary_expression) (call_expression) (identifier) (parenthesized_expression) (selector_expression) (index_expression)] @stmt)
+(for_statement [(binary_expression) (unary_expression) (call_expression) (identifier)] @stmt)
+(for_clause) @stmt
+(range_clause) @stmt
+(expression_switch_statement [(binary_expression) (call_expression) (identifier) (selector_expression) (index_expression)] @stmt)
+(select_statement "select" @stmt)
+`,
+      mode: "scheme", theme: "vscode-dark", lineNumbers: true
+    });
+
+    const cmScript = CodeMirror(document.getElementById("editor-script"), {
+      value: `// Query function boundaries to draw inline widgets
+// 1. Define the Statement Query (Your provided query)
+const stmtQueryStr = \`
+; --- ATOMIC STATEMENTS ---
+(expression_statement) @stmt
+(send_statement) @stmt
+(inc_statement) @stmt
+(dec_statement) @stmt
+(assignment_statement) @stmt
+(short_var_declaration) @stmt
+(return_statement) @stmt
+(go_statement) @stmt
+(defer_statement) @stmt
+(break_statement) @stmt
+(continue_statement) @stmt
+(fallthrough_statement) @stmt
+(goto_statement) @stmt
+
+; --- CONTROL FLOW LOGIC ---
+(if_statement [(binary_expression) (unary_expression) (call_expression) (identifier) (parenthesized_expression) (selector_expression) (index_expression)] @stmt)
+(for_statement [(binary_expression) (unary_expression) (call_expression) (identifier)] @stmt)
+(for_clause) @stmt
+(range_clause) @stmt
+(expression_switch_statement [(binary_expression) (call_expression) (identifier) (selector_expression) (index_expression)] @stmt)
+(select_statement "select" @stmt)
+\`;
+
+// 2. Define Function/Method Boundary Query
+const funcQueryStr = \`
+  (function_declaration name: (identifier) @name)
+  (method_declaration name: (field_identifier) @name)
+\`;
+
+const stmtQuery = language.query(stmtQueryStr);
+const funcQuery = language.query(funcQueryStr);
+
+// 3. Process each function
+funcQuery.captures(tree.rootNode).forEach(cap => {
+    if (cap.name !== 'name') return;
+
+    const funcNode = cap.node.parent;
+    const bodyNode = funcNode.childForFieldName ? funcNode.childForFieldName("body") : null;
+    
+    // We use a Set to store line numbers. 
+    // This prevents "inflation" if multiple captures hit the same line.
+    const statementLines = new Set();
+    let rawCaptureCount = 0;
+
+    if (bodyNode) {
+        const captures = stmtQuery.captures(bodyNode);
+        rawCaptureCount = captures.length;
+        captures.forEach(sCap => {
+            // Add the start line of the captured node to the set
+            statementLines.add(sCap.node.startPosition.row);
+        });
+    }
+
+    const startRow = funcNode.startPosition.row;
+    const endRow = funcNode.endPosition.row;
+    const stmtCount = statementLines.size; // De-duplicated count (Standard)
+
+    // Build the visualization label
+    let label = \`[ Function: \${cap.node.text} | \`;
+    label += \`Lines: \${startRow + 1}-\${endRow + 1} | \`;
+    label += \`Statements: \${stmtCount} ]\`;
+
+    // Add a warning to the label if inflation is detected (Raw matches > unique lines)
+    if (rawCaptureCount > stmtCount) {
+        label += \` (! \${rawCaptureCount} raw captures)\`;
+    }
+
+    addWidget(startRow, label, stmtCount > 0 ? "#0e639c" : "#555");
+    
+    log(\`Analyzed \${cap.node.text}: Found \${stmtCount} unique statement lines (Raw matches: \${rawCaptureCount})\`);
+});
+`, mode: "javascript", theme: "vscode-dark", lineNumbers: true
+    });
+
+    function logMsg(msg, type = "info") {
+      const out = document.getElementById("console-output");
+      const div = document.createElement("div");
+      div.className = "log-" + type;
+      div.textContent = typeof msg === 'object' ? JSON.stringify(msg, null, 2) : msg;
+      out.appendChild(div);
+      out.scrollTop = out.scrollHeight;
+    }
+
+    function clearVisuals() {
+      currentMarks.forEach(m => m.clear()); currentMarks =[];
+      currentWidgets.forEach(w => w.clear()); currentWidgets =[];
+      cmSource.clearGutter("coverage-gutter");
+      document.getElementById("console-output").innerHTML = "";
+    }
+
+    async function init() {
+      try {
+        logMsg("Bootstrapping Web Tree-sitter engine...");
+        await TreeSitter.init({ locateFile() { return 'https://unpkg.com/web-tree-sitter@0.22.6/tree-sitter.wasm'; } });
+        Parser = TreeSitter;
+        parser = new Parser();
+        await loadLanguage();
+      } catch (err) { logMsg("Failed to init Tree-sitter: " + err.message, "error"); }
+    }
+
+    async function loadLanguage() {
+      const url = document.getElementById("wasm-url").value;
+      try {
+        language = await Parser.Language.load(url);
+        parser.setLanguage(language);
+        runAnalysis();
+      } catch (err) { logMsg(`Failed to load language WASM: ${err.message}`, "error"); }
+    }
+
+    document.getElementById("btn-load").addEventListener("click", loadLanguage);
+    document.getElementById("lang-select").addEventListener("change", (e) => {
+      const lang = e.target.value;
+      document.getElementById("wasm-url").value = WASM_URLS[lang] || "";
+      cmSource.setOption('mode', lang === 'go' ? 'go' : lang === 'cpp' ? 'text/x-c++src' : 'python');
+      loadLanguage();
+    });
+
+    function runAnalysis() {
+      if (!parser || !language) return;
+      clearVisuals();
+      
+      const sourceCode = cmSource.getValue();
+      let tree;
+
+      try { tree = parser.parse(sourceCode); } 
+      catch (e) { logMsg("AST Parse Error: " + e.message, "error"); return; }
+      
+      // RUN MAIN QUERY
+      const queryString = cmQuery.getValue();
+      if (queryString.trim() !== "") {
+        try {
+          const query = language.query(queryString);
+          const captures = query.captures(tree.rootNode);
+          
+          let lineStats = {}; // Tracks captures per line
+          let nodeTypesCount = {}; // Tracks frequency of each captured type
+          let colorIdx = 0;
+          let captureColors = {};
+          
+          captures.forEach(cap => {
+            const startRow = cap.node.startPosition.row;
+            const type = cap.node.type;
+
+            // Update Breakdown metrics
+            nodeTypesCount[type] = (nodeTypesCount[type] || 0) + 1;
+            if (!lineStats[startRow]) lineStats[startRow] = [];
+            lineStats[startRow].push(type);
+
+            // Coloring
+            if (!captureColors[cap.name]) { captureColors[cap.name] = PALETTE[colorIdx % PALETTE.length]; colorIdx++; }
+            const color = captureColors[cap.name];
+            
+            // Visual Highlights
+            currentMarks.push(cmSource.markText(
+              { line: cap.node.startPosition.row, ch: cap.node.startPosition.column },
+              { line: cap.node.endPosition.row, ch: cap.node.endPosition.column },
+              { css: `background-color: ${color}30; border-bottom: 2px solid ${color};`, title: `Match: @${cap.name}\nType: ${type}` }
+            ));
+          });
+
+          // Generate Gutter Markers & Inflation Checks
+          let inflatedCount = 0;
+          Object.keys(lineStats).forEach(rowStr => {
+            const row = parseInt(rowStr);
+            const capturedNodes = lineStats[row];
+            const isInflated = capturedNodes.length > 1;
+            
+            if (isInflated) inflatedCount++;
+
+            const marker = document.createElement("div");
+            marker.className = "cov-marker" + (isInflated ? " inflated" : "");
+            marker.textContent = capturedNodes.length; 
+            marker.title = `Nodes Captured on Line ${row + 1}:\n` + capturedNodes.join("\n");
+            
+            cmSource.setGutterMarker(row, "coverage-gutter", marker);
+          });
+
+          // Print Detailed Metrics Summary
+          logMsg("=== STATEMENT COVERAGE ANALYSIS ===", "log-bold");
+          logMsg(`Total Queries Matched (Raw Count) : ${captures.length}`, "info");
+          logMsg(`Unique Executable Lines Identified: ${Object.keys(lineStats).length}`, "success");
+          
+          if (inflatedCount > 0) {
+            logMsg(`\nWARNING: Found ${inflatedCount} lines with multiple captures!`, "error");
+            logMsg(`This means your query might be double-counting certain statement lines. Hover over the red numbers in the left gutter to debug.`, "warn");
+          } else {
+            logMsg(`\nPerfect! No overlapping statements detected on the same line.`, "success");
+          }
+
+          logMsg("\nBreakdown by Node Type:", "log-bold");
+          Object.entries(nodeTypesCount).sort((a,b)=>b[1]-a[1]).forEach(([type, count]) => {
+            logMsg(`  • ${type}: ${count}`, "info");
+          });
+
+        } catch (e) {
+          logMsg("Main Query Error: " + e.message, "error");
+        }
+      }
+      
+      // RUN SCRIPT
+      const scriptString = cmScript.getValue();
+      if (scriptString.trim() !== "") {
+        try {
+          const addWidgetFn = (row, text, color) => {
+            const div = document.createElement("div");
+            div.textContent = text;
+            div.style.cssText = `background: ${color || "#0e639c"}; color: #fff; padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 3px; display: inline-block; margin-top: 5px; margin-bottom: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.5);`;
+            currentWidgets.push(cmSource.addLineWidget(row, div, { above: true }));
+          };
+          const scriptFn = new Function('tree', 'language', 'Parser', 'sourceCode', 'log', 'addWidget', scriptString);
+          scriptFn(tree, language, Parser, sourceCode, logMsg, addWidgetFn);
+        } catch (e) { logMsg("\nScript Error: " + e.message, "error"); }
+      }
+    }
+
+    let debounceTimer;
+    const schedule = () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(runAnalysis, 400); };
+    cmSource.on("change", schedule);
+    cmQuery.on("change", schedule);
+    cmScript.on("change", schedule);
+
+    window.onload = init;
+  </script>
+</body>
+</html>
