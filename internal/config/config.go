@@ -42,14 +42,14 @@ var DefaultDisplayMetrics = []MetricKey{
 	// LineCoverage,
 	BranchCoverage,
 	MethodsHit,
-	MethodsFullyCovered,
+	// MethodsFullyCovered,
 	// PatchLineCoverage,
 	PatchMethodsHit,
 	MethodBranchCoverage,
 	StatementCoverage,
 	PatchStatementCoverage,
 	StatementMethodsHit,
-	StatementMethodsFullyCovered,
+	// StatementMethodsFullyCovered,
 	PatchStatementMethodsHit,
 }
 
