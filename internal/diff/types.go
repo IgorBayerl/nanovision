@@ -27,6 +27,4 @@ type Hunk struct {
 	AddedLineOffsets    []int // Lines that were added (no corresponding removal)
 	ModifiedLineOffsets []int // Lines that replace removed lines
 
-	// Internal state for parsing
-	content string // Accumulated content during parsing
 }
