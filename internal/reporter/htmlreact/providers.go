@@ -19,8 +19,10 @@ type StatementCoverageProvider struct{}
 
 func (p StatementCoverageProvider) Key() config.MetricKey { return config.StatementCoverage }
 func (p StatementCoverageProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
-	ui.Metrics[MethodUIStmtCoverage] = methodMetric{
-		Value: fmt.Sprintf("%d / %d", m.StatementsCovered, m.StatementsValid),
+	if m.StatementsValid > 0 {
+		ui.Metrics[MethodUIStmtCoverage] = methodMetric{
+			Value: fmt.Sprintf("%d / %d", m.StatementsCovered, m.StatementsValid),
+		}
 	}
 }
 
@@ -71,7 +73,7 @@ type PatchStatementProvider struct{}
 func (p PatchStatementProvider) Key() config.MetricKey { return config.PatchStatementCoverage }
 func (p PatchStatementProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
 	// Only apply if there is patch data
-	if m.DiffStatus != "" {
+	if m.DiffStatus != "" && m.StatementsValid > 0 {
 		if m.PatchStatementsValid > 0 || m.PatchLinesValid > 0 {
 			cov := &newLinesCoverage{
 				Covered: m.PatchStatementsCovered,

@@ -118,6 +118,7 @@ func TestBuildFileTotals(t *testing.T) {
 			LinesCovered:    50,
 			BranchesValid:   10,
 			BranchesCovered: 5,
+			StatementsValid: 1,
 		},
 		Diff: &model.DiffInfo{}, // Trigger patch generation
 		Statuses: map[config.MetricKey]string{

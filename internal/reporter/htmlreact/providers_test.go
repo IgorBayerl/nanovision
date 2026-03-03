@@ -12,6 +12,7 @@ func TestPatchStatementProvider_Apply(t *testing.T) {
 	method := &model.MethodMetrics{
 		PatchStatementsValid:   10,
 		PatchStatementsCovered: 5,
+		StatementsValid:        1,
 		DiffStatus:             "modified",
 	}
 	ui := &methodDetail{Metrics: make(map[string]methodMetric)}

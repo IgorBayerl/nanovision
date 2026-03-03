@@ -292,7 +292,7 @@ func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, total
 	assignMethodHitMetric(&t.PatchMethodsHit, fileMetrics, string(config.PatchMethodsHit))
 
 	// Overrides for specific edge cases
-	if b.config.ActiveMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil && t.PatchStatementCoverage == nil {
+	if b.config.ActiveMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil && t.PatchStatementCoverage == nil && fileNode.Metrics.StatementsValid > 0 {
 		t.PatchStatementCoverage = &lineCoverageDetail{Percentage: 100.0} // Fallback to safe when modified but no statements changed
 	}
 

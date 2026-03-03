@@ -262,7 +262,7 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metricsMap {
 	metrics := metricsMap{}
 
-	if b.config.ActiveMetrics[config.StatementCoverage] {
+	if m.StatementsValid > 0 && b.config.ActiveMetrics[config.StatementCoverage] {
 		statementPct := utils.CalculatePercentage(m.StatementsCovered, m.StatementsValid, 2)
 		metrics[string(config.StatementCoverage)] = lineCoverageDetail{
 			Covered:    m.StatementsCovered,
