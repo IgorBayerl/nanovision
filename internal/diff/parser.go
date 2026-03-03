@@ -43,10 +43,11 @@ type parser struct {
 	data   *DiffData
 
 	// State variables
-	currFile        *FileDiff
-	currHunk        *Hunk
-	pendingRemovals int
-	isGitDiff       bool // Tracks if the current file started with 'diff --git'
+	currFile         *FileDiff
+	currHunk         *Hunk
+	currHunkNewLines int
+	pendingRemovals  int
+	isGitDiff        bool // Tracks if the current file started with 'diff --git'
 }
 
 func newParser(logger *slog.Logger) *parser {
@@ -210,6 +211,7 @@ func (p *parser) handleHunkHeader(line string) bool {
 		NewStart: newStart,
 		NewLines: newLines,
 	}
+	p.currHunkNewLines = 0
 	p.pendingRemovals = 0
 
 	p.logger.Debug("Diff found hunk", "file", p.currFile.NewPath, "start", newStart)
@@ -233,25 +235,17 @@ func (p *parser) handleContentLine(line string) {
 	case strings.HasPrefix(line, "+"):
 		// Calculate offset relative to the new file version
 		// We count lines in our accumulated content that are meant for the new file (starts with ' ' or '+')
-		currentLineOffset := 0
-		for _, prev := range strings.Split(p.currHunk.content, "\n") {
-			if prev == "" {
-				continue
-			}
-			if strings.HasPrefix(prev, " ") || strings.HasPrefix(prev, "+") {
-				currentLineOffset++
-			}
-		}
+		currentLineOffset := p.currHunkNewLines
 
 		if p.pendingRemovals > 0 {
 			p.pendingRemovals--
 		}
 
 		p.currHunk.AddedLineOffsets = append(p.currHunk.AddedLineOffsets, currentLineOffset)
-		p.currHunk.content += line + "\n"
+		p.currHunkNewLines++
 
 	case strings.HasPrefix(line, " "):
-		p.currHunk.content += line + "\n"
+		p.currHunkNewLines++
 		p.pendingRemovals = 0
 
 	case strings.HasPrefix(line, `\`):
