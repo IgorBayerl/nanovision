@@ -75,7 +75,8 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.StringVar(&rawInput.DiffStrip, "diff-strip", "", "Strip N leading components from diff paths ('auto' or 0-6)")
 	flag.BoolVar(&rawInput.IgnoreCache, "ignore-cache", false, "Ignore existing cache and force re-analysis")
 	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Metric threshold (e.g. 'line_coverage=60..80'). Can be repeated.")
-	flag.StringVar(&rawInput.DisplayMetrics, "display-metrics", "", "Comma-separated list of metrics to display (e.g., 'line_coverage,branch_coverage')")
+	flag.StringVar(&rawInput.FileMetrics, "file-metrics", "", "Comma-separated list of file-level metrics to display (e.g., 'line_coverage,branch_coverage')")
+	flag.StringVar(&rawInput.MethodMetrics, "method-metrics", "", "Comma-separated list of method-level metrics to display (e.g., 'line_coverage,statement_coverage')")
 	return rawInput
 }
 

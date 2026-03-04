@@ -83,7 +83,7 @@ diff:
 # Explicit Display List for UI Reports
 # Specifies which metrics should be included in generated reports.
 # See internal/config/config.go for the full list of supported metrics.
-display_metrics:
+file_metrics:
   # - "line_coverage"
   - "statement_coverage"
   - "branch_coverage"
@@ -96,6 +96,11 @@ display_metrics:
   - "statement_methods_hit"
   - "statement_methods_fully_covered"
   - "patch_statement_methods_hit"
+  - "max_cyclomatic_complexity"
+
+method_metrics:
+  - "line_coverage"
+  - "statement_coverage"
   - "max_cyclomatic_complexity"
 
 ignore_cache: true

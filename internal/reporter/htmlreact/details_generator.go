@@ -229,7 +229,7 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 
 	var activeProviders []MethodMetricProvider
 	for _, p := range allProviders {
-		if b.config.ActiveMetrics[p.Key()] {
+		if b.config.ActiveFileMetrics[p.Key()] {
 			activeProviders = append(activeProviders, p)
 		}
 	}
@@ -292,11 +292,11 @@ func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, total
 	assignMethodHitMetric(&t.PatchMethodsHit, fileMetrics, string(config.PatchMethodsHit))
 
 	// Overrides for specific edge cases
-	if b.config.ActiveMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil && t.PatchStatementCoverage == nil && fileNode.Metrics.StatementsValid > 0 {
+	if b.config.ActiveFileMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil && t.PatchStatementCoverage == nil && fileNode.Metrics.StatementsValid > 0 {
 		t.PatchStatementCoverage = &lineCoverageDetail{Percentage: 100.0} // Fallback to safe when modified but no statements changed
 	}
 
-	if totalBranches > 0 && b.config.ActiveMetrics[config.BranchCoverage] {
+	if totalBranches > 0 && b.config.ActiveFileMetrics[config.BranchCoverage] {
 		t.MethodBranchCoverage = &branchCoverageDetail{
 			Covered:    coveredBranches,
 			Total:      totalBranches,
@@ -304,7 +304,7 @@ func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, total
 		}
 	}
 
-	if maxCyclo > 0 && b.config.ActiveMetrics[config.MaxCyclomaticComplexity] {
+	if maxCyclo > 0 && b.config.ActiveFileMetrics[config.MaxCyclomaticComplexity] {
 		t.MaxCyclomaticComplexity = &lineCoverageDetail{Total: maxCyclo}
 	}
 

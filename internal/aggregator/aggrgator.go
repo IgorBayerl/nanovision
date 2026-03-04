@@ -114,6 +114,11 @@ func calculateAllMethodMetrics(file *model.FileNode) {
 			calculateMethodPatchMetrics(file, method)
 			aggregatePatchMethodMetrics(file, method)
 		}
+
+		// Propagate max cyclomatic complexity to file level.
+		if method.CyclomaticComplexity != nil && *method.CyclomaticComplexity > file.Metrics.MaxCyclomaticComplexity {
+			file.Metrics.MaxCyclomaticComplexity = *method.CyclomaticComplexity
+		}
 	}
 }
 
@@ -287,6 +292,7 @@ func resetFileMetrics(file *model.FileNode) {
 	file.Metrics.StatementMethodsFullyCovered = 0
 	file.Metrics.PatchStatementMethodsHit = 0
 	file.Metrics.PatchStatementMethodsValid = 0
+	file.Metrics.MaxCyclomaticComplexity = 0
 }
 
 func resetMethodMetrics(method *model.MethodMetrics) {
@@ -324,4 +330,8 @@ func addMetrics(dest *model.CoverageMetrics, src model.CoverageMetrics) {
 	dest.StatementMethodsFullyCovered += src.StatementMethodsFullyCovered
 	dest.PatchStatementMethodsValid += src.PatchStatementMethodsValid
 	dest.PatchStatementMethodsHit += src.PatchStatementMethodsHit
+
+	if src.MaxCyclomaticComplexity > dest.MaxCyclomaticComplexity {
+		dest.MaxCyclomaticComplexity = src.MaxCyclomaticComplexity
+	}
 }

@@ -259,3 +259,101 @@ func TestAggregatePatchMethodMetrics_ModifiedFile_NoPatchLines(t *testing.T) {
 	assert.Equal(t, 0, file.Metrics.PatchStatementMethodsValid)
 	assert.Equal(t, 0, file.Metrics.PatchStatementMethodsHit)
 }
+
+func TestMaxCyclomaticComplexity_FileLevel(t *testing.T) {
+	// Build a file with two methods having different complexity values
+	cyclo5 := 5
+	cyclo12 := 12
+	file := &model.FileNode{
+		Path: "test.go",
+		Lines: map[int]model.LineMetrics{
+			1: {Hits: 1}, 2: {Hits: 1}, 3: {Hits: 1}, 4: {Hits: 1},
+		},
+		Methods: []model.MethodMetrics{
+			{
+				Name:                 "FuncA",
+				StartLine:            1,
+				EndLine:              2,
+				CyclomaticComplexity: &cyclo5,
+				LinesValid:          2,
+				LinesCovered:         2,
+			},
+			{
+				Name:                 "FuncB",
+				StartLine:            3,
+				EndLine:              4,
+				CyclomaticComplexity: &cyclo12,
+				LinesValid:          2,
+				LinesCovered:         1,
+			},
+		},
+		Metrics: model.CoverageMetrics{
+			LinesValid:   4,
+			LinesCovered: 3,
+		},
+	}
+
+	calculateFileMethodMetrics(file)
+
+	assert.Equal(t, 12, file.Metrics.MaxCyclomaticComplexity,
+		"File-level MaxCyclomaticComplexity should be the max across methods")
+}
+
+func TestMaxCyclomaticComplexity_DirPropagation(t *testing.T) {
+	// Build a mini tree: dir with two files having different max complexities
+	cyclo3 := 3
+	cyclo7 := 7
+	cyclo15 := 15
+
+	dir := &model.DirNode{
+		Name:    "root",
+		Subdirs: map[string]*model.DirNode{},
+		Files: map[string]*model.FileNode{
+			"a.go": {
+				Path: "a.go",
+				Lines: map[int]model.LineMetrics{
+					1: {Hits: 1}, 2: {Hits: 1},
+				},
+				Methods: []model.MethodMetrics{
+					{
+						Name: "FuncA", StartLine: 1, EndLine: 2,
+						CyclomaticComplexity: &cyclo7,
+						LinesValid: 2, LinesCovered: 2,
+					},
+				},
+				Metrics: model.CoverageMetrics{LinesValid: 2, LinesCovered: 2},
+			},
+			"b.go": {
+				Path: "b.go",
+				Lines: map[int]model.LineMetrics{
+					1: {Hits: 1}, 2: {Hits: 0},
+				},
+				Methods: []model.MethodMetrics{
+					{
+						Name: "FuncB", StartLine: 1, EndLine: 1,
+						CyclomaticComplexity: &cyclo3,
+						LinesValid: 1, LinesCovered: 1,
+					},
+					{
+						Name: "FuncC", StartLine: 2, EndLine: 2,
+						CyclomaticComplexity: &cyclo15,
+						LinesValid: 1, LinesCovered: 0,
+					},
+				},
+				Metrics: model.CoverageMetrics{LinesValid: 2, LinesCovered: 1},
+			},
+		},
+	}
+
+	tree := &model.SummaryTree{Root: dir}
+	AggregateMetricsAfterEnrichment(tree)
+
+	// a.go should have max 7
+	assert.Equal(t, 7, dir.Files["a.go"].Metrics.MaxCyclomaticComplexity)
+	// b.go should have max 15 (from FuncC)
+	assert.Equal(t, 15, dir.Files["b.go"].Metrics.MaxCyclomaticComplexity)
+	// Dir should have max 15 (propagated via max, not sum)
+	assert.Equal(t, 15, dir.Metrics.MaxCyclomaticComplexity)
+	assert.Equal(t, 15, tree.Metrics.MaxCyclomaticComplexity)
+}
+

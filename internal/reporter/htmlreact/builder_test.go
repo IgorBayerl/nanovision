@@ -9,12 +9,12 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
-func TestHtmlReactReportBuilder_ActiveMetricsFilter(t *testing.T) {
+func TestHtmlReactReportBuilder_ActiveFileMetricsFilter(t *testing.T) {
 	tempDir := t.TempDir()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	cfg := &config.AppConfig{
-		ActiveMetrics: map[config.MetricKey]bool{
+		ActiveFileMetrics: map[config.MetricKey]bool{
 			"line_coverage": true,
 			// implicitly missing statement_coverage, branch_coverage
 		},

@@ -23,13 +23,13 @@ type TextReportBuilder struct {
 }
 
 func NewTextReportBuilder(outputDir string, logger *slog.Logger, cfg *config.AppConfig) reporter.ReportBuilder {
-	// Guarantee we always have a config and ActiveMetrics map, even in tests
+	// Guarantee we always have a config and ActiveFileMetrics map, even in tests
 	if cfg == nil {
 		cfg = config.GetDefaultConfig()
-		cfg.DisplayMetrics = config.DefaultDisplayMetrics
-		cfg.ActiveMetrics = make(map[config.MetricKey]bool)
-		for _, m := range cfg.DisplayMetrics {
-			cfg.ActiveMetrics[m] = true
+		cfg.FileMetrics = config.DefaultFileMetrics
+		cfg.ActiveFileMetrics = make(map[config.MetricKey]bool)
+		for _, m := range cfg.FileMetrics {
+			cfg.ActiveFileMetrics[m] = true
 		}
 	}
 
@@ -65,7 +65,7 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		fmt.Fprintf(f, "  Parser: %s\n", strings.Join(tree.ParserNames, " | "))
 	}
 
-	if tree.Metrics.StatementsValid > 0 && b.config.ActiveMetrics[config.StatementCoverage] {
+	if tree.Metrics.StatementsValid > 0 && b.config.ActiveFileMetrics[config.StatementCoverage] {
 		statementCoverage := utils.CalculatePercentage(tree.Metrics.StatementsCovered, tree.Metrics.StatementsValid, 1)
 		fmt.Fprintf(f, "  Statement coverage: %s\n", utils.FormatPercentage(statementCoverage, 0))
 		fmt.Fprintf(f, "  Covered statements: %d\n", tree.Metrics.StatementsCovered)
@@ -73,7 +73,7 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		fmt.Fprintf(f, "  Total statements: %d\n", tree.Metrics.StatementsValid)
 	}
 
-	if b.config.ActiveMetrics[config.LineCoverage] {
+	if b.config.ActiveFileMetrics[config.LineCoverage] {
 		lineCoverage := utils.CalculatePercentage(tree.Metrics.LinesCovered, tree.Metrics.LinesValid, 1)
 		fmt.Fprintf(f, "  Line coverage: %s\n", utils.FormatPercentage(lineCoverage, 0))
 		fmt.Fprintf(f, "  Covered lines: %d\n", tree.Metrics.LinesCovered)
@@ -81,7 +81,7 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		fmt.Fprintf(f, "  Coverable lines: %d\n", tree.Metrics.LinesValid)
 	}
 
-	if tree.Metrics.BranchesValid > 0 && b.config.ActiveMetrics[config.BranchCoverage] {
+	if tree.Metrics.BranchesValid > 0 && b.config.ActiveFileMetrics[config.BranchCoverage] {
 		branchCoverage := utils.CalculatePercentage(tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid, 1)
 		fmt.Fprintf(f, "  Branch coverage: %s (%d of %d)\n", utils.FormatPercentage(branchCoverage, 0), tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid)
 	}
@@ -125,10 +125,10 @@ func (b *TextReportBuilder) printNode(tw *tabwriter.Writer, dir *model.DirNode, 
 		lineCov := utils.CalculatePercentage(sub.Metrics.LinesCovered, sub.Metrics.LinesValid, 1)
 
 		var parts []string
-		if sub.Metrics.StatementsValid > 0 && b.config.ActiveMetrics[config.StatementCoverage] {
+		if sub.Metrics.StatementsValid > 0 && b.config.ActiveFileMetrics[config.StatementCoverage] {
 			parts = append(parts, fmt.Sprintf("%s (Stmt)", utils.FormatPercentage(stmtCov, 0)))
 		}
-		if b.config.ActiveMetrics[config.LineCoverage] {
+		if b.config.ActiveFileMetrics[config.LineCoverage] {
 			parts = append(parts, fmt.Sprintf("%s (Line)", utils.FormatPercentage(lineCov, 0)))
 		}
 
@@ -142,10 +142,10 @@ func (b *TextReportBuilder) printNode(tw *tabwriter.Writer, dir *model.DirNode, 
 		lineCov := utils.CalculatePercentage(file.Metrics.LinesCovered, file.Metrics.LinesValid, 1)
 
 		var parts []string
-		if file.Metrics.StatementsValid > 0 && b.config.ActiveMetrics[config.StatementCoverage] {
+		if file.Metrics.StatementsValid > 0 && b.config.ActiveFileMetrics[config.StatementCoverage] {
 			parts = append(parts, fmt.Sprintf("%s (Stmt)", utils.FormatPercentage(stmtCov, 0)))
 		}
-		if b.config.ActiveMetrics[config.LineCoverage] {
+		if b.config.ActiveFileMetrics[config.LineCoverage] {
 			parts = append(parts, fmt.Sprintf("%s (Line)", utils.FormatPercentage(lineCov, 0)))
 		}
 

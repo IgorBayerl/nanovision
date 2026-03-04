@@ -38,7 +38,7 @@ const (
 	MaxCyclomaticComplexity      MetricKey = "max_cyclomatic_complexity"
 )
 
-var DefaultDisplayMetrics = []MetricKey{
+var DefaultFileMetrics = []MetricKey{
 	// LineCoverage,
 	BranchCoverage,
 	MethodsHit,
@@ -51,6 +51,12 @@ var DefaultDisplayMetrics = []MetricKey{
 	StatementMethodsHit,
 	// StatementMethodsFullyCovered,
 	PatchStatementMethodsHit,
+}
+
+var DefaultMethodMetrics = []MetricKey{
+	LineCoverage,
+	StatementCoverage,
+	MaxCyclomaticComplexity,
 }
 
 func isValidMetric(m MetricKey) bool {
@@ -164,7 +170,8 @@ type RawConfigInput struct {
 	DiffFile       string
 	DiffStrip      string
 	StatusBands    []string
-	DisplayMetrics string
+	FileMetrics   string
+	MethodMetrics string
 	IgnoreCache    bool
 }
 
@@ -182,8 +189,10 @@ type AppConfig struct {
 	IgnoreFiles    []string           `yaml:"ignore_files"`
 	ProjectRoot    string             `yaml:"-"`
 	StatusBands    StatusBands        `yaml:"status_bands"`
-	DisplayMetrics []MetricKey        `yaml:"display_metrics"`
-	ActiveMetrics  map[MetricKey]bool `yaml:"-"`
+	FileMetrics         []MetricKey        `yaml:"file_metrics"`
+	MethodMetrics       []MetricKey        `yaml:"method_metrics"`
+	ActiveFileMetrics   map[MetricKey]bool `yaml:"-"`
+	ActiveMethodMetrics map[MetricKey]bool `yaml:"-"`
 	IgnoreCache    bool               `yaml:"ignore_cache"`
 	Diff           DiffConfig         `yaml:"diff"`
 
@@ -321,8 +330,8 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 			}
 		}
 	}
-	if cli.DisplayMetrics != "" {
-		parts := strings.Split(cli.DisplayMetrics, ",")
+	if cli.FileMetrics != "" {
+		parts := strings.Split(cli.FileMetrics, ",")
 		var keys []MetricKey
 		for _, p := range parts {
 			trimmed := strings.TrimSpace(p)
@@ -330,7 +339,18 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 				keys = append(keys, MetricKey(trimmed))
 			}
 		}
-		c.DisplayMetrics = keys
+		c.FileMetrics = keys
+	}
+	if cli.MethodMetrics != "" {
+		parts := strings.Split(cli.MethodMetrics, ",")
+		var keys []MetricKey
+		for _, p := range parts {
+			trimmed := strings.TrimSpace(p)
+			if trimmed != "" {
+				keys = append(keys, MetricKey(trimmed))
+			}
+		}
+		c.MethodMetrics = keys
 	}
 }
 
@@ -363,9 +383,14 @@ func (c *AppConfig) validate() error {
 		}
 	}
 
-	for _, m := range c.DisplayMetrics {
+	for _, m := range c.FileMetrics {
 		if !isValidMetric(m) {
-			return fmt.Errorf("configuration error: unknown display metric '%s'", m)
+			return fmt.Errorf("configuration error: unknown file metric '%s'", m)
+		}
+	}
+	for _, m := range c.MethodMetrics {
+		if !isValidMetric(m) {
+			return fmt.Errorf("configuration error: unknown method metric '%s'", m)
 		}
 	}
 
@@ -389,12 +414,19 @@ func (c *AppConfig) computeDerivedFields() error {
 
 	c.InputPairs = resolveInputPairs(c.ReportPatterns, c.SourceDirs)
 
-	if len(c.DisplayMetrics) == 0 {
-		c.DisplayMetrics = DefaultDisplayMetrics
+	if len(c.FileMetrics) == 0 {
+		c.FileMetrics = DefaultFileMetrics
 	}
-	c.ActiveMetrics = make(map[MetricKey]bool, len(c.DisplayMetrics))
-	for _, m := range c.DisplayMetrics {
-		c.ActiveMetrics[m] = true
+	if len(c.MethodMetrics) == 0 {
+		c.MethodMetrics = DefaultMethodMetrics
+	}
+	c.ActiveFileMetrics = make(map[MetricKey]bool, len(c.FileMetrics))
+	for _, m := range c.FileMetrics {
+		c.ActiveFileMetrics[m] = true
+	}
+	c.ActiveMethodMetrics = make(map[MetricKey]bool, len(c.MethodMetrics))
+	for _, m := range c.MethodMetrics {
+		c.ActiveMethodMetrics[m] = true
 	}
 
 	return nil

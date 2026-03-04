@@ -98,7 +98,7 @@ func TestBuildLineDetails(t *testing.T) {
 func TestBuildFileTotals(t *testing.T) {
 	builder := &HtmlReactReportBuilder{
 		config: &config.AppConfig{
-			ActiveMetrics: map[config.MetricKey]bool{
+			ActiveFileMetrics: map[config.MetricKey]bool{
 				config.LineCoverage:            true,
 				config.BranchCoverage:          true,
 				config.PatchStatementCoverage:  true,

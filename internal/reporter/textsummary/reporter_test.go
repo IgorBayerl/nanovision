@@ -11,12 +11,12 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
-func TestTextReportBuilder_ActiveMetricsFilter(t *testing.T) {
+func TestTextReportBuilder_ActiveFileMetricsFilter(t *testing.T) {
 	tempDir := t.TempDir()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	cfg := &config.AppConfig{
-		ActiveMetrics: map[config.MetricKey]bool{
+		ActiveFileMetrics: map[config.MetricKey]bool{
 			"statement_coverage": true,
 			// explicitly missing line_coverage and branch_coverage
 		},
