@@ -37,6 +37,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
 	"github.com/IgorBayerl/nanovision/internal/status"
+	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
 	"github.com/IgorBayerl/nanovision/internal/tree"
 )
 
@@ -302,7 +303,7 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 
 	logger.Info("Executing ANNOTATE stage...")
 	caps := deriveCapabilities(summaryTree)
-	status.Annotate(summaryTree, appConfig.StatusBands, caps)
+	status.Annotate(summaryTree, appConfig, caps, evaluators.Registry)
 	logger.Info("ANNOTATE stage completed successfully.")
 
 	logger.Info("Executing REPORT stage...")

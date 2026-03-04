@@ -8,17 +8,15 @@
 //     are actually present in the parsed report data.
 //  3. The `Annotate` function is called once. It traverses the entire in-memory
 //     data tree (`model.SummaryTree`).
-//  4. For each node (file or directory), it calculates the metric percentages and uses
-//     the `Classify` function to determine a risk level.
-//  5. This risk level is attached directly to the node in its `Statuses` map.
+//  4. For each node (file or directory), it looks up evaluators from the registry
+//     and falls back to generic percentage specs for unregistered metrics.
+//  5. The risk level is attached directly to the node in its `Statuses` map.
 //
 // By pre-computing these statuses, all report generators (HTML, text summary, etc.)
 // can simply read the status from the model without needing to know about the
 // specific thresholds or calculation logic. This makes the reporters simpler and
 // ensures consistent status reporting everywhere.
 package status
-
-import "github.com/IgorBayerl/nanovision/internal/config"
 
 // RiskLevel represents the classification of a coverage metric based on predefined thresholds.
 type RiskLevel string
@@ -27,24 +25,6 @@ const (
 	RiskDanger  RiskLevel = "danger"  // Indicates a metric is below the configured minimum threshold.
 	RiskWarning RiskLevel = "warning" // Indicates a metric is within the configured warning range.
 	RiskSafe    RiskLevel = "safe"    // Indicates a metric is above the configured maximum threshold.
-)
-
-// MetricKey is the canonical snake_case key used consistently across the configuration
-// (nanovision.yaml), the data model, and the status logic to identify a metric.
-type MetricKey = config.MetricKey
-
-const (
-	LineCoverage                 MetricKey = config.LineCoverage
-	BranchCoverage               MetricKey = config.BranchCoverage
-	MethodsHit                   MetricKey = config.MethodsHit
-	MethodsFullyCovered          MetricKey = config.MethodsFullyCovered
-	PatchLineCoverage            MetricKey = config.PatchLineCoverage
-	PatchMethodsHit              MetricKey = config.PatchMethodsHit
-	StatementCoverage            MetricKey = config.StatementCoverage
-	PatchStatementCoverage       MetricKey = config.PatchStatementCoverage
-	StatementMethodsHit          MetricKey = config.StatementMethodsHit
-	StatementMethodsFullyCovered MetricKey = config.StatementMethodsFullyCovered
-	PatchStatementMethodsHit     MetricKey = config.PatchStatementMethodsHit
 )
 
 // Capabilities informs the annotation process about which metrics are semantically
