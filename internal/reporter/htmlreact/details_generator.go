@@ -219,12 +219,12 @@ func mapHitsToLocal(reportHits []int, reportsList []report, globalToLocal map[in
 
 func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([]methodDetail, int, int, int) {
 	allProviders := []MethodMetricProvider{
-		LineCoverageProvider{},
-		StatementCoverageProvider{},
-		BranchCoverageProvider{},
-		PatchStatementProvider{},
-		PatchLineCoverageProvider{},
-		CyclomaticComplexityProvider{},
+		LineCoverageMethodProvider{},
+		StatementCoverageMethodProvider{},
+		BranchCoverageMethodProvider{},
+		PatchStatementMethodProvider{},
+		PatchLineCoverageMethodProvider{},
+		CyclomaticComplexityMethodProvider{},
 	}
 
 	var activeProviders []MethodMetricProvider

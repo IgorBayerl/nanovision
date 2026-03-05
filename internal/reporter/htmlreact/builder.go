@@ -10,7 +10,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/reporter"
-	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 type HtmlReactReportBuilder struct {
@@ -261,92 +260,11 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 
 func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metricsMap {
 	metrics := metricsMap{}
-
-	if m.StatementsValid > 0 && b.config.ActiveFileMetrics[config.StatementCoverage] {
-		statementPct := utils.CalculatePercentage(m.StatementsCovered, m.StatementsValid, 2)
-		metrics[string(config.StatementCoverage)] = lineCoverageDetail{
-			Covered:    m.StatementsCovered,
-			Uncovered:  m.StatementsValid - m.StatementsCovered,
-			Coverable:  m.StatementsValid,
-			Total:      m.StatementsValid,
-			Percentage: statementPct,
+	for key := range b.config.ActiveFileMetrics {
+		if provider, ok := FileProviderRegistry[key]; ok {
+			provider.Apply(m, metrics)
 		}
 	}
-
-	if b.config.ActiveFileMetrics[config.LineCoverage] {
-		linePct := utils.CalculatePercentage(m.LinesCovered, m.LinesValid, 2)
-		metrics[string(config.LineCoverage)] = lineCoverageDetail{
-			Covered:    m.LinesCovered,
-			Uncovered:  m.LinesValid - m.LinesCovered,
-			Coverable:  m.LinesValid,
-			Total:      m.TotalLines,
-			Percentage: linePct,
-		}
-	}
-
-	if m.BranchesValid > 0 && b.config.ActiveFileMetrics[config.BranchCoverage] {
-		branchPct := utils.CalculatePercentage(m.BranchesCovered, m.BranchesValid, 2)
-		metrics[string(config.BranchCoverage)] = branchCoverageDetail{
-			Covered:    m.BranchesCovered,
-			Total:      m.BranchesValid,
-			Percentage: branchPct,
-		}
-	}
-
-	if m.MethodsValid > 0 {
-		if b.config.ActiveFileMetrics[config.MethodsHit] {
-			methodsHitPct := utils.CalculatePercentage(m.MethodsHit, m.MethodsValid, 2)
-			metrics[string(config.MethodsHit)] = methodsHitDetail{
-				Covered:    m.MethodsHit,
-				Total:      m.MethodsValid,
-				Percentage: methodsHitPct,
-			}
-		}
-
-		if b.config.ActiveFileMetrics[config.MethodsFullyCovered] {
-			methodsFullyCoveredPct := utils.CalculatePercentage(m.MethodsFullyCovered, m.MethodsValid, 2)
-			metrics[string(config.MethodsFullyCovered)] = methodsFullyCoveredDetail{
-				Covered:    m.MethodsFullyCovered,
-				Total:      m.MethodsValid,
-				Percentage: methodsFullyCoveredPct,
-			}
-		}
-	}
-
-	// Patch statement coverage
-	if m.PatchStatementsValid > 0 && b.config.ActiveFileMetrics[config.PatchStatementCoverage] {
-		patchStatementPct := utils.CalculatePercentage(m.PatchStatementsCovered, m.PatchStatementsValid, 2)
-		metrics[string(config.PatchStatementCoverage)] = lineCoverageDetail{
-			Covered:    m.PatchStatementsCovered,
-			Uncovered:  m.PatchStatementsValid - m.PatchStatementsCovered,
-			Coverable:  m.PatchStatementsValid,
-			Total:      m.PatchStatementsValid,
-			Percentage: patchStatementPct,
-		}
-	}
-
-	// Patch line coverage
-	if m.PatchLinesTotal > 0 && b.config.ActiveFileMetrics[config.PatchLineCoverage] {
-		patchLinePct := utils.CalculatePercentage(m.PatchLinesCovered, m.PatchLinesValid, 2)
-		metrics[string(config.PatchLineCoverage)] = lineCoverageDetail{
-			Covered:    m.PatchLinesCovered,
-			Uncovered:  m.PatchLinesValid - m.PatchLinesCovered,
-			Coverable:  m.PatchLinesValid,
-			Total:      m.PatchLinesTotal,
-			Percentage: patchLinePct,
-		}
-	}
-
-	// Patch methods coverage
-	if m.PatchMethodsValid > 0 && b.config.ActiveFileMetrics[config.PatchMethodsHit] {
-		patchMethodsPct := utils.CalculatePercentage(m.PatchMethodsHit, m.PatchMethodsValid, 2)
-		metrics[string(config.PatchMethodsHit)] = methodsHitDetail{
-			Covered:    m.PatchMethodsHit,
-			Total:      m.PatchMethodsValid,
-			Percentage: patchMethodsPct,
-		}
-	}
-
 	return metrics
 }
 

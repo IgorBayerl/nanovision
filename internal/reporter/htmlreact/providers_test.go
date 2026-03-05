@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPatchStatementProvider_Apply(t *testing.T) {
-	provider := PatchStatementProvider{}
+func TestPatchStatementMethodProvider_Apply(t *testing.T) {
+	provider := PatchStatementMethodProvider{}
 	method := &model.MethodMetrics{
 		PatchStatementsValid:   10,
 		PatchStatementsCovered: 5,
@@ -25,8 +25,8 @@ func TestPatchStatementProvider_Apply(t *testing.T) {
 	assert.Equal(t, 10, ui.NewStatementCoverage.Total)
 }
 
-func TestPatchLineCoverageProvider_Apply(t *testing.T) {
-	provider := PatchLineCoverageProvider{}
+func TestPatchLineCoverageMethodProvider_Apply(t *testing.T) {
+	provider := PatchLineCoverageMethodProvider{}
 	method := &model.MethodMetrics{
 		PatchLinesValid:   20,
 		PatchLinesCovered: 15,
