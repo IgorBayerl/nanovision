@@ -229,7 +229,7 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 
 	var activeProviders []MethodMetricProvider
 	for _, p := range allProviders {
-		if b.config.ActiveFileMetrics[p.Key()] {
+		if b.config.ActiveMethodMetrics[p.Key()] {
 			activeProviders = append(activeProviders, p)
 		}
 	}

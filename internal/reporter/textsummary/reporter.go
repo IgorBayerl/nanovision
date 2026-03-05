@@ -65,25 +65,32 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		fmt.Fprintf(f, "  Parser: %s\n", strings.Join(tree.ParserNames, " | "))
 	}
 
-	if tree.Metrics.StatementsValid > 0 && b.config.ActiveFileMetrics[config.StatementCoverage] {
-		statementCoverage := utils.CalculatePercentage(tree.Metrics.StatementsCovered, tree.Metrics.StatementsValid, 1)
-		fmt.Fprintf(f, "  Statement coverage: %s\n", utils.FormatPercentage(statementCoverage, 0))
-		fmt.Fprintf(f, "  Covered statements: %d\n", tree.Metrics.StatementsCovered)
-		fmt.Fprintf(f, "  Uncovered statements: %d\n", tree.Metrics.StatementsValid-tree.Metrics.StatementsCovered)
-		fmt.Fprintf(f, "  Total statements: %d\n", tree.Metrics.StatementsValid)
-	}
-
-	if b.config.ActiveFileMetrics[config.LineCoverage] {
-		lineCoverage := utils.CalculatePercentage(tree.Metrics.LinesCovered, tree.Metrics.LinesValid, 1)
-		fmt.Fprintf(f, "  Line coverage: %s\n", utils.FormatPercentage(lineCoverage, 0))
-		fmt.Fprintf(f, "  Covered lines: %d\n", tree.Metrics.LinesCovered)
-		fmt.Fprintf(f, "  Uncovered lines: %d\n", tree.Metrics.LinesValid-tree.Metrics.LinesCovered)
-		fmt.Fprintf(f, "  Coverable lines: %d\n", tree.Metrics.LinesValid)
-	}
-
-	if tree.Metrics.BranchesValid > 0 && b.config.ActiveFileMetrics[config.BranchCoverage] {
-		branchCoverage := utils.CalculatePercentage(tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid, 1)
-		fmt.Fprintf(f, "  Branch coverage: %s (%d of %d)\n", utils.FormatPercentage(branchCoverage, 0), tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid)
+	// Print metric summaries in the order defined by cfg.FileMetrics.
+	for _, key := range b.config.FileMetrics {
+		if !b.config.ActiveFileMetrics[key] {
+			continue
+		}
+		switch key {
+		case config.StatementCoverage:
+			if tree.Metrics.StatementsValid > 0 {
+				statementCoverage := utils.CalculatePercentage(tree.Metrics.StatementsCovered, tree.Metrics.StatementsValid, 1)
+				fmt.Fprintf(f, "  Statement coverage: %s\n", utils.FormatPercentage(statementCoverage, 0))
+				fmt.Fprintf(f, "  Covered statements: %d\n", tree.Metrics.StatementsCovered)
+				fmt.Fprintf(f, "  Uncovered statements: %d\n", tree.Metrics.StatementsValid-tree.Metrics.StatementsCovered)
+				fmt.Fprintf(f, "  Total statements: %d\n", tree.Metrics.StatementsValid)
+			}
+		case config.LineCoverage:
+			lineCoverage := utils.CalculatePercentage(tree.Metrics.LinesCovered, tree.Metrics.LinesValid, 1)
+			fmt.Fprintf(f, "  Line coverage: %s\n", utils.FormatPercentage(lineCoverage, 0))
+			fmt.Fprintf(f, "  Covered lines: %d\n", tree.Metrics.LinesCovered)
+			fmt.Fprintf(f, "  Uncovered lines: %d\n", tree.Metrics.LinesValid-tree.Metrics.LinesCovered)
+			fmt.Fprintf(f, "  Coverable lines: %d\n", tree.Metrics.LinesValid)
+		case config.BranchCoverage:
+			if tree.Metrics.BranchesValid > 0 {
+				branchCoverage := utils.CalculatePercentage(tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid, 1)
+				fmt.Fprintf(f, "  Branch coverage: %s (%d of %d)\n", utils.FormatPercentage(branchCoverage, 0), tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid)
+			}
+		}
 	}
 
 	// Print the hierarchical summary table.
@@ -95,6 +102,32 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 	b.printNode(tw, tree.Root, 0)
 
 	return nil
+}
+
+// buildNodeParts builds the metric summary parts for a node in FileMetrics order.
+func (b *TextReportBuilder) buildNodeParts(m model.CoverageMetrics) []string {
+	var parts []string
+	for _, key := range b.config.FileMetrics {
+		if !b.config.ActiveFileMetrics[key] {
+			continue
+		}
+		switch key {
+		case config.StatementCoverage:
+			if m.StatementsValid > 0 {
+				stmtCov := utils.CalculatePercentage(m.StatementsCovered, m.StatementsValid, 1)
+				parts = append(parts, fmt.Sprintf("%s (Stmt)", utils.FormatPercentage(stmtCov, 0)))
+			}
+		case config.LineCoverage:
+			lineCov := utils.CalculatePercentage(m.LinesCovered, m.LinesValid, 1)
+			parts = append(parts, fmt.Sprintf("%s (Line)", utils.FormatPercentage(lineCov, 0)))
+		case config.BranchCoverage:
+			if m.BranchesValid > 0 {
+				branchCov := utils.CalculatePercentage(m.BranchesCovered, m.BranchesValid, 1)
+				parts = append(parts, fmt.Sprintf("%s (Branch)", utils.FormatPercentage(branchCov, 0)))
+			}
+		}
+	}
+	return parts
 }
 
 // printNode is a recursive helper to print the tree hierarchy.
@@ -121,34 +154,14 @@ func (b *TextReportBuilder) printNode(tw *tabwriter.Writer, dir *model.DirNode, 
 
 	// Print subdirectories first.
 	for _, sub := range sortedSubdirs {
-		stmtCov := utils.CalculatePercentage(sub.Metrics.StatementsCovered, sub.Metrics.StatementsValid, 1)
-		lineCov := utils.CalculatePercentage(sub.Metrics.LinesCovered, sub.Metrics.LinesValid, 1)
-
-		var parts []string
-		if sub.Metrics.StatementsValid > 0 && b.config.ActiveFileMetrics[config.StatementCoverage] {
-			parts = append(parts, fmt.Sprintf("%s (Stmt)", utils.FormatPercentage(stmtCov, 0)))
-		}
-		if b.config.ActiveFileMetrics[config.LineCoverage] {
-			parts = append(parts, fmt.Sprintf("%s (Line)", utils.FormatPercentage(lineCov, 0)))
-		}
-
+		parts := b.buildNodeParts(sub.Metrics)
 		fmt.Fprintf(tw, "%s%s/\t  %s\n", indent, sub.Name, strings.Join(parts, " | "))
 		b.printNode(tw, sub, indentLevel+1)
 	}
 
 	// Then print files in the current directory.
 	for _, file := range sortedFiles {
-		stmtCov := utils.CalculatePercentage(file.Metrics.StatementsCovered, file.Metrics.StatementsValid, 1)
-		lineCov := utils.CalculatePercentage(file.Metrics.LinesCovered, file.Metrics.LinesValid, 1)
-
-		var parts []string
-		if file.Metrics.StatementsValid > 0 && b.config.ActiveFileMetrics[config.StatementCoverage] {
-			parts = append(parts, fmt.Sprintf("%s (Stmt)", utils.FormatPercentage(stmtCov, 0)))
-		}
-		if b.config.ActiveFileMetrics[config.LineCoverage] {
-			parts = append(parts, fmt.Sprintf("%s (Line)", utils.FormatPercentage(lineCov, 0)))
-		}
-
+		parts := b.buildNodeParts(file.Metrics)
 		fmt.Fprintf(tw, "%s%s\t  %s\n", indent, file.Name, strings.Join(parts, " | "))
 	}
 }
