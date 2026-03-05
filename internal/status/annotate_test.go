@@ -179,9 +179,10 @@ func TestAnnotate_BranchNotApplicable(t *testing.T) {
 	assert.False(t, hasBranch, "branch_coverage status should not be set when HasBranchCoverage is false")
 }
 
-// TestAnnotate_FallbackPercentageMetrics verifies that metrics handled by
-// the fallback spec table (e.g. methods_hit) are correctly evaluated.
-func TestAnnotate_FallbackPercentageMetrics(t *testing.T) {
+// TestAnnotate_MethodsHitViaRegistry verifies that metrics previously handled
+// by the old fallback spec table (e.g. methods_hit) are now correctly
+// evaluated through their dedicated Evaluator in the registry.
+func TestAnnotate_MethodsHitViaRegistry(t *testing.T) {
 	fileNode := &model.FileNode{
 		Name: "main.go",
 		Path: "src/main.go",

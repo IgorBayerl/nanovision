@@ -24,8 +24,8 @@ type CachedData struct {
 }
 
 type Manager struct {
-	mu        sync.RWMutex
-	filePath  string
+	mu       sync.RWMutex
+	filePath string
 	// entries maps ContentHash -> Analysis Data
 	entries   map[string]CachedData
 	validator CacheValidator

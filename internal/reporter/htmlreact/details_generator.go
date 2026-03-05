@@ -218,18 +218,9 @@ func mapHitsToLocal(reportHits []int, reportsList []report, globalToLocal map[in
 }
 
 func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([]methodDetail, int, int, int) {
-	allProviders := []MethodMetricProvider{
-		LineCoverageMethodProvider{},
-		StatementCoverageMethodProvider{},
-		BranchCoverageMethodProvider{},
-		PatchStatementMethodProvider{},
-		PatchLineCoverageMethodProvider{},
-		CyclomaticComplexityMethodProvider{},
-	}
-
 	var activeProviders []MethodMetricProvider
-	for _, p := range allProviders {
-		if b.config.ActiveMethodMetrics[p.Key()] {
+	for _, key := range b.config.MethodMetrics {
+		if p, ok := MethodProviderRegistry[key]; ok && b.config.ActiveMethodMetrics[key] {
 			activeProviders = append(activeProviders, p)
 		}
 	}

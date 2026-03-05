@@ -197,10 +197,103 @@ func TestRegistryContainsAllEvaluators(t *testing.T) {
 		config.BranchCoverage,
 		config.StatementCoverage,
 		config.MaxCyclomaticComplexity,
+		config.MethodsHit,
+		config.MethodsFullyCovered,
+		config.PatchLineCoverage,
+		config.PatchMethodsHit,
+		config.PatchStatementCoverage,
+		config.StatementMethodsHit,
+		config.StatementMethodsFullyCovered,
+		config.PatchStatementMethodsHit,
 	}
 	for _, key := range expectedKeys {
 		ev, ok := Registry[key]
 		assert.True(t, ok, "Registry should contain %s", key)
 		assert.Equal(t, key, ev.Key())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// MethodsHitEvaluator (representative of the new percentage evaluators)
+// ---------------------------------------------------------------------------
+
+func TestMethodsHitEvaluator_Key(t *testing.T) {
+	assert.Equal(t, config.MethodsHit, MethodsHitEvaluator{}.Key())
+}
+
+func TestMethodsHitEvaluator_IsApplicable(t *testing.T) {
+	assert.False(t, MethodsHitEvaluator{}.IsApplicable(status.Capabilities{HasMethodCoverage: false}))
+	assert.True(t, MethodsHitEvaluator{}.IsApplicable(status.Capabilities{HasMethodCoverage: true}))
+}
+
+func TestMethodsHitEvaluator_ZeroGuard(t *testing.T) {
+	m := model.CoverageMetrics{MethodsValid: 0}
+	band := &config.Band{Min: 60, Max: 80}
+	lvl, show := MethodsHitEvaluator{}.Evaluate(m, band)
+	assert.Equal(t, status.RiskLevel(""), lvl)
+	assert.False(t, show)
+}
+
+func TestMethodsHitEvaluator_Thresholds(t *testing.T) {
+	band := &config.Band{Min: 60, Max: 80}
+	tests := []struct {
+		name  string
+		hit   int
+		total int
+		want  status.RiskLevel
+	}{
+		{"danger - below min", 50, 100, status.RiskDanger},
+		{"warning - in range", 70, 100, status.RiskWarning},
+		{"safe - above max", 90, 100, status.RiskSafe},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := model.CoverageMetrics{MethodsHit: tt.hit, MethodsValid: tt.total}
+			lvl, show := MethodsHitEvaluator{}.Evaluate(m, band)
+			assert.True(t, show)
+			assert.Equal(t, tt.want, lvl)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// PatchLineCoverageEvaluator (representative always-applicable evaluator)
+// ---------------------------------------------------------------------------
+
+func TestPatchLineCoverageEvaluator_Key(t *testing.T) {
+	assert.Equal(t, config.PatchLineCoverage, PatchLineCoverageEvaluator{}.Key())
+}
+
+func TestPatchLineCoverageEvaluator_IsApplicable(t *testing.T) {
+	assert.True(t, PatchLineCoverageEvaluator{}.IsApplicable(status.Capabilities{}))
+}
+
+func TestPatchLineCoverageEvaluator_ZeroGuard(t *testing.T) {
+	m := model.CoverageMetrics{PatchLinesValid: 0}
+	band := &config.Band{Min: 60, Max: 80}
+	lvl, show := PatchLineCoverageEvaluator{}.Evaluate(m, band)
+	assert.Equal(t, status.RiskLevel(""), lvl)
+	assert.False(t, show)
+}
+
+func TestPatchLineCoverageEvaluator_Thresholds(t *testing.T) {
+	band := &config.Band{Min: 60, Max: 80}
+	tests := []struct {
+		name    string
+		covered int
+		valid   int
+		want    status.RiskLevel
+	}{
+		{"danger", 50, 100, status.RiskDanger},
+		{"warning", 70, 100, status.RiskWarning},
+		{"safe", 90, 100, status.RiskSafe},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := model.CoverageMetrics{PatchLinesCovered: tt.covered, PatchLinesValid: tt.valid}
+			lvl, show := PatchLineCoverageEvaluator{}.Evaluate(m, band)
+			assert.True(t, show)
+			assert.Equal(t, tt.want, lvl)
+		})
 	}
 }

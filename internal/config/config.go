@@ -170,31 +170,31 @@ type RawConfigInput struct {
 	DiffFile       string
 	DiffStrip      string
 	StatusBands    []string
-	FileMetrics   string
-	MethodMetrics string
+	FileMetrics    string
+	MethodMetrics  string
 	IgnoreCache    bool
 }
 
 type AppConfig struct {
-	ReportPatterns []string           `yaml:"reports"`
-	SourceDirs     []string           `yaml:"source_dirs"`
-	ReportTypes    []string           `yaml:"report_types"`
-	FileFilters    []string           `yaml:"file_filters"`
-	OutputDir      string             `yaml:"output_dir"`
-	Tag            string             `yaml:"tag"`
-	Title          string             `yaml:"title"`
-	LogFile        string             `yaml:"log_file"`
-	LogFormat      string             `yaml:"log_format"`
-	Verbosity      string             `yaml:"verbosity"`
-	IgnoreFiles    []string           `yaml:"ignore_files"`
-	ProjectRoot    string             `yaml:"-"`
-	StatusBands    StatusBands        `yaml:"status_bands"`
+	ReportPatterns      []string           `yaml:"reports"`
+	SourceDirs          []string           `yaml:"source_dirs"`
+	ReportTypes         []string           `yaml:"report_types"`
+	FileFilters         []string           `yaml:"file_filters"`
+	OutputDir           string             `yaml:"output_dir"`
+	Tag                 string             `yaml:"tag"`
+	Title               string             `yaml:"title"`
+	LogFile             string             `yaml:"log_file"`
+	LogFormat           string             `yaml:"log_format"`
+	Verbosity           string             `yaml:"verbosity"`
+	IgnoreFiles         []string           `yaml:"ignore_files"`
+	ProjectRoot         string             `yaml:"-"`
+	StatusBands         StatusBands        `yaml:"status_bands"`
 	FileMetrics         []MetricKey        `yaml:"file_metrics"`
 	MethodMetrics       []MetricKey        `yaml:"method_metrics"`
 	ActiveFileMetrics   map[MetricKey]bool `yaml:"-"`
 	ActiveMethodMetrics map[MetricKey]bool `yaml:"-"`
-	IgnoreCache    bool               `yaml:"ignore_cache"`
-	Diff           DiffConfig         `yaml:"diff"`
+	IgnoreCache         bool               `yaml:"ignore_cache"`
+	Diff                DiffConfig         `yaml:"diff"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel

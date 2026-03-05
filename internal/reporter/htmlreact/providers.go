@@ -269,3 +269,17 @@ var FileProviderRegistry = map[config.MetricKey]FileMetricProvider{
 	config.PatchLineCoverage:      PatchLineCoverageFileProvider{},
 	config.PatchMethodsHit:        PatchMethodsHitFileProvider{},
 }
+
+// =============================================================================
+// Method Provider Registry
+// =============================================================================
+
+// MethodProviderRegistry maps each method-scoped MetricKey to its MethodMetricProvider.
+var MethodProviderRegistry = map[config.MetricKey]MethodMetricProvider{
+	config.StatementCoverage:       StatementCoverageMethodProvider{},
+	config.LineCoverage:            LineCoverageMethodProvider{},
+	config.BranchCoverage:          BranchCoverageMethodProvider{},
+	config.PatchLineCoverage:       PatchLineCoverageMethodProvider{},
+	config.PatchStatementCoverage:  PatchStatementMethodProvider{},
+	config.MaxCyclomaticComplexity: CyclomaticComplexityMethodProvider{},
+}

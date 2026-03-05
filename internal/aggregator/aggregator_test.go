@@ -275,7 +275,7 @@ func TestMaxCyclomaticComplexity_FileLevel(t *testing.T) {
 				StartLine:            1,
 				EndLine:              2,
 				CyclomaticComplexity: &cyclo5,
-				LinesValid:          2,
+				LinesValid:           2,
 				LinesCovered:         2,
 			},
 			{
@@ -283,7 +283,7 @@ func TestMaxCyclomaticComplexity_FileLevel(t *testing.T) {
 				StartLine:            3,
 				EndLine:              4,
 				CyclomaticComplexity: &cyclo12,
-				LinesValid:          2,
+				LinesValid:           2,
 				LinesCovered:         1,
 			},
 		},
@@ -318,7 +318,7 @@ func TestMaxCyclomaticComplexity_DirPropagation(t *testing.T) {
 					{
 						Name: "FuncA", StartLine: 1, EndLine: 2,
 						CyclomaticComplexity: &cyclo7,
-						LinesValid: 2, LinesCovered: 2,
+						LinesValid:           2, LinesCovered: 2,
 					},
 				},
 				Metrics: model.CoverageMetrics{LinesValid: 2, LinesCovered: 2},
@@ -332,12 +332,12 @@ func TestMaxCyclomaticComplexity_DirPropagation(t *testing.T) {
 					{
 						Name: "FuncB", StartLine: 1, EndLine: 1,
 						CyclomaticComplexity: &cyclo3,
-						LinesValid: 1, LinesCovered: 1,
+						LinesValid:           1, LinesCovered: 1,
 					},
 					{
 						Name: "FuncC", StartLine: 2, EndLine: 2,
 						CyclomaticComplexity: &cyclo15,
-						LinesValid: 1, LinesCovered: 0,
+						LinesValid:           1, LinesCovered: 0,
 					},
 				},
 				Metrics: model.CoverageMetrics{LinesValid: 2, LinesCovered: 1},
@@ -356,4 +356,3 @@ func TestMaxCyclomaticComplexity_DirPropagation(t *testing.T) {
 	assert.Equal(t, 15, dir.Metrics.MaxCyclomaticComplexity)
 	assert.Equal(t, 15, tree.Metrics.MaxCyclomaticComplexity)
 }
-

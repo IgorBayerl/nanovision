@@ -79,7 +79,7 @@ type MethodMetrics struct {
 	PatchLinesCovered      int
 	PatchStatementsValid   int
 	PatchStatementsCovered int
-	DiffStatus string // "added", "modified", or ""
+	DiffStatus             string // "added", "modified", or ""
 
 	Statuses map[config.MetricKey]string // Per-method risk statuses
 }

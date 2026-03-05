@@ -230,7 +230,7 @@ func setupCacheManager(appConfig *config.AppConfig, logger *slog.Logger, buildMe
 	// SELECT VALIDATOR BASED ON BUILD TYPE
 	var validator cache.CacheValidator
 	if commit == "dev" || commit == "none" {
-		validator = &cache.DevValidator{}  // Always invalidate in dev
+		validator = &cache.DevValidator{} // Always invalidate in dev
 		logger.Info("Dev mode: cache will be invalidated on each run")
 	} else {
 		validator = &cache.StrictValidator{CurrentBuildMetadata: buildMeta}

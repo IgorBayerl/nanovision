@@ -9,8 +9,16 @@ import (
 // The annotation engine iterates over the active metric keys and looks
 // up evaluators from this registry.
 var Registry = map[config.MetricKey]status.Evaluator{
-	config.LineCoverage:            LineCoverageEvaluator{},
-	config.BranchCoverage:          BranchCoverageEvaluator{},
-	config.StatementCoverage:       StatementCoverageEvaluator{},
-	config.MaxCyclomaticComplexity: MaxComplexityEvaluator{},
+	config.LineCoverage:                 LineCoverageEvaluator{},
+	config.BranchCoverage:               BranchCoverageEvaluator{},
+	config.StatementCoverage:            StatementCoverageEvaluator{},
+	config.MaxCyclomaticComplexity:      MaxComplexityEvaluator{},
+	config.MethodsHit:                   MethodsHitEvaluator{},
+	config.MethodsFullyCovered:          MethodsFullyCoveredEvaluator{},
+	config.PatchLineCoverage:            PatchLineCoverageEvaluator{},
+	config.PatchMethodsHit:              PatchMethodsHitEvaluator{},
+	config.PatchStatementCoverage:       PatchStatementCoverageEvaluator{},
+	config.StatementMethodsHit:          StatementMethodsHitEvaluator{},
+	config.StatementMethodsFullyCovered: StatementMethodsFullyCoveredEvaluator{},
+	config.PatchStatementMethodsHit:     PatchStatementMethodsHitEvaluator{},
 }

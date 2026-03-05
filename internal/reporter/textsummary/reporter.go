@@ -13,7 +13,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/reporter"
-	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 type TextReportBuilder struct {
@@ -70,26 +69,8 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		if !b.config.ActiveFileMetrics[key] {
 			continue
 		}
-		switch key {
-		case config.StatementCoverage:
-			if tree.Metrics.StatementsValid > 0 {
-				statementCoverage := utils.CalculatePercentage(tree.Metrics.StatementsCovered, tree.Metrics.StatementsValid, 1)
-				fmt.Fprintf(f, "  Statement coverage: %s\n", utils.FormatPercentage(statementCoverage, 0))
-				fmt.Fprintf(f, "  Covered statements: %d\n", tree.Metrics.StatementsCovered)
-				fmt.Fprintf(f, "  Uncovered statements: %d\n", tree.Metrics.StatementsValid-tree.Metrics.StatementsCovered)
-				fmt.Fprintf(f, "  Total statements: %d\n", tree.Metrics.StatementsValid)
-			}
-		case config.LineCoverage:
-			lineCoverage := utils.CalculatePercentage(tree.Metrics.LinesCovered, tree.Metrics.LinesValid, 1)
-			fmt.Fprintf(f, "  Line coverage: %s\n", utils.FormatPercentage(lineCoverage, 0))
-			fmt.Fprintf(f, "  Covered lines: %d\n", tree.Metrics.LinesCovered)
-			fmt.Fprintf(f, "  Uncovered lines: %d\n", tree.Metrics.LinesValid-tree.Metrics.LinesCovered)
-			fmt.Fprintf(f, "  Coverable lines: %d\n", tree.Metrics.LinesValid)
-		case config.BranchCoverage:
-			if tree.Metrics.BranchesValid > 0 {
-				branchCoverage := utils.CalculatePercentage(tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid, 1)
-				fmt.Fprintf(f, "  Branch coverage: %s (%d of %d)\n", utils.FormatPercentage(branchCoverage, 0), tree.Metrics.BranchesCovered, tree.Metrics.BranchesValid)
-			}
+		if provider, ok := TextProviderRegistry[key]; ok {
+			provider.PrintSummary(f, tree)
 		}
 	}
 
@@ -111,19 +92,9 @@ func (b *TextReportBuilder) buildNodeParts(m model.CoverageMetrics) []string {
 		if !b.config.ActiveFileMetrics[key] {
 			continue
 		}
-		switch key {
-		case config.StatementCoverage:
-			if m.StatementsValid > 0 {
-				stmtCov := utils.CalculatePercentage(m.StatementsCovered, m.StatementsValid, 1)
-				parts = append(parts, fmt.Sprintf("%s (Stmt)", utils.FormatPercentage(stmtCov, 0)))
-			}
-		case config.LineCoverage:
-			lineCov := utils.CalculatePercentage(m.LinesCovered, m.LinesValid, 1)
-			parts = append(parts, fmt.Sprintf("%s (Line)", utils.FormatPercentage(lineCov, 0)))
-		case config.BranchCoverage:
-			if m.BranchesValid > 0 {
-				branchCov := utils.CalculatePercentage(m.BranchesCovered, m.BranchesValid, 1)
-				parts = append(parts, fmt.Sprintf("%s (Branch)", utils.FormatPercentage(branchCov, 0)))
+		if provider, ok := TextProviderRegistry[key]; ok {
+			if part := provider.NodePart(m); part != "" {
+				parts = append(parts, part)
 			}
 		}
 	}
