@@ -372,7 +372,7 @@ func main() {
 		fmt.Println("--------------------------------------------------")
 		for _, ev := range evals {
 			if bootlog.HasScope(ev, status.FileScope) {
-				fmt.Printf(" - %-28s : %s\n", ev.Key(), ev.Description())
+				fmt.Printf(" - %-35s : %s\n", ev.Key(), ev.Description())
 			}
 		}
 
@@ -380,7 +380,7 @@ func main() {
 		fmt.Println("--------------------------------------------------")
 		for _, ev := range evals {
 			if bootlog.HasScope(ev, status.MethodScope) {
-				fmt.Printf(" - %-28s : %s\n", ev.Key(), ev.Description())
+				fmt.Printf(" - %-35s : %s\n", ev.Key(), ev.Description())
 			}
 		}
 
