@@ -5,16 +5,24 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
-// Evaluator is the strategy interface for computing a risk status from a
-// single metric. Each implementation knows how to extract its own value
-// from CoverageMetrics, guard against invalid data, and classify the
-// result against a Band.
-type Evaluator interface {
-	// Key returns the config.MetricKey this evaluator handles.
-	Key() config.MetricKey
+// MetricScope defines where a metric can be applied.
+type MetricScope string
 
-	// IsApplicable returns whether this metric should be evaluated given
-	// the dataset's capabilities (e.g., branch coverage may not be present).
+const (
+	FileScope   MetricScope = "file"
+	MethodScope MetricScope = "method"
+)
+
+// Evaluator is the strategy interface for computing a risk status from a
+// single metric. It is also the Source of Truth for the metric's documentation.
+type Evaluator interface {
+	// Identity & Documentation
+	Key() config.MetricKey
+	Name() string
+	Description() string
+	SupportedScopes() MetricScope
+
+	// Logic
 	IsApplicable(caps Capabilities) bool
 
 	// Evaluate computes the risk level for this metric. It returns the

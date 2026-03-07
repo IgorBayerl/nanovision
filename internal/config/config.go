@@ -36,6 +36,12 @@ const (
 	StatementMethodsFullyCovered MetricKey = "statement_methods_fully_covered"
 	PatchStatementMethodsHit     MetricKey = "patch_statement_methods_hit"
 	MaxCyclomaticComplexity      MetricKey = "max_cyclomatic_complexity"
+
+	MethodLineCoverage           MetricKey = "method_line_coverage"
+	MethodStatementCoverage      MetricKey = "method_statement_coverage"
+	MethodPatchLineCoverage      MetricKey = "method_patch_line_coverage"
+	MethodPatchStatementCoverage MetricKey = "method_patch_statement_coverage"
+	CyclomaticComplexity         MetricKey = "cyclomatic_complexity"
 )
 
 var DefaultFileMetrics = []MetricKey{
@@ -45,38 +51,22 @@ var DefaultFileMetrics = []MetricKey{
 	// MethodsFullyCovered,
 	// PatchLineCoverage,
 	PatchMethodsHit,
-	MethodBranchCoverage,
+
 	StatementCoverage,
 	PatchStatementCoverage,
 	StatementMethodsHit,
-	// StatementMethodsFullyCovered,
+	// StatementMethodsFullyCovered, // Let's keep existing defaults commented or active as they were.
 	PatchStatementMethodsHit,
+	// MaxCyclomaticComplexity,
 }
 
 var DefaultMethodMetrics = []MetricKey{
-	LineCoverage,
-	StatementCoverage,
-	MaxCyclomaticComplexity,
-}
-
-func isValidMetric(m MetricKey) bool {
-	switch m {
-	case LineCoverage,
-		BranchCoverage,
-		MethodsHit,
-		MethodsFullyCovered,
-		PatchLineCoverage,
-		PatchMethodsHit,
-		MethodBranchCoverage,
-		StatementCoverage,
-		PatchStatementCoverage,
-		StatementMethodsHit,
-		StatementMethodsFullyCovered,
-		PatchStatementMethodsHit,
-		MaxCyclomaticComplexity:
-		return true
-	}
-	return false
+	MethodLineCoverage,
+	MethodStatementCoverage,
+	CyclomaticComplexity,
+	// MethodBranchCoverage,
+	// MethodPatchLineCoverage,
+	// MethodPatchStatementCoverage,
 }
 
 // StatusBands supports either:
@@ -382,18 +372,6 @@ func (c *AppConfig) validate() error {
 			}
 		}
 	}
-
-	for _, m := range c.FileMetrics {
-		if !isValidMetric(m) {
-			return fmt.Errorf("configuration error: unknown file metric '%s'", m)
-		}
-	}
-	for _, m := range c.MethodMetrics {
-		if !isValidMetric(m) {
-			return fmt.Errorf("configuration error: unknown method metric '%s'", m)
-		}
-	}
-
 	return nil
 }
 

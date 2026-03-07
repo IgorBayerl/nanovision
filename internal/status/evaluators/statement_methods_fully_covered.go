@@ -14,6 +14,13 @@ type StatementMethodsFullyCoveredEvaluator struct{}
 func (StatementMethodsFullyCoveredEvaluator) Key() config.MetricKey {
 	return config.StatementMethodsFullyCovered
 }
+func (StatementMethodsFullyCoveredEvaluator) Name() string { return "Statement Methods Fully Covered" }
+func (StatementMethodsFullyCoveredEvaluator) Description() string {
+	return "Percentage of methods with 100% statement coverage."
+}
+func (StatementMethodsFullyCoveredEvaluator) SupportedScopes() status.MetricScope {
+	return status.FileScope
+}
 
 func (StatementMethodsFullyCoveredEvaluator) IsApplicable(caps status.Capabilities) bool {
 	return caps.HasStatementCoverage

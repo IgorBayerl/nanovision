@@ -22,7 +22,9 @@ type MethodMetricProvider interface {
 // StatementCoverageMethodProvider Strategy
 type StatementCoverageMethodProvider struct{}
 
-func (p StatementCoverageMethodProvider) Key() config.MetricKey { return config.StatementCoverage }
+func (p StatementCoverageMethodProvider) Key() config.MetricKey {
+	return config.MethodStatementCoverage
+}
 func (p StatementCoverageMethodProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
 	if m.StatementsValid > 0 {
 		ui.Metrics[MethodUIStmtCoverage] = methodMetric{
@@ -34,7 +36,7 @@ func (p StatementCoverageMethodProvider) Apply(m *model.MethodMetrics, ui *metho
 // LineCoverageMethodProvider Strategy
 type LineCoverageMethodProvider struct{}
 
-func (p LineCoverageMethodProvider) Key() config.MetricKey { return config.LineCoverage }
+func (p LineCoverageMethodProvider) Key() config.MetricKey { return config.MethodLineCoverage }
 func (p LineCoverageMethodProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
 	ui.Metrics[MethodUILineCoverage] = methodMetric{
 		Value: fmt.Sprintf("%d / %d", m.LinesCovered, m.LinesValid),
@@ -44,7 +46,7 @@ func (p LineCoverageMethodProvider) Apply(m *model.MethodMetrics, ui *methodDeta
 // BranchCoverageMethodProvider Strategy
 type BranchCoverageMethodProvider struct{}
 
-func (p BranchCoverageMethodProvider) Key() config.MetricKey { return config.BranchCoverage }
+func (p BranchCoverageMethodProvider) Key() config.MetricKey { return config.MethodBranchCoverage }
 func (p BranchCoverageMethodProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
 	if m.BranchesValid > 0 {
 		ui.Metrics[MethodUIBranchCoverage] = methodMetric{
@@ -56,7 +58,9 @@ func (p BranchCoverageMethodProvider) Apply(m *model.MethodMetrics, ui *methodDe
 // PatchLineCoverageMethodProvider Strategy
 type PatchLineCoverageMethodProvider struct{}
 
-func (p PatchLineCoverageMethodProvider) Key() config.MetricKey { return config.PatchLineCoverage }
+func (p PatchLineCoverageMethodProvider) Key() config.MetricKey {
+	return config.MethodPatchLineCoverage
+}
 func (p PatchLineCoverageMethodProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
 	// Only apply if there is patch data
 	if m.DiffStatus != "" {
@@ -75,7 +79,9 @@ func (p PatchLineCoverageMethodProvider) Apply(m *model.MethodMetrics, ui *metho
 // PatchStatementMethodProvider Strategy
 type PatchStatementMethodProvider struct{}
 
-func (p PatchStatementMethodProvider) Key() config.MetricKey { return config.PatchStatementCoverage }
+func (p PatchStatementMethodProvider) Key() config.MetricKey {
+	return config.MethodPatchStatementCoverage
+}
 func (p PatchStatementMethodProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
 	// Only apply if there is patch data
 	if m.DiffStatus != "" && m.StatementsValid > 0 {
@@ -97,7 +103,7 @@ func (p PatchStatementMethodProvider) Apply(m *model.MethodMetrics, ui *methodDe
 type CyclomaticComplexityMethodProvider struct{}
 
 func (p CyclomaticComplexityMethodProvider) Key() config.MetricKey {
-	return config.MaxCyclomaticComplexity
+	return config.CyclomaticComplexity
 }
 func (p CyclomaticComplexityMethodProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
 	if m.CyclomaticComplexity != nil {
@@ -276,10 +282,10 @@ var FileProviderRegistry = map[config.MetricKey]FileMetricProvider{
 
 // MethodProviderRegistry maps each method-scoped MetricKey to its MethodMetricProvider.
 var MethodProviderRegistry = map[config.MetricKey]MethodMetricProvider{
-	config.StatementCoverage:       StatementCoverageMethodProvider{},
-	config.LineCoverage:            LineCoverageMethodProvider{},
-	config.BranchCoverage:          BranchCoverageMethodProvider{},
-	config.PatchLineCoverage:       PatchLineCoverageMethodProvider{},
-	config.PatchStatementCoverage:  PatchStatementMethodProvider{},
-	config.MaxCyclomaticComplexity: CyclomaticComplexityMethodProvider{},
+	config.MethodStatementCoverage:      StatementCoverageMethodProvider{},
+	config.MethodLineCoverage:           LineCoverageMethodProvider{},
+	config.MethodBranchCoverage:         BranchCoverageMethodProvider{},
+	config.MethodPatchLineCoverage:      PatchLineCoverageMethodProvider{},
+	config.MethodPatchStatementCoverage: PatchStatementMethodProvider{},
+	config.CyclomaticComplexity:         CyclomaticComplexityMethodProvider{},
 }

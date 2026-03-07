@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	cpp "github.com/IgorBayerl/nanovision/internal/analyzer/cpp"
 	"github.com/IgorBayerl/nanovision/internal/analyzer/gdscript"
 	golang "github.com/IgorBayerl/nanovision/internal/analyzer/go"
+	"github.com/IgorBayerl/nanovision/internal/bootlog"
 	"github.com/IgorBayerl/nanovision/internal/cache"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/diff"
@@ -338,6 +340,7 @@ func main() {
 	watchFlag := flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes")
 	versionFlag := flag.Bool("version", false, "Print version information and exit")
 	listParsersFlag := flag.Bool("list-parsers", false, "List supported coverage report parsers and exit")
+	listMetricsFlag := flag.Bool("list-metrics", false, "List all configurable metrics and exit")
 
 	rawInput := parseAndBindFlags()
 	flag.Parse()
@@ -351,6 +354,37 @@ func main() {
 		for _, name := range factory.RegisteredParsers() {
 			fmt.Printf(" - %s\n", name)
 		}
+		os.Exit(0)
+	}
+
+	if *listMetricsFlag {
+		fmt.Println("NanoVision Supported Metrics")
+		fmt.Println("==================================================")
+
+		// Sort evaluators alphabetically
+		var evals []status.Evaluator
+		for _, ev := range evaluators.Registry {
+			evals = append(evals, ev)
+		}
+		sort.Slice(evals, func(i, j int) bool { return evals[i].Name() < evals[j].Name() })
+
+		fmt.Println("\nFile & Directory Metrics (yaml: file_metrics)")
+		fmt.Println("--------------------------------------------------")
+		for _, ev := range evals {
+			if bootlog.HasScope(ev, status.FileScope) {
+				fmt.Printf(" - %-28s : %s\n", ev.Key(), ev.Description())
+			}
+		}
+
+		fmt.Println("\nMethod & Function Metrics (yaml: method_metrics)")
+		fmt.Println("--------------------------------------------------")
+		for _, ev := range evals {
+			if bootlog.HasScope(ev, status.MethodScope) {
+				fmt.Printf(" - %-28s : %s\n", ev.Key(), ev.Description())
+			}
+		}
+
+		fmt.Println("\nTo configure these, add them to your nanovision.yaml file or pass them via CLI flags.")
 		os.Exit(0)
 	}
 
@@ -377,6 +411,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Validate metrics against the evaluator registry (source of truth).
+	// Unknown keys are warned (not fatal) because some keys (e.g.
+	// method_branch_coverage) are display-only reporter metrics without
+	// a status evaluator.
+	for _, m := range appConfig.FileMetrics {
+		if _, ok := evaluators.Registry[m]; !ok {
+			fmt.Fprintf(os.Stderr, "Warning: file metric '%s' has no evaluator (display-only)\n", m)
+		}
+	}
+	for _, m := range appConfig.MethodMetrics {
+		if _, ok := evaluators.Registry[m]; !ok {
+			fmt.Fprintf(os.Stderr, "Warning: method metric '%s' has no evaluator (display-only)\n", m)
+		}
+	}
+
 	appConfig.ProjectRoot, err = determineProjectRoot(*configPath)
 	if err != nil {
 		slog.Error("Failed to determine project root", "error", err)
@@ -392,6 +441,9 @@ func main() {
 	if closer != nil {
 		defer closer.Close()
 	}
+
+	// Print the visual checklist of resolved configurations
+	bootlog.PrintBootSummary(appConfig, evaluators.Registry)
 
 	var diffData *diff.DiffData
 	if appConfig.Diff.File != "" {

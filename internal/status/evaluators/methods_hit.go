@@ -12,6 +12,13 @@ import (
 type MethodsHitEvaluator struct{}
 
 func (MethodsHitEvaluator) Key() config.MetricKey { return config.MethodsHit }
+func (MethodsHitEvaluator) Name() string          { return "Methods Hit" }
+func (MethodsHitEvaluator) Description() string {
+	return "Percentage of methods with at least one hit."
+}
+func (MethodsHitEvaluator) SupportedScopes() status.MetricScope {
+	return status.FileScope
+}
 
 func (MethodsHitEvaluator) IsApplicable(caps status.Capabilities) bool {
 	return caps.HasMethodCoverage

@@ -12,6 +12,13 @@ import (
 type StatementMethodsHitEvaluator struct{}
 
 func (StatementMethodsHitEvaluator) Key() config.MetricKey { return config.StatementMethodsHit }
+func (StatementMethodsHitEvaluator) Name() string          { return "Statement Methods Hit" }
+func (StatementMethodsHitEvaluator) Description() string {
+	return "Percentage of methods with at least one statement hit."
+}
+func (StatementMethodsHitEvaluator) SupportedScopes() status.MetricScope {
+	return status.FileScope
+}
 
 func (StatementMethodsHitEvaluator) IsApplicable(caps status.Capabilities) bool {
 	return caps.HasStatementCoverage

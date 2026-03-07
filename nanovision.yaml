@@ -62,18 +62,26 @@ ignore_files:
 # If a metric is not listed here, it will not have a status indicator.
 #
 status_bands:
+  # --- File & Directory Metrics ---
   # line_coverage: "60..75"
   statement_coverage: "60..75"
   branch_coverage: "50..70"
   # methods_hit: "60..80"
   methods_fully_covered: "40..60"
-  # method_branch_coverage: "50..70"
-  # statement_methods_hit: "60..80"
-  # statement_methods_fully_covered: "40..60"
   # patch_line_coverage: "80..90"
   patch_statement_coverage: "80..90"
   patch_methods_hit: "80..90"
+  # statement_methods_hit: "60..80"
+  # statement_methods_fully_covered: "40..60"
   # patch_statement_methods_hit: "80..90"
+  # max_cyclomatic_complexity: "10..20"
+
+  # --- Method & Function Metrics ---
+  # method_line_coverage: "60..75"
+  # method_statement_coverage: "60..75"
+  # method_patch_line_coverage: "80..90"
+  # method_patch_statement_coverage: "80..90"
+  # cyclomatic_complexity: "10..20"
 
 # Optional settings for patch coverage analysis.
 diff:
@@ -91,7 +99,6 @@ file_metrics:
   - "methods_fully_covered"
   # - "patch_line_coverage"
   - "patch_methods_hit"
-  - "method_branch_coverage"
   - "patch_statement_coverage"
   - "statement_methods_hit"
   - "statement_methods_fully_covered"
@@ -99,8 +106,11 @@ file_metrics:
   - "max_cyclomatic_complexity"
 
 method_metrics:
-  - "line_coverage"
-  - "statement_coverage"
-  - "max_cyclomatic_complexity"
+  # - "method_line_coverage"
+  - "method_statement_coverage"
+  - "cyclomatic_complexity"
+  - "method_branch_coverage"
+  # - "method_patch_line_coverage"
+  - "method_patch_statement_coverage"
 
 ignore_cache: true

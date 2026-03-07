@@ -282,6 +282,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
 		}
+	}
+	if b.config.ActiveMethodMetrics[config.MethodStatementCoverage] {
 		defs[MethodUIStmtCoverage] = metricDefinition{
 			Label:      "Statements",
 			ShortLabel: "Statements",
@@ -301,6 +303,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
 		}
+	}
+	if b.config.ActiveMethodMetrics[config.MethodLineCoverage] {
 		defs[MethodUILineCoverage] = metricDefinition{
 			Label:      "Lines",
 			ShortLabel: "Lines",
@@ -318,6 +322,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
 		}
+	}
+	if b.config.ActiveMethodMetrics[config.MethodBranchCoverage] {
 		defs[string(config.MethodBranchCoverage)] = metricDefinition{
 			Label:      "Method Branches",
 			ShortLabel: "Method Branches",
@@ -345,6 +351,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
 		}
+	}
+	if b.config.ActiveMethodMetrics[config.MethodPatchStatementCoverage] {
 		defs[MethodUIPatchStmtCoverage] = metricDefinition{
 			Label:      "Patch Statements",
 			ShortLabel: "Patch Stmts",
@@ -364,6 +372,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "percentage", Label: "Percentage %", Width: 160},
 			},
 		}
+	}
+	if b.config.ActiveMethodMetrics[config.MethodPatchLineCoverage] {
 		defs[MethodUIPatchLineCoverage] = metricDefinition{
 			Label:      "Patch Lines",
 			ShortLabel: "Patch Lines",
@@ -379,6 +389,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 				{ID: "total", Label: "Value", Width: 100},
 			},
 		}
+	}
+	if b.config.ActiveMethodMetrics[config.CyclomaticComplexity] {
 		defs[MethodUICyclomaticComplexity] = metricDefinition{
 			Label:      "Cyclomatic Complexity",
 			ShortLabel: "Complexity",

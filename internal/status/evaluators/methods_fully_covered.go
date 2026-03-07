@@ -12,6 +12,13 @@ import (
 type MethodsFullyCoveredEvaluator struct{}
 
 func (MethodsFullyCoveredEvaluator) Key() config.MetricKey { return config.MethodsFullyCovered }
+func (MethodsFullyCoveredEvaluator) Name() string          { return "Methods Fully Covered" }
+func (MethodsFullyCoveredEvaluator) Description() string {
+	return "Percentage of methods with 100% line coverage."
+}
+func (MethodsFullyCoveredEvaluator) SupportedScopes() status.MetricScope {
+	return status.FileScope
+}
 
 func (MethodsFullyCoveredEvaluator) IsApplicable(caps status.Capabilities) bool {
 	return caps.HasMethodCoverage

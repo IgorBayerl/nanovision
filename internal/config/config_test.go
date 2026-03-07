@@ -2,7 +2,6 @@ package config
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -70,23 +69,19 @@ func TestConfig_FileMetrics_CLIOverride(t *testing.T) {
 	}
 }
 
-func TestConfig_FileMetrics_Invalid(t *testing.T) {
-	// Unhappy Path: User provides an unknown/typo metric name -> validate() returns a clear error
+func TestConfig_FileMetrics_UnknownKeysPassConfig(t *testing.T) {
+	// After refactoring, config.validate() no longer rejects unknown metric keys.
+	// Validation is handled by main.go using the evaluator Registry.
 	cfg := GetDefaultConfig()
 	cliInput := defaultCLIInput()
 	cliInput.ReportPatterns = "report.xml"
 	cliInput.SourceDirs = "."
-	cliInput.FileMetrics = "lines_coverage" // invalid, should be line_coverage
+	cliInput.FileMetrics = "lines_coverage" // would be invalid, but config no longer validates this
 
 	cfg.mergeCliOverrides(cliInput)
 	err := cfg.validate()
-	if err == nil {
-		t.Fatal("expected validation error for invalid metric, got nil")
-	}
-
-	expectedErrMsg := "unknown file metric 'lines_coverage'"
-	if !strings.Contains(err.Error(), expectedErrMsg) {
-		t.Errorf("expected error to contain %q, but got: %v", expectedErrMsg, err)
+	if err != nil {
+		t.Fatalf("expected no validation error (validation moved to main.go), got: %v", err)
 	}
 }
 
@@ -152,8 +147,9 @@ func TestConfig_FileAndMethodMetrics_YAML(t *testing.T) {
 	}
 }
 
-func TestConfig_MethodMetrics_Invalid(t *testing.T) {
-	// Unhappy Path: Unknown key in MethodMetrics produces a clear error
+func TestConfig_MethodMetrics_UnknownKeysPassConfig(t *testing.T) {
+	// After refactoring, config.validate() no longer rejects unknown metric keys.
+	// Validation is handled by main.go using the evaluator Registry.
 	cfg := GetDefaultConfig()
 	cliInput := defaultCLIInput()
 	cliInput.ReportPatterns = "report.xml"
@@ -162,12 +158,7 @@ func TestConfig_MethodMetrics_Invalid(t *testing.T) {
 
 	cfg.mergeCliOverrides(cliInput)
 	err := cfg.validate()
-	if err == nil {
-		t.Fatal("expected validation error for invalid method metric, got nil")
-	}
-
-	expectedErrMsg := "unknown method metric 'nonexistent_metric'"
-	if !strings.Contains(err.Error(), expectedErrMsg) {
-		t.Errorf("expected error to contain %q, but got: %v", expectedErrMsg, err)
+	if err != nil {
+		t.Fatalf("expected no validation error (validation moved to main.go), got: %v", err)
 	}
 }

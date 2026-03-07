@@ -11,6 +11,13 @@ import (
 type PatchMethodsHitEvaluator struct{}
 
 func (PatchMethodsHitEvaluator) Key() config.MetricKey { return config.PatchMethodsHit }
+func (PatchMethodsHitEvaluator) Name() string          { return "Patch Methods Hit" }
+func (PatchMethodsHitEvaluator) Description() string {
+	return "Percentage of patched methods with at least one hit."
+}
+func (PatchMethodsHitEvaluator) SupportedScopes() status.MetricScope {
+	return status.FileScope
+}
 
 func (PatchMethodsHitEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
 

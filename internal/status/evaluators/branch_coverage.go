@@ -12,6 +12,11 @@ import (
 type BranchCoverageEvaluator struct{}
 
 func (BranchCoverageEvaluator) Key() config.MetricKey { return config.BranchCoverage }
+func (BranchCoverageEvaluator) Name() string          { return "Branch Coverage" }
+func (BranchCoverageEvaluator) Description() string   { return "Percentage of covered code branches." }
+func (BranchCoverageEvaluator) SupportedScopes() status.MetricScope {
+	return status.FileScope
+}
 
 func (BranchCoverageEvaluator) IsApplicable(caps status.Capabilities) bool {
 	return caps.HasBranchCoverage
