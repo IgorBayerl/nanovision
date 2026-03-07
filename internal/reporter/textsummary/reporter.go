@@ -56,13 +56,15 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 
 	// Print top-level summary information.
 	fmt.Fprintf(f, "Summary\n")
-	fmt.Fprintf(f, "  Generated on: %s\n", time.Now().Format("02/01/2006 - 15:04:05"))
+	fmt.Fprintf(f, "Generated on: %s\n", time.Now().Format("02/01/2006 - 15:04:05"))
 	if tree.Timestamp > 0 {
-		fmt.Fprintf(f, "  Coverage date: %s\n", time.Unix(tree.Timestamp, 0).Format("02/01/2006 - 15:04:05"))
+		fmt.Fprintf(f, "Coverage date: %s\n", time.Unix(tree.Timestamp, 0).Format("02/01/2006 - 15:04:05"))
 	}
 	if len(tree.ParserNames) > 0 {
-		fmt.Fprintf(f, "  Parser: %s\n", strings.Join(tree.ParserNames, " | "))
+		fmt.Fprintf(f, "Parser: %s\n", strings.Join(tree.ParserNames, " | "))
 	}
+
+	fmt.Fprintf(f, "\n")
 
 	// Print metric summaries in the order defined by cfg.FileMetrics.
 	for _, key := range b.config.FileMetrics {
@@ -73,23 +75,21 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 			prettyKey := formatKey(string(key))
 			switch v := calcData.(type) {
 			case model.CoverageDetail:
-				fmt.Fprintf(f, "  %s: %.1f%%\n", prettyKey, v.Percentage)
-				fmt.Fprintf(f, "    Covered: %d\n", v.Covered)
-				fmt.Fprintf(f, "    Uncovered: %d\n", v.Uncovered)
-				fmt.Fprintf(f, "    Total: %d\n", v.Total)
+				fmt.Fprintf(f, "%s: %.1f%%\n", prettyKey, v.Percentage)
 			case model.ScoreDetail:
-				fmt.Fprintf(f, "  %s: %.1f\n", prettyKey, v.Value)
+				fmt.Fprintf(f, "%s: %.1f\n", prettyKey, v.Value)
 			}
 		}
 	}
 
+	// TODO: Create a better visualization of this table, maybe separate in different report
 	// Print the hierarchical summary table.
-	tw := tabwriter.NewWriter(f, 0, 0, 2, ' ', 0)
-	defer tw.Flush()
+	// tw := tabwriter.NewWriter(f, 0, 0, 2, ' ', 0)
+	// defer tw.Flush()
 
-	fmt.Fprintln(tw) // Newline before the table
-	// Start the recursive walk from the root's children.
-	b.printNode(tw, tree.Root, 0)
+	// fmt.Fprintln(tw) // Newline before the table
+	// // Start the recursive walk from the root's children.
+	// b.printNode(tw, tree.Root, 0)
 
 	return nil
 }

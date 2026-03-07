@@ -178,8 +178,8 @@ type MyNewMetricEvaluator struct{}
 func (MyNewMetricEvaluator) Key() config.MetricKey { return config.MyNewMetric }
 func (MyNewMetricEvaluator) Name() string           { return "My New Metric" }
 func (MyNewMetricEvaluator) Description() string    { return "Description of what this metric measures." }
-func (MyNewMetricEvaluator) SupportedScopes() []status.MetricScope {
-    return []status.MetricScope{status.FileScope} // or {status.FileScope, status.MethodScope}
+func (MyNewMetricEvaluator) SupportedScopes() status.MetricScope {
+    return status.FileScope // or status.MethodScope
 }
 
 func (MyNewMetricEvaluator) IsApplicable(_ status.Capabilities) bool {
@@ -261,62 +261,28 @@ If your metric applies at method scope, map it in [annotate.go](file:///c:/www/n
 
 Three sub-areas need updates for the HTML report.
 
-### 5a. File-level provider
+### 5a. Metric extraction
 
-**File:** [providers.go](file:///c:/www/nanovision/internal/reporter/htmlreact/providers.go)
+**File:** [builder.go](file:///c:/www/nanovision/internal/reporter/htmlreact/builder.go)
 
-Create a new `FileMetricProvider`:
-
-```go
-// --- MyNewMetricFileProvider ---
-
-type MyNewMetricFileProvider struct{}
-
-func (p MyNewMetricFileProvider) Key() config.MetricKey { return config.MyNewMetric }
-func (p MyNewMetricFileProvider) Apply(m model.CoverageMetrics, ui metricsMap) {
-    if m.MyNewMetricValid > 0 {
-        pct := utils.CalculatePercentage(m.MyNewMetricCovered, m.MyNewMetricValid, 2)
-        ui[string(config.MyNewMetric)] = lineCoverageDetail{
-            Covered:    m.MyNewMetricCovered,
-            Uncovered:  m.MyNewMetricValid - m.MyNewMetricCovered,
-            Coverable:  m.MyNewMetricValid,
-            Total:      m.MyNewMetricValid,
-            Percentage: pct,
-        }
-    }
-}
-```
-
-Register it in `FileProviderRegistry`:
-
-```diff
- var FileProviderRegistry = map[config.MetricKey]FileMetricProvider{
-     // ... existing entries ...
-+    config.MyNewMetric: MyNewMetricFileProvider{},
- }
-```
-
-### 5b. Method-level provider (if applicable)
-
-Create a new `MethodMetricProvider` and register in `MethodProviderRegistry`:
+Add your metric to `buildMetricsMap()` so it is mapped for the React UI:
 
 ```go
-type MyNewMetricMethodProvider struct{}
-
-func (p MyNewMetricMethodProvider) Key() config.MetricKey { return config.MyNewMetric }
-func (p MyNewMetricMethodProvider) Apply(m *model.MethodMetrics, ui *methodDetail) {
-    if m.MyNewMetricValid > 0 {
-        ui.Metrics["g_my_new_metric"] = methodMetric{
-            Value: fmt.Sprintf("%d / %d", m.MyNewMetricCovered, m.MyNewMetricValid),
+func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metricsMap {
+    // ... inside the ActiveFileMetrics switch ...
+    case config.MyNewMetric:
+        if detail, ok := calcData.(model.CoverageDetail); ok {
+            metrics[string(key)] = lineCoverageDetail{
+                Covered:    detail.Covered,
+                Uncovered:  detail.Uncovered,
+                Coverable:  detail.Total,
+                Total:      detail.Total,
+                Percentage: detail.Percentage,
+            }
         }
-    }
-}
 ```
 
-> [!IMPORTANT]
-> Method-level UI keys use alphabetical prefixes (`a_`, `b_`, `c_`, ...) to enforce sort order. See `schema.go` constants (`MethodUIStmtCoverage`, etc.). Choose the next letter in sequence.
-
-### 5c. Metric definitions
+### 5b. Metric definitions
 
 **File:** [builder.go](file:///c:/www/nanovision/internal/reporter/htmlreact/builder.go)
 
@@ -340,7 +306,7 @@ Add metric column definitions in `buildMetricDefinitions()`:
  }
 ```
 
-### 5d. Totals struct (if it needs a top-level hero card)
+### 5c. Totals struct (if it needs a top-level hero card)
 
 **File:** [schema.go](file:///c:/www/nanovision/internal/reporter/htmlreact/schema.go)
 
@@ -372,43 +338,9 @@ And the same assignment block in `buildFileTotals()` in [details_generator.go](f
 
 ## Step 6 — Reporter: Text Summary
 
-**File:** [providers.go](file:///c:/www/nanovision/internal/reporter/textsummary/providers.go)
+**File:** No changes required! 🎉
 
-Create a new `TextMetricProvider`:
-
-```go
-// --- MyNewMetricTextProvider ---
-
-type MyNewMetricTextProvider struct{}
-
-func (MyNewMetricTextProvider) Key() config.MetricKey { return config.MyNewMetric }
-
-func (MyNewMetricTextProvider) PrintSummary(w io.Writer, tree *model.SummaryTree) {
-    if tree.Metrics.MyNewMetricValid > 0 {
-        pct := utils.CalculatePercentage(
-            tree.Metrics.MyNewMetricCovered, tree.Metrics.MyNewMetricValid, 1,
-        )
-        fmt.Fprintf(w, "  My new metric: %s\n", utils.FormatPercentage(pct, 0))
-    }
-}
-
-func (MyNewMetricTextProvider) NodePart(m model.CoverageMetrics) string {
-    if m.MyNewMetricValid > 0 {
-        pct := utils.CalculatePercentage(m.MyNewMetricCovered, m.MyNewMetricValid, 1)
-        return fmt.Sprintf("%s (New)", utils.FormatPercentage(pct, 0))
-    }
-    return ""
-}
-```
-
-Register it in `TextProviderRegistry`:
-
-```diff
- var TextProviderRegistry = map[config.MetricKey]TextMetricProvider{
-     // ... existing entries ...
-+    config.MyNewMetric: MyNewMetricTextProvider{},
- }
-```
+The text reporter iterates over configured metrics automatically using `b.config.ActiveFileMetrics` and formats them based on `tree.Metrics.Calculated`. As long as your metric yields a `model.CoverageDetail` or `model.ScoreDetail` and you registered the evaluator, it will just work!
 
 ---
 
@@ -501,12 +433,10 @@ Also update `TestRegistryContainsAllEvaluators` to include the new key.
 | 6 | `internal/status/types.go` | *(Optional)* Add `Capabilities` flag |
 | 7 | `internal/status/annotate.go` | *(Optional)* Map method fields in `methodToCoverageMetrics` |
 | 8 | `cmd/main.go` | *(Optional)* Update `deriveCapabilities` |
-| 9 | `internal/reporter/htmlreact/providers.go` | Add `FileMetricProvider` + register; optionally `MethodMetricProvider` |
+| 9 | `internal/reporter/htmlreact/builder.go` | Map value in `buildMetricsMap` + add definition + extract in `buildTotals` |
 | 10 | `internal/reporter/htmlreact/schema.go` | *(Optional)* Add field to `totals` struct |
-| 11 | `internal/reporter/htmlreact/builder.go` | Add metric definition + extract in `buildTotals` |
-| 12 | `internal/reporter/htmlreact/details_generator.go` | *(Optional)* Add assignment in `buildFileTotals` |
-| 13 | `internal/reporter/textsummary/providers.go` | Add `TextMetricProvider` + register |
-| 14 | `internal/status/evaluators/evaluators_test.go` | Add evaluator tests + update registry test |
+| 11 | `internal/reporter/htmlreact/details_generator.go` | *(Optional)* Add assignment in `buildFileTotals` |
+| 12 | `internal/status/evaluators/evaluators_test.go` | Add evaluator tests + update registry test |
 
 ---
 
@@ -514,9 +444,9 @@ Also update `TestRegistryContainsAllEvaluators` to include the new key.
 
 | Pattern | Where | Purpose |
 |---------|-------|---------|
-| **Strategy** | `Evaluator` interface, `FileMetricProvider`, `MethodMetricProvider`, `TextMetricProvider` | Each metric is its own pluggable strategy |
-| **Registry** | `evaluators.Registry`, `FileProviderRegistry`, `MethodProviderRegistry`, `TextProviderRegistry` | Decouple metric logic from iteration code |
-| **Open/Closed** | The `Annotate`, `buildMetricsMap`, `buildNodeParts` functions | Adding a metric never requires modifying iteration loops |
+| **Strategy** | `Evaluator` interface | Each metric evaluates its own risk logically |
+| **Registry** | `evaluators.Registry` | Decouple metric logic from annotation logic |
+| **Open/Closed** | The `Annotate` and text reporting functions | Evaluators and Text UI dynamically handle new metrics with no code changes |
 
 ### Classifier Functions
 

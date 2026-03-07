@@ -14,7 +14,7 @@ type Evaluator interface {
     Key() config.MetricKey          // "statement_coverage"
     Name() string                   // "Statement Coverage"
     Description() string            // "Percentage of executed statements."
-    SupportedScopes() []MetricScope // [FileScope, MethodScope]
+    SupportedScopes() MetricScope   // FileScope
 
     IsApplicable(caps Capabilities) bool
     Evaluate(metrics model.CoverageMetrics, band *config.Band) (RiskLevel, bool)
@@ -24,7 +24,7 @@ type Evaluator interface {
 | Method | Purpose |
 |--------|---------|
 | [Key()](file:///c:/www/nanovision/internal/status/evaluators/complexity.go#12-13) | The config key users write in YAML |
-| [Name()](file:///c:/www/nanovision/internal/status/evaluators/complexity.go#13-14) / [Description()](file:///c:/www/nanovision/internal/status/evaluators/patch_statement_coverage.go#15-16) / [SupportedScopes()](file:///c:/www/nanovision/internal/status/evaluators/line_coverage.go#16-19) | Powers `--list-metrics` and the boot log |
+| [Name()](file:///c:/www/nanovision/internal/status/evaluators/complexity.go#13-14) / [Description()](file:///c:/www/nanovision/internal/status/evaluators/patch_statement_coverage.go#15-16) / [SupportedScopes()](file:///c:/www/nanovision/internal/status/evaluators/line_coverage.go#16-17) | Powers `--list-metrics` and the boot log |
 | [IsApplicable(caps)](file:///c:/www/nanovision/internal/status/evaluators/patch_line_coverage.go#20-21) | Guards against data that doesn't exist (e.g. skip branch coverage if the parser didn't produce branch data) |
 | [Evaluate(metrics, band)](file:///c:/www/nanovision/internal/status/evaluators/methods_fully_covered.go#25-32) | The core: extract a number, classify it against the threshold band |
 
