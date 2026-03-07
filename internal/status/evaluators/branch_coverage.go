@@ -4,7 +4,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/status"
-	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 // BranchCoverageEvaluator evaluates branch coverage (higher is better).
@@ -22,10 +21,11 @@ func (BranchCoverageEvaluator) IsApplicable(caps status.Capabilities) bool {
 	return caps.HasBranchCoverage
 }
 
-func (BranchCoverageEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
-	if m.BranchesValid == 0 {
+func (e BranchCoverageEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
 		return "", false
 	}
-	pct := utils.CalculatePercentage(m.BranchesCovered, m.BranchesValid, 2)
-	return status.ClassifyHigherIsBetter(pct, band)
+	detail := calc.(model.CoverageDetail)
+	return status.ClassifyHigherIsBetter(detail.Percentage, band)
 }

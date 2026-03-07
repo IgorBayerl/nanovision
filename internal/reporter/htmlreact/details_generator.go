@@ -218,13 +218,6 @@ func mapHitsToLocal(reportHits []int, reportsList []report, globalToLocal map[in
 }
 
 func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([]methodDetail, int, int, int) {
-	var activeProviders []MethodMetricProvider
-	for _, key := range b.config.MethodMetrics {
-		if p, ok := MethodProviderRegistry[key]; ok && b.config.ActiveMethodMetrics[key] {
-			activeProviders = append(activeProviders, p)
-		}
-	}
-
 	var detailsMethods []methodDetail
 	var totalMethodBranches, coveredMethodBranches, maxCyclo int
 
@@ -237,8 +230,39 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 			Metrics:    make(map[string]methodMetric),
 		}
 
-		for _, provider := range activeProviders {
-			provider.Apply(&method, &md)
+		for key := range b.config.ActiveMethodMetrics {
+			if calcData, exists := method.Calculated[key]; exists {
+				switch key {
+				case config.MethodStatementCoverage:
+					if det, ok := calcData.(model.CoverageDetail); ok {
+						md.Metrics[MethodUIStmtCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
+					}
+				case config.MethodLineCoverage:
+					if det, ok := calcData.(model.CoverageDetail); ok {
+						md.Metrics[MethodUILineCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
+					}
+				case config.MethodBranchCoverage:
+					if det, ok := calcData.(model.CoverageDetail); ok {
+						md.Metrics[MethodUIBranchCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
+					}
+				case config.MethodPatchLineCoverage:
+					if det, ok := calcData.(model.CoverageDetail); ok {
+						if md.DiffStatus != "" {
+							md.Metrics[MethodUIPatchLineCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
+						}
+					}
+				case config.MethodPatchStatementCoverage:
+					if det, ok := calcData.(model.CoverageDetail); ok {
+						if md.DiffStatus != "" {
+							md.Metrics[MethodUIPatchStmtCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
+						}
+					}
+				case config.CyclomaticComplexity:
+					if det, ok := calcData.(model.ScoreDetail); ok {
+						md.Metrics[MethodUICyclomaticComplexity] = methodMetric{Value: fmt.Sprintf("%.0f", det.Value)}
+					}
+				}
+			}
 		}
 
 		if method.BranchesValid > 0 {

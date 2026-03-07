@@ -69,8 +69,17 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		if !b.config.ActiveFileMetrics[key] {
 			continue
 		}
-		if provider, ok := TextProviderRegistry[key]; ok {
-			provider.PrintSummary(f, tree)
+		if calcData, exists := tree.Metrics.Calculated[key]; exists {
+			prettyKey := formatKey(string(key))
+			switch v := calcData.(type) {
+			case model.CoverageDetail:
+				fmt.Fprintf(f, "  %s: %.1f%%\n", prettyKey, v.Percentage)
+				fmt.Fprintf(f, "    Covered: %d\n", v.Covered)
+				fmt.Fprintf(f, "    Uncovered: %d\n", v.Uncovered)
+				fmt.Fprintf(f, "    Total: %d\n", v.Total)
+			case model.ScoreDetail:
+				fmt.Fprintf(f, "  %s: %.1f\n", prettyKey, v.Value)
+			}
 		}
 	}
 
@@ -92,9 +101,12 @@ func (b *TextReportBuilder) buildNodeParts(m model.CoverageMetrics) []string {
 		if !b.config.ActiveFileMetrics[key] {
 			continue
 		}
-		if provider, ok := TextProviderRegistry[key]; ok {
-			if part := provider.NodePart(m); part != "" {
-				parts = append(parts, part)
+		if val, exists := m.Calculated[key]; exists {
+			switch v := val.(type) {
+			case model.CoverageDetail:
+				parts = append(parts, fmt.Sprintf("%.0f%%", v.Percentage))
+			case model.ScoreDetail:
+				parts = append(parts, fmt.Sprintf("%.0f", v.Value))
 			}
 		}
 	}
@@ -129,10 +141,19 @@ func (b *TextReportBuilder) printNode(tw *tabwriter.Writer, dir *model.DirNode, 
 		fmt.Fprintf(tw, "%s%s/\t  %s\n", indent, sub.Name, strings.Join(parts, " | "))
 		b.printNode(tw, sub, indentLevel+1)
 	}
-
 	// Then print files in the current directory.
 	for _, file := range sortedFiles {
 		parts := b.buildNodeParts(file.Metrics)
 		fmt.Fprintf(tw, "%s%s\t  %s\n", indent, file.Name, strings.Join(parts, " | "))
 	}
+}
+
+func formatKey(s string) string {
+	parts := strings.Split(s, "_")
+	for i := range parts {
+		if len(parts[i]) > 0 {
+			parts[i] = strings.ToUpper(parts[i][:1]) + parts[i][1:]
+		}
+	}
+	return strings.Join(parts, " ")
 }

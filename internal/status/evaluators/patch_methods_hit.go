@@ -4,7 +4,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/status"
-	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 // PatchMethodsHitEvaluator evaluates patch methods-hit coverage (higher is better).
@@ -21,10 +20,11 @@ func (PatchMethodsHitEvaluator) SupportedScopes() status.MetricScope {
 
 func (PatchMethodsHitEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
 
-func (PatchMethodsHitEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
-	if m.PatchMethodsValid == 0 {
+func (e PatchMethodsHitEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
 		return "", false
 	}
-	pct := utils.CalculatePercentage(m.PatchMethodsHit, m.PatchMethodsValid, 2)
-	return status.ClassifyHigherIsBetter(pct, band)
+	detail := calc.(model.CoverageDetail)
+	return status.ClassifyHigherIsBetter(detail.Percentage, band)
 }

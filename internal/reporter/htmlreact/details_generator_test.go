@@ -3,6 +3,7 @@ package htmlreact
 import (
 	"testing"
 
+	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/stretchr/testify/assert"
@@ -125,6 +126,12 @@ func TestBuildFileTotals(t *testing.T) {
 			config.LineCoverage: "danger",
 		},
 	}
+
+	tree := &model.SummaryTree{Root: &model.DirNode{
+		Metrics: fileNode.Metrics,
+		Files:   map[string]*model.FileNode{"test.go": fileNode},
+	}}
+	calculator.CalculateTree(tree, builder.config.ActiveFileMetrics, nil)
 
 	totalsData := builder.buildFileTotals(fileNode, totalBranches, coveredBranches, maxCyclo)
 

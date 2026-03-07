@@ -20,11 +20,13 @@ func (MaxComplexityEvaluator) SupportedScopes() status.MetricScope {
 
 func (MaxComplexityEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
 
-func (MaxComplexityEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
-	if m.MaxCyclomaticComplexity == 0 {
+func (e MaxComplexityEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
 		return "", false
 	}
-	return status.ClassifyLowerIsBetter(float64(m.MaxCyclomaticComplexity), band)
+	detail := calc.(model.ScoreDetail)
+	return status.ClassifyLowerIsBetter(detail.Value, band)
 }
 
 // CyclomaticComplexityEvaluator evaluates cyclomatic complexity (lower is better) for methods.
@@ -41,9 +43,11 @@ func (CyclomaticComplexityEvaluator) SupportedScopes() status.MetricScope {
 
 func (CyclomaticComplexityEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
 
-func (CyclomaticComplexityEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
-	if m.MaxCyclomaticComplexity == 0 {
+func (e CyclomaticComplexityEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
 		return "", false
 	}
-	return status.ClassifyLowerIsBetter(float64(m.MaxCyclomaticComplexity), band)
+	detail := calc.(model.ScoreDetail)
+	return status.ClassifyLowerIsBetter(detail.Value, band)
 }

@@ -22,6 +22,7 @@ import (
 	golang "github.com/IgorBayerl/nanovision/internal/analyzer/go"
 	"github.com/IgorBayerl/nanovision/internal/bootlog"
 	"github.com/IgorBayerl/nanovision/internal/cache"
+	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/diff"
 	"github.com/IgorBayerl/nanovision/internal/diffapply"
@@ -302,6 +303,10 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 	}
 
 	aggregator.AggregateMetricsAfterEnrichment(summaryTree)
+
+	logger.Info("Executing CALCULATE stage...")
+	calculator.CalculateTree(summaryTree, appConfig.ActiveFileMetrics, appConfig.ActiveMethodMetrics)
+	logger.Info("CALCULATE stage completed successfully.")
 
 	logger.Info("Executing ANNOTATE stage...")
 	caps := deriveCapabilities(summaryTree)

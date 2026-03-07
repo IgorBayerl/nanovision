@@ -70,7 +70,7 @@ func TestSmokeDefaultMetrics(t *testing.T) {
 
 	// Default file metrics include statement_coverage and branch_coverage
 	// (line_coverage is NOT in defaults). Check that the defaults render.
-	for _, want := range []string{"(Stmt)", "(Branch)"} {
+	for _, want := range []string{"Statement Coverage", "Branch Coverage"} {
 		if !strings.Contains(txtContent, want) {
 			t.Errorf("text output missing %q\nContent:\n%s", want, txtContent)
 		}
@@ -120,10 +120,10 @@ func TestSmokeLineCoverageOnly(t *testing.T) {
 	}
 	txtContent := string(txtBytes)
 
-	if !strings.Contains(txtContent, "Line coverage:") {
-		t.Errorf("text output missing 'Line coverage:'")
+	if !strings.Contains(txtContent, "Line Coverage:") {
+		t.Errorf("text output missing 'Line Coverage:'")
 	}
-	for _, notWant := range []string{"Statement coverage:", "Branch coverage:", "(Stmt)", "(Branch)"} {
+	for _, notWant := range []string{"Statement Coverage:", "Branch Coverage:", "(Stmt)", "(Branch)"} {
 		if strings.Contains(txtContent, notWant) {
 			t.Errorf("text output should NOT contain %q when only line_coverage is configured\nContent:\n%s", notWant, txtContent)
 		}

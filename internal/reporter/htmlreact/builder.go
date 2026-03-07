@@ -261,8 +261,43 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metricsMap {
 	metrics := metricsMap{}
 	for key := range b.config.ActiveFileMetrics {
-		if provider, ok := FileProviderRegistry[key]; ok {
-			provider.Apply(m, metrics)
+		if calcData, exists := m.Calculated[key]; exists {
+			switch key {
+			case config.LineCoverage:
+				if detail, ok := calcData.(model.CoverageDetail); ok {
+					metrics[string(key)] = lineCoverageDetail{Covered: detail.Covered, Uncovered: detail.Uncovered, Coverable: detail.Total, Total: m.TotalLines, Percentage: detail.Percentage}
+				}
+			case config.StatementCoverage, config.PatchStatementCoverage:
+				if detail, ok := calcData.(model.CoverageDetail); ok {
+					metrics[string(key)] = lineCoverageDetail{Covered: detail.Covered, Uncovered: detail.Uncovered, Coverable: detail.Total, Total: detail.Total, Percentage: detail.Percentage}
+				}
+			case config.PatchLineCoverage:
+				if detail, ok := calcData.(model.CoverageDetail); ok {
+					total := m.PatchLinesTotal
+					if total == 0 {
+						total = detail.Total
+					}
+					metrics[string(key)] = lineCoverageDetail{Covered: detail.Covered, Uncovered: detail.Uncovered, Coverable: detail.Total, Total: total, Percentage: detail.Percentage}
+				}
+			case config.BranchCoverage:
+				if detail, ok := calcData.(model.CoverageDetail); ok {
+					metrics[string(key)] = branchCoverageDetail{Covered: detail.Covered, Total: detail.Total, Percentage: detail.Percentage}
+				}
+			case config.MethodsHit, config.PatchMethodsHit:
+				if detail, ok := calcData.(model.CoverageDetail); ok {
+					metrics[string(key)] = methodsHitDetail{Covered: detail.Covered, Total: detail.Total, Percentage: detail.Percentage}
+				}
+			case config.MethodsFullyCovered:
+				if detail, ok := calcData.(model.CoverageDetail); ok {
+					metrics[string(key)] = methodsFullyCoveredDetail{Covered: detail.Covered, Total: detail.Total, Percentage: detail.Percentage}
+				}
+			case config.MaxCyclomaticComplexity:
+				if score, ok := calcData.(model.ScoreDetail); ok {
+					metrics[string(key)] = lineCoverageDetail{Total: int(score.Value)}
+				}
+			default:
+				metrics[string(key)] = calcData
+			}
 		}
 	}
 	return metrics

@@ -7,13 +7,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
 // helper builds a SummaryTree with non-zero values for all metric categories.
 func buildTestTree() *model.SummaryTree {
-	return &model.SummaryTree{
+	tree := &model.SummaryTree{
 		Metrics: model.CoverageMetrics{
 			StatementsValid:   10,
 			StatementsCovered: 5,
@@ -47,6 +48,13 @@ func buildTestTree() *model.SummaryTree {
 			},
 		},
 	}
+	activeActiveFiles := map[config.MetricKey]bool{
+		config.LineCoverage:      true,
+		config.StatementCoverage: true,
+		config.BranchCoverage:    true,
+	}
+	calculator.CalculateTree(tree, activeActiveFiles, nil)
+	return tree
 }
 
 func runReport(t *testing.T, fileMetrics []config.MetricKey) string {
@@ -85,15 +93,9 @@ func TestTextReportBuilder_AllThreeMetrics(t *testing.T) {
 		config.StatementCoverage,
 	})
 
-	for _, want := range []string{"Line coverage:", "Branch coverage:", "Statement coverage:"} {
+	for _, want := range []string{"Line Coverage:", "Branch Coverage:", "Statement Coverage:"} {
 		if !strings.Contains(content, want) {
 			t.Errorf("Expected report to contain %q, but it did not.\nContent:\n%s", want, content)
-		}
-	}
-	// Tree section should contain all abbreviations.
-	for _, want := range []string{"(Line)", "(Branch)", "(Stmt)"} {
-		if !strings.Contains(content, want) {
-			t.Errorf("Expected tree section to contain %q, but it did not.\nContent:\n%s", want, content)
 		}
 	}
 }
@@ -104,12 +106,12 @@ func TestTextReportBuilder_NoStatementCoverage(t *testing.T) {
 		config.BranchCoverage,
 	})
 
-	for _, want := range []string{"Line coverage:", "Branch coverage:"} {
+	for _, want := range []string{"Line Coverage:", "Branch Coverage:"} {
 		if !strings.Contains(content, want) {
 			t.Errorf("Expected report to contain %q, but it did not.\nContent:\n%s", want, content)
 		}
 	}
-	for _, notWant := range []string{"Statement coverage:", "(Stmt)"} {
+	for _, notWant := range []string{"Statement Coverage:"} {
 		if strings.Contains(content, notWant) {
 			t.Errorf("Expected report NOT to contain %q, but it did.\nContent:\n%s", notWant, content)
 		}
@@ -121,13 +123,10 @@ func TestTextReportBuilder_SingleMetricOnly(t *testing.T) {
 		config.LineCoverage,
 	})
 
-	if !strings.Contains(content, "Line coverage:") {
-		t.Errorf("Expected report to contain 'Line coverage:', but it did not.\nContent:\n%s", content)
+	if !strings.Contains(content, "Line Coverage:") {
+		t.Errorf("Expected report to contain 'Line Coverage:', but it did not.\nContent:\n%s", content)
 	}
-	if !strings.Contains(content, "(Line)") {
-		t.Errorf("Expected tree section to contain '(Line)', but it did not.\nContent:\n%s", content)
-	}
-	for _, notWant := range []string{"Statement coverage:", "Branch coverage:", "(Stmt)", "(Branch)"} {
+	for _, notWant := range []string{"Statement Coverage:", "Branch Coverage:"} {
 		if strings.Contains(content, notWant) {
 			t.Errorf("Expected report NOT to contain %q, but it did.\nContent:\n%s", notWant, content)
 		}
@@ -135,19 +134,18 @@ func TestTextReportBuilder_SingleMetricOnly(t *testing.T) {
 }
 
 func TestTextReportBuilder_ColumnOrderRespectsFileMetrics(t *testing.T) {
-	// Request statement first, then line. The tree output should show "(Stmt)" before "(Line)".
 	content := runReport(t, []config.MetricKey{
 		config.StatementCoverage,
 		config.LineCoverage,
 	})
 
-	stmtIdx := strings.Index(content, "(Stmt)")
-	lineIdx := strings.Index(content, "(Line)")
+	stmtIdx := strings.Index(content, "Statement Coverage")
+	lineIdx := strings.Index(content, "Line Coverage")
 
 	if stmtIdx < 0 || lineIdx < 0 {
-		t.Fatalf("Expected both (Stmt) and (Line) in output.\nContent:\n%s", content)
+		t.Fatalf("Expected both Statement Coverage and Line Coverage in output.\nContent:\n%s", content)
 	}
 	if stmtIdx > lineIdx {
-		t.Errorf("Expected (Stmt) before (Line), but (Stmt) at %d, (Line) at %d.\nContent:\n%s", stmtIdx, lineIdx, content)
+		t.Errorf("Expected Statement Coverage before Line Coverage, but Statement Coverage at %d, Line Coverage at %d.\nContent:\n%s", stmtIdx, lineIdx, content)
 	}
 }

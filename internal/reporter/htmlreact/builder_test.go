@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/stretchr/testify/assert"
@@ -36,8 +37,17 @@ func TestHtmlReactReportBuilder_ActiveFileMetricsFilter(t *testing.T) {
 		},
 		Root: &model.DirNode{
 			Name: "root",
+			Metrics: model.CoverageMetrics{
+				StatementsValid:   10,
+				StatementsCovered: 5,
+				LinesValid:        10,
+				LinesCovered:      5,
+				BranchesValid:     10,
+				BranchesCovered:   5,
+			},
 		},
 	}
+	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, nil)
 
 	b, ok := builder.(*HtmlReactReportBuilder)
 	if !ok {
@@ -94,8 +104,10 @@ func TestBuildMetricsMap_GoldenFile(t *testing.T) {
 		PatchMethodsHit:        1,
 		PatchMethodsValid:      2,
 	}
+	tree := &model.SummaryTree{Root: &model.DirNode{Metrics: m}}
+	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, nil)
 
-	metrics := b.buildMetricsMap(m)
+	metrics := b.buildMetricsMap(tree.Root.Metrics)
 
 	// Verify all 8 metric keys are present
 	expectedKeys := []string{
@@ -199,8 +211,10 @@ func TestBuildMetricsMap_RemoveBranchCoverage(t *testing.T) {
 		BranchesCovered:   3,
 		BranchesValid:     5,
 	}
+	tree := &model.SummaryTree{Metrics: m, Root: &model.DirNode{Metrics: m}}
+	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, nil)
 
-	metrics := b.buildMetricsMap(m)
+	metrics := b.buildMetricsMap(tree.Root.Metrics)
 
 	// Branch data must be absent
 	_, hasBranch := metrics[string(config.BranchCoverage)]
@@ -211,10 +225,7 @@ func TestBuildMetricsMap_RemoveBranchCoverage(t *testing.T) {
 	assert.Contains(t, metrics, string(config.LineCoverage))
 
 	// Also verify totals mirrors the same behavior
-	tree := &model.SummaryTree{
-		Metrics: m,
-		Root:    &model.DirNode{Name: "root"},
-	}
+	// Tree is already calculated above.
 	totalsData := b.buildTotals(tree, 1, 0)
 	assert.Nil(t, totalsData.BranchCoverage, "totals.BranchCoverage should be nil")
 	assert.NotNil(t, totalsData.StatementCoverage, "totals.StatementCoverage should be present")
@@ -235,8 +246,10 @@ func TestBuildMetricsMap_GuardsSkipEmptyData(t *testing.T) {
 
 	// All zero values — guards should prevent any entries
 	m := model.CoverageMetrics{}
+	tree := &model.SummaryTree{Root: &model.DirNode{Metrics: m}}
+	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, nil)
 
-	metrics := b.buildMetricsMap(m)
+	metrics := b.buildMetricsMap(tree.Root.Metrics)
 
 	_, hasStmt := metrics[string(config.StatementCoverage)]
 	assert.False(t, hasStmt, "statement_coverage should be skipped when StatementsValid == 0")

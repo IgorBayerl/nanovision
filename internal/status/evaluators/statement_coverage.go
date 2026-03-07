@@ -4,7 +4,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/status"
-	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
 // StatementCoverageEvaluator evaluates statement coverage (higher is better).
@@ -31,20 +30,22 @@ func (MethodStatementCoverageEvaluator) SupportedScopes() status.MetricScope {
 
 func (MethodStatementCoverageEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
 
-func (MethodStatementCoverageEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
-	if m.StatementsValid == 0 {
+func (e MethodStatementCoverageEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
 		return "", false
 	}
-	pct := utils.CalculatePercentage(m.StatementsCovered, m.StatementsValid, 2)
-	return status.ClassifyHigherIsBetter(pct, band)
+	detail := calc.(model.CoverageDetail)
+	return status.ClassifyHigherIsBetter(detail.Percentage, band)
 }
 
 func (StatementCoverageEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
 
-func (StatementCoverageEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
-	if m.StatementsValid == 0 {
+func (e StatementCoverageEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
 		return "", false
 	}
-	pct := utils.CalculatePercentage(m.StatementsCovered, m.StatementsValid, 2)
-	return status.ClassifyHigherIsBetter(pct, band)
+	detail := calc.(model.CoverageDetail)
+	return status.ClassifyHigherIsBetter(detail.Percentage, band)
 }

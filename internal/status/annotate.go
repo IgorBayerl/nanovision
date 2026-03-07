@@ -100,6 +100,7 @@ func methodToCoverageMetrics(m *model.MethodMetrics) model.CoverageMetrics {
 		PatchLinesCovered:      m.PatchLinesCovered,
 		PatchStatementsValid:   m.PatchStatementsValid,
 		PatchStatementsCovered: m.PatchStatementsCovered,
+		Calculated:             m.Calculated,
 	}
 	if m.CyclomaticComplexity != nil {
 		cm.MaxCyclomaticComplexity = *m.CyclomaticComplexity

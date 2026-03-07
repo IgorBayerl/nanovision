@@ -64,8 +64,6 @@ export default function MethodsTable({
         })
     }, [methods, metricDefinitions])
 
-    const hasNewLinesColumn = useMemo(() => methods.some((m) => m.newLinesCoverage), [methods])
-    const hasNewStatementsColumn = useMemo(() => methods.some((m) => m.newStatementsCoverage), [methods])
 
     if (!methods || methods.length === 0) {
         return null
@@ -84,16 +82,6 @@ export default function MethodsTable({
                             <th className="text-nowrap px-4 py-2 text-right text-muted-foreground">Line #</th>
                             {/* --- 2. THE KEY: Tell this column to expand --- */}
                             <th className="w-full px-4 py-2 text-left text-muted-foreground">Method</th>
-                            {hasNewStatementsColumn && (
-                                <th className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground">
-                                    Patch Stmt Cov.
-                                </th>
-                            )}
-                            {hasNewLinesColumn && (
-                                <th className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground">
-                                    Patch Line Cov.
-                                </th>
-                            )}
                             {metricConfigs.map((mc) => (
                                 <th
                                     key={mc.id}
@@ -123,28 +111,6 @@ export default function MethodsTable({
                                         <DiffStatusBadge status={method.diffStatus} />
                                     </div>
                                 </td>
-                                {hasNewStatementsColumn && (
-                                    <td className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-xs">
-                                        {method.newStatementsCoverage ? (
-                                            <span>
-                                                {method.newStatementsCoverage.covered} / {method.newStatementsCoverage.total}
-                                            </span>
-                                        ) : (
-                                            '-'
-                                        )}
-                                    </td>
-                                )}
-                                {hasNewLinesColumn && (
-                                    <td className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-xs">
-                                        {method.newLinesCoverage ? (
-                                            <span>
-                                                {method.newLinesCoverage.covered} / {method.newLinesCoverage.total}
-                                            </span>
-                                        ) : (
-                                            '-'
-                                        )}
-                                    </td>
-                                )}
                                 {metricConfigs.map((mc) => {
                                     const metric = method.metrics[mc.id]
                                     return (

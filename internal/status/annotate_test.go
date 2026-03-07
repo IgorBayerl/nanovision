@@ -3,6 +3,7 @@ package status_test
 import (
 	"testing"
 
+	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/status"
@@ -78,6 +79,9 @@ func TestAnnotate_Integration(t *testing.T) {
 			config.BranchCoverage:          config.Band{Min: 60, Max: 80},
 			config.StatementCoverage:       config.Band{Min: 60, Max: 80},
 			config.MaxCyclomaticComplexity: config.Band{Min: 5, Max: 10},
+			config.MethodLineCoverage:      config.Band{Min: 60, Max: 80},
+			config.MethodStatementCoverage: config.Band{Min: 60, Max: 80},
+			config.CyclomaticComplexity:    config.Band{Min: 5, Max: 10},
 		},
 		ActiveFileMetrics: map[config.MetricKey]bool{
 			config.LineCoverage:            true,
@@ -86,9 +90,9 @@ func TestAnnotate_Integration(t *testing.T) {
 			config.MaxCyclomaticComplexity: true,
 		},
 		ActiveMethodMetrics: map[config.MetricKey]bool{
-			config.LineCoverage:            true,
-			config.StatementCoverage:       true,
-			config.MaxCyclomaticComplexity: true,
+			config.MethodLineCoverage:      true,
+			config.MethodStatementCoverage: true,
+			config.CyclomaticComplexity:    true,
 		},
 	}
 
@@ -98,6 +102,7 @@ func TestAnnotate_Integration(t *testing.T) {
 		HasStatementCoverage: true,
 	}
 
+	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, cfg.ActiveMethodMetrics)
 	status.Annotate(tree, cfg, caps, evaluators.Registry)
 
 	// ---------- Verify file node statuses ----------
@@ -118,14 +123,13 @@ func TestAnnotate_Integration(t *testing.T) {
 
 	// ---------- Verify method node statuses ----------
 	require.Len(t, fileNode.Methods, 1)
-	method := fileNode.Methods[0]
-	require.NotNil(t, method.Statuses)
+	require.NotNil(t, fileNode.Methods[0].Statuses)
 	// 18/20 = 90% line coverage → safe
-	assert.Equal(t, "safe", method.Statuses[config.LineCoverage])
+	assert.Equal(t, "safe", fileNode.Methods[0].Statuses[config.MethodLineCoverage])
 	// 8/10 = 80% statement coverage → warning (at max)
-	assert.Equal(t, "warning", method.Statuses[config.StatementCoverage])
+	assert.Equal(t, "warning", fileNode.Methods[0].Statuses[config.MethodStatementCoverage])
 	// complexity 15 > 10 → danger
-	assert.Equal(t, "danger", method.Statuses[config.MaxCyclomaticComplexity])
+	assert.Equal(t, "danger", fileNode.Methods[0].Statuses[config.CyclomaticComplexity])
 }
 
 // TestAnnotate_BranchNotApplicable ensures branch coverage is skipped when
@@ -172,6 +176,7 @@ func TestAnnotate_BranchNotApplicable(t *testing.T) {
 	// HasBranchCoverage = false → branch coverage should not appear
 	caps := status.Capabilities{HasBranchCoverage: false}
 
+	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, cfg.ActiveMethodMetrics)
 	status.Annotate(tree, cfg, caps, evaluators.Registry)
 
 	assert.Equal(t, "safe", fileNode.Statuses[config.LineCoverage])
@@ -221,6 +226,7 @@ func TestAnnotate_MethodsHitViaRegistry(t *testing.T) {
 
 	caps := status.Capabilities{HasMethodCoverage: true}
 
+	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, cfg.ActiveMethodMetrics)
 	status.Annotate(tree, cfg, caps, evaluators.Registry)
 
 	// 5/10 = 50% < 60 min → danger

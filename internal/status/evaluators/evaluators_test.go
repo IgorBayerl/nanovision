@@ -6,6 +6,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/status"
+	"github.com/IgorBayerl/nanovision/internal/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,6 +46,7 @@ func TestLineCoverageEvaluator_Thresholds(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := model.CoverageMetrics{LinesCovered: tt.covered, LinesValid: tt.valid}
+			m.Calculated = map[config.MetricKey]any{config.LineCoverage: model.CoverageDetail{Percentage: utils.CalculatePercentage(tt.covered, tt.valid, 2)}}
 			lvl, show := LineCoverageEvaluator{}.Evaluate(m, band)
 			assert.True(t, show)
 			assert.Equal(t, tt.want, lvl)
@@ -88,6 +90,7 @@ func TestBranchCoverageEvaluator_Thresholds(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := model.CoverageMetrics{BranchesCovered: tt.covered, BranchesValid: tt.valid}
+			m.Calculated = map[config.MetricKey]any{config.BranchCoverage: model.CoverageDetail{Percentage: utils.CalculatePercentage(tt.covered, tt.valid, 2)}}
 			lvl, show := BranchCoverageEvaluator{}.Evaluate(m, band)
 			assert.True(t, show)
 			assert.Equal(t, tt.want, lvl)
@@ -130,6 +133,7 @@ func TestStatementCoverageEvaluator_Thresholds(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := model.CoverageMetrics{StatementsCovered: tt.covered, StatementsValid: tt.valid}
+			m.Calculated = map[config.MetricKey]any{config.StatementCoverage: model.CoverageDetail{Percentage: utils.CalculatePercentage(tt.covered, tt.valid, 2)}}
 			lvl, show := StatementCoverageEvaluator{}.Evaluate(m, band)
 			assert.True(t, show)
 			assert.Equal(t, tt.want, lvl)
@@ -171,6 +175,7 @@ func TestMaxComplexityEvaluator_Thresholds(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := model.CoverageMetrics{MaxCyclomaticComplexity: tt.complexity}
+			m.Calculated = map[config.MetricKey]any{config.MaxCyclomaticComplexity: model.ScoreDetail{Value: float64(tt.complexity)}}
 			lvl, show := MaxComplexityEvaluator{}.Evaluate(m, band)
 			assert.True(t, show)
 			assert.Equal(t, tt.want, lvl)
@@ -182,6 +187,7 @@ func TestMaxComplexityEvaluator_Thresholds(t *testing.T) {
 func TestMaxComplexityEvaluator_AboveMaxReturnsDanger(t *testing.T) {
 	band := &config.Band{Min: 5, Max: 10}
 	m := model.CoverageMetrics{MaxCyclomaticComplexity: 20}
+	m.Calculated = map[config.MetricKey]any{config.MaxCyclomaticComplexity: model.ScoreDetail{Value: 20.0}}
 	lvl, show := MaxComplexityEvaluator{}.Evaluate(m, band)
 	assert.True(t, show)
 	assert.Equal(t, status.RiskDanger, lvl)
@@ -249,6 +255,7 @@ func TestMethodsHitEvaluator_Thresholds(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := model.CoverageMetrics{MethodsHit: tt.hit, MethodsValid: tt.total}
+			m.Calculated = map[config.MetricKey]any{config.MethodsHit: model.CoverageDetail{Percentage: utils.CalculatePercentage(tt.hit, tt.total, 2)}}
 			lvl, show := MethodsHitEvaluator{}.Evaluate(m, band)
 			assert.True(t, show)
 			assert.Equal(t, tt.want, lvl)
@@ -291,6 +298,7 @@ func TestPatchLineCoverageEvaluator_Thresholds(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := model.CoverageMetrics{PatchLinesCovered: tt.covered, PatchLinesValid: tt.valid}
+			m.Calculated = map[config.MetricKey]any{config.PatchLineCoverage: model.CoverageDetail{Percentage: utils.CalculatePercentage(tt.covered, tt.valid, 2)}}
 			lvl, show := PatchLineCoverageEvaluator{}.Evaluate(m, band)
 			assert.True(t, show)
 			assert.Equal(t, tt.want, lvl)
