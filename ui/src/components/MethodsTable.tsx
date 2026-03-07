@@ -54,7 +54,17 @@ export default function MethodsTable({
 
     const metricConfigs = useMemo(() => {
         if (!methods || methods.length === 0) return []
-        return Object.keys(methods[0].metrics).map((id) => {
+
+        // Collect all possible metric keys across all methods
+        const keys = new Set<string>()
+        for (const method of methods) {
+            for (const key of Object.keys(method.metrics)) {
+                keys.add(key)
+            }
+        }
+
+        // Sort them. The backend prefixes them (a_, b_, c_) to enforce order.
+        return Array.from(keys).sort().map((id) => {
             const def = metricDefinitions[id]
             return {
                 id,
