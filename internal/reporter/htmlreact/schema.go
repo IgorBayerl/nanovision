@@ -109,20 +109,12 @@ type methodMetric struct {
 	Status riskLevel `json:"status,omitempty"`
 }
 
-type newLinesCoverage struct {
-	Covered int `json:"covered"`
-	Total   int `json:"total"`
-}
-
 type methodDetail struct {
-	Name                  string                  `json:"name"`
-	StartLine             int                     `json:"startLine"`
-	EndLine               int                     `json:"endLine"`
-	Metrics               map[string]methodMetric `json:"metrics"`
-	DiffStatus            string                  `json:"diffStatus,omitempty"`
-	NewLinesCoverage      *newLinesCoverage       `json:"newLinesCoverage,omitempty"`
-	NewStatementCoverage  *newLinesCoverage       `json:"newStatementCoverage,omitempty"`
-	NewStatementsCoverage *newLinesCoverage       `json:"newStatementsCoverage,omitempty"`
+	Name       string                  `json:"name"`
+	StartLine  int                     `json:"startLine"`
+	EndLine    int                     `json:"endLine"`
+	Metrics    map[string]methodMetric `json:"metrics"`
+	DiffStatus string                  `json:"diffStatus,omitempty"`
 }
 
 type report struct {

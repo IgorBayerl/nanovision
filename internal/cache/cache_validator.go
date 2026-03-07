@@ -16,9 +16,9 @@ import "time"
 // If you need to change the validation strategy (e.g. adding a new
 // property like 'EnvironmentType' to invalidate cache differently
 // between dev and prod paths), you can:
-// 1. Add the new field to both BuildMetadata and CacheMetadata.
-// 2. Adjust or create a new implementation of CacheValidator below
-//    that accounts for your new rules in the `IsValid` method.
+//  1. Add the new field to both BuildMetadata and CacheMetadata.
+//  2. Adjust or create a new implementation of CacheValidator below
+//     that accounts for your new rules in the `IsValid` method.
 type CacheValidator interface {
 	// IsValid checks if the cached data is still applicable given current context
 	IsValid(metadata CacheMetadata, currentMetadata BuildMetadata) bool

@@ -36,41 +36,34 @@ const (
 	StatementMethodsFullyCovered MetricKey = "statement_methods_fully_covered"
 	PatchStatementMethodsHit     MetricKey = "patch_statement_methods_hit"
 	MaxCyclomaticComplexity      MetricKey = "max_cyclomatic_complexity"
+
+	MethodLineCoverage           MetricKey = "method_line_coverage"
+	MethodStatementCoverage      MetricKey = "method_statement_coverage"
+	MethodPatchLineCoverage      MetricKey = "method_patch_line_coverage"
+	MethodPatchStatementCoverage MetricKey = "method_patch_statement_coverage"
+	CyclomaticComplexity         MetricKey = "cyclomatic_complexity"
 )
 
-var DefaultDisplayMetrics = []MetricKey{
+var DefaultFileMetrics = []MetricKey{
 	// LineCoverage,
 	BranchCoverage,
 	MethodsHit,
 	// MethodsFullyCovered,
 	// PatchLineCoverage,
 	PatchMethodsHit,
-	MethodBranchCoverage,
+
 	StatementCoverage,
 	PatchStatementCoverage,
 	StatementMethodsHit,
-	// StatementMethodsFullyCovered,
+	// StatementMethodsFullyCovered, // Let's keep existing defaults commented or active as they were.
 	PatchStatementMethodsHit,
+	// MaxCyclomaticComplexity,
 }
 
-func isValidMetric(m MetricKey) bool {
-	switch m {
-	case LineCoverage,
-		BranchCoverage,
-		MethodsHit,
-		MethodsFullyCovered,
-		PatchLineCoverage,
-		PatchMethodsHit,
-		MethodBranchCoverage,
-		StatementCoverage,
-		PatchStatementCoverage,
-		StatementMethodsHit,
-		StatementMethodsFullyCovered,
-		PatchStatementMethodsHit,
-		MaxCyclomaticComplexity:
-		return true
-	}
-	return false
+var DefaultMethodMetrics = []MetricKey{
+	MethodLineCoverage,
+	MethodStatementCoverage,
+	CyclomaticComplexity,
 }
 
 // StatusBands supports either:
@@ -164,28 +157,31 @@ type RawConfigInput struct {
 	DiffFile       string
 	DiffStrip      string
 	StatusBands    []string
-	DisplayMetrics string
+	FileMetrics    string
+	MethodMetrics  string
 	IgnoreCache    bool
 }
 
 type AppConfig struct {
-	ReportPatterns []string           `yaml:"reports"`
-	SourceDirs     []string           `yaml:"source_dirs"`
-	ReportTypes    []string           `yaml:"report_types"`
-	FileFilters    []string           `yaml:"file_filters"`
-	OutputDir      string             `yaml:"output_dir"`
-	Tag            string             `yaml:"tag"`
-	Title          string             `yaml:"title"`
-	LogFile        string             `yaml:"log_file"`
-	LogFormat      string             `yaml:"log_format"`
-	Verbosity      string             `yaml:"verbosity"`
-	IgnoreFiles    []string           `yaml:"ignore_files"`
-	ProjectRoot    string             `yaml:"-"`
-	StatusBands    StatusBands        `yaml:"status_bands"`
-	DisplayMetrics []MetricKey        `yaml:"display_metrics"`
-	ActiveMetrics  map[MetricKey]bool `yaml:"-"`
-	IgnoreCache    bool               `yaml:"ignore_cache"`
-	Diff           DiffConfig         `yaml:"diff"`
+	ReportPatterns      []string           `yaml:"reports"`
+	SourceDirs          []string           `yaml:"source_dirs"`
+	ReportTypes         []string           `yaml:"report_types"`
+	FileFilters         []string           `yaml:"file_filters"`
+	OutputDir           string             `yaml:"output_dir"`
+	Tag                 string             `yaml:"tag"`
+	Title               string             `yaml:"title"`
+	LogFile             string             `yaml:"log_file"`
+	LogFormat           string             `yaml:"log_format"`
+	Verbosity           string             `yaml:"verbosity"`
+	IgnoreFiles         []string           `yaml:"ignore_files"`
+	ProjectRoot         string             `yaml:"-"`
+	StatusBands         StatusBands        `yaml:"status_bands"`
+	FileMetrics         []MetricKey        `yaml:"file_metrics"`
+	MethodMetrics       []MetricKey        `yaml:"method_metrics"`
+	ActiveFileMetrics   map[MetricKey]bool `yaml:"-"`
+	ActiveMethodMetrics map[MetricKey]bool `yaml:"-"`
+	IgnoreCache         bool               `yaml:"ignore_cache"`
+	Diff                DiffConfig         `yaml:"diff"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel
@@ -321,8 +317,8 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 			}
 		}
 	}
-	if cli.DisplayMetrics != "" {
-		parts := strings.Split(cli.DisplayMetrics, ",")
+	if cli.FileMetrics != "" {
+		parts := strings.Split(cli.FileMetrics, ",")
 		var keys []MetricKey
 		for _, p := range parts {
 			trimmed := strings.TrimSpace(p)
@@ -330,7 +326,18 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 				keys = append(keys, MetricKey(trimmed))
 			}
 		}
-		c.DisplayMetrics = keys
+		c.FileMetrics = keys
+	}
+	if cli.MethodMetrics != "" {
+		parts := strings.Split(cli.MethodMetrics, ",")
+		var keys []MetricKey
+		for _, p := range parts {
+			trimmed := strings.TrimSpace(p)
+			if trimmed != "" {
+				keys = append(keys, MetricKey(trimmed))
+			}
+		}
+		c.MethodMetrics = keys
 	}
 }
 
@@ -362,13 +369,6 @@ func (c *AppConfig) validate() error {
 			}
 		}
 	}
-
-	for _, m := range c.DisplayMetrics {
-		if !isValidMetric(m) {
-			return fmt.Errorf("configuration error: unknown display metric '%s'", m)
-		}
-	}
-
 	return nil
 }
 
@@ -389,12 +389,19 @@ func (c *AppConfig) computeDerivedFields() error {
 
 	c.InputPairs = resolveInputPairs(c.ReportPatterns, c.SourceDirs)
 
-	if len(c.DisplayMetrics) == 0 {
-		c.DisplayMetrics = DefaultDisplayMetrics
+	if len(c.FileMetrics) == 0 {
+		c.FileMetrics = DefaultFileMetrics
 	}
-	c.ActiveMetrics = make(map[MetricKey]bool, len(c.DisplayMetrics))
-	for _, m := range c.DisplayMetrics {
-		c.ActiveMetrics[m] = true
+	if len(c.MethodMetrics) == 0 {
+		c.MethodMetrics = DefaultMethodMetrics
+	}
+	c.ActiveFileMetrics = make(map[MetricKey]bool, len(c.FileMetrics))
+	for _, m := range c.FileMetrics {
+		c.ActiveFileMetrics[m] = true
+	}
+	c.ActiveMethodMetrics = make(map[MetricKey]bool, len(c.MethodMetrics))
+	for _, m := range c.MethodMetrics {
+		c.ActiveMethodMetrics[m] = true
 	}
 
 	return nil

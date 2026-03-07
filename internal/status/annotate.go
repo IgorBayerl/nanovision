@@ -1,240 +1,116 @@
 package status
 
 import (
-	"math"
-
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/model"
-	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
-// Annotate traverses the entire `model.SummaryTree` and attaches a risk status
-// to every file and directory node based on their calculated coverage metrics.
-// This function is the main entry point for the status annotation pipeline stage.
+// Annotate traverses the entire model.SummaryTree and attaches risk statuses
+// to every file, directory, and method node based on the active metric
+// configuration and the evaluator registry.
 //
-// What it does:
+// It loops over cfg.ActiveFileMetrics for file/directory nodes and
+// cfg.ActiveMethodMetrics for method nodes. For each active metric key it
+// looks up a registered Evaluator from the registry. This design means zero
+// hardcoded metric keys appear in the annotation logic.
 //
-// It performs a recursive walk of the entire project tree. For each node (both
-// files and directories), it performs the following steps for each supported metric
-// (e.g., line coverage, branch coverage):
-//  1. It calculates the metric's percentage value (e.g., 85.5% line coverage).
-//  2. It calls `Classify` with this percentage and the corresponding thresholds
-//     loaded from the user's configuration (`status_bands`).
-//  3. If `Classify` indicates a status should be shown (`show: true`), it adds the
-//     resulting `RiskLevel` ("danger", "warning", or "safe") to the node's
-//     `Statuses` map.
-//
-// Contribution to Reports:
-//
-// This annotation step is what enables consistent risk visualization across all
-// types of reports. By pre-calculating and embedding the status directly into the
-// data model, the report generators themselves are kept simple.
-//   - The HTML report reads the `Statuses` map to display the correct risk icon
-//     (e.g., red circle, yellow triangle, blue shield) next to each metric, both
-//     in the summary cards and in the file explorer tree, without needing to
-//     contain any threshold logic itself.
-//   - A text-based report could use this information to highlight files that are
-//     in a 'danger' state.
-//   - Future reporters (e.g., a "Risk Hotspots" report) can easily filter for
-//     nodes with a specific status without re-implementing any logic.
-//
-// The `caps` parameter ensures that statuses are only applied for metrics that
-// are actually supported by the input coverage formats (e.g., it prevents a
-// "branch_coverage" status from being added if the report came from Go's native
-// coverage tool, which lacks branch data).
-func Annotate(tree *model.SummaryTree, bands config.StatusBands, caps Capabilities) {
+// The `registry` parameter is the evaluator registry (typically
+// evaluators.Registry) passed in by the caller to avoid an import cycle.
+func Annotate(tree *model.SummaryTree, cfg *config.AppConfig, caps Capabilities, registry map[config.MetricKey]Evaluator) {
 	if tree == nil || tree.Root == nil {
 		return
 	}
 	walk(tree.Root, func(dir *model.DirNode) {
-		annotateNode(dir, bands, caps)
+		annotateMetrics(dir.Metrics, &dir.Statuses, cfg.ActiveFileMetrics, cfg.StatusBands, caps, registry)
 		for _, file := range dir.Files {
-			annotateFile(file, bands, caps)
+			annotateMetrics(file.Metrics, &file.Statuses, cfg.ActiveFileMetrics, cfg.StatusBands, caps, registry)
+			annotateMethodNodes(file.Methods, cfg.ActiveMethodMetrics, cfg.StatusBands, caps, registry)
 		}
 	})
 }
 
-// annotateNode is a helper that calculates and attaches statuses to a single directory node.
-func annotateNode(node *model.DirNode, bands config.StatusBands, caps Capabilities) {
-	node.Statuses = make(map[config.MetricKey]string)
-	metrics := node.Metrics
+// annotateMetrics evaluates all active metrics for a single node (file or directory).
+func annotateMetrics(
+	metrics model.CoverageMetrics,
+	statuses *map[config.MetricKey]string,
+	activeMetrics map[config.MetricKey]bool,
+	bands config.StatusBands,
+	caps Capabilities,
+	registry map[config.MetricKey]Evaluator,
+) {
+	*statuses = make(map[config.MetricKey]string)
 
-	// Line Coverage
-	pct := utils.CalculatePercentage(metrics.LinesCovered, metrics.LinesValid, 2)
-	if math.IsNaN(pct) {
-		pct = 0.0
-	}
-	if lvl, show := Classify(pct, bandPtr(bands, LineCoverage)); show {
-		node.Statuses[LineCoverage] = string(lvl)
-	}
-
-	// Branch Coverage (only if applicable)
-	if caps.HasBranchCoverage && metrics.BranchesValid > 0 {
-		pct := utils.CalculatePercentage(metrics.BranchesCovered, metrics.BranchesValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, BranchCoverage)); show {
-			node.Statuses[BranchCoverage] = string(lvl)
+	for key := range activeMetrics {
+		ev, ok := registry[key]
+		if !ok {
+			continue
 		}
-	}
-
-	// Method Coverage (only if applicable)
-	if caps.HasMethodCoverage && metrics.MethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.MethodsHit, metrics.MethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, MethodsHit)); show {
-			node.Statuses[MethodsHit] = string(lvl)
+		if !ev.IsApplicable(caps) {
+			continue
 		}
-
-		pct = utils.CalculatePercentage(metrics.MethodsFullyCovered, metrics.MethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, MethodsFullyCovered)); show {
-			node.Statuses[MethodsFullyCovered] = string(lvl)
-		}
-	}
-
-	// Patch Line Coverage
-	// We check if PatchLinesTotal (or Valid) > 0 to ensure this file/folder was actually involved in the diff.
-	if metrics.PatchLinesValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchLinesCovered, metrics.PatchLinesValid, 2)
-		// Use the constant PatchLineCoverage which should resolve to "patch_line_coverage"
-		if lvl, show := Classify(pct, bandPtr(bands, PatchLineCoverage)); show {
-			node.Statuses[PatchLineCoverage] = string(lvl)
-		}
-	}
-
-	// Patch Method Coverage
-	if metrics.PatchMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchMethodsHit, metrics.PatchMethodsValid, 2)
-		// We check config for "patch_methods_hit" band
-		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsHit)); show {
-			node.Statuses[PatchMethodsHit] = string(lvl)
-		}
-	}
-
-	// Statement Coverage
-	if caps.HasStatementCoverage && metrics.StatementsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.StatementsCovered, metrics.StatementsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, StatementCoverage)); show {
-			node.Statuses[StatementCoverage] = string(lvl)
-		}
-	}
-
-	// Patch Statement Coverage
-	if metrics.PatchStatementsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchStatementsCovered, metrics.PatchStatementsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementCoverage)); show {
-			node.Statuses[PatchStatementCoverage] = string(lvl)
-		}
-	}
-
-	// Statement Method Coverage (only if applicable)
-	if caps.HasStatementCoverage && metrics.StatementMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.StatementMethodsHit, metrics.StatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsHit)); show {
-			node.Statuses[StatementMethodsHit] = string(lvl)
-		}
-
-		pct = utils.CalculatePercentage(metrics.StatementMethodsFullyCovered, metrics.StatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsFullyCovered)); show {
-			node.Statuses[StatementMethodsFullyCovered] = string(lvl)
-		}
-	}
-
-	// Patch Statement Method Coverage
-	if metrics.PatchStatementMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchStatementMethodsHit, metrics.PatchStatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementMethodsHit)); show {
-			node.Statuses[PatchStatementMethodsHit] = string(lvl)
+		if lvl, show := ev.Evaluate(metrics, bandPtr(bands, key)); show {
+			(*statuses)[key] = string(lvl)
 		}
 	}
 }
 
-// annotateFile is a helper that calculates and attaches statuses to a single file node.
-func annotateFile(node *model.FileNode, bands config.StatusBands, caps Capabilities) {
-	node.Statuses = make(map[config.MetricKey]string)
-	metrics := node.Metrics
+// annotateMethodNodes evaluates active method-level metrics for every method
+// in a file node.
+func annotateMethodNodes(
+	methods []model.MethodMetrics,
+	activeMetrics map[config.MetricKey]bool,
+	bands config.StatusBands,
+	caps Capabilities,
+	registry map[config.MetricKey]Evaluator,
+) {
+	for i := range methods {
+		m := &methods[i]
+		m.Statuses = make(map[config.MetricKey]string)
 
-	// Line Coverage
-	pct := utils.CalculatePercentage(metrics.LinesCovered, metrics.LinesValid, 2)
-	if lvl, show := Classify(pct, bandPtr(bands, LineCoverage)); show {
-		node.Statuses[LineCoverage] = string(lvl)
-	}
+		// Build a CoverageMetrics from the method-level fields so that
+		// evaluators can operate uniformly on both scopes.
+		cm := methodToCoverageMetrics(m)
 
-	// Branch Coverage (only if applicable)
-	if caps.HasBranchCoverage && metrics.BranchesValid > 0 {
-		pct := utils.CalculatePercentage(metrics.BranchesCovered, metrics.BranchesValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, BranchCoverage)); show {
-			node.Statuses[BranchCoverage] = string(lvl)
+		for key := range activeMetrics {
+			ev, ok := registry[key]
+			if !ok {
+				continue
+			}
+			if !ev.IsApplicable(caps) {
+				continue
+			}
+			if lvl, show := ev.Evaluate(cm, bandPtr(bands, key)); show {
+				m.Statuses[key] = string(lvl)
+			}
 		}
 	}
+}
 
-	// Method Coverage (only if applicable)
-	if caps.HasMethodCoverage && metrics.MethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.MethodsHit, metrics.MethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, MethodsHit)); show {
-			node.Statuses[MethodsHit] = string(lvl)
-		}
-
-		pct = utils.CalculatePercentage(metrics.MethodsFullyCovered, metrics.MethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, MethodsFullyCovered)); show {
-			node.Statuses[MethodsFullyCovered] = string(lvl)
-		}
+// methodToCoverageMetrics maps MethodMetrics fields into CoverageMetrics so
+// that registered evaluators can operate uniformly on both scopes.
+func methodToCoverageMetrics(m *model.MethodMetrics) model.CoverageMetrics {
+	cm := model.CoverageMetrics{
+		LinesValid:             m.LinesValid,
+		LinesCovered:           m.LinesCovered,
+		BranchesValid:          m.BranchesValid,
+		BranchesCovered:        m.BranchesCovered,
+		StatementsValid:        m.StatementsValid,
+		StatementsCovered:      m.StatementsCovered,
+		PatchLinesValid:        m.PatchLinesValid,
+		PatchLinesCovered:      m.PatchLinesCovered,
+		PatchStatementsValid:   m.PatchStatementsValid,
+		PatchStatementsCovered: m.PatchStatementsCovered,
+		Calculated:             m.Calculated,
 	}
-
-	// Patch Line Coverage
-	if metrics.PatchLinesValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchLinesCovered, metrics.PatchLinesValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchLineCoverage)); show {
-			node.Statuses[PatchLineCoverage] = string(lvl)
-		}
+	if m.CyclomaticComplexity != nil {
+		cm.MaxCyclomaticComplexity = *m.CyclomaticComplexity
 	}
-
-	// Patch Method Coverage
-	if metrics.PatchMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchMethodsHit, metrics.PatchMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchMethodsHit)); show {
-			node.Statuses[PatchMethodsHit] = string(lvl)
-		}
-	}
-
-	// Statement Coverage
-	if caps.HasStatementCoverage && metrics.StatementsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.StatementsCovered, metrics.StatementsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, StatementCoverage)); show {
-			node.Statuses[StatementCoverage] = string(lvl)
-		}
-	}
-
-	// Patch Statement Coverage
-	if metrics.PatchStatementsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchStatementsCovered, metrics.PatchStatementsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementCoverage)); show {
-			node.Statuses[PatchStatementCoverage] = string(lvl)
-		}
-	}
-
-	// Statement Method Coverage (only if applicable)
-	if caps.HasStatementCoverage && metrics.StatementMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.StatementMethodsHit, metrics.StatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsHit)); show {
-			node.Statuses[StatementMethodsHit] = string(lvl)
-		}
-
-		pct = utils.CalculatePercentage(metrics.StatementMethodsFullyCovered, metrics.StatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, StatementMethodsFullyCovered)); show {
-			node.Statuses[StatementMethodsFullyCovered] = string(lvl)
-		}
-	}
-
-	// Patch Statement Method Coverage
-	if metrics.PatchStatementMethodsValid > 0 {
-		pct := utils.CalculatePercentage(metrics.PatchStatementMethodsHit, metrics.PatchStatementMethodsValid, 2)
-		if lvl, show := Classify(pct, bandPtr(bands, PatchStatementMethodsHit)); show {
-			node.Statuses[PatchStatementMethodsHit] = string(lvl)
-		}
-	}
+	return cm
 }
 
 // bandPtr is a small helper to get a pointer to a band from the map, which is
-// needed for the `Classify` function's nil check.
-func bandPtr(bands config.StatusBands, k MetricKey) *config.Band {
+// needed for the classifier's nil check.
+func bandPtr(bands config.StatusBands, k config.MetricKey) *config.Band {
 	if b, ok := bands[k]; ok {
 		return &b
 	}

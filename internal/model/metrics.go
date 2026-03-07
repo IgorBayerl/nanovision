@@ -1,5 +1,21 @@
 package model
 
+import "github.com/IgorBayerl/nanovision/internal/config"
+
+// CoverageDetail represents a standard metric expressed as a percentage,
+// tracking covered out of total possible.
+type CoverageDetail struct {
+	Percentage float64 `json:"percentage"`
+	Covered    int     `json:"covered"`
+	Uncovered  int     `json:"uncovered"`
+	Total      int     `json:"total"`
+}
+
+// ScoreDetail represents a standalone score (e.g. Max Cyclomatic Complexity).
+type ScoreDetail struct {
+	Value float64 `json:"value"`
+}
+
 // CoverageMetrics holds the aggregated coverage data for a node (project, dir, or file).
 type CoverageMetrics struct {
 	LinesCovered    int
@@ -36,6 +52,11 @@ type CoverageMetrics struct {
 	StatementMethodsValid        int
 	PatchStatementMethodsHit     int
 	PatchStatementMethodsValid   int
+
+	MaxCyclomaticComplexity int
+
+	// Calculated contains all computed metrics, populated by the calculation pipeline.
+	Calculated map[config.MetricKey]any `json:"calculated,omitempty"`
 }
 
 // LineMetrics holds the coverage data for a single line of code.
@@ -76,4 +97,9 @@ type MethodMetrics struct {
 	PatchStatementsValid   int
 	PatchStatementsCovered int
 	DiffStatus             string // "added", "modified", or ""
+
+	Statuses map[config.MetricKey]string // Per-method risk statuses
+
+	// Calculated contains all computed metrics for this method.
+	Calculated map[config.MetricKey]any `json:"calculated,omitempty"`
 }

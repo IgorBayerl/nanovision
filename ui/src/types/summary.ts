@@ -118,19 +118,12 @@ export type MethodMetric = {
     status?: RiskLevel
 }
 
-export type NewLinesCoverage = {
-    covered: number
-    total: number
-}
-
 export interface Method {
     name: string
     startLine: number
     endLine: number
     metrics: Record<string, MethodMetric>
     diffStatus?: DiffStatus
-    newLinesCoverage?: NewLinesCoverage
-    newStatementsCoverage?: NewLinesCoverage
 }
 
 export interface DetailsV1 {

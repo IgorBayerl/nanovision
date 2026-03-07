@@ -129,10 +129,6 @@ const methodMetricSchema = z.object({
     status: riskLevelSchema.optional(),
 })
 
-const newLinesCoverageSchema = z.object({
-    covered: z.number().int(),
-    total: z.number().int(),
-})
 
 // A schema for a single method/function in the file
 const methodSchema = z.object({
@@ -141,8 +137,6 @@ const methodSchema = z.object({
     endLine: z.number(),
     metrics: z.record(z.string(), methodMetricSchema),
     diffStatus: diffStatusSchema.optional(),
-    newLinesCoverage: newLinesCoverageSchema.optional(),
-    newStatementsCoverage: newLinesCoverageSchema.optional(),
 })
 
 // Schema for the entire details page data object
