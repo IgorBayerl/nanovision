@@ -39,7 +39,7 @@ func PrintBootSummary(cfg *config.AppConfig, registry map[config.MetricKey]statu
 			if cfg.ActiveFileMetrics[ev.Key()] {
 				mark = "[x]"
 			}
-			sb.WriteString(fmt.Sprintf("   %s %-28s (%s)\n", mark, ev.Name(), ev.Key()))
+			sb.WriteString(fmt.Sprintf("   %s %-30s (%s)\n", mark, ev.Name(), ev.Key()))
 		}
 	}
 
@@ -50,7 +50,7 @@ func PrintBootSummary(cfg *config.AppConfig, registry map[config.MetricKey]statu
 			if cfg.ActiveMethodMetrics[ev.Key()] {
 				mark = "[x]"
 			}
-			sb.WriteString(fmt.Sprintf("   %s %-28s (%s)\n", mark, ev.Name(), ev.Key()))
+			sb.WriteString(fmt.Sprintf("   %s %-30s (%s)\n", mark, ev.Name(), ev.Key()))
 		}
 	}
 	sb.WriteString("======================================================\n")
