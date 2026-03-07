@@ -8,13 +8,15 @@ import (
 // MetricCalculator defines the calculation logic for a single file/directory-level coverage metric.
 type MetricCalculator interface {
 	Key() config.MetricKey
+	DependsOn() []config.MetricKey
 	// Calculate takes raw coverage metrics and returns a shaped detail (like model.CoverageDetail or model.ScoreDetail),
 	// and a boolean indicating if calculation was possible (e.g. valid total > 0).
-	Calculate(raw model.CoverageMetrics) (any, bool)
+	Calculate(raw model.CoverageMetrics, prior map[config.MetricKey]any) (any, bool)
 }
 
 // MethodMetricCalculator defines the calculation logic for a single method-level metric.
 type MethodMetricCalculator interface {
 	Key() config.MetricKey
-	Calculate(raw model.MethodMetrics) (any, bool)
+	DependsOn() []config.MetricKey
+	Calculate(raw model.MethodMetrics, prior map[config.MetricKey]any) (any, bool)
 }

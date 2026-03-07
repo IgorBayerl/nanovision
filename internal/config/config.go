@@ -42,6 +42,11 @@ const (
 	MethodPatchLineCoverage      MetricKey = "method_patch_line_coverage"
 	MethodPatchStatementCoverage MetricKey = "method_patch_statement_coverage"
 	CyclomaticComplexity         MetricKey = "cyclomatic_complexity"
+	MethodCrapScore              MetricKey = "method_crap_score"
+
+	MethodPatchCrapScore    MetricKey = "method_patch_crap_score"
+	MethodExposedRisk       MetricKey = "method_exposed_risk"
+	MethodDefectProbability MetricKey = "method_defect_probability"
 )
 
 var DefaultFileMetrics = []MetricKey{

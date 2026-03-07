@@ -5,15 +5,92 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
+// topSortFileCalculators returns a slice of MetricKeys sorted such that
+// for every calculator C, its dependencies appear before C in the slice.
+func topSortFileCalculators(active map[config.MetricKey]bool) []config.MetricKey {
+	var sorted []config.MetricKey
+	visited := make(map[config.MetricKey]bool)
+	visiting := make(map[config.MetricKey]bool)
+
+	var visit func(key config.MetricKey)
+	visit = func(key config.MetricKey) {
+		if visited[key] {
+			return
+		}
+		if visiting[key] {
+			// Circular dependency detected, ignore for now
+			return
+		}
+		visiting[key] = true
+
+		if calc, ok := FileRegistry[key]; ok {
+			for _, dep := range calc.DependsOn() {
+				if active[dep] {
+					visit(dep)
+				}
+			}
+		}
+
+		visiting[key] = false
+		visited[key] = true
+		sorted = append(sorted, key)
+	}
+
+	for key := range active {
+		visit(key)
+	}
+	return sorted
+}
+
+// topSortMethodCalculators returns a slice of MetricKeys sorted such that
+// for every calculator C, its dependencies appear before C in the slice.
+func topSortMethodCalculators(active map[config.MetricKey]bool) []config.MetricKey {
+	var sorted []config.MetricKey
+	visited := make(map[config.MetricKey]bool)
+	visiting := make(map[config.MetricKey]bool)
+
+	var visit func(key config.MetricKey)
+	visit = func(key config.MetricKey) {
+		if visited[key] {
+			return
+		}
+		if visiting[key] {
+			// Circular dependency detected, ignore for now
+			return
+		}
+		visiting[key] = true
+
+		if calc, ok := MethodRegistry[key]; ok {
+			for _, dep := range calc.DependsOn() {
+				if active[dep] {
+					visit(dep)
+				}
+			}
+		}
+
+		visiting[key] = false
+		visited[key] = true
+		sorted = append(sorted, key)
+	}
+
+	for key := range active {
+		visit(key)
+	}
+	return sorted
+}
+
 // CalculateTree traverses the coverage tree and populates the Calculated map on every metric.
 func CalculateTree(tree *model.SummaryTree, activeFileMetrics map[config.MetricKey]bool, activeMethodMetrics map[config.MetricKey]bool) {
+	sortedFileKeys := topSortFileCalculators(activeFileMetrics)
+	sortedMethodKeys := topSortMethodCalculators(activeMethodMetrics)
+
 	// First do the root
 	if tree.Metrics.Calculated == nil {
 		tree.Metrics.Calculated = make(map[config.MetricKey]any)
 	}
-	for key := range activeFileMetrics {
+	for _, key := range sortedFileKeys {
 		if calc, ok := FileRegistry[key]; ok {
-			if res, ok := calc.Calculate(tree.Metrics); ok {
+			if res, ok := calc.Calculate(tree.Metrics, tree.Metrics.Calculated); ok {
 				tree.Metrics.Calculated[key] = res
 			}
 		}
@@ -24,9 +101,9 @@ func CalculateTree(tree *model.SummaryTree, activeFileMetrics map[config.MetricK
 		if n.Metrics.Calculated == nil {
 			n.Metrics.Calculated = make(map[config.MetricKey]any)
 		}
-		for key := range activeFileMetrics {
+		for _, key := range sortedFileKeys {
 			if calc, ok := FileRegistry[key]; ok {
-				if res, ok := calc.Calculate(n.Metrics); ok {
+				if res, ok := calc.Calculate(n.Metrics, n.Metrics.Calculated); ok {
 					n.Metrics.Calculated[key] = res
 				}
 			}
@@ -36,9 +113,9 @@ func CalculateTree(tree *model.SummaryTree, activeFileMetrics map[config.MetricK
 			if file.Metrics.Calculated == nil {
 				file.Metrics.Calculated = make(map[config.MetricKey]any)
 			}
-			for key := range activeFileMetrics {
+			for _, key := range sortedFileKeys {
 				if calc, ok := FileRegistry[key]; ok {
-					if res, ok := calc.Calculate(file.Metrics); ok {
+					if res, ok := calc.Calculate(file.Metrics, file.Metrics.Calculated); ok {
 						file.Metrics.Calculated[key] = res
 					}
 				}
@@ -50,9 +127,9 @@ func CalculateTree(tree *model.SummaryTree, activeFileMetrics map[config.MetricK
 				if m.Calculated == nil {
 					m.Calculated = make(map[config.MetricKey]any)
 				}
-				for key := range activeMethodMetrics {
+				for _, key := range sortedMethodKeys {
 					if calc, ok := MethodRegistry[key]; ok {
-						if res, ok := calc.Calculate(*m); ok {
+						if res, ok := calc.Calculate(*m, m.Calculated); ok {
 							m.Calculated[key] = res
 						}
 					}

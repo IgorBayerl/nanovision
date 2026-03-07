@@ -1,6 +1,6 @@
 module github.com/IgorBayerl/nanovision
 
-go 1.25.3
+go 1.24.0
 
 require (
 	github.com/IgorBayerl/fsglob v0.1.3
