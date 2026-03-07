@@ -64,9 +64,6 @@ var DefaultMethodMetrics = []MetricKey{
 	MethodLineCoverage,
 	MethodStatementCoverage,
 	CyclomaticComplexity,
-	// MethodBranchCoverage,
-	// MethodPatchLineCoverage,
-	// MethodPatchStatementCoverage,
 }
 
 // StatusBands supports either:
