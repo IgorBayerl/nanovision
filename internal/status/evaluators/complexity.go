@@ -51,3 +51,99 @@ func (e CyclomaticComplexityEvaluator) Evaluate(m model.CoverageMetrics, band *c
 	detail := calc.(model.ScoreDetail)
 	return status.ClassifyLowerIsBetter(detail.Value, band)
 }
+
+// MethodCrapScoreEvaluator
+
+type MethodCrapScoreEvaluator struct{}
+
+func (MethodCrapScoreEvaluator) Key() config.MetricKey { return config.MethodCrapScore }
+func (MethodCrapScoreEvaluator) Name() string          { return "CRAP Score" }
+func (MethodCrapScoreEvaluator) Description() string {
+	return "Change Risk Anti-Pattern (CRAP) score combining complexity and coverage (lower is better)."
+}
+func (MethodCrapScoreEvaluator) SupportedScopes() status.MetricScope {
+	return status.MethodScope
+}
+
+func (MethodCrapScoreEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
+
+func (e MethodCrapScoreEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
+		return "", false
+	}
+	detail := calc.(model.ScoreDetail)
+	return status.ClassifyLowerIsBetter(detail.Value, band)
+}
+
+// MethodPatchCrapScoreEvaluator
+
+type MethodPatchCrapScoreEvaluator struct{}
+
+func (MethodPatchCrapScoreEvaluator) Key() config.MetricKey { return config.MethodPatchCrapScore }
+func (MethodPatchCrapScoreEvaluator) Name() string          { return "Patch CRAP Score" }
+func (MethodPatchCrapScoreEvaluator) Description() string {
+	return "CRAP score applied only to patched statements (lower is better)."
+}
+func (MethodPatchCrapScoreEvaluator) SupportedScopes() status.MetricScope {
+	return status.MethodScope
+}
+
+func (MethodPatchCrapScoreEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
+
+func (e MethodPatchCrapScoreEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
+		return "", false
+	}
+	detail := calc.(model.ScoreDetail)
+	return status.ClassifyLowerIsBetter(detail.Value, band)
+}
+
+// MethodExposedRiskEvaluator
+
+type MethodExposedRiskEvaluator struct{}
+
+func (MethodExposedRiskEvaluator) Key() config.MetricKey { return config.MethodExposedRisk }
+func (MethodExposedRiskEvaluator) Name() string          { return "Exposed Risk" }
+func (MethodExposedRiskEvaluator) Description() string {
+	return "Absolute volume of complexity that is unprotected by tests (lower is better)."
+}
+func (MethodExposedRiskEvaluator) SupportedScopes() status.MetricScope {
+	return status.MethodScope
+}
+
+func (MethodExposedRiskEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
+
+func (e MethodExposedRiskEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
+		return "", false
+	}
+	detail := calc.(model.ScoreDetail)
+	return status.ClassifyLowerIsBetter(detail.Value, band)
+}
+
+// MethodDefectProbabilityEvaluator
+
+type MethodDefectProbabilityEvaluator struct{}
+
+func (MethodDefectProbabilityEvaluator) Key() config.MetricKey { return config.MethodDefectProbability }
+func (MethodDefectProbabilityEvaluator) Name() string          { return "Defect Probability Index" }
+func (MethodDefectProbabilityEvaluator) Description() string {
+	return "Index representing the probability of defects based on complexity and patch coverage (lower is better)."
+}
+func (MethodDefectProbabilityEvaluator) SupportedScopes() status.MetricScope {
+	return status.MethodScope
+}
+
+func (MethodDefectProbabilityEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
+
+func (e MethodDefectProbabilityEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
+	calc, exists := m.Calculated[e.Key()]
+	if !exists {
+		return "", false
+	}
+	detail := calc.(model.ScoreDetail)
+	return status.ClassifyLowerIsBetter(detail.Value, band)
+}

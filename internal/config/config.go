@@ -49,27 +49,20 @@ const (
 	MethodDefectProbability MetricKey = "method_defect_probability"
 )
 
-var DefaultFileMetrics = []MetricKey{
-	// LineCoverage,
-	BranchCoverage,
-	MethodsHit,
-	// MethodsFullyCovered,
-	// PatchLineCoverage,
-	PatchMethodsHit,
-
-	StatementCoverage,
-	PatchStatementCoverage,
-	StatementMethodsHit,
-	// StatementMethodsFullyCovered, // Let's keep existing defaults commented or active as they were.
-	PatchStatementMethodsHit,
-	// MaxCyclomaticComplexity,
+// RegisterDefaultMetrics should be called during bootstrap to dynamically
+// populate default metrics based on registered calculators or evaluators.
+func RegisterDefaultMetrics(fileMetrics, methodMetrics []MetricKey) {
+	if len(DefaultFileMetrics) == 0 {
+		DefaultFileMetrics = fileMetrics
+	}
+	if len(DefaultMethodMetrics) == 0 {
+		DefaultMethodMetrics = methodMetrics
+	}
 }
 
-var DefaultMethodMetrics = []MetricKey{
-	MethodLineCoverage,
-	MethodStatementCoverage,
-	CyclomaticComplexity,
-}
+var DefaultFileMetrics = []MetricKey{}
+
+var DefaultMethodMetrics = []MetricKey{}
 
 // StatusBands supports either:
 // 1) map form:    { "line_coverage": "60..75", ... }

@@ -25,9 +25,9 @@ func topSortFileCalculators(active map[config.MetricKey]bool) []config.MetricKey
 
 		if calc, ok := FileRegistry[key]; ok {
 			for _, dep := range calc.DependsOn() {
-				if active[dep] {
-					visit(dep)
-				}
+				// Auto-enable dependencies if they aren't explicitly requested
+				active[dep] = true
+				visit(dep)
 			}
 		}
 
@@ -36,7 +36,13 @@ func topSortFileCalculators(active map[config.MetricKey]bool) []config.MetricKey
 		sorted = append(sorted, key)
 	}
 
-	for key := range active {
+	// We copy the initial keys to avoid map iteration issues while modifying active
+	var initialKeys []config.MetricKey
+	for k := range active {
+		initialKeys = append(initialKeys, k)
+	}
+
+	for _, key := range initialKeys {
 		visit(key)
 	}
 	return sorted
@@ -62,9 +68,9 @@ func topSortMethodCalculators(active map[config.MetricKey]bool) []config.MetricK
 
 		if calc, ok := MethodRegistry[key]; ok {
 			for _, dep := range calc.DependsOn() {
-				if active[dep] {
-					visit(dep)
-				}
+				// Auto-enable dependencies if they aren't explicitly requested
+				active[dep] = true
+				visit(dep)
 			}
 		}
 
@@ -73,7 +79,13 @@ func topSortMethodCalculators(active map[config.MetricKey]bool) []config.MetricK
 		sorted = append(sorted, key)
 	}
 
-	for key := range active {
+	// We copy the initial keys to avoid map iteration issues while modifying active
+	var initialKeys []config.MetricKey
+	for k := range active {
+		initialKeys = append(initialKeys, k)
+	}
+
+	for _, key := range initialKeys {
 		visit(key)
 	}
 	return sorted

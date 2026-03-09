@@ -27,4 +27,8 @@ var Registry = map[config.MetricKey]status.Evaluator{
 	config.MethodStatementCoverage:      MethodStatementCoverageEvaluator{},
 	config.MethodPatchStatementCoverage: MethodPatchStatementCoverageEvaluator{},
 	config.CyclomaticComplexity:         CyclomaticComplexityEvaluator{},
+	config.MethodCrapScore:              MethodCrapScoreEvaluator{},
+	config.MethodPatchCrapScore:         MethodPatchCrapScoreEvaluator{},
+	config.MethodExposedRisk:            MethodExposedRiskEvaluator{},
+	config.MethodDefectProbability:      MethodDefectProbabilityEvaluator{},
 }
