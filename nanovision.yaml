@@ -115,6 +115,6 @@ method_metrics:
   - "method_crap_score"
   - "method_patch_crap_score"
   - "method_exposed_risk"
-  - "method_defect_probability"
+  - "method_defect_probability" # DPI
 
 ignore_cache: true

@@ -5,28 +5,27 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
-// topSortFileCalculators returns a slice of MetricKeys sorted such that
+// Calculator is a constraint for types that have a DependsOn method.
+type Calculator interface {
+	DependsOn() []config.MetricKey
+}
+
+// topSortCalculators returns a slice of MetricKeys sorted such that
 // for every calculator C, its dependencies appear before C in the slice.
-func topSortFileCalculators(active map[config.MetricKey]bool) []config.MetricKey {
+func topSortCalculators[C Calculator](registry map[config.MetricKey]C, active map[config.MetricKey]bool) []config.MetricKey {
 	var sorted []config.MetricKey
 	visited := make(map[config.MetricKey]bool)
 	visiting := make(map[config.MetricKey]bool)
 
 	var visit func(key config.MetricKey)
 	visit = func(key config.MetricKey) {
-		if visited[key] {
-			return
-		}
-		if visiting[key] {
-			// Circular dependency detected, ignore for now
+		if visited[key] || visiting[key] {
 			return
 		}
 		visiting[key] = true
 
-		if calc, ok := FileRegistry[key]; ok {
+		if calc, ok := registry[key]; ok {
 			for _, dep := range calc.DependsOn() {
-				// Auto-enable dependencies if they aren't explicitly requested
-				active[dep] = true
 				visit(dep)
 			}
 		}
@@ -36,8 +35,8 @@ func topSortFileCalculators(active map[config.MetricKey]bool) []config.MetricKey
 		sorted = append(sorted, key)
 	}
 
-	// We copy the initial keys to avoid map iteration issues while modifying active
-	var initialKeys []config.MetricKey
+	// Copy initial keys to avoid map iteration issues while modifying active.
+	initialKeys := make([]config.MetricKey, 0, len(active))
 	for k := range active {
 		initialKeys = append(initialKeys, k)
 	}
@@ -48,47 +47,12 @@ func topSortFileCalculators(active map[config.MetricKey]bool) []config.MetricKey
 	return sorted
 }
 
-// topSortMethodCalculators returns a slice of MetricKeys sorted such that
-// for every calculator C, its dependencies appear before C in the slice.
+func topSortFileCalculators(active map[config.MetricKey]bool) []config.MetricKey {
+	return topSortCalculators(FileRegistry, active)
+}
+
 func topSortMethodCalculators(active map[config.MetricKey]bool) []config.MetricKey {
-	var sorted []config.MetricKey
-	visited := make(map[config.MetricKey]bool)
-	visiting := make(map[config.MetricKey]bool)
-
-	var visit func(key config.MetricKey)
-	visit = func(key config.MetricKey) {
-		if visited[key] {
-			return
-		}
-		if visiting[key] {
-			// Circular dependency detected, ignore for now
-			return
-		}
-		visiting[key] = true
-
-		if calc, ok := MethodRegistry[key]; ok {
-			for _, dep := range calc.DependsOn() {
-				// Auto-enable dependencies if they aren't explicitly requested
-				active[dep] = true
-				visit(dep)
-			}
-		}
-
-		visiting[key] = false
-		visited[key] = true
-		sorted = append(sorted, key)
-	}
-
-	// We copy the initial keys to avoid map iteration issues while modifying active
-	var initialKeys []config.MetricKey
-	for k := range active {
-		initialKeys = append(initialKeys, k)
-	}
-
-	for _, key := range initialKeys {
-		visit(key)
-	}
-	return sorted
+	return topSortCalculators(MethodRegistry, active)
 }
 
 // CalculateTree traverses the coverage tree and populates the Calculated map on every metric.
