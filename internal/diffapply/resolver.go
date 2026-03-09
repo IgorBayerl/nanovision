@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/IgorBayerl/nanovision/internal/diff"
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
@@ -31,7 +30,7 @@ type resolverImpl struct {
 // H2: Remove longest common prefix from monorepo root
 // H3: Match by basename and suffix components
 // H4: Prefer paths with known coverage in ambiguous cases
-func BuildResolver(dd *diff.DiffData, fileIndex map[string]*model.FileNode, coveredSet map[string]bool, logger *slog.Logger) Resolver {
+func BuildResolver(diffPaths []string, fileIndex map[string]*model.FileNode, coveredSet map[string]bool, logger *slog.Logger) Resolver {
 	r := &resolverImpl{
 		cache:      make(map[string]string),
 		warned:     make(map[string]struct{}),
@@ -40,18 +39,15 @@ func BuildResolver(dd *diff.DiffData, fileIndex map[string]*model.FileNode, cove
 		logger:     logger,
 	}
 
-	// Collect all diff paths and tree paths
-	diffPaths := make([]string, 0, len(dd.Files))
 	treePaths := make([]string, 0, len(fileIndex))
-	for _, f := range dd.Files {
-		normalized := diff.Normalize(f.NewPath)
-		if logger != nil {
-			logger.Debug("Normalized diff path", "raw", f.NewPath, "normalized", normalized)
-		}
-		diffPaths = append(diffPaths, normalized)
-	}
 	for path := range fileIndex {
 		treePaths = append(treePaths, path)
+	}
+
+	if logger != nil {
+		for _, p := range diffPaths {
+			logger.Debug("Analyzed diff path", "path", p)
+		}
 	}
 
 	// Try H1: Strip N path components
@@ -77,9 +73,6 @@ func (r *resolverImpl) Resolve(diffPath string) (string, bool) {
 	if resolved, ok := r.cache[diffPath]; ok {
 		return resolved, true
 	}
-
-	// Normalize the diff path
-	diffPath = diff.Normalize(diffPath)
 
 	// Check for a direct, exact match first before trying heuristics.
 	if _, ok := r.fileIndex[diffPath]; ok {

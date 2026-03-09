@@ -11,6 +11,9 @@ github.com/mattn/go-pointer
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
+# github.com/sourcegraph/go-diff v0.7.0
+## explicit; go 1.14
+github.com/sourcegraph/go-diff/diff
 # github.com/stretchr/testify v1.10.0
 ## explicit; go 1.17
 github.com/stretchr/testify/assert

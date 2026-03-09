@@ -5,6 +5,7 @@ go 1.25.3
 require (
 	github.com/IgorBayerl/fsglob v0.1.3
 	github.com/mattn/go-pointer v0.0.1
+	github.com/sourcegraph/go-diff v0.7.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/net v0.43.0
 	golang.org/x/text v0.28.0

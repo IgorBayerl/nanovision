@@ -24,7 +24,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/cache"
 	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
-	"github.com/IgorBayerl/nanovision/internal/diff"
 	"github.com/IgorBayerl/nanovision/internal/diffapply"
 	"github.com/IgorBayerl/nanovision/internal/enricher"
 	"github.com/IgorBayerl/nanovision/internal/filereader"
@@ -251,7 +250,7 @@ func setupCacheManager(appConfig *config.AppConfig, logger *slog.Logger, buildMe
 }
 
 // executePipeline orchestrates the report generation process from start to finish.
-func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error {
+func executePipeline(appConfig *config.AppConfig, diffMap map[string]*model.DiffInfo) error {
 	logger := slog.Default()
 	logger.Info("Executing report generation pipeline...")
 
@@ -296,9 +295,9 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 	treeEnricher.EnrichTree(summaryTree)
 	logger.Info("ENRICH stage completed successfully.")
 
-	if diffData != nil {
+	if diffMap != nil {
 		logger.Info("Executing DIFF ANALYSIS stage...")
-		diffapply.Apply(summaryTree, diffData, logger)
+		diffapply.Apply(summaryTree, diffMap, logger)
 		logger.Info("DIFF ANALYSIS stage completed successfully.")
 	}
 
@@ -469,21 +468,27 @@ func main() {
 	// Print the visual checklist of resolved configurations
 	bootlog.PrintBootSummary(appConfig, evaluators.Registry)
 
-	var diffData *diff.DiffData
+	var diffMap map[string]*model.DiffInfo
 	if appConfig.Diff.File != "" {
 		var parseErr error
 		diffLogger := slog.Default()
 		diffLogger.Info("Parsing diff file...", "path", appConfig.Diff.File)
-		diffData, parseErr = diff.Parse(appConfig.Diff.File, diffLogger)
-		if parseErr != nil {
-			diffLogger.Warn("Failed to parse diff file; ignoring diff analysis.", "error", parseErr)
-			diffData = nil
+		
+		rawDiff, readErr := os.ReadFile(appConfig.Diff.File)
+		if readErr != nil {
+			diffLogger.Warn("Failed to read diff file; ignoring diff analysis.", "error", readErr)
+		} else {
+			diffMap, parseErr = diffapply.Parse(rawDiff)
+			if parseErr != nil {
+				diffLogger.Warn("Failed to parse diff file; ignoring diff analysis.", "error", parseErr)
+				diffMap = nil
+			}
 		}
 	} else {
 		slog.Info("No diff file specified in configuration, skipping diff analysis")
 	}
 
-	if err := executePipeline(appConfig, diffData); err != nil {
+	if err := executePipeline(appConfig, diffMap); err != nil {
 		slog.Error("An error occurred during report generation", "error", err)
 		os.Exit(1)
 	}

@@ -3,15 +3,14 @@ package diffapply
 import (
 	"log/slog"
 
-	"github.com/IgorBayerl/nanovision/internal/diff"
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
 // Apply annotates a model.SummaryTree with diff information.
 // It resolves paths from the diff data, finds corresponding file nodes in the tree,
 // and attaches change details like kind (added/modified) and changed line numbers.
-func Apply(tree *model.SummaryTree, dd *diff.DiffData, logger *slog.Logger) {
-	if tree == nil || tree.Root == nil || dd == nil || len(dd.Files) == 0 {
+func Apply(tree *model.SummaryTree, diffMap map[string]*model.DiffInfo, logger *slog.Logger) {
+	if tree == nil || tree.Root == nil || len(diffMap) == 0 {
 		return
 	}
 
@@ -21,14 +20,18 @@ func Apply(tree *model.SummaryTree, dd *diff.DiffData, logger *slog.Logger) {
 	collectFilesAndCoverage(tree.Root, fileIndex, coveredSet)
 
 	// 2. Build the resolver with heuristics.
-	resolver := BuildResolver(dd, fileIndex, coveredSet, logger)
+	var diffPaths []string
+	for path := range diffMap {
+		diffPaths = append(diffPaths, path)
+	}
+	resolver := BuildResolver(diffPaths, fileIndex, coveredSet, logger)
 
 	// 3. Iterate through each file in the diff and apply its changes.
-	for _, fileDiff := range dd.Files {
+	for path, diffInfo := range diffMap {
 		// Resolve the diff path to a path in our coverage tree.
-		treePath, ok := resolver.Resolve(fileDiff.NewPath)
+		treePath, ok := resolver.Resolve(path)
 		if !ok {
-			logger.Debug("Skipping unmapped diff file", "path", fileDiff.NewPath)
+			logger.Debug("Skipping unmapped diff file", "path", path)
 			continue
 		}
 
@@ -41,33 +44,7 @@ func Apply(tree *model.SummaryTree, dd *diff.DiffData, logger *slog.Logger) {
 			continue
 		}
 
-		// Ensure the DiffInfo struct exists.
-		if node.Diff == nil {
-			node.Diff = &model.DiffInfo{
-				AddedLines:    make(map[int]bool),
-				ModifiedLines: make(map[int]bool),
-			}
-		}
-
-		// Set the change kind.
-		switch fileDiff.Kind {
-		case "added":
-			node.Diff.Kind = model.ChangeKindAdded
-		default:
-			node.Diff.Kind = model.ChangeKindModified
-		}
-
-		// Populate the line maps from hunks.
-		for _, hunk := range fileDiff.Hunks {
-			for _, offset := range hunk.AddedLineOffsets {
-				lineNumber := hunk.NewStart + offset
-				node.Diff.AddedLines[lineNumber] = true
-			}
-			for _, offset := range hunk.ModifiedLineOffsets {
-				lineNumber := hunk.NewStart + offset
-				node.Diff.ModifiedLines[lineNumber] = true
-			}
-		}
+		node.Diff = diffInfo
 	}
 }
 

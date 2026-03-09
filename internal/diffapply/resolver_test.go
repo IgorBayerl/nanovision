@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/IgorBayerl/nanovision/internal/diff"
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
@@ -13,7 +12,7 @@ func TestBuildResolver(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		diffData     *diff.DiffData
+		diffPaths    []string
 		fileIndex    map[string]*model.FileNode
 		coveredSet   map[string]bool
 		diffPath     string
@@ -22,11 +21,9 @@ func TestBuildResolver(t *testing.T) {
 	}{
 		{
 			name: "H1: strip one component",
-			diffData: &diff.DiffData{
-				Files: []diff.FileDiff{
-					{NewPath: "backend/src/foo.go"},
-					{NewPath: "backend/src/bar.go"},
-				},
+			diffPaths: []string{
+				"backend/src/foo.go",
+				"backend/src/bar.go",
 			},
 			fileIndex: map[string]*model.FileNode{
 				"src/foo.go": {},
@@ -39,11 +36,9 @@ func TestBuildResolver(t *testing.T) {
 		},
 		{
 			name: "H2: common monorepo prefix",
-			diffData: &diff.DiffData{
-				Files: []diff.FileDiff{
-					{NewPath: "//depot/main/backend/foo.go"},
-					{NewPath: "//depot/main/backend/bar.go"},
-				},
+			diffPaths: []string{
+				"//depot/main/backend/foo.go",
+				"//depot/main/backend/bar.go",
 			},
 			fileIndex: map[string]*model.FileNode{
 				"backend/foo.go": {},
@@ -56,10 +51,8 @@ func TestBuildResolver(t *testing.T) {
 		},
 		{
 			name: "H3: suffix matching",
-			diffData: &diff.DiffData{
-				Files: []diff.FileDiff{
-					{NewPath: "unique/path/test.go"},
-				},
+			diffPaths: []string{
+				"unique/path/test.go",
 			},
 			fileIndex: map[string]*model.FileNode{
 				"src/test.go":       {},
@@ -73,10 +66,8 @@ func TestBuildResolver(t *testing.T) {
 		},
 		{
 			name: "H4: coverage tie-breaker",
-			diffData: &diff.DiffData{
-				Files: []diff.FileDiff{
-					{NewPath: "test.go"},
-				},
+			diffPaths: []string{
+				"test.go",
 			},
 			fileIndex: map[string]*model.FileNode{
 				"src/test.go": {},
@@ -91,10 +82,8 @@ func TestBuildResolver(t *testing.T) {
 		},
 		{
 			name: "ambiguous path",
-			diffData: &diff.DiffData{
-				Files: []diff.FileDiff{
-					{NewPath: "test.go"},
-				},
+			diffPaths: []string{
+				"test.go",
 			},
 			fileIndex: map[string]*model.FileNode{
 				"src/test.go": {},
@@ -111,7 +100,7 @@ func TestBuildResolver(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resolver := BuildResolver(tt.diffData, tt.fileIndex, tt.coveredSet, logger)
+			resolver := BuildResolver(tt.diffPaths, tt.fileIndex, tt.coveredSet, logger)
 			gotPath, ok := resolver.Resolve(tt.diffPath)
 			if ok != tt.wantResolved {
 				t.Errorf("Resolve() ok = %v, want %v", ok, tt.wantResolved)
