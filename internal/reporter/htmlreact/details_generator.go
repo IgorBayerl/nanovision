@@ -261,6 +261,26 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 					if det, ok := calcData.(model.ScoreDetail); ok {
 						md.Metrics[MethodUICyclomaticComplexity] = methodMetric{Value: fmt.Sprintf("%.0f", det.Value)}
 					}
+				case config.MethodCrapScore:
+					if det, ok := calcData.(model.ScoreDetail); ok {
+						md.Metrics[MethodUICrapScore] = methodMetric{Value: fmt.Sprintf("%.2f", det.Value)}
+					}
+				case config.MethodPatchCrapScore:
+					if det, ok := calcData.(model.ScoreDetail); ok {
+						if md.DiffStatus != "" {
+							md.Metrics[MethodUIPatchCrapScore] = methodMetric{Value: fmt.Sprintf("%.2f", det.Value)}
+						}
+					}
+				case config.MethodExposedRisk:
+					if det, ok := calcData.(model.ScoreDetail); ok {
+						md.Metrics[MethodUIExposedRisk] = methodMetric{Value: fmt.Sprintf("%.2f", det.Value)}
+					}
+				case config.MethodDefectProbability:
+					if det, ok := calcData.(model.ScoreDetail); ok {
+						if md.DiffStatus != "" {
+							md.Metrics[MethodUIDefectProbability] = methodMetric{Value: fmt.Sprintf("%.0f", det.Value)}
+						}
+					}
 				}
 			}
 		}

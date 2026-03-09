@@ -112,5 +112,9 @@ method_metrics:
   - "method_branch_coverage"
   # - "method_patch_line_coverage"
   - "method_patch_statement_coverage"
+  - "method_crap_score"
+  - "method_patch_crap_score"
+  - "method_exposed_risk"
+  - "method_defect_probability" # DPI
 
 ignore_cache: true

@@ -326,6 +326,38 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		}
 	}
 
+	if b.config.ActiveMethodMetrics[config.MethodCrapScore] {
+		defs[MethodUICrapScore] = metricDefinition{
+			Label:      "CRAP Score",
+			ShortLabel: "CRAP",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMethodMetrics[config.MethodPatchCrapScore] {
+		defs[MethodUIPatchCrapScore] = metricDefinition{
+			Label:      "Patch CRAP Score",
+			ShortLabel: "PCRAP",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMethodMetrics[config.MethodExposedRisk] {
+		defs[MethodUIExposedRisk] = metricDefinition{
+			Label:      "Exposed Risk",
+			ShortLabel: "Risk",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
+	if b.config.ActiveMethodMetrics[config.MethodDefectProbability] {
+		defs[MethodUIDefectProbability] = metricDefinition{
+			Label:      "Defect Probability",
+			ShortLabel: "DPI",
+			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+		}
+	}
+
 	if b.config.ActiveFileMetrics[config.LineCoverage] {
 		defs[string(config.LineCoverage)] = metricDefinition{
 			Label:      "Lines",
