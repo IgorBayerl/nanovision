@@ -4,17 +4,45 @@ project_name: nanovision
 dist: bin
 
 builds:
+  # --- macOS ---
+  - id: darwin-amd64
+    binary: nanovision
+    main: ./cmd/main.go
+    goos: [darwin]
+    goarch: [amd64]
+    env:
+      - CGO_ENABLED=0
+      - CC=zig cc -target x86_64-macos
+      - CXX=zig c++ -target x86_64-macos
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  - id: darwin-arm64
+    binary: nanovision
+    main: ./cmd/main.go
+    goos: [darwin]
+    goarch: [arm64]
+    env:
+      - CGO_ENABLED=0
+      - CC=zig cc -target aarch64-macos
+      - CXX=zig c++ -target aarch64-macos
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+  # --- Linux ---
   - id: linux-amd64
     binary: nanovision
     main: ./cmd/main.go
-    goos:
-      - linux
-    goarch:
-      - amd64
+    goos: [linux]
+    goarch: [amd64]
     env:
       - CGO_ENABLED=1
-      - CC=x86_64-linux-gnu-gcc
-      - CXX=x86_64-linux-gnu-g++
+      - CC=zig cc -target x86_64-linux-gnu
+      - CXX=zig c++ -target x86_64-linux-gnu
     flags:
       - -mod=vendor
     ldflags:
@@ -23,53 +51,45 @@ builds:
   - id: linux-arm64
     binary: nanovision
     main: ./cmd/main.go
-    goos:
-      - linux
-    goarch:
-      - arm64
+    goos: [linux]
+    goarch: [arm64]
     env:
       - CGO_ENABLED=1
-      - CC=aarch64-linux-gnu-gcc
-      - CXX=aarch64-linux-gnu-g++
+      - CC=zig cc -target aarch64-linux-gnu
+      - CXX=zig c++ -target aarch64-linux-gnu
     flags:
       - -mod=vendor
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
+  # --- Windows ---
   - id: windows-amd64
     binary: nanovision
     main: ./cmd/main.go
-    goos:
-      - windows
-    goarch:
-      - amd64
+    goos: [windows]
+    goarch: [amd64]
     env:
       - CGO_ENABLED=1
-      - CC=x86_64-w64-mingw32-gcc
-      - CXX=x86_64-w64-mingw32-g++
+      - CC=zig cc -target x86_64-windows-gnu
+      - CXX=zig c++ -target x86_64-windows-gnu
     flags:
       - -mod=vendor
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
-  # Windows ARM64 is currently disabled because the goreleaser-cross image
-  # does not include the aarch64-w64-mingw32-gcc compiler by default.
-  # - id: windows-arm64
-  #   binary: nanovision
-  #   main: ./cmd/main.go
-  #   goos:
-  #     - windows
-  #   goarch:
-  #     - arm64
-  #   env:
-  #     - CGO_ENABLED=1
-  #     # goreleaser-cross uses llvm-mingw or similar for this
-  #     - CC=aarch64-w64-mingw32-gcc
-  #     - CXX=aarch64-w64-mingw32-g++
-  #   flags:
-  #     - -mod=vendor
-  #   ldflags:
-  #     - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+  - id: windows-arm64
+    binary: nanovision
+    main: ./cmd/main.go
+    goos: [windows]
+    goarch: [arm64]
+    env:
+      - CGO_ENABLED=1
+      - CC=zig cc -target aarch64-windows-gnu
+      - CXX=zig c++ -target aarch64-windows-gnu
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
 archives:
   - formats:

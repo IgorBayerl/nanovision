@@ -80,10 +80,10 @@ Native setup works on macOS/Linux/Windows:
 * **Node.js:** ≥ **20.x**
   * Only for the React project, not necessary if you are not touching the UI side.
 * **Package manager (web):** `pnpm` (preferred) or `npm`/`yarn`
-* **C/C++ toolchain (for Windows build only):** MinGW-w64 on `PATH` providing `x86_64-w64-mingw32-gcc`/`g++`.
-  * On **Windows**, use MSYS2 MinGW-w64.
-  * On **macOS/Linux** (cross-compiling to Windows), use the MinGW-w64 cross-compiler.
-  * **Linux build (`--linux`)**: no C/C++ toolchain needed unless you enable CGO yourself.
+* **Zig:** ≥ **0.11.0** (used as C/C++ cross-compiler for CGO on all platforms).
+  * On **Windows**, you can use `winget install zig.zig`.
+  * On **macOS**, you can use `brew install zig`.
+  * On **Linux**, you can download the binary from the [Zig website](https://ziglang.org/download/).
 
 ### Basic Commands
 
@@ -124,26 +124,12 @@ To build for all platforms (including ARM64) and publish a release:
 
 This triggers a cloud build using `goreleaser-cross` to generate all artifacts.
 
-#### 3. Test Release Locally (Docker)
+#### 3. Test Release Locally
 
-You can simulate the CI release process locally using Docker. This builds all binaries (Windows/Linux, AMD64/ARM64) and places them in the `bin/` folder.
+You can simulate the CI release process locally. This builds all binaries (Windows/Linux/macOS, AMD64/ARM64) and places them in the `bin/` folder. Since we use `zig c/c++` for cross-platform CGO compilation, you don't even need Docker!
 
-**PowerShell (Windows):**
-```powershell
-docker run --rm --privileged `
-  -v "${PWD}:/src" `
-  -w /src `
-  ghcr.io/goreleaser/goreleaser-cross:v1.25.3 `
-  release --clean --snapshot --skip=publish
-```
-
-**Bash (Linux/macOS):**
 ```bash
-docker run --rm --privileged \
-  -v "$PWD:/src" \
-  -w /src \
-  ghcr.io/goreleaser/goreleaser-cross:v1.25.3 \
-  release --clean --snapshot --skip=publish
+goreleaser release --clean --snapshot --skip=publish
 ```
 
 ### 4. Winget Release Automation
@@ -183,6 +169,7 @@ Project automation lives under `scripts/`:
 
 | Script                    | Purpose                                         |
 |---------------------------|-------------------------------------------------|
+| `python scripts/setup.py` | Run 'doctor' to check/install local toolchain   |
 | `python scripts/build.py` | Build local binaries (x64)                      |
 | `test.py`                 | Run unit tests                                  |
 | `e2e_test.py`             | Run end-to-end tests with example reports       |

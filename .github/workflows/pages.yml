@@ -32,6 +32,7 @@ jobs:
         with: 
           # fetch-depth: 0 is crucial for git diff history to be available
           fetch-depth: 0
+      - uses: goto-bus-stop/setup-zig@v2
       - uses: ./.github/actions/build-report
         with:
           # Logic: Use manual input if available, otherwise default to HEAD~5

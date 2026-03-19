@@ -2,15 +2,22 @@ FROM golang:1.25
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install necessary packages for C compilation, and Windows cross-compilation
-# Also install Python 3. These commands are run as root.
+# Install necessary packages for C compilation and Python 3.
 RUN apt-get update && apt-get install -y \
     build-essential \
-    mingw-w64 \
+    curl \
+    xz-utils \
     python3 \
     python3-pip \
     python-is-python3 \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Zig globally
+RUN curl -L "https://ziglang.org/download/0.15.2/zig-linux-x86_64-0.15.2.tar.xz" -o zig.tar.xz \
+    && tar -xf zig.tar.xz \
+    && mv zig-linux-x86_64-0.15.2 /usr/local/zig \
+    && rm zig.tar.xz \
+    && ln -s /usr/local/zig/zig /usr/local/bin/zig
 
 # Create a non-root user to avoid running as root
 RUN useradd -ms /bin/bash vscode

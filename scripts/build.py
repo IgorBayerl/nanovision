@@ -74,12 +74,18 @@ def build_target(target_os, version):
         "CGO_ENABLED": "1"
     }
 
-    # Detect Cross-Compilation (Building Windows from Linux)
-    # This is required for CGO to find the MinGW compiler
+    # Detect Cross-Compilation to configure CGO and zig cc
     host_os = platform.system().lower()
-    if target_os == "windows" and host_os == "linux":
-        env["CC"] = "x86_64-w64-mingw32-gcc"
-        env["CXX"] = "x86_64-w64-mingw32-g++"
+    if target_os != host_os:
+        if target_os == "windows":
+            env["CC"] = "zig cc -target x86_64-windows-gnu"
+            env["CXX"] = "zig c++ -target x86_64-windows-gnu"
+        elif target_os == "linux":
+            env["CC"] = "zig cc -target x86_64-linux-gnu"
+            env["CXX"] = "zig c++ -target x86_64-linux-gnu"
+        elif target_os == "darwin":
+            env["CC"] = "zig cc -target x86_64-macos"
+            env["CXX"] = "zig c++ -target x86_64-macos"
 
     # Run Build
     cmd = ["go", "build", "-mod=vendor", "-ldflags", ldflags, "-o", output_binary, MAIN_PACKAGE]

@@ -25,4 +25,5 @@ jobs:
       - uses: actions/checkout@v4
         with: 
           fetch-depth: 0
+      - uses: goto-bus-stop/setup-zig@v2
       - uses: ./.github/actions/build-report
