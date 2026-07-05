@@ -15,8 +15,13 @@ const coverageDetailSchema = z.object({
     percentage: z.number(),
 })
 
-// A schema for the Metrics object, which can contain any number of coverage details
-const metricsSchema = z.record(z.string(), coverageDetailSchema)
+// Scalar (non-percentage) metric payload, e.g. max cyclomatic complexity.
+const scoreDetailSchema = z.object({
+    value: z.number(),
+})
+
+// A schema for the Metrics object, which can contain coverage details or scalar scores.
+const metricsSchema = z.record(z.string(), coverageDetailSchema.or(scoreDetailSchema))
 
 const diffStatusSchema = z.enum(['added', 'modified', 'unchanged', 'removed'])
 
@@ -53,9 +58,9 @@ const totalsSchema = z
         files: z.number(),
         folders: z.number(),
         statuses: statusesSchema,
-        // Allows other keys to be present, as long as they are valid coverage details
+        // Allows other keys to be present, as long as they are valid coverage details or scores
     })
-    .catchall(coverageDetailSchema.or(z.number()))
+    .catchall(coverageDetailSchema.or(scoreDetailSchema).or(z.number()))
 
 // A schema for a single metadata item
 const metadataItemSchema = z.object({
@@ -74,6 +79,7 @@ const subMetricSchema = z.object({
 const metricDefinitionSchema = z.object({
     label: z.string(),
     shortLabel: z.string().optional(),
+    kind: z.enum(['percentage', 'value']).optional(),
     subMetrics: z.array(subMetricSchema),
 })
 
@@ -88,6 +94,7 @@ export const summaryV1Schema = z.object({
     nodes: z.array(fileNodeSchema),
     metricDefinitions: z.record(z.string(), metricDefinitionSchema),
     metadata: z.array(metadataItemSchema).optional(),
+    defaultFilters: z.string().optional(),
 })
 
 export type SummaryV1 = z.infer<typeof summaryV1Schema>
@@ -150,6 +157,7 @@ export const detailsV1Schema = z.object({
     metadata: z.array(metadataItemSchema).optional(),
     methods: z.array(methodSchema).optional(),
     reports: z.array(reportSchema).optional(),
+    defaultFilters: z.string().optional(),
 })
 
 export type DetailsV1 = z.infer<typeof detailsV1Schema>

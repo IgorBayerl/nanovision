@@ -1,7 +1,7 @@
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { TreeRow } from '@/components/Tree.Row'
-import type { FileNode, MetricConfig, Metrics } from '@/types/summary'
+import type { DiffStatus, FileNode, MetricConfig, Metrics } from '@/types/summary'
 
 type RenderNode = FileNode & { depth: number }
 
@@ -12,6 +12,8 @@ interface BodyProps {
     onToggleFolder: (id: string, event: React.MouseEvent | React.KeyboardEvent) => void
     viewMode: 'tree' | 'flat'
     isPinned: boolean
+    /** Folder id -> diff status aggregated from descendant files. */
+    folderDiffMap: Map<string, DiffStatus>
 }
 
 const metricsForNode = (node: FileNode): Partial<Metrics> | undefined => {
@@ -28,6 +30,7 @@ export default function FileExplorerBody({
     onToggleFolder,
     viewMode,
     isPinned,
+    folderDiffMap,
 }: BodyProps) {
     const listRef = useRef<HTMLDivElement>(null)
 
@@ -61,6 +64,7 @@ export default function FileExplorerBody({
             <div style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
                 {virtualizer.getVirtualItems().map((virtualRow) => {
                     const node = nodes[virtualRow.index]
+                    const diffStatus = node.type === 'folder' ? folderDiffMap.get(node.id) : node.diffStatus
                     return (
                         <div
                             key={virtualRow.key}
@@ -84,6 +88,7 @@ export default function FileExplorerBody({
                                 viewMode={viewMode}
                                 index={virtualRow.index}
                                 isPinned={isPinned}
+                                diffStatus={diffStatus}
                             />
                         </div>
                     )

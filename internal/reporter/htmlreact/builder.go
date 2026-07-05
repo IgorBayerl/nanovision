@@ -100,14 +100,20 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		totalsData.Statuses = b.convertStatuses(tree.Root.Statuses)
 	}
 
+	title := b.config.Title
+	if title == "" {
+		title = "Coverage Report"
+	}
+
 	return summaryV1{
 		SchemaVersion:     1,
 		GeneratedAt:       generatedAt.Format(time.RFC3339),
-		Title:             "Coverage Report",
+		Title:             title,
 		Totals:            totalsData,
 		Nodes:             nodes,
 		MetricDefinitions: b.buildMetricDefinitions(),
 		Metadata:          b.buildMetadata(tree, generatedAt),
+		DefaultFilters:    b.config.DefaultFilters,
 	}, nil
 }
 
@@ -263,6 +269,10 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 		t.PatchMethodsHit = &pmc
 	}
 
+	if mcc, ok := metrics[string(config.MaxCyclomaticComplexity)].(scoreDetail); ok {
+		t.MaxCyclomaticComplexity = &mcc
+	}
+
 	return t
 }
 
@@ -301,7 +311,7 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 				}
 			case config.MaxCyclomaticComplexity:
 				if score, ok := calcData.(model.ScoreDetail); ok {
-					metrics[string(key)] = lineCoverageDetail{Total: int(score.Value)}
+					metrics[string(key)] = scoreDetail{Value: score.Value}
 				}
 			default:
 				metrics[string(key)] = calcData
@@ -428,8 +438,10 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		defs[string(config.MaxCyclomaticComplexity)] = metricDefinition{
 			Label:      "Max Cyclomatic Complexity",
 			ShortLabel: "Max Complexity",
+			Kind:       "value",
 			SubMetrics: []subMetric{
-				{ID: "total", Label: "Value", Width: 100},
+				// Wide enough that the "Max Complexity" header never wraps.
+				{ID: "value", Label: "Value", Width: 140},
 			},
 		}
 	}
@@ -437,7 +449,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		defs[MethodUICyclomaticComplexity] = metricDefinition{
 			Label:      "Cyclomatic Complexity",
 			ShortLabel: "Complexity",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+			Kind:       "value",
+			SubMetrics: []subMetric{{ID: "value", Label: "Value", Width: 100}},
 		}
 	}
 

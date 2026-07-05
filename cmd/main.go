@@ -81,6 +81,7 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Metric threshold (e.g. 'line_coverage=60..80'). Can be repeated.")
 	flag.StringVar(&rawInput.FileMetrics, "file-metrics", "", "Comma-separated list of file-level metrics to display (e.g., 'line_coverage,branch_coverage')")
 	flag.StringVar(&rawInput.MethodMetrics, "method-metrics", "", "Comma-separated list of method-level metrics to display (e.g., 'line_coverage,statement_coverage')")
+	flag.StringVar(&rawInput.DefaultFilters, "default-filters", "", "Raw URL query string of filters auto-applied when the report opens (e.g. 'diff=changed&risk=danger')")
 	return rawInput
 }
 

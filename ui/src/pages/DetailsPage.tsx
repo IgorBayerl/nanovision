@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import FunctionNav from '@/components/FunctionNav'
 import Layout from '@/components/Layout'
 import MethodsTable from '@/components/MethodsTable'
 import ReportsSelector from '@/components/ReportsSelector'
@@ -8,6 +9,7 @@ import ValidationAlerts from '@/components/ValidationAlerts'
 import type { DetailsV1 } from '@/lib/validation'
 import { validateDetailsData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
+import { SidebarContent, SidebarHeader } from '@/ui/sidebar'
 
 const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
 const isMetricKey = (key: string): boolean => !NON_METRIC_KEYS.has(key)
@@ -56,25 +58,41 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
 
     const title = validatedData?.title ?? (rawData as Partial<DetailsV1>)?.title ?? 'Coverage Details'
 
+    const leftSidebar = validatedData ? (
+        <>
+            <SidebarHeader>
+                <div className="font-semibold text-sm">Overview</div>
+            </SidebarHeader>
+            <SidebarContent>
+                {validatedData.reports && validatedData.reports.length > 0 && (
+                    <ReportsSelector
+                        reports={validatedData.reports}
+                        activeReportIndices={activeReportIndices}
+                        onToggleReport={handleToggleReport}
+                    />
+                )}
+                <SummaryMetrics
+                    info={reportInfo}
+                    metrics={validatedData.totals}
+                    metricOrder={metricKeys}
+                    metricDefinitions={validatedData.metricDefinitions}
+                    variant="sidebar"
+                />
+            </SidebarContent>
+        </>
+    ) : undefined
+
+    const rightSidebar =
+        validatedData?.methods && validatedData.methods.length > 0 ? (
+            <FunctionNav methods={validatedData.methods} />
+        ) : undefined
+
     return (
-        <Layout title={title} showBackButton>
+        <Layout title={title} showBackButton leftSidebar={leftSidebar} rightSidebar={rightSidebar}>
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}
 
             {validatedData ? (
                 <>
-                    <SummaryMetrics
-                        info={reportInfo} // <-- PASS INFO
-                        metrics={validatedData.totals}
-                        metricOrder={metricKeys}
-                        metricDefinitions={validatedData.metricDefinitions}
-                    />
-                    {validatedData.reports && validatedData.reports.length > 0 && (
-                        <ReportsSelector
-                            reports={validatedData.reports}
-                            activeReportIndices={activeReportIndices}
-                            onToggleReport={handleToggleReport}
-                        />
-                    )}
                     {validatedData.methods && (
                         <MethodsTable
                             methods={validatedData.methods}
@@ -85,6 +103,7 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
                         fileName={validatedData.fileName}
                         lines={validatedData.lines}
                         activeReportIndices={activeReportIndices}
+                        reports={validatedData.reports}
                     />
                 </>
             ) : (

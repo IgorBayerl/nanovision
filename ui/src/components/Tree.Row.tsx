@@ -1,37 +1,31 @@
-import { ChevronDown, ChevronRight, File, Folder, FolderOpen, GitCommitHorizontal, Plus } from 'lucide-react'
+import { ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
+import DiffStatusBadge from '@/components/DiffStatusBadge'
 import InlineCoverage from '@/components/InlineCoverage'
 import { cn } from '@/lib/utils'
-import type { FileNode, MetricConfig, Metrics } from '@/types/summary'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
+import type { DiffStatus, FileNode, MetricConfig, Metrics, RiskLevel } from '@/types/summary'
 
-const DiffStatusIndicator = ({ status }: { status: FileNode['diffStatus'] }) => {
-    if (!status || status === 'unchanged' || status === 'removed') return null
+const RISK_ORDER: Record<RiskLevel, number> = { safe: 0, warning: 1, danger: 2 }
 
-    const icon =
-        status === 'added' ? (
-            <Plus className="h-3 w-3 text-covered" />
-        ) : (
-            <GitCommitHorizontal className="h-3 w-3 text-partial" />
-        )
-
-    return (
-        <TooltipProvider delayDuration={100}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <span className="flex items-center justify-center rounded-full bg-muted p-0.5">{icon}</span>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>File has been {status}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    )
+const riskTextClass: Partial<Record<RiskLevel, string>> = {
+    danger: 'text-uncovered',
+    warning: 'text-partial',
 }
 
-const NodeName = ({ node, viewMode }: { node: FileNode; viewMode: 'tree' | 'flat' }) => {
+/** Worst risk level across the currently visible (enabled) metric columns. */
+function worstStatus(node: FileNode, enabledMetrics: MetricConfig[]): RiskLevel | undefined {
+    let worst: RiskLevel | undefined
+    for (const cfg of enabledMetrics) {
+        const status = node.statuses?.[cfg.id]
+        if (!status) continue
+        if (!worst || RISK_ORDER[status] > RISK_ORDER[worst]) worst = status
+    }
+    return worst
+}
+
+const NodeName = ({ node, viewMode, riskClass }: { node: FileNode; viewMode: 'tree' | 'flat'; riskClass?: string }) => {
     const isFolder = node.type === 'folder' && viewMode === 'tree'
     const content = viewMode === 'flat' ? node.path : node.name
-    const commonClasses = cn('truncate', isFolder ? 'font-semibold' : 'font-medium text-foreground/90')
+    const commonClasses = cn('truncate', isFolder ? 'font-semibold' : 'font-medium text-foreground/90', riskClass)
 
     // If it's a file and has a targetUrl, render it as a link.
     if (!isFolder && node.targetUrl) {
@@ -64,6 +58,7 @@ export function TreeRow({
     viewMode,
     index,
     isPinned,
+    diffStatus,
 }: {
     node: FileNode
     depth: number
@@ -74,11 +69,16 @@ export function TreeRow({
     viewMode: 'tree' | 'flat'
     index: number
     isPinned: boolean
+    /** Effective diff status: aggregated from descendants for folders. */
+    diffStatus?: DiffStatus
 }) {
     const isFolder = node.type === 'folder' && viewMode === 'tree'
     const metrics = metricsForNode(node)
     const indentPx = viewMode === 'tree' ? depth * 20 : 0
     const isOdd = index % 2 !== 0
+
+    const risk = worstStatus(node, enabledMetrics)
+    const riskClass = risk ? riskTextClass[risk] : undefined
 
     const interactiveProps = isFolder
         ? {
@@ -135,8 +135,8 @@ export function TreeRow({
                     ) : (
                         <File className="h-4 w-4 shrink-0 text-muted-foreground" />
                     )}
-                    <NodeName node={node} viewMode={viewMode} />
-                    <DiffStatusIndicator status={node.diffStatus} />
+                    <NodeName node={node} viewMode={viewMode} riskClass={riskClass} />
+                    <DiffStatusBadge status={diffStatus} className="ml-auto pr-3 pl-2" />
                 </div>
 
                 <div
@@ -160,7 +160,7 @@ export function TreeRow({
                                     if (subMetric.id === 'percentage') {
                                         return (
                                             <div key={subMetric.id} className="px-2 text-right text-xs tabular-nums">
-                                                {metricData !== undefined ? (
+                                                {metricData !== undefined && 'percentage' in metricData ? (
                                                     <InlineCoverage
                                                         percentage={metricData.percentage}
                                                         risk={node.statuses?.[cfg.id] ?? 'safe'}
@@ -172,7 +172,7 @@ export function TreeRow({
                                             </div>
                                         )
                                     }
-                                    const value = metricData?.[subMetric.id as keyof typeof metricData]
+                                    const value = (metricData as Record<string, number> | undefined)?.[subMetric.id]
                                     return (
                                         <div key={subMetric.id} className="px-2 text-right text-xs tabular-nums">
                                             {value ?? '-'}

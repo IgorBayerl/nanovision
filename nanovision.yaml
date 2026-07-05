@@ -83,6 +83,18 @@ status_bands:
   # method_patch_statement_coverage: "80..90"
   # cyclomatic_complexity: "10..20"
 
+# Default Filters
+# A raw URL query string that the HTML report applies automatically the first
+# time it is opened (only when no query string is already present, so manual
+# navigation always wins). Any client-side filter, column, or sort is
+# expressible here using the same keys the UI writes to the URL, e.g.:
+#   diff=changed        only changed files/methods
+#   risk=danger         only danger-status rows
+#   q=internal/         search/path filter
+#   cols=statement_coverage,max_cyclomatic_complexity   visible columns
+# Combine with '&', e.g. "diff=changed&risk=danger".
+# default_filters: "diff=changed&risk=danger"
+
 # Optional settings for patch coverage analysis.
 diff:
   file: "my_changes.diff" # Path to the .diff file (can also be set via -diff flag)

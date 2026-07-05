@@ -1,33 +1,61 @@
+import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { useMemo } from 'react'
-import { camelCaseToTitleCase } from '@/lib/utils'
+import DiffStatusBadge from '@/components/DiffStatusBadge'
+import { useUrlState } from '@/hooks/useUrlState'
+import { scrollToLine } from '@/lib/scrollToLine'
+import { camelCaseToTitleCase, cn } from '@/lib/utils'
 import type { Method, MetricDefinitions } from '@/types/summary'
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
+import { Card, CardContent, CardHeader } from '@/ui/card'
+import { Input } from '@/ui/input'
 import { StatusIcon } from './MetricCard'
 
-const DiffStatusBadge = ({ status }: { status: Method['diffStatus'] }) => {
-    if (!status || status === 'unchanged') return null
-
-    const content = status === 'added' ? 'New' : 'Mod'
-    const color = status === 'added' ? 'bg-covered/20 text-covered' : 'bg-partial/20 text-partial'
-
-    return (
-        <TooltipProvider delayDuration={100}>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <span
-                        className={`ml-2 inline-block rounded-sm px-1.5 py-0.5 font-sans font-semibold text-xs ${color}`}
-                    >
-                        {content}
-                    </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                    <p>Method was {status}</p>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
-    )
+// Parses the leading number out of a method metric value ("12", "3 / 5", "80%").
+const parseMetricNumber = (value?: string): number => {
+    if (!value) return Number.NEGATIVE_INFINITY
+    const match = value.match(/-?\d+(\.\d+)?/)
+    return match ? Number.parseFloat(match[0]) : Number.NEGATIVE_INFINITY
 }
+
+const SortIcon = ({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) => {
+    if (!active) return <ChevronsUpDown className="h-3 w-3 opacity-40" />
+    return dir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+}
+
+const SortableTh = ({
+    columnKey,
+    label,
+    align = 'right',
+    sortKey,
+    sortDir,
+    onSort,
+}: {
+    columnKey: string
+    label: string
+    align?: 'left' | 'right'
+    sortKey: string
+    sortDir: 'asc' | 'desc'
+    onSort: (key: string) => void
+}) => (
+    <th
+        className={cn(
+            'whitespace-nowrap px-4 py-2 text-muted-foreground',
+            align === 'left' ? 'text-left' : 'text-right',
+            columnKey === 'name' && 'w-full',
+        )}
+    >
+        <button
+            type="button"
+            onClick={() => onSort(columnKey)}
+            className={cn(
+                'inline-flex items-center gap-1 hover:text-foreground',
+                align === 'right' && 'flex-row-reverse',
+            )}
+        >
+            <span>{label}</span>
+            <SortIcon active={sortKey === columnKey} dir={sortDir} />
+        </button>
+    </th>
+)
 
 export default function MethodsTable({
     methods,
@@ -36,89 +64,125 @@ export default function MethodsTable({
     methods: Method[]
     metricDefinitions: MetricDefinitions
 }) {
-    const handleGoToLine = (lineNumber: number) => {
-        const selector = `[data-line-number="${lineNumber}"]`
-        const lineElement = document.querySelector(selector) as HTMLElement
-
-        if (lineElement) {
-            lineElement.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-            })
-            lineElement.classList.add('animate-pulse-bg')
-            setTimeout(() => {
-                lineElement.classList.remove('animate-pulse-bg')
-            }, 1500)
-        }
-    }
+    const [query, setQuery] = useUrlState('mq', '')
+    const [sortKey, setSortKey] = useUrlState('msort', 'line')
+    const [sortDir, setSortDir] = useUrlState<'asc' | 'desc'>('msortDir', 'asc')
 
     const metricConfigs = useMemo(() => {
         if (!methods || methods.length === 0) return []
-
-        // Collect all possible metric keys across all methods
         const keys = new Set<string>()
         for (const method of methods) {
-            for (const key of Object.keys(method.metrics)) {
-                keys.add(key)
-            }
+            for (const key of Object.keys(method.metrics)) keys.add(key)
         }
-
-        // Sort them. The backend prefixes them (a_, b_, c_) to enforce order.
-        return Array.from(keys).sort().map((id) => {
-            const def = metricDefinitions[id]
-            return {
-                id,
-                label: def?.label ?? camelCaseToTitleCase(id),
-                shortLabel: def?.shortLabel ?? camelCaseToTitleCase(id),
-            }
-        })
+        // Sorted; the backend prefixes them (a_, b_, ...) to enforce order.
+        return Array.from(keys)
+            .sort()
+            .map((id) => {
+                const def = metricDefinitions[id]
+                return {
+                    id,
+                    label: def?.label ?? camelCaseToTitleCase(id),
+                    shortLabel: def?.shortLabel ?? camelCaseToTitleCase(id),
+                }
+            })
     }, [methods, metricDefinitions])
 
-
-    if (!methods || methods.length === 0) {
-        return null
+    const handleSort = (key: string) => {
+        if (sortKey === key) {
+            setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+        } else {
+            setSortKey(key)
+            setSortDir('asc')
+        }
     }
 
+    const visibleMethods = useMemo(() => {
+        const q = query.trim().toLowerCase()
+        let rows = methods
+        if (q) rows = rows.filter((m) => m.name.toLowerCase().includes(q))
+
+        const sorted = [...rows].sort((a, b) => {
+            let cmp: number
+            if (sortKey === 'name') {
+                cmp = a.name.localeCompare(b.name)
+            } else if (sortKey === 'line') {
+                cmp = a.startLine - b.startLine
+            } else {
+                cmp = parseMetricNumber(a.metrics[sortKey]?.value) - parseMetricNumber(b.metrics[sortKey]?.value)
+            }
+            return sortDir === 'asc' ? cmp : -cmp
+        })
+        return sorted
+    }, [methods, query, sortKey, sortDir])
+
+    if (!methods || methods.length === 0) return null
+
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Method Coverage</CardTitle>
+        <Card className="rounded-md">
+            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="font-semibold text-lg">Method Coverage</div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Filter methods…"
+                        className="h-8 w-full md:w-64"
+                    />
+                </div>
             </CardHeader>
             <CardContent className="overflow-x-auto p-0">
-                {/* --- 1. REMOVED 'table-fixed' to use the browser's auto-sizing algorithm --- */}
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-border border-b bg-subtle/50 font-semibold text-xs">
-                            <th className="text-nowrap px-4 py-2 text-right text-muted-foreground">Line #</th>
-                            {/* --- 2. THE KEY: Tell this column to expand --- */}
-                            <th className="w-full px-4 py-2 text-left text-muted-foreground">Method</th>
+                            <SortableTh
+                                columnKey="line"
+                                label="Line #"
+                                align="right"
+                                sortKey={sortKey}
+                                sortDir={sortDir}
+                                onSort={handleSort}
+                            />
+                            <SortableTh
+                                columnKey="name"
+                                label="Method"
+                                align="left"
+                                sortKey={sortKey}
+                                sortDir={sortDir}
+                                onSort={handleSort}
+                            />
                             {metricConfigs.map((mc) => (
-                                <th
+                                <SortableTh
                                     key={mc.id}
-                                    className="whitespace-nowrap px-4 py-2 text-right text-muted-foreground"
-                                >
-                                    {mc.shortLabel}
-                                </th>
+                                    columnKey={mc.id}
+                                    label={mc.shortLabel}
+                                    align="right"
+                                    sortKey={sortKey}
+                                    sortDir={sortDir}
+                                    onSort={handleSort}
+                                />
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {methods.map((method) => (
-                            <tr key={method.name} className="group border-border/50 border-b hover:bg-accent/50">
+                        {visibleMethods.map((method) => (
+                            <tr
+                                key={`${method.name}-${method.startLine}`}
+                                className="group border-border/50 border-b hover:bg-accent/50"
+                            >
                                 <td className="whitespace-nowrap px-4 py-1.5 text-right font-mono text-muted-foreground text-xs">
                                     {method.startLine}
                                 </td>
                                 <td className="px-4 py-1.5 text-left font-mono">
-                                    <div className="flex items-center">
+                                    <div className="flex min-w-0 items-center gap-2">
                                         <button
                                             type="button"
                                             className="truncate text-left hover:text-primary hover:underline"
                                             title={method.name}
-                                            onClick={() => handleGoToLine(method.startLine)}
+                                            onClick={() => scrollToLine(method.startLine)}
                                         >
                                             {method.name}
                                         </button>
-                                        <DiffStatusBadge status={method.diffStatus} />
+                                        <DiffStatusBadge status={method.diffStatus} className="ml-auto" />
                                     </div>
                                 </td>
                                 {metricConfigs.map((mc) => {

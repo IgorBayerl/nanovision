@@ -1,7 +1,9 @@
 import { ThemeProvider } from '@/components/Theme.Context'
 import '@/index.css'
 import ReactDOM from 'react-dom/client'
+import { applyDefaultFilters } from '@/lib/applyDefaultFilters'
 import DetailsPage from '@/pages/DetailsPage'
+import { TooltipProvider } from '@/ui/tooltip'
 
 /**
  * Retrieves details data from the window.
@@ -27,9 +29,12 @@ if (!rootEl) {
             </div>,
         )
     } else {
+        applyDefaultFilters(data)
         ReactDOM.createRoot(rootEl).render(
             <ThemeProvider>
-                <DetailsPage data={data} />
+                <TooltipProvider delayDuration={300} skipDelayDuration={300}>
+                    <DetailsPage data={data} />
+                </TooltipProvider>
             </ThemeProvider>,
         )
     }

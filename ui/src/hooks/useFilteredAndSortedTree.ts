@@ -110,9 +110,17 @@ export function useFilteredAndSortedTree({
 
             if (activeRanges.length > 0) {
                 const rangeMatches = activeRanges.every(([metricId, range]) => {
-                    const percentage = file.metrics?.[metricId]?.percentage
-                    if (percentage === undefined) return true
-                    return percentage >= range.min && percentage <= range.max
+                    const metric = file.metrics?.[metricId]
+                    // Percentage metrics filter on their percentage; scalar (value)
+                    // metrics filter on their raw value.
+                    const value =
+                        metric && 'percentage' in metric
+                            ? metric.percentage
+                            : metric && 'value' in metric
+                              ? metric.value
+                              : undefined
+                    if (value === undefined) return true
+                    return value >= range.min && value <= range.max
                 })
                 if (!rangeMatches) return false
             }
@@ -163,9 +171,14 @@ export function useFilteredAndSortedTree({
             return nameA.localeCompare(nameB) * dir
         }
 
+        const readSub = (node: FileNode, key: { metric: MetricKey; subMetric: string }) => {
+            const metric = node.metrics?.[key.metric] as Record<string, number> | undefined
+            return metric?.[key.subMetric] ?? -1
+        }
+
         const sortByMetric = (a: FileNode, b: FileNode, key: { metric: MetricKey; subMetric: string }) => {
-            const valA = a.metrics?.[key.metric]?.[key.subMetric as keyof (typeof a.metrics)[string]] ?? -1
-            const valB = b.metrics?.[key.metric]?.[key.subMetric as keyof (typeof b.metrics)[string]] ?? -1
+            const valA = readSub(a, key)
+            const valB = readSub(b, key)
             if (valA === valB) return sortByName(a, b)
             return (valA - valB) * dir
         }

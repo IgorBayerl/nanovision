@@ -105,9 +105,10 @@ export function useFileExplorerState(nodes: FileNode[], availableMetrics: string
         setEnabledMetricsParam(newEnabled.join(','))
     }
 
-    const updateFilterRange = (id: MetricKey, vals: [number, number]) => {
+    const updateFilterRange = (id: MetricKey, vals: [number, number], max = 100) => {
         const newRanges = { ...filterRanges }
-        if (vals[0] === 0 && vals[1] === 100) delete newRanges[id]
+        // A full-span selection [0, max] means "no filter" for this metric.
+        if (vals[0] === 0 && vals[1] === max) delete newRanges[id]
         else newRanges[id] = { min: vals[0], max: vals[1] }
         setFilterRanges(newRanges)
     }

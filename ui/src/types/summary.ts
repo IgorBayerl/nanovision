@@ -8,7 +8,7 @@ export interface CoverageDetail {
     percentage: number
 }
 
-export type Metrics = Record<string, CoverageDetail>
+export type Metrics = Record<string, CoverageDetail | ScoreDetail>
 
 export type Statuses = Partial<Record<string, RiskLevel>>
 
@@ -40,8 +40,8 @@ export interface Totals {
     methods_covered?: CoverageDetail
     methods_fully_covered?: CoverageDetail
     method_branch_coverage?: CoverageDetail
-    max_cyclomatic_complexity?: CoverageDetail
-    [key: string]: CoverageDetail | number | Statuses | undefined
+    max_cyclomatic_complexity?: ScoreDetail
+    [key: string]: CoverageDetail | ScoreDetail | number | Statuses | undefined
 }
 
 export type MetadataItem = {
@@ -56,10 +56,19 @@ export type SubMetric = {
     width: number
 }
 
+/** How a metric renders: a percentage card/column, or a plain scalar value. */
+export type MetricKind = 'percentage' | 'value'
+
 export type MetricDefinition = {
     label: string
     shortLabel?: string
+    kind?: MetricKind
     subMetrics: SubMetric[]
+}
+
+/** Scalar (non-percentage) metric payload, e.g. max cyclomatic complexity. */
+export interface ScoreDetail {
+    value: number
 }
 
 export type MetricDefinitions = Record<string, MetricDefinition>
@@ -74,6 +83,8 @@ export interface SummaryV1 {
     nodes: FileNode[]
     metricDefinitions: MetricDefinitions
     metadata?: MetadataItem[]
+    /** Raw URL query string auto-applied on first load (no existing query). */
+    defaultFilters?: string
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'
@@ -141,4 +152,6 @@ export interface DetailsV1 {
     metadata?: MetadataItem[]
     methods?: Method[]
     reports?: Report[]
+    /** Raw URL query string auto-applied on first load (no existing query). */
+    defaultFilters?: string
 }

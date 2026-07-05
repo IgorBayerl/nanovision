@@ -34,6 +34,13 @@ type methodsFullyCoveredDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
+// scoreDetail represents a standalone scalar metric (e.g. Max Cyclomatic
+// Complexity). Unlike the coverage details it has no percentage; the UI renders
+// it with a "value" card and treats it as a numeric column.
+type scoreDetail struct {
+	Value float64 `json:"value"`
+}
+
 // UI specific method metric keys to enforce alphabetical sorting
 const (
 	MethodUIStmtCoverage         = "a_statement_coverage"
@@ -53,7 +60,7 @@ type totals struct {
 	MethodsHit              *methodsHitDetail          `json:"methods_hit,omitempty"`
 	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
 	MethodBranchCoverage    *branchCoverageDetail      `json:"method_branch_coverage,omitempty"`
-	MaxCyclomaticComplexity *lineCoverageDetail        `json:"max_cyclomatic_complexity,omitempty"`
+	MaxCyclomaticComplexity *scoreDetail               `json:"max_cyclomatic_complexity,omitempty"`
 
 	// Patch / diff-based metrics.
 	PatchStatementCoverage *lineCoverageDetail `json:"patch_statement_coverage,omitempty"`
@@ -144,6 +151,10 @@ type subMetric struct {
 type metricDefinition struct {
 	Label      string      `json:"label"`
 	ShortLabel string      `json:"shortLabel,omitempty"`
+	// Kind selects how the UI renders this metric. "" or "percentage" (default)
+	// renders a percentage card with a progress bar; "value" renders a plain
+	// scalar number card (e.g. cyclomatic complexity, CRAP score).
+	Kind       string      `json:"kind,omitempty"`
 	SubMetrics []subMetric `json:"subMetrics"`
 }
 
@@ -158,6 +169,9 @@ type summaryV1 struct {
 	Nodes             []fileNode        `json:"nodes"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
+	// DefaultFilters is a raw URL query string (e.g. "diff=changed&risk=danger")
+	// that the UI applies on first load when no query string is already present.
+	DefaultFilters string `json:"defaultFilters,omitempty"`
 }
 
 type detailsV1 struct {
@@ -171,4 +185,7 @@ type detailsV1 struct {
 	Methods           []methodDetail    `json:"methods,omitempty"`
 	Lines             []lineDetail      `json:"lines"`
 	Reports           []report          `json:"reports,omitempty"`
+	// DefaultFilters is a raw URL query string applied by the UI on first load
+	// when no query string is already present.
+	DefaultFilters string `json:"defaultFilters,omitempty"`
 }

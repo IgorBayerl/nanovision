@@ -6,6 +6,7 @@ import ValidationAlerts from '@/components/ValidationAlerts'
 import type { SummaryV1 } from '@/lib/validation'
 import { validateSummaryData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
+import { SidebarContent, SidebarHeader } from '@/ui/sidebar'
 
 const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
 
@@ -52,23 +53,32 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
 
     const title = validatedData?.title ?? (rawData as Partial<SummaryV1>)?.title ?? 'Coverage Report'
 
+    const leftSidebar = validatedData ? (
+        <>
+            <SidebarHeader>
+                <div className="font-semibold text-sm">Overview</div>
+            </SidebarHeader>
+            <SidebarContent>
+                <SummaryMetrics
+                    info={reportInfo}
+                    metrics={validatedData.totals}
+                    metricOrder={metricKeys}
+                    metricDefinitions={validatedData.metricDefinitions}
+                    variant="sidebar"
+                />
+            </SidebarContent>
+        </>
+    ) : undefined
+
     return (
-        <Layout title={title}>
+        <Layout title={title} leftSidebar={leftSidebar}>
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}
             {validatedData ? (
-                <>
-                    <SummaryMetrics
-                        info={reportInfo}
-                        metrics={validatedData.totals}
-                        metricOrder={metricKeys}
-                        metricDefinitions={validatedData.metricDefinitions}
-                    />
-                    <FileExplorer
-                        nodes={validatedData.nodes}
-                        availableMetrics={metricKeys}
-                        metricDefinitions={validatedData.metricDefinitions}
-                    />
-                </>
+                <FileExplorer
+                    nodes={validatedData.nodes}
+                    availableMetrics={metricKeys}
+                    metricDefinitions={validatedData.metricDefinitions}
+                />
             ) : (
                 <div className="rounded-md border border-border bg-card p-10 text-center text-muted-foreground">
                     Could not render the report due to critical data errors. Please review the alerts above.
