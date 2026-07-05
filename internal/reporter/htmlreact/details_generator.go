@@ -73,6 +73,7 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 		Methods:           detailsMethods,
 		Lines:             detailsLines,
 		Reports:           reportsList,
+		DefaultFilters:    b.config.DefaultFilters,
 	}, nil
 }
 
@@ -340,7 +341,7 @@ func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, total
 	}
 
 	if maxCyclo > 0 && b.config.ActiveFileMetrics[config.MaxCyclomaticComplexity] {
-		t.MaxCyclomaticComplexity = &lineCoverageDetail{Total: maxCyclo}
+		t.MaxCyclomaticComplexity = &scoreDetail{Value: float64(maxCyclo)}
 	}
 
 	return t

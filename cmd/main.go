@@ -35,9 +35,11 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gcov"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gocover"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_lcov"
+	"github.com/IgorBayerl/nanovision/internal/reporter/annotations"
 	"github.com/IgorBayerl/nanovision/internal/reporter/htmlreact"
 	"github.com/IgorBayerl/nanovision/internal/reporter/lcov"
 	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
+	"github.com/IgorBayerl/nanovision/internal/reporter/sarif"
 	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
 	"github.com/IgorBayerl/nanovision/internal/status"
 	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
@@ -81,6 +83,7 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Metric threshold (e.g. 'line_coverage=60..80'). Can be repeated.")
 	flag.StringVar(&rawInput.FileMetrics, "file-metrics", "", "Comma-separated list of file-level metrics to display (e.g., 'line_coverage,branch_coverage')")
 	flag.StringVar(&rawInput.MethodMetrics, "method-metrics", "", "Comma-separated list of method-level metrics to display (e.g., 'line_coverage,statement_coverage')")
+	flag.StringVar(&rawInput.DefaultFilters, "default-filters", "", "Raw URL query string of filters auto-applied when the report opens (e.g. 'diff=changed&risk=danger')")
 	return rawInput
 }
 
@@ -174,6 +177,10 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 			err = lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree)
 		case "RawJson":
 			err = reporter_rawjson.NewRawJsonReportBuilder(outputDir).CreateReport(summaryTree)
+		case "Sarif":
+			err = sarif.NewSarifReportBuilder(outputDir, appConfig, evaluators.Registry).CreateReport(summaryTree)
+		case "Annotations":
+			err = annotations.NewAnnotationsReportBuilder(outputDir, appConfig, evaluators.Registry).CreateReport(summaryTree)
 		}
 		if err != nil {
 			return fmt.Errorf("failed to generate '%s' report: %w", trimmedType, err)

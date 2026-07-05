@@ -143,7 +143,7 @@ func TestBuildFileTotals(t *testing.T) {
 	assert.Equal(t, 10, totalsData.MethodBranchCoverage.Total)
 
 	assert.NotNil(t, totalsData.MaxCyclomaticComplexity)
-	assert.Equal(t, 12, totalsData.MaxCyclomaticComplexity.Total)
+	assert.Equal(t, 12.0, totalsData.MaxCyclomaticComplexity.Value)
 
 	// Edge case: PatchStatementCoverage explicitly forced to 100% when nil
 	assert.NotNil(t, totalsData.PatchStatementCoverage)

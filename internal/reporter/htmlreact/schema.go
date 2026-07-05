@@ -1,5 +1,7 @@
 package htmlreact
 
+import "github.com/IgorBayerl/nanovision/internal/diagnostics"
+
 type riskLevel string
 
 const (
@@ -34,6 +36,13 @@ type methodsFullyCoveredDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
+// scoreDetail represents a standalone scalar metric (e.g. Max Cyclomatic
+// Complexity). Unlike the coverage details it has no percentage; the UI renders
+// it with a "value" card and treats it as a numeric column.
+type scoreDetail struct {
+	Value float64 `json:"value"`
+}
+
 // UI specific method metric keys to enforce alphabetical sorting
 const (
 	MethodUIStmtCoverage         = "a_statement_coverage"
@@ -57,7 +66,7 @@ type totals struct {
 	MethodsHit              *methodsHitDetail          `json:"methods_hit,omitempty"`
 	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
 	MethodBranchCoverage    *branchCoverageDetail      `json:"method_branch_coverage,omitempty"`
-	MaxCyclomaticComplexity *lineCoverageDetail        `json:"max_cyclomatic_complexity,omitempty"`
+	MaxCyclomaticComplexity *scoreDetail               `json:"max_cyclomatic_complexity,omitempty"`
 
 	// Patch / diff-based metrics.
 	PatchStatementCoverage *lineCoverageDetail `json:"patch_statement_coverage,omitempty"`
@@ -71,12 +80,19 @@ type totals struct {
 
 type statuses map[string]riskLevel
 
+// fileNode is a single entry in the flat node list emitted to the UI.
+//
+// The report is delivered as a pre-order (depth-first) flat slice rather than a
+// nested tree: each node carries its ParentID and Depth so the client can rebuild
+// parent/child relationships in a single linear pass instead of walking a tree.
+// This keeps client-side filtering and virtualization O(n).
 type fileNode struct {
 	ID            string     `json:"id"`
 	Name          string     `json:"name"`
 	Type          string     `json:"type"`
 	Path          string     `json:"path"`
-	Children      []fileNode `json:"children,omitempty"`
+	ParentID      string     `json:"parentId,omitempty"` // "" for top-level nodes
+	Depth         int        `json:"depth"`              // structural depth, root children = 0
 	Metrics       metricsMap `json:"metrics,omitempty"`
 	Statuses      statuses   `json:"statuses,omitempty"`
 	ComponentID   string     `json:"componentId,omitempty"`
@@ -141,6 +157,10 @@ type subMetric struct {
 type metricDefinition struct {
 	Label      string      `json:"label"`
 	ShortLabel string      `json:"shortLabel,omitempty"`
+	// Kind selects how the UI renders this metric. "" or "percentage" (default)
+	// renders a percentage card with a progress bar; "value" renders a plain
+	// scalar number card (e.g. cyclomatic complexity, CRAP score).
+	Kind       string      `json:"kind,omitempty"`
 	SubMetrics []subMetric `json:"subMetrics"`
 }
 
@@ -152,9 +172,16 @@ type summaryV1 struct {
 	ReportID          string            `json:"reportId,omitempty"`
 	Title             string            `json:"title"`
 	Totals            totals            `json:"totals"`
-	Tree              []fileNode        `json:"tree"`
+	Nodes             []fileNode        `json:"nodes"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
+	// Diagnostics is the flat list of editor-style problems (coverage
+	// warnings/errors) produced by the central diagnostics engine. The UI
+	// renders these in a collapsible "Problems" panel.
+	Diagnostics []diagnostics.Diagnostic `json:"diagnostics,omitempty"`
+	// DefaultFilters is a raw URL query string (e.g. "diff=changed&risk=danger")
+	// that the UI applies on first load when no query string is already present.
+	DefaultFilters string `json:"defaultFilters,omitempty"`
 }
 
 type detailsV1 struct {
@@ -168,4 +195,7 @@ type detailsV1 struct {
 	Methods           []methodDetail    `json:"methods,omitempty"`
 	Lines             []lineDetail      `json:"lines"`
 	Reports           []report          `json:"reports,omitempty"`
+	// DefaultFilters is a raw URL query string applied by the UI on first load
+	// when no query string is already present.
+	DefaultFilters string `json:"defaultFilters,omitempty"`
 }

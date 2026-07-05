@@ -4,6 +4,7 @@ import FileExplorerHeader from '@/components/FileExplorer.Header'
 import FileExplorerToolbar from '@/components/FileExplorer.Toolbar'
 import { useFileExplorerState } from '@/hooks/useFileExplorerState'
 import { useFilteredAndSortedTree } from '@/hooks/useFilteredAndSortedTree'
+import { aggregateFolderDiff } from '@/lib/aggregateFolderDiff'
 import { camelCaseToTitleCase } from '@/lib/utils'
 import type { FileNode, MetricDefinitions } from '@/types/summary'
 import { Card, CardContent, CardHeader } from '@/ui/card'
@@ -16,13 +17,13 @@ function getShortLabel(metricId: string): string {
 }
 
 interface FileExplorerProps {
-    tree: FileNode[]
+    nodes: FileNode[]
     availableMetrics: string[]
     metricDefinitions: MetricDefinitions
 }
 
-export default function FileExplorer({ tree, availableMetrics, metricDefinitions }: FileExplorerProps) {
-    const { state, setters, searchRef } = useFileExplorerState(tree, availableMetrics)
+export default function FileExplorer({ nodes, availableMetrics, metricDefinitions }: FileExplorerProps) {
+    const { state, setters, searchRef } = useFileExplorerState(nodes, availableMetrics)
 
     const metricConfigs = useMemo(
         () =>
@@ -41,8 +42,29 @@ export default function FileExplorer({ tree, availableMetrics, metricDefinitions
 
     const enabledMetrics = useMemo(() => metricConfigs.filter((m) => m.enabled), [metricConfigs])
 
+    // Diff status propagated up to folders (a folder is decorated when any
+    // descendant file was added/modified).
+    const folderDiffMap = useMemo(() => aggregateFolderDiff(nodes), [nodes])
+
+    // Data-derived upper bound for value (non-percentage) metrics, so their range
+    // sliders span the actual observed values instead of a fixed 0–100.
+    const metricMaxes = useMemo(() => {
+        const maxes: Record<string, number> = {}
+        for (const cfg of metricConfigs) {
+            if (cfg.definition?.kind !== 'value') continue
+            let max = 0
+            for (const node of nodes) {
+                const metric = node.metrics?.[cfg.id]
+                const val = metric && 'value' in metric ? metric.value : undefined
+                if (typeof val === 'number' && val > max) max = val
+            }
+            maxes[cfg.id] = max
+        }
+        return maxes
+    }, [metricConfigs, nodes])
+
     const finalView = useFilteredAndSortedTree({
-        tree,
+        nodes,
         query: state.query,
         searchMode: state.searchMode,
         riskFilter: state.riskFilter,
@@ -85,6 +107,7 @@ export default function FileExplorer({ tree, availableMetrics, metricDefinitions
                             filterRanges={state.filterRanges}
                             onRangeUpdate={setters.updateFilterRange}
                             totalMetricsWidth={totalMetricsWidth}
+                            metricMaxes={metricMaxes}
                         />
                         <FileExplorerBody
                             nodes={finalView}
@@ -93,6 +116,7 @@ export default function FileExplorer({ tree, availableMetrics, metricDefinitions
                             onToggleFolder={setters.toggleFolder}
                             viewMode={state.viewMode}
                             isPinned={state.isNameColumnPinned}
+                            folderDiffMap={folderDiffMap}
                         />
                     </div>
                 </div>

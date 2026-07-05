@@ -20,7 +20,7 @@ export default function ColumnsMenu({
                     Columns
                 </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-56 rounded-md">
+            <PopoverContent align="end" className="w-auto min-w-48 max-w-sm rounded-md">
                 <div className="space-y-2">
                     <div className="font-medium text-sm">Visible Metrics</div>
                     <div className="space-y-2">
@@ -33,7 +33,7 @@ export default function ColumnsMenu({
                                         checked={cfg.enabled}
                                         onCheckedChange={() => onToggleMetric(cfg.id)}
                                     />
-                                    <Label htmlFor={checkboxId} className="cursor-pointer text-sm">
+                                    <Label htmlFor={checkboxId} className="cursor-pointer whitespace-nowrap text-sm">
                                         {cfg.label}
                                     </Label>
                                 </div>

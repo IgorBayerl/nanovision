@@ -3,16 +3,30 @@ import type * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-function TooltipProvider({ delayDuration = 0, ...props }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-    return <TooltipPrimitive.Provider data-slot="tooltip-provider" delayDuration={delayDuration} {...props} />
+function TooltipProvider({
+    delayDuration = 0,
+    // Default to non-hoverable content: the tooltip dismisses immediately once
+    // the trigger is no longer hovered, instead of staying open while the mouse
+    // travels onto the tooltip. Callers can opt back in by passing false.
+    disableHoverableContent = true,
+    ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
+    return (
+        <TooltipPrimitive.Provider
+            data-slot="tooltip-provider"
+            delayDuration={delayDuration}
+            disableHoverableContent={disableHoverableContent}
+            {...props}
+        />
+    )
 }
 
+// NOTE: unlike some shadcn variants, this does NOT wrap itself in a Provider.
+// A single shared TooltipProvider (mounted at the app root) governs delay and
+// skip-delay behaviour, so hovering across many triggers (e.g. code lines) is
+// smooth instead of each tooltip resetting its own timers.
 function Tooltip({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-    return (
-        <TooltipProvider>
-            <TooltipPrimitive.Root data-slot="tooltip" {...props} />
-        </TooltipProvider>
-    )
+    return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
 function TooltipTrigger({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
@@ -31,7 +45,9 @@ function TooltipContent({
                 data-slot="tooltip-content"
                 sideOffset={sideOffset}
                 className={cn(
-                    'fade-in-0 zoom-in-95 data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) animate-in text-balance rounded-md bg-primary px-3 py-1.5 text-primary-foreground text-xs data-[state=closed]:animate-out',
+                    // pointer-events-none: the tooltip never intercepts the cursor,
+                    // avoiding flicker when it renders over/near the trigger.
+                    'pointer-events-none fade-in-0 zoom-in-95 data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) animate-in text-balance rounded-md bg-primary px-3 py-1.5 text-primary-foreground text-xs data-[state=closed]:animate-out',
                     className,
                 )}
                 {...props}

@@ -1,9 +1,9 @@
 import type { MetadataItem } from '@/types/summary'
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
+import { Card } from '@/ui/card'
 
 const InfoRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="group flex w-full items-baseline justify-between text-sm hover:bg-accent/50">
-        <span className="text-muted-foreground group-hover:text-foreground">{label}:</span>
+    <div className="flex w-full items-baseline justify-between gap-2 text-xs">
+        <span className="shrink-0 text-muted-foreground">{label}</span>
         {children}
     </div>
 )
@@ -16,7 +16,7 @@ const ValueDisplay = ({ value }: { value: MetadataItem['value'] }) => {
     const displayString = Array.isArray(value) ? value.join(', ') : String(value)
 
     return (
-        <span className="font-medium font-mono text-foreground" title={displayString}>
+        <span className="truncate text-right font-medium font-mono text-foreground" title={displayString}>
             {displayString}
         </span>
     )
@@ -29,19 +29,15 @@ interface InfoCardProps {
 
 export default function InfoCard({ title, items }: InfoCardProps) {
     return (
-        <Card className="flex h-full flex-col rounded-md">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-lg">{title}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow">
-                <div className="flex flex-col flex-wrap content-start gap-x-6 divide-y border-border">
-                    {items.map((item) => (
-                        <InfoRow key={item.label} label={item.label}>
-                            <ValueDisplay value={item.value} />
-                        </InfoRow>
-                    ))}
-                </div>
-            </CardContent>
+        <Card className="flex w-full flex-col gap-2 rounded-md px-3 py-2.5">
+            <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{title}</span>
+            <div className="flex flex-col gap-0.5">
+                {items.map((item) => (
+                    <InfoRow key={item.label} label={item.label}>
+                        <ValueDisplay value={item.value} />
+                    </InfoRow>
+                ))}
+            </div>
         </Card>
     )
 }

@@ -15,37 +15,42 @@ const coverageDetailSchema = z.object({
     percentage: z.number(),
 })
 
-// A schema for the Metrics object, which can contain any number of coverage details
-const metricsSchema = z.record(z.string(), coverageDetailSchema)
+// Scalar (non-percentage) metric payload, e.g. max cyclomatic complexity.
+const scoreDetailSchema = z.object({
+    value: z.number(),
+})
+
+// A schema for the Metrics object, which can contain coverage details or scalar scores.
+const metricsSchema = z.record(z.string(), coverageDetailSchema.or(scoreDetailSchema))
 
 const diffStatusSchema = z.enum(['added', 'modified', 'unchanged', 'removed'])
 
-// A recursive schema for a file or folder node in the tree.
+// A single file or folder node in the flat node list.
 export type FileNode = {
     id: string
     name: string
     type: 'file' | 'folder'
     path: string
-    children?: FileNode[]
+    parentId?: string
+    depth?: number
     metrics?: z.infer<typeof metricsSchema>
     statuses?: z.infer<typeof statusesSchema>
     targetUrl?: string | null
     diffStatus?: z.infer<typeof diffStatusSchema>
 }
 
-const fileNodeSchema: z.ZodType<FileNode> = z.lazy(() =>
-    z.object({
-        id: z.string().min(1, 'Node ID cannot be empty.'),
-        name: z.string().min(1, 'Node name cannot be empty.'),
-        type: z.enum(['file', 'folder']),
-        path: z.string().min(1, 'Node path cannot be empty.'),
-        children: z.array(fileNodeSchema).optional(),
-        metrics: metricsSchema.optional(),
-        statuses: statusesSchema,
-        targetUrl: z.string().nullable().optional(),
-        diffStatus: diffStatusSchema.optional(),
-    }),
-)
+const fileNodeSchema: z.ZodType<FileNode> = z.object({
+    id: z.string().min(1, 'Node ID cannot be empty.'),
+    name: z.string().min(1, 'Node name cannot be empty.'),
+    type: z.enum(['file', 'folder']),
+    path: z.string().min(1, 'Node path cannot be empty.'),
+    parentId: z.string().optional(),
+    depth: z.number().optional(),
+    metrics: metricsSchema.optional(),
+    statuses: statusesSchema,
+    targetUrl: z.string().nullable().optional(),
+    diffStatus: diffStatusSchema.optional(),
+})
 
 // A schema for the overall totals section
 const totalsSchema = z
@@ -53,9 +58,9 @@ const totalsSchema = z
         files: z.number(),
         folders: z.number(),
         statuses: statusesSchema,
-        // Allows other keys to be present, as long as they are valid coverage details
+        // Allows other keys to be present, as long as they are valid coverage details or scores
     })
-    .catchall(coverageDetailSchema.or(z.number()))
+    .catchall(coverageDetailSchema.or(scoreDetailSchema).or(z.number()))
 
 // A schema for a single metadata item
 const metadataItemSchema = z.object({
@@ -74,8 +79,24 @@ const subMetricSchema = z.object({
 const metricDefinitionSchema = z.object({
     label: z.string(),
     shortLabel: z.string().optional(),
+    kind: z.enum(['percentage', 'value']).optional(),
     subMetrics: z.array(subMetricSchema),
 })
+
+// A single editor-style diagnostic ("problem") produced by the backend
+// diagnostics engine and rendered in the collapsible Problems panel.
+const diagnosticSchema = z.object({
+    ruleId: z.string(),
+    ruleName: z.string(),
+    severity: z.enum(['error', 'warning', 'info']),
+    file: z.string(),
+    startLine: z.number(),
+    endLine: z.number(),
+    message: z.string(),
+    scope: z.enum(['file', 'method']),
+})
+
+export type Diagnostic = z.infer<typeof diagnosticSchema>
 
 export const summaryV1Schema = z.object({
     schemaVersion: z.literal(1, { message: 'This report requires schemaVersion 1.' }),
@@ -85,9 +106,11 @@ export const summaryV1Schema = z.object({
     reportId: z.string().optional(),
     title: z.string().min(1, { message: 'Report title is missing or empty.' }),
     totals: totalsSchema,
-    tree: z.array(fileNodeSchema),
+    nodes: z.array(fileNodeSchema),
     metricDefinitions: z.record(z.string(), metricDefinitionSchema),
     metadata: z.array(metadataItemSchema).optional(),
+    diagnostics: z.array(diagnosticSchema).optional(),
+    defaultFilters: z.string().optional(),
 })
 
 export type SummaryV1 = z.infer<typeof summaryV1Schema>
@@ -129,7 +152,6 @@ const methodMetricSchema = z.object({
     status: riskLevelSchema.optional(),
 })
 
-
 // A schema for a single method/function in the file
 const methodSchema = z.object({
     name: z.string(),
@@ -151,6 +173,7 @@ export const detailsV1Schema = z.object({
     metadata: z.array(metadataItemSchema).optional(),
     methods: z.array(methodSchema).optional(),
     reports: z.array(reportSchema).optional(),
+    defaultFilters: z.string().optional(),
 })
 
 export type DetailsV1 = z.infer<typeof detailsV1Schema>

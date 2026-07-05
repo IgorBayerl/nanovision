@@ -158,6 +158,7 @@ type RawConfigInput struct {
 	FileMetrics    string
 	MethodMetrics  string
 	IgnoreCache    bool
+	DefaultFilters string
 }
 
 type AppConfig struct {
@@ -180,6 +181,9 @@ type AppConfig struct {
 	ActiveMethodMetrics map[MetricKey]bool `yaml:"-"`
 	IgnoreCache         bool               `yaml:"ignore_cache"`
 	Diff                DiffConfig         `yaml:"diff"`
+	// DefaultFilters is a raw URL query string (e.g. "diff=changed&risk=danger")
+	// propagated to the HTML report and auto-applied by the UI on first load.
+	DefaultFilters      string             `yaml:"default_filters"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel
@@ -299,6 +303,9 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 	}
 	if cli.IgnoreCache {
 		c.IgnoreCache = true
+	}
+	if cli.DefaultFilters != "" {
+		c.DefaultFilters = cli.DefaultFilters
 	}
 	if len(cli.StatusBands) > 0 {
 		if c.StatusBands == nil {

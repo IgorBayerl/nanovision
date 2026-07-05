@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ThemeProvider } from '@/components/Theme.Context'
 import '@/index.css'
 import ReactDOM from 'react-dom/client'
-import SummaryPage from '@/pages/SummaryPage'
+import { applyDefaultFilters } from '@/lib/applyDefaultFilters'
 import DetailsPage from '@/pages/DetailsPage'
+import SummaryPage from '@/pages/SummaryPage'
+import { TooltipProvider } from '@/ui/tooltip'
 
 // Declare types for global variables attached to the window
 declare global {
@@ -38,7 +40,13 @@ function SingleFileApp({ data }: { data: NonNullable<Window['__NANOVISION_FULL_D
                 <div className="p-6 text-foreground text-sm">
                     <h2>File Not Found</h2>
                     <p>No details found for path: {filePath}</p>
-                    <button type="button" onClick={() => { window.location.hash = '' }} className="mt-4 text-primary underline">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            window.location.hash = ''
+                        }}
+                        className="mt-4 text-primary underline"
+                    >
                         Return to Summary
                     </button>
                 </div>
@@ -77,9 +85,12 @@ if (!rootEl) {
 } else {
     // Branch on NANOVISION_MODE
     if (window.__NANOVISION_MODE__ === 'single' && window.__NANOVISION_FULL_DATA__) {
+        applyDefaultFilters(window.__NANOVISION_FULL_DATA__.summary)
         ReactDOM.createRoot(rootEl).render(
             <ThemeProvider>
-                <SingleFileApp data={window.__NANOVISION_FULL_DATA__} />
+                <TooltipProvider delayDuration={300} skipDelayDuration={300}>
+                    <SingleFileApp data={window.__NANOVISION_FULL_DATA__} />
+                </TooltipProvider>
             </ThemeProvider>,
         )
     } else {
@@ -93,9 +104,12 @@ if (!rootEl) {
                 </div>,
             )
         } else {
+            applyDefaultFilters(data)
             ReactDOM.createRoot(rootEl).render(
                 <ThemeProvider>
-                    <SummaryPage data={data} />
+                    <TooltipProvider delayDuration={300} skipDelayDuration={300}>
+                        <SummaryPage data={data} />
+                    </TooltipProvider>
                 </ThemeProvider>,
             )
         }

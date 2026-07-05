@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import FileExplorer from '@/components/FileExplorer'
 import Layout from '@/components/Layout'
+import ProblemsPanel from '@/components/ProblemsPanel'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
 import type { SummaryV1 } from '@/lib/validation'
 import { validateSummaryData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
+import { SidebarContent, SidebarHeader } from '@/ui/sidebar'
 
 const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
 
@@ -52,19 +54,33 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
 
     const title = validatedData?.title ?? (rawData as Partial<SummaryV1>)?.title ?? 'Coverage Report'
 
+    const leftSidebar = validatedData ? (
+        <>
+            <SidebarHeader>
+                <div className="font-semibold text-sm">Overview</div>
+            </SidebarHeader>
+            <SidebarContent>
+                <SummaryMetrics
+                    info={reportInfo}
+                    metrics={validatedData.totals}
+                    metricOrder={metricKeys}
+                    metricDefinitions={validatedData.metricDefinitions}
+                    variant="sidebar"
+                />
+            </SidebarContent>
+        </>
+    ) : undefined
+
     return (
-        <Layout title={title}>
+        <Layout title={title} leftSidebar={leftSidebar}>
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}
             {validatedData ? (
                 <>
-                    <SummaryMetrics
-                        info={reportInfo}
-                        metrics={validatedData.totals}
-                        metricOrder={metricKeys}
-                        metricDefinitions={validatedData.metricDefinitions}
-                    />
+                    {validatedData.diagnostics && validatedData.diagnostics.length > 0 && (
+                        <ProblemsPanel diagnostics={validatedData.diagnostics} nodes={validatedData.nodes} />
+                    )}
                     <FileExplorer
-                        tree={validatedData.tree}
+                        nodes={validatedData.nodes}
                         availableMetrics={metricKeys}
                         metricDefinitions={validatedData.metricDefinitions}
                     />

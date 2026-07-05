@@ -33,6 +33,9 @@ export default defineConfig({
     plugins: [react(), tailwindcss(), nodePolyfills(), devServerRewrites()],
 
     resolve: {
+        // Ensure a single React instance in dev; pnpm can otherwise resolve a second
+        // copy for dependencies like @tanstack/react-virtual, breaking hook calls.
+        dedupe: ['react', 'react-dom'],
         alias: {
             '@': resolve(__dirname, './src'),
         },

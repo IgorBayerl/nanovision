@@ -26,3 +26,4 @@ internal/reporter/htmlreact/assets/dist/data.js
 build
 
 my_changes.diff
+.claude/launch.json

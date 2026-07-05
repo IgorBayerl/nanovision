@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/IgorBayerl/nanovision/internal/config"
+	"github.com/IgorBayerl/nanovision/internal/diagnostics"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/reporter"
+	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
 )
 
 type HtmlReactReportBuilder struct {
@@ -92,22 +94,29 @@ func (b *HtmlReactReportBuilder) createSingleFileReport(tree *model.SummaryTree)
 
 func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summaryV1, error) {
 	generatedAt := time.Now().UTC()
-	treeNodes := b.buildTreeChildren(tree.Root)
-	totalFiles, totalFolders := countNodes(treeNodes)
+	nodes := b.buildFlatNodes(tree.Root)
+	totalFiles, totalFolders := countFlatNodes(nodes)
 
 	totalsData := b.buildTotals(tree, totalFiles, totalFolders)
 	if tree.Root.Statuses != nil {
 		totalsData.Statuses = b.convertStatuses(tree.Root.Statuses)
 	}
 
+	title := b.config.Title
+	if title == "" {
+		title = "Coverage Report"
+	}
+
 	return summaryV1{
 		SchemaVersion:     1,
 		GeneratedAt:       generatedAt.Format(time.RFC3339),
-		Title:             "Coverage Report",
+		Title:             title,
 		Totals:            totalsData,
-		Tree:              treeNodes,
+		Nodes:             nodes,
 		MetricDefinitions: b.buildMetricDefinitions(),
 		Metadata:          b.buildMetadata(tree, generatedAt),
+		Diagnostics:       diagnostics.Extract(tree, b.config, evaluators.Registry),
+		DefaultFilters:    b.config.DefaultFilters,
 	}, nil
 }
 
@@ -159,29 +168,46 @@ func (b *HtmlReactReportBuilder) buildMetadata(tree *model.SummaryTree, generate
 	return meta
 }
 
-func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNode {
-	children := make([]fileNode, 0, len(dir.Subdirs)+len(dir.Files))
+// buildFlatNodes walks the directory tree depth-first and returns a pre-ordered
+// flat slice of nodes. Each node records its ParentID and Depth so the client can
+// rebuild the hierarchy in a single linear pass. Sibling order matches the old
+// nested layout: folders before files, each group sorted by name.
+func (b *HtmlReactReportBuilder) buildFlatNodes(root *model.DirNode) []fileNode {
+	nodes := make([]fileNode, 0, len(root.Subdirs)+len(root.Files))
+	b.appendFlatNodes(&nodes, root, "", 0)
+	return nodes
+}
 
+func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.DirNode, parentID string, depth int) {
+	// Subdirs/Files are maps (non-deterministic order), so collect and sort by name.
+	subdirs := make([]*model.DirNode, 0, len(dir.Subdirs))
 	for _, subdir := range dir.Subdirs {
-		nodeMetrics := b.buildMetricsMap(subdir.Metrics)
-		statuses := b.convertStatuses(subdir.Statuses)
+		subdirs = append(subdirs, subdir)
+	}
+	sort.Slice(subdirs, func(i, j int) bool { return subdirs[i].Name < subdirs[j].Name })
 
-		child := fileNode{
+	// Folders first, each followed immediately by its subtree (pre-order).
+	for _, subdir := range subdirs {
+		*out = append(*out, fileNode{
 			ID:       subdir.Path,
 			Name:     subdir.Name,
 			Type:     "folder",
 			Path:     subdir.Path,
-			Metrics:  nodeMetrics,
-			Statuses: statuses,
-			Children: b.buildTreeChildren(subdir),
-		}
-		children = append(children, child)
+			ParentID: parentID,
+			Depth:    depth,
+			Metrics:  b.buildMetricsMap(subdir.Metrics),
+			Statuses: b.convertStatuses(subdir.Statuses),
+		})
+		b.appendFlatNodes(out, subdir, subdir.Path, depth+1)
 	}
 
+	files := make([]*model.FileNode, 0, len(dir.Files))
 	for _, file := range dir.Files {
-		nodeMetrics := b.buildMetricsMap(file.Metrics)
-		statuses := b.convertStatuses(file.Statuses)
+		files = append(files, file)
+	}
+	sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
 
+	for _, file := range files {
 		target := ""
 		if file.SourceDir != "" {
 			if b.singleFile {
@@ -196,28 +222,19 @@ func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNod
 			diffStatus = file.Diff.Kind.String()
 		}
 
-		child := fileNode{
+		*out = append(*out, fileNode{
 			ID:         file.Path,
 			Name:       file.Name,
 			Type:       "file",
 			Path:       file.Path,
-			Metrics:    nodeMetrics,
-			Statuses:   statuses,
+			ParentID:   parentID,
+			Depth:      depth,
+			Metrics:    b.buildMetricsMap(file.Metrics),
+			Statuses:   b.convertStatuses(file.Statuses),
 			TargetURL:  target,
 			DiffStatus: diffStatus,
-		}
-		children = append(children, child)
+		})
 	}
-
-	// Sort children so folders come before files, then by name.
-	sort.Slice(children, func(i, j int) bool {
-		if children[i].Type != children[j].Type {
-			return children[i].Type == "folder"
-		}
-		return children[i].Name < children[j].Name
-	})
-
-	return children
 }
 
 func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, folders int) totals {
@@ -253,6 +270,10 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 
 	if pmc, ok := metrics[string(config.PatchMethodsHit)].(methodsHitDetail); ok {
 		t.PatchMethodsHit = &pmc
+	}
+
+	if mcc, ok := metrics[string(config.MaxCyclomaticComplexity)].(scoreDetail); ok {
+		t.MaxCyclomaticComplexity = &mcc
 	}
 
 	return t
@@ -293,7 +314,7 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 				}
 			case config.MaxCyclomaticComplexity:
 				if score, ok := calcData.(model.ScoreDetail); ok {
-					metrics[string(key)] = lineCoverageDetail{Total: int(score.Value)}
+					metrics[string(key)] = scoreDetail{Value: score.Value}
 				}
 			default:
 				metrics[string(key)] = calcData
@@ -452,8 +473,10 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		defs[string(config.MaxCyclomaticComplexity)] = metricDefinition{
 			Label:      "Max Cyclomatic Complexity",
 			ShortLabel: "Max Complexity",
+			Kind:       "value",
 			SubMetrics: []subMetric{
-				{ID: "total", Label: "Value", Width: 100},
+				// Wide enough that the "Max Complexity" header never wraps.
+				{ID: "value", Label: "Value", Width: 140},
 			},
 		}
 	}
@@ -461,7 +484,8 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		defs[MethodUICyclomaticComplexity] = metricDefinition{
 			Label:      "Cyclomatic Complexity",
 			ShortLabel: "Complexity",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+			Kind:       "value",
+			SubMetrics: []subMetric{{ID: "value", Label: "Value", Width: 100}},
 		}
 	}
 
@@ -504,15 +528,12 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 	return defs
 }
 
-func countNodes(nodes []fileNode) (files, folders int) {
+func countFlatNodes(nodes []fileNode) (files, folders int) {
 	for _, node := range nodes {
 		if node.Type == "file" {
 			files++
-		} else { // folder
+		} else {
 			folders++
-			f, fo := countNodes(node.Children)
-			files += f
-			folders += fo
 		}
 	}
 	return
