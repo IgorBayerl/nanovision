@@ -1,5 +1,7 @@
 package htmlreact
 
+import "github.com/IgorBayerl/nanovision/internal/diagnostics"
+
 type riskLevel string
 
 const (
@@ -169,6 +171,10 @@ type summaryV1 struct {
 	Nodes             []fileNode        `json:"nodes"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
+	// Diagnostics is the flat list of editor-style problems (coverage
+	// warnings/errors) produced by the central diagnostics engine. The UI
+	// renders these in a collapsible "Problems" panel.
+	Diagnostics []diagnostics.Diagnostic `json:"diagnostics,omitempty"`
 	// DefaultFilters is a raw URL query string (e.g. "diff=changed&risk=danger")
 	// that the UI applies on first load when no query string is already present.
 	DefaultFilters string `json:"defaultFilters,omitempty"`

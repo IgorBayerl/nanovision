@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import FileExplorer from '@/components/FileExplorer'
 import Layout from '@/components/Layout'
+import ProblemsPanel from '@/components/ProblemsPanel'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
 import type { SummaryV1 } from '@/lib/validation'
@@ -74,11 +75,16 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
         <Layout title={title} leftSidebar={leftSidebar}>
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}
             {validatedData ? (
-                <FileExplorer
-                    nodes={validatedData.nodes}
-                    availableMetrics={metricKeys}
-                    metricDefinitions={validatedData.metricDefinitions}
-                />
+                <>
+                    {validatedData.diagnostics && validatedData.diagnostics.length > 0 && (
+                        <ProblemsPanel diagnostics={validatedData.diagnostics} nodes={validatedData.nodes} />
+                    )}
+                    <FileExplorer
+                        nodes={validatedData.nodes}
+                        availableMetrics={metricKeys}
+                        metricDefinitions={validatedData.metricDefinitions}
+                    />
+                </>
             ) : (
                 <div className="rounded-md border border-border bg-card p-10 text-center text-muted-foreground">
                     Could not render the report due to critical data errors. Please review the alerts above.

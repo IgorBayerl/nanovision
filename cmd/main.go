@@ -35,9 +35,11 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gcov"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_gocover"
 	"github.com/IgorBayerl/nanovision/internal/parsers/parser_lcov"
+	"github.com/IgorBayerl/nanovision/internal/reporter/annotations"
 	"github.com/IgorBayerl/nanovision/internal/reporter/htmlreact"
 	"github.com/IgorBayerl/nanovision/internal/reporter/lcov"
 	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
+	"github.com/IgorBayerl/nanovision/internal/reporter/sarif"
 	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
 	"github.com/IgorBayerl/nanovision/internal/status"
 	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
@@ -175,6 +177,10 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 			err = lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree)
 		case "RawJson":
 			err = reporter_rawjson.NewRawJsonReportBuilder(outputDir).CreateReport(summaryTree)
+		case "Sarif":
+			err = sarif.NewSarifReportBuilder(outputDir, appConfig, evaluators.Registry).CreateReport(summaryTree)
+		case "Annotations":
+			err = annotations.NewAnnotationsReportBuilder(outputDir, appConfig, evaluators.Registry).CreateReport(summaryTree)
 		}
 		if err != nil {
 			return fmt.Errorf("failed to generate '%s' report: %w", trimmedType, err)

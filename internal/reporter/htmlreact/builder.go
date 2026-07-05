@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/IgorBayerl/nanovision/internal/config"
+	"github.com/IgorBayerl/nanovision/internal/diagnostics"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/reporter"
+	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
 )
 
 type HtmlReactReportBuilder struct {
@@ -113,6 +115,7 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		Nodes:             nodes,
 		MetricDefinitions: b.buildMetricDefinitions(),
 		Metadata:          b.buildMetadata(tree, generatedAt),
+		Diagnostics:       diagnostics.Extract(tree, b.config, evaluators.Registry),
 		DefaultFilters:    b.config.DefaultFilters,
 	}, nil
 }

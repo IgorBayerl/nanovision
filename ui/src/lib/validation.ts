@@ -83,6 +83,21 @@ const metricDefinitionSchema = z.object({
     subMetrics: z.array(subMetricSchema),
 })
 
+// A single editor-style diagnostic ("problem") produced by the backend
+// diagnostics engine and rendered in the collapsible Problems panel.
+const diagnosticSchema = z.object({
+    ruleId: z.string(),
+    ruleName: z.string(),
+    severity: z.enum(['error', 'warning', 'info']),
+    file: z.string(),
+    startLine: z.number(),
+    endLine: z.number(),
+    message: z.string(),
+    scope: z.enum(['file', 'method']),
+})
+
+export type Diagnostic = z.infer<typeof diagnosticSchema>
+
 export const summaryV1Schema = z.object({
     schemaVersion: z.literal(1, { message: 'This report requires schemaVersion 1.' }),
     generatedAt: z
@@ -94,6 +109,7 @@ export const summaryV1Schema = z.object({
     nodes: z.array(fileNodeSchema),
     metricDefinitions: z.record(z.string(), metricDefinitionSchema),
     metadata: z.array(metadataItemSchema).optional(),
+    diagnostics: z.array(diagnosticSchema).optional(),
     defaultFilters: z.string().optional(),
 })
 
