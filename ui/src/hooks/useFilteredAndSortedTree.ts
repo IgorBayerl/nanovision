@@ -16,7 +16,7 @@ import type {
 type RenderNode = FileNode & { depth: number }
 
 interface HookParams {
-    tree: FileNode[]
+    nodes: FileNode[]
     query: string
     searchMode: 'glob' | 'normal'
     riskFilter: RiskFilter
@@ -35,36 +35,47 @@ interface HookParams {
  */
 const DEBOUNCE_DELAY_MS = 1
 
+/** Sentinel key used for top-level nodes (those with no parentId). */
+const ROOT_KEY = ''
+
+const EMPTY_CHILDREN: ReadonlyMap<string, FileNode[]> = new Map()
+
+type Comparator = (a: FileNode, b: FileNode) => number
+
 /**
- * Pre-computes data structures from the raw tree to optimize filtering and lookups.
+ * Derives lookup structures from the flat node list in a single linear pass:
+ *  - allFiles:     just the file nodes (what every filter runs against)
+ *  - parentMap:    node id -> parent id (used to walk ancestors)
+ *  - childrenMap:  parent id -> child nodes, preserving the backend's pre-order
+ *                  (folders before files, each group sorted by name)
  */
-function usePrecomputedTree(tree: FileNode[]) {
+function usePrecomputedNodes(nodes: FileNode[]) {
     return useMemo(() => {
         const allFiles: FileNode[] = []
         const parentMap = new Map<string, string | null>()
+        const childrenMap = new Map<string, FileNode[]>()
 
-        function walk(nodes: FileNode[], parentId: string | null) {
-            for (const node of nodes) {
-                parentMap.set(node.id, parentId)
-                if (node.type === 'file') {
-                    allFiles.push(node)
-                }
-                if (node.children) {
-                    walk(node.children, node.id)
-                }
-            }
+        for (const node of nodes) {
+            const parentId = node.parentId ?? null
+            parentMap.set(node.id, parentId)
+
+            const key = parentId ?? ROOT_KEY
+            const siblings = childrenMap.get(key)
+            if (siblings) siblings.push(node)
+            else childrenMap.set(key, [node])
+
+            if (node.type === 'file') allFiles.push(node)
         }
 
-        walk(tree, null)
-        return { allFiles, parentMap }
-    }, [tree])
+        return { allFiles, parentMap, childrenMap }
+    }, [nodes])
 }
 
 /**
- * A hook that filters, sorts, and structures file tree data for display.
+ * A hook that filters, sorts, and structures the flat node list for display.
  */
 export function useFilteredAndSortedTree({
-    tree,
+    nodes,
     query,
     searchMode,
     riskFilter,
@@ -76,7 +87,7 @@ export function useFilteredAndSortedTree({
     expandedFolders,
     enabledMetrics,
 }: HookParams): RenderNode[] {
-    const { allFiles, parentMap } = usePrecomputedTree(tree)
+    const { allFiles, parentMap, childrenMap } = usePrecomputedNodes(nodes)
 
     // Debounce the filterRanges prop. The expensive filtering logic will only re-run
     // after the user has stopped dragging the slider for the specified delay.
@@ -141,11 +152,11 @@ export function useFilteredAndSortedTree({
         })
     }, [allFiles, query, searchMode, debouncedFilterRanges, riskFilter, diffFilter, enabledMetrics])
 
-    const sortedNodes = useMemo(() => {
-        const nodesToSort = viewMode === 'flat' ? filteredFiles : tree
+    // A single comparator shared by both flat and tree views.
+    const comparator = useMemo<Comparator>(() => {
         const dir = sortDir === 'asc' ? 1 : -1
 
-        const sortByName = (a: FileNode, b: FileNode) => {
+        const sortByName: Comparator = (a, b) => {
             if (viewMode === 'tree' && a.type !== b.type) return a.type === 'folder' ? -1 : 1
             const nameA = viewMode === 'flat' ? a.path : a.name
             const nameB = viewMode === 'flat' ? b.path : b.name
@@ -159,18 +170,34 @@ export function useFilteredAndSortedTree({
             return (valA - valB) * dir
         }
 
-        return [...nodesToSort].sort((a, b) => {
+        return (a, b) => {
             if (sortKey === 'name') return sortByName(a, b)
             if (typeof sortKey === 'object') return sortByMetric(a, b, sortKey)
             return 0
-        })
-    }, [filteredFiles, tree, viewMode, sortKey, sortDir])
+        }
+    }, [sortKey, sortDir, viewMode])
+
+    // Flat view: a single sorted list of the filtered files.
+    const flatNodes = useMemo<RenderNode[]>(() => {
+        if (viewMode !== 'flat') return []
+        return [...filteredFiles].sort(comparator).map((node) => ({ ...node, depth: 0 }))
+    }, [viewMode, filteredFiles, comparator])
+
+    // Tree view: pre-sort each sibling group once. This is independent of expand/collapse
+    // state, so toggling folders never re-sorts. Total cost is O(n log n), not O(n²).
+    const sortedChildrenMap = useMemo(() => {
+        if (viewMode !== 'tree') return EMPTY_CHILDREN
+        const sorted = new Map<string, FileNode[]>()
+        for (const [key, siblings] of childrenMap) {
+            sorted.set(key, [...siblings].sort(comparator))
+        }
+        return sorted
+    }, [viewMode, childrenMap, comparator])
 
     return useMemo(() => {
-        if (viewMode === 'flat') {
-            return sortedNodes.map((node) => ({ ...node, depth: 0 }))
-        }
+        if (viewMode === 'flat') return flatNodes
 
+        // Mark every filtered file and its ancestor folders as visible.
         const visibleNodeIds = new Set<string>()
         for (const file of filteredFiles) {
             visibleNodeIds.add(file.id)
@@ -184,23 +211,20 @@ export function useFilteredAndSortedTree({
 
         if (visibleNodeIds.size === 0 && (query.trim().length > 0 || diffFilter === 'changed')) return []
 
+        // Depth-first walk over the pre-sorted sibling groups, honoring expand state.
         const result: RenderNode[] = []
-        function buildRenderList(nodes: FileNode[], depth: number) {
-            for (const node of nodes) {
+        const walk = (parentKey: string, depth: number) => {
+            const siblings = sortedChildrenMap.get(parentKey)
+            if (!siblings) return
+            for (const node of siblings) {
                 if (!visibleNodeIds.has(node.id)) continue
                 result.push({ ...node, depth })
-                if (node.type === 'folder' && node.children && expandedFolders.has(node.id)) {
-                    const sortedChildren = [...node.children].sort((a, b) => {
-                        const aIndex = sortedNodes.findIndex((n) => n.id === a.id)
-                        const bIndex = sortedNodes.findIndex((n) => n.id === b.id)
-                        return aIndex - bIndex
-                    })
-                    buildRenderList(sortedChildren, depth + 1)
+                if (node.type === 'folder' && expandedFolders.has(node.id)) {
+                    walk(node.id, depth + 1)
                 }
             }
         }
-
-        buildRenderList(sortedNodes, 0)
+        walk(ROOT_KEY, 0)
         return result
-    }, [viewMode, filteredFiles, sortedNodes, parentMap, expandedFolders, query, diffFilter])
+    }, [viewMode, flatNodes, filteredFiles, sortedChildrenMap, parentMap, expandedFolders, query, diffFilter])
 }

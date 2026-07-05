@@ -67,12 +67,19 @@ type totals struct {
 
 type statuses map[string]riskLevel
 
+// fileNode is a single entry in the flat node list emitted to the UI.
+//
+// The report is delivered as a pre-order (depth-first) flat slice rather than a
+// nested tree: each node carries its ParentID and Depth so the client can rebuild
+// parent/child relationships in a single linear pass instead of walking a tree.
+// This keeps client-side filtering and virtualization O(n).
 type fileNode struct {
 	ID            string     `json:"id"`
 	Name          string     `json:"name"`
 	Type          string     `json:"type"`
 	Path          string     `json:"path"`
-	Children      []fileNode `json:"children,omitempty"`
+	ParentID      string     `json:"parentId,omitempty"` // "" for top-level nodes
+	Depth         int        `json:"depth"`              // structural depth, root children = 0
 	Metrics       metricsMap `json:"metrics,omitempty"`
 	Statuses      statuses   `json:"statuses,omitempty"`
 	ComponentID   string     `json:"componentId,omitempty"`
@@ -148,7 +155,7 @@ type summaryV1 struct {
 	ReportID          string            `json:"reportId,omitempty"`
 	Title             string            `json:"title"`
 	Totals            totals            `json:"totals"`
-	Tree              []fileNode        `json:"tree"`
+	Nodes             []fileNode        `json:"nodes"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
 }

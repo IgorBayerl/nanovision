@@ -16,13 +16,13 @@ function getShortLabel(metricId: string): string {
 }
 
 interface FileExplorerProps {
-    tree: FileNode[]
+    nodes: FileNode[]
     availableMetrics: string[]
     metricDefinitions: MetricDefinitions
 }
 
-export default function FileExplorer({ tree, availableMetrics, metricDefinitions }: FileExplorerProps) {
-    const { state, setters, searchRef } = useFileExplorerState(tree, availableMetrics)
+export default function FileExplorer({ nodes, availableMetrics, metricDefinitions }: FileExplorerProps) {
+    const { state, setters, searchRef } = useFileExplorerState(nodes, availableMetrics)
 
     const metricConfigs = useMemo(
         () =>
@@ -42,7 +42,7 @@ export default function FileExplorer({ tree, availableMetrics, metricDefinitions
     const enabledMetrics = useMemo(() => metricConfigs.filter((m) => m.enabled), [metricConfigs])
 
     const finalView = useFilteredAndSortedTree({
-        tree,
+        nodes,
         query: state.query,
         searchMode: state.searchMode,
         riskFilter: state.riskFilter,

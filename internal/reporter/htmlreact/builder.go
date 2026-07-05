@@ -92,8 +92,8 @@ func (b *HtmlReactReportBuilder) createSingleFileReport(tree *model.SummaryTree)
 
 func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summaryV1, error) {
 	generatedAt := time.Now().UTC()
-	treeNodes := b.buildTreeChildren(tree.Root)
-	totalFiles, totalFolders := countNodes(treeNodes)
+	nodes := b.buildFlatNodes(tree.Root)
+	totalFiles, totalFolders := countFlatNodes(nodes)
 
 	totalsData := b.buildTotals(tree, totalFiles, totalFolders)
 	if tree.Root.Statuses != nil {
@@ -105,7 +105,7 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		GeneratedAt:       generatedAt.Format(time.RFC3339),
 		Title:             "Coverage Report",
 		Totals:            totalsData,
-		Tree:              treeNodes,
+		Nodes:             nodes,
 		MetricDefinitions: b.buildMetricDefinitions(),
 		Metadata:          b.buildMetadata(tree, generatedAt),
 	}, nil
@@ -159,29 +159,46 @@ func (b *HtmlReactReportBuilder) buildMetadata(tree *model.SummaryTree, generate
 	return meta
 }
 
-func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNode {
-	children := make([]fileNode, 0, len(dir.Subdirs)+len(dir.Files))
+// buildFlatNodes walks the directory tree depth-first and returns a pre-ordered
+// flat slice of nodes. Each node records its ParentID and Depth so the client can
+// rebuild the hierarchy in a single linear pass. Sibling order matches the old
+// nested layout: folders before files, each group sorted by name.
+func (b *HtmlReactReportBuilder) buildFlatNodes(root *model.DirNode) []fileNode {
+	nodes := make([]fileNode, 0, len(root.Subdirs)+len(root.Files))
+	b.appendFlatNodes(&nodes, root, "", 0)
+	return nodes
+}
 
+func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.DirNode, parentID string, depth int) {
+	// Subdirs/Files are maps (non-deterministic order), so collect and sort by name.
+	subdirs := make([]*model.DirNode, 0, len(dir.Subdirs))
 	for _, subdir := range dir.Subdirs {
-		nodeMetrics := b.buildMetricsMap(subdir.Metrics)
-		statuses := b.convertStatuses(subdir.Statuses)
+		subdirs = append(subdirs, subdir)
+	}
+	sort.Slice(subdirs, func(i, j int) bool { return subdirs[i].Name < subdirs[j].Name })
 
-		child := fileNode{
+	// Folders first, each followed immediately by its subtree (pre-order).
+	for _, subdir := range subdirs {
+		*out = append(*out, fileNode{
 			ID:       subdir.Path,
 			Name:     subdir.Name,
 			Type:     "folder",
 			Path:     subdir.Path,
-			Metrics:  nodeMetrics,
-			Statuses: statuses,
-			Children: b.buildTreeChildren(subdir),
-		}
-		children = append(children, child)
+			ParentID: parentID,
+			Depth:    depth,
+			Metrics:  b.buildMetricsMap(subdir.Metrics),
+			Statuses: b.convertStatuses(subdir.Statuses),
+		})
+		b.appendFlatNodes(out, subdir, subdir.Path, depth+1)
 	}
 
+	files := make([]*model.FileNode, 0, len(dir.Files))
 	for _, file := range dir.Files {
-		nodeMetrics := b.buildMetricsMap(file.Metrics)
-		statuses := b.convertStatuses(file.Statuses)
+		files = append(files, file)
+	}
+	sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
 
+	for _, file := range files {
 		target := ""
 		if file.SourceDir != "" {
 			if b.singleFile {
@@ -196,28 +213,19 @@ func (b *HtmlReactReportBuilder) buildTreeChildren(dir *model.DirNode) []fileNod
 			diffStatus = file.Diff.Kind.String()
 		}
 
-		child := fileNode{
+		*out = append(*out, fileNode{
 			ID:         file.Path,
 			Name:       file.Name,
 			Type:       "file",
 			Path:       file.Path,
-			Metrics:    nodeMetrics,
-			Statuses:   statuses,
+			ParentID:   parentID,
+			Depth:      depth,
+			Metrics:    b.buildMetricsMap(file.Metrics),
+			Statuses:   b.convertStatuses(file.Statuses),
 			TargetURL:  target,
 			DiffStatus: diffStatus,
-		}
-		children = append(children, child)
+		})
 	}
-
-	// Sort children so folders come before files, then by name.
-	sort.Slice(children, func(i, j int) bool {
-		if children[i].Type != children[j].Type {
-			return children[i].Type == "folder"
-		}
-		return children[i].Name < children[j].Name
-	})
-
-	return children
 }
 
 func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, folders int) totals {
@@ -472,15 +480,12 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 	return defs
 }
 
-func countNodes(nodes []fileNode) (files, folders int) {
+func countFlatNodes(nodes []fileNode) (files, folders int) {
 	for _, node := range nodes {
 		if node.Type == "file" {
 			files++
-		} else { // folder
+		} else {
 			folders++
-			f, fo := countNodes(node.Children)
-			files += f
-			folders += fo
 		}
 	}
 	return

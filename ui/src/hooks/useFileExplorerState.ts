@@ -6,24 +6,10 @@ import type { DiffFilter, FileNode, FilterRange, MetricKey, RiskFilter, SortDir,
 const getDefaultEnabledMetrics = (metrics: string[]) => metrics.slice(0, 3)
 const EXPANDED_FOLDERS_STORAGE_KEY = 'nanovision-expanded-folders'
 
-// Helper function to recursively find all folder IDs in the tree.
-const getAllFolderIds = (nodes: FileNode[]): string[] => {
-    const ids: string[] = []
-    const walk = (arr: FileNode[]) => {
-        arr.forEach((n) => {
-            if (n.type === 'folder') {
-                ids.push(n.id)
-            }
-            if (n.children) {
-                walk(n.children)
-            }
-        })
-    }
-    walk(nodes)
-    return ids
-}
+// Collect all folder IDs from the flat node list.
+const getAllFolderIds = (nodes: FileNode[]): string[] => nodes.filter((n) => n.type === 'folder').map((n) => n.id)
 
-export function useFileExplorerState(tree: FileNode[], availableMetrics: string[]) {
+export function useFileExplorerState(nodes: FileNode[], availableMetrics: string[]) {
     const [viewMode, setViewMode] = useUrlState<'tree' | 'flat'>('view', 'tree')
     const [query, setQuery] = useUrlState('q', '')
     const [searchMode, setSearchMode] = useUrlState<'glob' | 'normal'>('qMode', 'normal')
@@ -42,7 +28,7 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
     const [expandedFoldersArray, setExpandedFoldersArray] = useState<string[]>(() => {
         try {
             const item = window.localStorage.getItem(EXPANDED_FOLDERS_STORAGE_KEY)
-            return item ? JSON.parse(item) : getAllFolderIds(tree)
+            return item ? JSON.parse(item) : getAllFolderIds(nodes)
         } catch (error) {
             console.error('Error reading from localStorage', error)
             return []
@@ -62,28 +48,28 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
     const searchRef = useRef<HTMLInputElement>(null)
     useKeyboardSearch(searchRef)
 
-    const idToNodeMap = useMemo(() => {
-        const map = new Map<string, FileNode>()
-        const walk = (nodes: FileNode[]) => {
-            for (const node of nodes) {
-                map.set(node.id, node)
-                if (node.children) walk(node.children)
-            }
+    // Map of parent id -> child folder ids, built from the flat node list. Used to
+    // resolve descendants for recursive (alt-click) folder expansion.
+    const childFolderIdsByParent = useMemo(() => {
+        const map = new Map<string, string[]>()
+        for (const node of nodes) {
+            if (node.type !== 'folder') continue
+            const parentId = node.parentId ?? ''
+            const siblings = map.get(parentId)
+            if (siblings) siblings.push(node.id)
+            else map.set(parentId, [node.id])
         }
-        walk(tree)
         return map
-    }, [tree])
+    }, [nodes])
 
-    const getDescendantFolderIds = (startNode: FileNode): string[] => {
+    const getDescendantFolderIds = (startId: string): string[] => {
         const ids: string[] = []
-        const walk = (node: FileNode) => {
-            if (node.type === 'folder' && node.children) {
-                ids.push(node.id)
-                for (const child of node.children) walk(child)
-            }
-        }
-        if (startNode.children) {
-            for (const child of startNode.children) walk(child)
+        const stack = [...(childFolderIdsByParent.get(startId) ?? [])]
+        while (stack.length > 0) {
+            const id = stack.pop() as string
+            ids.push(id)
+            const children = childFolderIdsByParent.get(id)
+            if (children) stack.push(...children)
         }
         return ids
     }
@@ -95,19 +81,10 @@ export function useFileExplorerState(tree: FileNode[], availableMetrics: string[
         const shouldExpand = !newSet.has(id)
 
         if (isRecursive) {
-            const startNode = idToNodeMap.get(id)
-            if (startNode) {
-                const descendantIds = getDescendantFolderIds(startNode)
-                const allIdsToToggle = [id, ...descendantIds]
-                if (shouldExpand) {
-                    allIdsToToggle.forEach((folderId) => {
-                        newSet.add(folderId)
-                    })
-                } else {
-                    allIdsToToggle.forEach((folderId) => {
-                        newSet.delete(folderId)
-                    })
-                }
+            const allIdsToToggle = [id, ...getDescendantFolderIds(id)]
+            for (const folderId of allIdsToToggle) {
+                if (shouldExpand) newSet.add(folderId)
+                else newSet.delete(folderId)
             }
         } else {
             if (shouldExpand) {

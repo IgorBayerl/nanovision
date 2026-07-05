@@ -64,7 +64,7 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
                         metricDefinitions={validatedData.metricDefinitions}
                     />
                     <FileExplorer
-                        tree={validatedData.tree}
+                        nodes={validatedData.nodes}
                         availableMetrics={metricKeys}
                         metricDefinitions={validatedData.metricDefinitions}
                     />

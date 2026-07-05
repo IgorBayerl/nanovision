@@ -19,7 +19,10 @@ export interface FileNode {
     name: string
     type: 'file' | 'folder'
     path: string
-    children?: FileNode[]
+    /** Parent node id; undefined/"" for top-level nodes. */
+    parentId?: string
+    /** Structural depth from the backend; root-level nodes are 0. */
+    depth?: number
     metrics?: Metrics
     statuses?: Statuses
     componentId?: string
@@ -67,7 +70,8 @@ export interface SummaryV1 {
     reportId?: string
     title: string
     totals: Totals
-    tree: FileNode[]
+    /** Flat, pre-ordered (depth-first) list of all file and folder nodes. */
+    nodes: FileNode[]
     metricDefinitions: MetricDefinitions
     metadata?: MetadataItem[]
 }

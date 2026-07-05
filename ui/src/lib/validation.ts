@@ -20,32 +20,32 @@ const metricsSchema = z.record(z.string(), coverageDetailSchema)
 
 const diffStatusSchema = z.enum(['added', 'modified', 'unchanged', 'removed'])
 
-// A recursive schema for a file or folder node in the tree.
+// A single file or folder node in the flat node list.
 export type FileNode = {
     id: string
     name: string
     type: 'file' | 'folder'
     path: string
-    children?: FileNode[]
+    parentId?: string
+    depth?: number
     metrics?: z.infer<typeof metricsSchema>
     statuses?: z.infer<typeof statusesSchema>
     targetUrl?: string | null
     diffStatus?: z.infer<typeof diffStatusSchema>
 }
 
-const fileNodeSchema: z.ZodType<FileNode> = z.lazy(() =>
-    z.object({
-        id: z.string().min(1, 'Node ID cannot be empty.'),
-        name: z.string().min(1, 'Node name cannot be empty.'),
-        type: z.enum(['file', 'folder']),
-        path: z.string().min(1, 'Node path cannot be empty.'),
-        children: z.array(fileNodeSchema).optional(),
-        metrics: metricsSchema.optional(),
-        statuses: statusesSchema,
-        targetUrl: z.string().nullable().optional(),
-        diffStatus: diffStatusSchema.optional(),
-    }),
-)
+const fileNodeSchema: z.ZodType<FileNode> = z.object({
+    id: z.string().min(1, 'Node ID cannot be empty.'),
+    name: z.string().min(1, 'Node name cannot be empty.'),
+    type: z.enum(['file', 'folder']),
+    path: z.string().min(1, 'Node path cannot be empty.'),
+    parentId: z.string().optional(),
+    depth: z.number().optional(),
+    metrics: metricsSchema.optional(),
+    statuses: statusesSchema,
+    targetUrl: z.string().nullable().optional(),
+    diffStatus: diffStatusSchema.optional(),
+})
 
 // A schema for the overall totals section
 const totalsSchema = z
@@ -85,7 +85,7 @@ export const summaryV1Schema = z.object({
     reportId: z.string().optional(),
     title: z.string().min(1, { message: 'Report title is missing or empty.' }),
     totals: totalsSchema,
-    tree: z.array(fileNodeSchema),
+    nodes: z.array(fileNodeSchema),
     metricDefinitions: z.record(z.string(), metricDefinitionSchema),
     metadata: z.array(metadataItemSchema).optional(),
 })
@@ -128,7 +128,6 @@ const methodMetricSchema = z.object({
     value: z.string(),
     status: riskLevelSchema.optional(),
 })
-
 
 // A schema for a single method/function in the file
 const methodSchema = z.object({
