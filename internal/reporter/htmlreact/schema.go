@@ -51,6 +51,10 @@ const (
 	MethodUIPatchLineCoverage    = "d_patch_line_coverage"
 	MethodUIBranchCoverage       = "e_branch_coverage"
 	MethodUICyclomaticComplexity = "f_cyclomatic_complexity"
+	MethodUICrapScore            = "g_crap_score"
+	MethodUIPatchCrapScore       = "h_patch_crap_score"
+	MethodUIExposedRisk          = "i_exposed_risk"
+	MethodUIDefectProbability    = "j_defect_probability"
 )
 
 type metricsMap map[string]any

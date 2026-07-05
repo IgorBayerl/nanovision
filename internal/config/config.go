@@ -42,29 +42,27 @@ const (
 	MethodPatchLineCoverage      MetricKey = "method_patch_line_coverage"
 	MethodPatchStatementCoverage MetricKey = "method_patch_statement_coverage"
 	CyclomaticComplexity         MetricKey = "cyclomatic_complexity"
+	MethodCrapScore              MetricKey = "method_crap_score"
+
+	MethodPatchCrapScore    MetricKey = "method_patch_crap_score"
+	MethodExposedRisk       MetricKey = "method_exposed_risk"
+	MethodDefectProbability MetricKey = "method_defect_probability"
 )
 
-var DefaultFileMetrics = []MetricKey{
-	// LineCoverage,
-	BranchCoverage,
-	MethodsHit,
-	// MethodsFullyCovered,
-	// PatchLineCoverage,
-	PatchMethodsHit,
-
-	StatementCoverage,
-	PatchStatementCoverage,
-	StatementMethodsHit,
-	// StatementMethodsFullyCovered, // Let's keep existing defaults commented or active as they were.
-	PatchStatementMethodsHit,
-	// MaxCyclomaticComplexity,
+// RegisterDefaultMetrics should be called during bootstrap to dynamically
+// populate default metrics based on registered calculators or evaluators.
+func RegisterDefaultMetrics(fileMetrics, methodMetrics []MetricKey) {
+	if len(DefaultFileMetrics) == 0 {
+		DefaultFileMetrics = fileMetrics
+	}
+	if len(DefaultMethodMetrics) == 0 {
+		DefaultMethodMetrics = methodMetrics
+	}
 }
 
-var DefaultMethodMetrics = []MetricKey{
-	MethodLineCoverage,
-	MethodStatementCoverage,
-	CyclomaticComplexity,
-}
+var DefaultFileMetrics = []MetricKey{}
+
+var DefaultMethodMetrics = []MetricKey{}
 
 // StatusBands supports either:
 // 1) map form:    { "line_coverage": "60..75", ... }

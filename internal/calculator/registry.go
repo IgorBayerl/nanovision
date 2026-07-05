@@ -21,4 +21,8 @@ var MethodRegistry = map[config.MetricKey]MethodMetricCalculator{
 	config.MethodPatchLineCoverage:      MethodPatchLineCoverageCalculator{},
 	config.MethodPatchStatementCoverage: MethodPatchStatementCoverageCalculator{},
 	config.CyclomaticComplexity:         MethodCyclomaticComplexityCalculator{},
+	config.MethodCrapScore:              MethodCrapScoreCalculator{},
+	config.MethodPatchCrapScore:         MethodPatchCrapScoreCalculator{},
+	config.MethodExposedRisk:            MethodExposedRiskCalculator{},
+	config.MethodDefectProbability:      MethodDefectProbabilityCalculator{},
 }

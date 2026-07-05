@@ -342,6 +342,25 @@ func determineProjectRoot(configPath string) (string, error) {
 }
 
 func main() {
+	// Dynamically register all available metrics from the calculator registry as defaults
+	var defaultFileKeys []config.MetricKey
+	for k := range calculator.FileRegistry {
+		defaultFileKeys = append(defaultFileKeys, k)
+	}
+	sort.Slice(defaultFileKeys, func(i, j int) bool {
+		return string(defaultFileKeys[i]) < string(defaultFileKeys[j])
+	})
+
+	var defaultMethodKeys []config.MetricKey
+	for k := range calculator.MethodRegistry {
+		defaultMethodKeys = append(defaultMethodKeys, k)
+	}
+	sort.Slice(defaultMethodKeys, func(i, j int) bool {
+		return string(defaultMethodKeys[i]) < string(defaultMethodKeys[j])
+	})
+
+	config.RegisterDefaultMetrics(defaultFileKeys, defaultMethodKeys)
+
 	start := time.Now()
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
