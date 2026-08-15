@@ -73,6 +73,44 @@ export interface ScoreDetail {
 
 export type MetricDefinitions = Record<string, MetricDefinition>
 
+/** One evaluated review-gate threshold (e.g. minimum patch coverage). */
+export interface ReviewGateCheck {
+    key: string
+    label: string
+    value: number
+    threshold: number
+    passed: boolean
+}
+
+/** A changed method ranked by exposed risk (complexity × uncovered ratio). */
+export interface ReviewHotspot {
+    file: string
+    method: string
+    startLine: number
+    diffStatus: string
+    complexity?: number
+    patchCoverage?: number
+    risk: number
+}
+
+export interface ReviewStats {
+    changedFiles: number
+    methodsAdded: number
+    methodsModified: number
+    untestedChangedMethods: number
+    patchStatementsValid: number
+    patchStatementsCovered: number
+    maxChangedComplexity: number
+}
+
+/** Changelist evaluation emitted by the HtmlReview report type. */
+export interface ReviewResult {
+    passed: boolean
+    checks?: ReviewGateCheck[]
+    stats: ReviewStats
+    hotspots?: ReviewHotspot[]
+}
+
 export interface SummaryV1 {
     schemaVersion: number
     generatedAt: string
@@ -85,6 +123,8 @@ export interface SummaryV1 {
     metadata?: MetadataItem[]
     /** Raw URL query string auto-applied on first load (no existing query). */
     defaultFilters?: string
+    /** Present only in review reports; switches the UI to the review layout. */
+    review?: ReviewResult
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'

@@ -20,6 +20,13 @@ func projectRoot(t *testing.T) string {
 	return filepath.Dir(filepath.Dir(thisFile))
 }
 
+// the CLI auto-loads nanovision.yaml from its working directory, so tests run
+// somewhere empty to keep the repo's own config out of the run.
+func configFreeDir(t *testing.T) string {
+	t.Helper()
+	return t.TempDir()
+}
+
 // buildBinary compiles the nanovision CLI into a temp directory and returns
 // the path to the resulting executable.
 func buildBinary(t *testing.T, root string) string {
@@ -54,13 +61,13 @@ func TestSmokeDefaultMetrics(t *testing.T) {
 		"-reporttypes=TextSummary,Html",
 		"-output="+outDir,
 	)
-	cmd.Dir = root
+	cmd.Dir = configFreeDir(t)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("nanovision exited with error: %v\nOutput:\n%s", err, out)
 	}
 
-	// ---- Assert text output ----
+	// assert text output
 	txtPath := filepath.Join(outDir, "Summary.txt")
 	txtBytes, err := os.ReadFile(txtPath)
 	if err != nil {
@@ -76,18 +83,23 @@ func TestSmokeDefaultMetrics(t *testing.T) {
 		}
 	}
 
-	// ---- Assert HTML output ----
-	htmlPath := filepath.Join(outDir, "index.html")
-	htmlBytes, err := os.ReadFile(htmlPath)
-	if err != nil {
+	// assert HTML output
+	if _, err := os.Stat(filepath.Join(outDir, "index.html")); err != nil {
 		t.Fatalf("index.html not found: %v", err)
 	}
-	htmlContent := string(htmlBytes)
 
-	// The HTML JSON embeds metric keys as object keys (e.g. "statement_coverage":).
+	// In multi-page Html mode the report data lives in data.js
+	// (window.__NANOVISION_SUMMARY__), not in index.html.
+	dataBytes, err := os.ReadFile(filepath.Join(outDir, "data.js"))
+	if err != nil {
+		t.Fatalf("data.js not found: %v", err)
+	}
+	dataContent := string(dataBytes)
+
+	// The summary JSON embeds metric keys as object keys (e.g. "statement_coverage":).
 	for _, wantKey := range []string{`"statement_coverage"`, `"branch_coverage"`} {
-		if !strings.Contains(htmlContent, wantKey) {
-			t.Errorf("HTML output missing metric key %s", wantKey)
+		if !strings.Contains(dataContent, wantKey) {
+			t.Errorf("report data missing metric key %s", wantKey)
 		}
 	}
 }
@@ -107,13 +119,13 @@ func TestSmokeLineCoverageOnly(t *testing.T) {
 		"-output="+outDir,
 		"-file-metrics=line_coverage",
 	)
-	cmd.Dir = root
+	cmd.Dir = configFreeDir(t)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("nanovision exited with error: %v\nOutput:\n%s", err, out)
 	}
 
-	// ---- Assert text output has only line coverage ----
+	// assert text output has only line coverage
 	txtBytes, err := os.ReadFile(filepath.Join(outDir, "Summary.txt"))
 	if err != nil {
 		t.Fatalf("Summary.txt not found: %v", err)
@@ -129,19 +141,19 @@ func TestSmokeLineCoverageOnly(t *testing.T) {
 		}
 	}
 
-	// ---- Assert HTML output has only line coverage ----
-	htmlBytes, err := os.ReadFile(filepath.Join(outDir, "index.html"))
+	// assert HTML output has only line coverage
+	dataBytes, err := os.ReadFile(filepath.Join(outDir, "data.js"))
 	if err != nil {
-		t.Fatalf("index.html not found: %v", err)
+		t.Fatalf("data.js not found: %v", err)
 	}
-	htmlContent := string(htmlBytes)
+	dataContent := string(dataBytes)
 
-	if !strings.Contains(htmlContent, `"line_coverage"`) {
-		t.Errorf("HTML output missing metric key \"line_coverage\"")
+	if !strings.Contains(dataContent, `"line_coverage"`) {
+		t.Errorf("report data missing metric key \"line_coverage\"")
 	}
 	for _, notWantKey := range []string{`"statement_coverage"`, `"branch_coverage"`} {
-		if strings.Contains(htmlContent, notWantKey) {
-			t.Errorf("HTML output should NOT contain %s when only line_coverage is configured", notWantKey)
+		if strings.Contains(dataContent, notWantKey) {
+			t.Errorf("report data should NOT contain %s when only line_coverage is configured", notWantKey)
 		}
 	}
 }

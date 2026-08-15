@@ -98,6 +98,45 @@ const diagnosticSchema = z.object({
 
 export type Diagnostic = z.infer<typeof diagnosticSchema>
 
+// gate verdict, changelist stats and hotspots.
+// when present, the summary page switches to the review layout.
+const reviewGateCheckSchema = z.object({
+    key: z.string(),
+    label: z.string(),
+    value: z.number(),
+    threshold: z.number(),
+    passed: z.boolean(),
+})
+
+const reviewHotspotSchema = z.object({
+    file: z.string(),
+    method: z.string(),
+    startLine: z.number(),
+    diffStatus: z.string(),
+    complexity: z.number().optional(),
+    patchCoverage: z.number().optional(),
+    risk: z.number(),
+})
+
+const reviewStatsSchema = z.object({
+    changedFiles: z.number(),
+    methodsAdded: z.number(),
+    methodsModified: z.number(),
+    untestedChangedMethods: z.number(),
+    patchStatementsValid: z.number(),
+    patchStatementsCovered: z.number(),
+    maxChangedComplexity: z.number(),
+})
+
+const reviewSchema = z.object({
+    passed: z.boolean(),
+    checks: z.array(reviewGateCheckSchema).optional(),
+    stats: reviewStatsSchema,
+    hotspots: z.array(reviewHotspotSchema).optional(),
+})
+
+export type Review = z.infer<typeof reviewSchema>
+
 export const summaryV1Schema = z.object({
     schemaVersion: z.literal(1, { message: 'This report requires schemaVersion 1.' }),
     generatedAt: z
@@ -111,6 +150,7 @@ export const summaryV1Schema = z.object({
     metadata: z.array(metadataItemSchema).optional(),
     diagnostics: z.array(diagnosticSchema).optional(),
     defaultFilters: z.string().optional(),
+    review: reviewSchema.optional(),
 })
 
 export type SummaryV1 = z.infer<typeof summaryV1Schema>

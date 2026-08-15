@@ -24,6 +24,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/cache"
 	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
+	"github.com/IgorBayerl/nanovision/internal/diagnostics"
 	"github.com/IgorBayerl/nanovision/internal/diff"
 	"github.com/IgorBayerl/nanovision/internal/diffapply"
 	"github.com/IgorBayerl/nanovision/internal/enricher"
@@ -41,6 +42,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/reporter/reporter_rawjson"
 	"github.com/IgorBayerl/nanovision/internal/reporter/sarif"
 	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
+	"github.com/IgorBayerl/nanovision/internal/review"
 	"github.com/IgorBayerl/nanovision/internal/status"
 	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
 	"github.com/IgorBayerl/nanovision/internal/tree"
@@ -84,6 +86,7 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.StringVar(&rawInput.FileMetrics, "file-metrics", "", "Comma-separated list of file-level metrics to display (e.g., 'line_coverage,branch_coverage')")
 	flag.StringVar(&rawInput.MethodMetrics, "method-metrics", "", "Comma-separated list of method-level metrics to display (e.g., 'line_coverage,statement_coverage')")
 	flag.StringVar(&rawInput.DefaultFilters, "default-filters", "", "Raw URL query string of filters auto-applied when the report opens (e.g. 'diff=changed&risk=danger')")
+	flag.StringVar(&rawInput.FailOn, "fail-on", "", "Exit non-zero when the review gate fails or changed code has problems: 'error', 'warning' or 'never' (default)")
 	return rawInput
 }
 
@@ -173,6 +176,8 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, false, appConfig).CreateReport(summaryTree)
 		case "HtmlUnified":
 			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, true, appConfig).CreateReport(summaryTree)
+		case "HtmlReview":
+			err = htmlreact.NewHtmlReviewReportBuilder(outputDir, logger, appConfig).CreateReport(summaryTree)
 		case "Lcov":
 			err = lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree)
 		case "RawJson":
@@ -257,8 +262,8 @@ func setupCacheManager(appConfig *config.AppConfig, logger *slog.Logger, buildMe
 	return manager
 }
 
-// executePipeline orchestrates the report generation process from start to finish.
-func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error {
+// returns the annotated tree so the caller can still run the review gate on it
+func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) (*model.SummaryTree, error) {
 	logger := slog.Default()
 	logger.Info("Executing report generation pipeline...")
 
@@ -282,20 +287,20 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 	treeEnricher := enricher.New(allAnalyzers, prodFileReader, logger, cacheManager, buildMeta)
 
 	if len(appConfig.InputPairs) == 0 {
-		return fmt.Errorf("no valid report pattern and source directory pairs were provided")
+		return nil, fmt.Errorf("no valid report pattern and source directory pairs were provided")
 	}
 
 	logger.Info("Executing PARSE stage...")
 	parserResults, err := parseReportFiles(logger, appConfig, appConfig.InputPairs, parserFactory)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	logger.Info("PARSE stage completed successfully.", "parsed_report_sets", len(parserResults))
 
 	logger.Info("Executing BUILD stage...")
 	summaryTree, err := treeBuilder.BuildTree(parserResults)
 	if err != nil {
-		return fmt.Errorf("failed to build and aggregate coverage tree: %w", err)
+		return nil, fmt.Errorf("failed to build and aggregate coverage tree: %w", err)
 	}
 	logger.Info("BUILD stage completed successfully.")
 
@@ -321,7 +326,46 @@ func executePipeline(appConfig *config.AppConfig, diffData *diff.DiffData) error
 	logger.Info("ANNOTATE stage completed successfully.")
 
 	logger.Info("Executing REPORT stage...")
-	return generateReports(appConfig, summaryTree)
+	if err := generateReports(appConfig, summaryTree); err != nil {
+		return nil, err
+	}
+	return summaryTree, nil
+}
+
+// applies review.fail_on and returns the reasons to fail the build, empty means pass
+func evaluateReviewGate(appConfig *config.AppConfig, summaryTree *model.SummaryTree) []string {
+	failOn := appConfig.Review.FailOn
+	if failOn == "" || failOn == "never" {
+		return nil
+	}
+
+	var reasons []string
+
+	result := review.Evaluate(summaryTree, appConfig)
+	for _, check := range result.Checks {
+		if !check.Passed {
+			reasons = append(reasons, fmt.Sprintf("%s is %.1f (limit %.1f)", check.Label, check.Value, check.Threshold))
+		}
+	}
+
+	changed := diagnostics.OnlyChanged(diagnostics.Extract(summaryTree, appConfig, evaluators.Registry))
+	var errorCount, warningCount int
+	for _, d := range changed {
+		switch d.Severity {
+		case diagnostics.SeverityError:
+			errorCount++
+		case diagnostics.SeverityWarning:
+			warningCount++
+		}
+	}
+	if errorCount > 0 {
+		reasons = append(reasons, fmt.Sprintf("%d error-severity problem(s) in changed code", errorCount))
+	}
+	if failOn == "warning" && warningCount > 0 {
+		reasons = append(reasons, fmt.Sprintf("%d warning-severity problem(s) in changed code", warningCount))
+	}
+
+	return reasons
 }
 
 func determineProjectRoot(configPath string) (string, error) {
@@ -490,9 +534,18 @@ func main() {
 		slog.Info("No diff file specified in configuration, skipping diff analysis")
 	}
 
-	if err := executePipeline(appConfig, diffData); err != nil {
+	summaryTree, err := executePipeline(appConfig, diffData)
+	if err != nil {
 		slog.Error("An error occurred during report generation", "error", err)
 		os.Exit(1)
+	}
+
+	if gateReasons := evaluateReviewGate(appConfig, summaryTree); len(gateReasons) > 0 {
+		for _, reason := range gateReasons {
+			slog.Error("Review gate failed", "reason", reason)
+		}
+		slog.Error("Build failed by review gate", "fail_on", appConfig.Review.FailOn)
+		os.Exit(2)
 	}
 
 	if *watchFlag {

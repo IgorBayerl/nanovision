@@ -3,6 +3,7 @@ package htmlreact
 import (
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/diagnostics"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/reporter"
+	"github.com/IgorBayerl/nanovision/internal/review"
 	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
 )
 
@@ -18,6 +20,7 @@ type HtmlReactReportBuilder struct {
 	outputDir  string
 	logger     *slog.Logger
 	singleFile bool
+	review     bool
 	config     *config.AppConfig
 }
 
@@ -30,7 +33,22 @@ func NewHtmlReactReportBuilder(outputDir string, logger *slog.Logger, singleFile
 	}
 }
 
+// changelist-only HTML report: changed files, review block, patch metrics as columns.
+// single-file, written to <outputDir>/review so it can sit next to HtmlUnified.
+func NewHtmlReviewReportBuilder(outputDir string, logger *slog.Logger, cfg *config.AppConfig) reporter.ReportBuilder {
+	return &HtmlReactReportBuilder{
+		outputDir:  filepath.Join(outputDir, "review"),
+		logger:     logger,
+		singleFile: true,
+		review:     true,
+		config:     cfg,
+	}
+}
+
 func (b *HtmlReactReportBuilder) ReportType() string {
+	if b.review {
+		return "HtmlReview"
+	}
 	if b.singleFile {
 		return "HtmlUnified"
 	}
@@ -38,7 +56,11 @@ func (b *HtmlReactReportBuilder) ReportType() string {
 }
 
 func (b *HtmlReactReportBuilder) CreateReport(tree *model.SummaryTree) error {
-	b.logger.Info("Starting generation of new React HTML report.", "directory", b.outputDir, "single_file", b.singleFile)
+	b.logger.Info("Starting generation of new React HTML report.", "directory", b.outputDir, "single_file", b.singleFile, "review", b.review)
+
+	if b.review && b.config.Diff.File == "" {
+		return fmt.Errorf("HtmlReview requires a diff: set diff.file in nanovision.yaml or pass -diff")
+	}
 
 	if b.singleFile {
 		return b.createSingleFileReport(tree)
@@ -76,6 +98,11 @@ func (b *HtmlReactReportBuilder) createSingleFileReport(tree *model.SummaryTree)
 	collectFiles(tree.Root, fileMap)
 
 	for path, fileNode := range fileMap {
+		// Review reports only carry the changelist; unchanged files get no
+		// details page (they are pruned from the summary nodes as well).
+		if b.review && !isChangedFile(fileNode) {
+			continue
+		}
 		details, err := b.transformFileNodeToDetails(tree, fileNode)
 		if err != nil {
 			b.logger.Warn("Failed to generate details for file", "path", path, "error", err)
@@ -107,6 +134,18 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		title = "Coverage Report"
 	}
 
+	diags := diagnostics.Extract(tree, b.config, evaluators.Registry)
+	defaultFilters := b.config.DefaultFilters
+
+	var reviewResult *review.Result
+	if b.review {
+		diags = diagnostics.OnlyChanged(diags)
+		reviewResult = review.Evaluate(tree, b.config)
+		if defaultFilters == "" {
+			defaultFilters = b.reviewDefaultFilters()
+		}
+	}
+
 	return summaryV1{
 		SchemaVersion:     1,
 		GeneratedAt:       generatedAt.Format(time.RFC3339),
@@ -115,9 +154,33 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		Nodes:             nodes,
 		MetricDefinitions: b.buildMetricDefinitions(),
 		Metadata:          b.buildMetadata(tree, generatedAt),
-		Diagnostics:       diagnostics.Extract(tree, b.config, evaluators.Registry),
-		DefaultFilters:    b.config.DefaultFilters,
+		Diagnostics:       diags,
+		DefaultFilters:    defaultFilters,
+		Review:            reviewResult,
 	}, nil
+}
+
+// first-load URL state: changed rows only, patch metrics as columns.
+// skips any metric that is not active in this run.
+func (b *HtmlReactReportBuilder) reviewDefaultFilters() string {
+	candidates := []config.MetricKey{
+		config.PatchStatementCoverage,
+		config.PatchLineCoverage,
+		config.PatchMethodsHit,
+		config.PatchStatementMethodsHit,
+		config.MaxCyclomaticComplexity,
+	}
+	var cols []string
+	for _, key := range candidates {
+		if b.config.ActiveFileMetrics[key] {
+			cols = append(cols, string(key))
+		}
+	}
+	filters := "diff=changed"
+	if len(cols) > 0 {
+		filters += "&cols=" + strings.Join(cols, ",")
+	}
+	return filters
 }
 
 func (b *HtmlReactReportBuilder) convertStatuses(modelStatuses map[config.MetricKey]string) statuses {
@@ -168,17 +231,20 @@ func (b *HtmlReactReportBuilder) buildMetadata(tree *model.SummaryTree, generate
 	return meta
 }
 
-// buildFlatNodes walks the directory tree depth-first and returns a pre-ordered
-// flat slice of nodes. Each node records its ParentID and Depth so the client can
-// rebuild the hierarchy in a single linear pass. Sibling order matches the old
-// nested layout: folders before files, each group sorted by name.
+// depth-first, pre-ordered. siblings go folders first, then files, each sorted by name.
+//
+// review mode emits only changed files and the folders needed to reach them,
+// because the report is a changelist artifact, not a repo browser.
 func (b *HtmlReactReportBuilder) buildFlatNodes(root *model.DirNode) []fileNode {
 	nodes := make([]fileNode, 0, len(root.Subdirs)+len(root.Files))
 	b.appendFlatNodes(&nodes, root, "", 0)
 	return nodes
 }
 
-func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.DirNode, parentID string, depth int) {
+// returns false when the subtree emitted nothing, which drops empty folders in review mode.
+func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.DirNode, parentID string, depth int) bool {
+	emitted := false
+
 	// Subdirs/Files are maps (non-deterministic order), so collect and sort by name.
 	subdirs := make([]*model.DirNode, 0, len(dir.Subdirs))
 	for _, subdir := range dir.Subdirs {
@@ -188,6 +254,13 @@ func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.Dir
 
 	// Folders first, each followed immediately by its subtree (pre-order).
 	for _, subdir := range subdirs {
+		var children []fileNode
+		hasChildren := b.appendFlatNodes(&children, subdir, subdir.Path, depth+1)
+		// Only review mode prunes empty folders; the full report keeps the
+		// tree exactly as before.
+		if b.review && !hasChildren {
+			continue
+		}
 		*out = append(*out, fileNode{
 			ID:       subdir.Path,
 			Name:     subdir.Name,
@@ -198,7 +271,8 @@ func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.Dir
 			Metrics:  b.buildMetricsMap(subdir.Metrics),
 			Statuses: b.convertStatuses(subdir.Statuses),
 		})
-		b.appendFlatNodes(out, subdir, subdir.Path, depth+1)
+		*out = append(*out, children...)
+		emitted = true
 	}
 
 	files := make([]*model.FileNode, 0, len(dir.Files))
@@ -208,6 +282,10 @@ func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.Dir
 	sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
 
 	for _, file := range files {
+		if b.review && !isChangedFile(file) {
+			continue
+		}
+
 		target := ""
 		if file.SourceDir != "" {
 			if b.singleFile {
@@ -234,7 +312,14 @@ func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.Dir
 			TargetURL:  target,
 			DiffStatus: diffStatus,
 		})
+		emitted = true
 	}
+
+	return emitted
+}
+
+func isChangedFile(file *model.FileNode) bool {
+	return file.Diff != nil && file.Diff.Kind != model.ChangeKindNone
 }
 
 func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, folders int) totals {

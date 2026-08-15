@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import FileExplorer from '@/components/FileExplorer'
 import Layout from '@/components/Layout'
 import ProblemsPanel from '@/components/ProblemsPanel'
+import ReviewSummary from '@/components/ReviewSummary'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
 import type { SummaryV1 } from '@/lib/validation'
@@ -76,6 +77,9 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}
             {validatedData ? (
                 <>
+                    {validatedData.review && (
+                        <ReviewSummary review={validatedData.review} nodes={validatedData.nodes} />
+                    )}
                     {validatedData.diagnostics && validatedData.diagnostics.length > 0 && (
                         <ProblemsPanel diagnostics={validatedData.diagnostics} nodes={validatedData.nodes} />
                     )}

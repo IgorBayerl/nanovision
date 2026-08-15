@@ -50,6 +50,9 @@ type Diagnostic struct {
 	EndLine   int      `json:"endLine"`   // 1-based, >= StartLine
 	Message   string   `json:"message"`
 	Scope     Scope    `json:"scope"`
+	// "added" or "modified" when the anchor is in the diff, "" otherwise.
+	// the anchor is the file for file scope, the method for method scope.
+	DiffStatus string `json:"diffStatus,omitempty"`
 }
 
 // Extract walks the annotated tree and produces one diagnostic per file-level
@@ -66,9 +69,14 @@ func Extract(tree *model.SummaryTree, cfg *config.AppConfig, registry map[config
 	var out []Diagnostic
 	walk(tree.Root, func(dir *model.DirNode) {
 		for _, file := range dir.Files {
+			fileDiff := ""
+			if file.Diff != nil {
+				fileDiff = file.Diff.Kind.String()
+			}
 			// File-level statuses -> anchored at the top of the file.
 			for key, level := range file.Statuses {
 				if d, ok := build(key, level, file.Metrics.Calculated, cfg, registry, ScopeFile, file.Path, 1, 1); ok {
+					d.DiffStatus = fileDiff
 					out = append(out, d)
 				}
 			}
@@ -79,6 +87,7 @@ func Extract(tree *model.SummaryTree, cfg *config.AppConfig, registry map[config
 				for key, level := range m.Statuses {
 					if d, ok := build(key, level, m.Calculated, cfg, registry, ScopeMethod, file.Path, start, end); ok {
 						d.Message = fmt.Sprintf("%s in %s", d.Message, m.Name)
+						d.DiffStatus = m.DiffStatus
 						out = append(out, d)
 					}
 				}
@@ -90,9 +99,18 @@ func Extract(tree *model.SummaryTree, cfg *config.AppConfig, registry map[config
 	return out
 }
 
-// build turns a single (metric key, risk level) pair into a Diagnostic. It
-// returns ok=false when the level is "safe" (or unknown) and thus not a
-// problem worth surfacing.
+// OnlyChanged keeps the diagnostics anchored to diffed code, in order.
+func OnlyChanged(ds []Diagnostic) []Diagnostic {
+	var out []Diagnostic
+	for _, d := range ds {
+		if d.DiffStatus != "" {
+			out = append(out, d)
+		}
+	}
+	return out
+}
+
+// ok is false for a "safe" or unknown level, which is not a problem worth showing
 func build(
 	key config.MetricKey,
 	level string,

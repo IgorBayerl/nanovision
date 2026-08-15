@@ -384,7 +384,12 @@ def main():
                 self_cover_cli_args = global_cli_args.copy()
                 diff_file_path = generate_diff_file(args.diff_target)
                 if diff_file_path:
+                    # With a diff available, also generate the changelist-only
+                    # review report (published at <output>/review/index.html).
+                    self_cover_cli_args = [f"-reporttypes={args.report_types},HtmlReview"]
                     self_cover_cli_args.append(f"-diff={diff_file_path}")
+                    for case in SELF_COVERAGE_TESTS:
+                        case.output_files = case.output_files + [os.path.join("review", "index.html")]
 
                 self_cover_results = run_self_coverage_workflow(binary_path, self_cover_cli_args, verbose=args.verbose)
                 all_results.extend(self_cover_results)

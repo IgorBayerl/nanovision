@@ -140,6 +140,24 @@ type DiffConfig struct {
 	PathMaps     []DiffPathMap `yaml:"path_maps"`
 }
 
+// ReviewGate defines pass/fail thresholds evaluated against the changelist.
+// Nil pointers mean "check disabled".
+type ReviewGate struct {
+	// minimum patch coverage across the whole changelist, 0-100
+	PatchStatementCoverage *float64 `yaml:"patch_statement_coverage"`
+	// ceiling for any single added or modified method
+	MaxChangedMethodComplexity *int `yaml:"max_changed_method_complexity"`
+}
+
+type ReviewConfig struct {
+	Gate ReviewGate `yaml:"gate"`
+	// how many hotspots to list, 0 means 10
+	Hotspots int `yaml:"hotspots"`
+	// exit-code policy: "error", "warning", or "never" (default).
+	// "error" fails on a failed gate or an error on changed code, "warning" also fails on warnings.
+	FailOn string `yaml:"fail_on"`
+}
+
 type RawConfigInput struct {
 	ReportPatterns string
 	SourceDirs     string
@@ -159,6 +177,7 @@ type RawConfigInput struct {
 	MethodMetrics  string
 	IgnoreCache    bool
 	DefaultFilters string
+	FailOn         string
 }
 
 type AppConfig struct {
@@ -181,9 +200,9 @@ type AppConfig struct {
 	ActiveMethodMetrics map[MetricKey]bool `yaml:"-"`
 	IgnoreCache         bool               `yaml:"ignore_cache"`
 	Diff                DiffConfig         `yaml:"diff"`
-	// DefaultFilters is a raw URL query string (e.g. "diff=changed&risk=danger")
-	// propagated to the HTML report and auto-applied by the UI on first load.
-	DefaultFilters      string             `yaml:"default_filters"`
+	Review              ReviewConfig       `yaml:"review"`
+	// URL query string applied on first load, e.g. "diff=changed&risk=danger"
+	DefaultFilters string `yaml:"default_filters"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel
@@ -307,6 +326,9 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 	if cli.DefaultFilters != "" {
 		c.DefaultFilters = cli.DefaultFilters
 	}
+	if cli.FailOn != "" {
+		c.Review.FailOn = cli.FailOn
+	}
 	if len(cli.StatusBands) > 0 {
 		if c.StatusBands == nil {
 			c.StatusBands = make(StatusBands)
@@ -365,6 +387,12 @@ func (c *AppConfig) validate() error {
 		return fmt.Errorf("invalid verbosity level '%s'", c.Verbosity)
 	}
 
+	switch strings.ToLower(c.Review.FailOn) {
+	case "", "never", "warning", "error":
+	default:
+		return fmt.Errorf("invalid review.fail_on value '%s' (expected 'error', 'warning' or 'never')", c.Review.FailOn)
+	}
+
 	if c.Diff.File != "" {
 		stripVal := strings.ToLower(c.Diff.Strip)
 		if stripVal != "auto" {
@@ -407,6 +435,14 @@ func (c *AppConfig) computeDerivedFields() error {
 	c.ActiveMethodMetrics = make(map[MetricKey]bool, len(c.MethodMetrics))
 	for _, m := range c.MethodMetrics {
 		c.ActiveMethodMetrics[m] = true
+	}
+
+	c.Review.FailOn = strings.ToLower(c.Review.FailOn)
+	if c.Review.FailOn == "" {
+		c.Review.FailOn = "never"
+	}
+	if c.Review.Hotspots <= 0 {
+		c.Review.Hotspots = 10
 	}
 
 	return nil

@@ -1,9 +1,8 @@
 # ------------------------------------------------------------------
 #  nanovision Configuration for the Self-Coverage Report
 # ------------------------------------------------------------------
-# This file defines the default settings for generating nanovision's own
-# coverage report. CLI flags provided by the python script will override
-# the settings in this file.
+# This file defines the default settings for generating nanovision's own coverage report.
+# CLI flags provided by the python script will override the settings in this file.
 
 # A list of coverage report files to parse for the merged report.
 reports:
@@ -26,7 +25,8 @@ output_dir: "reports/nanovision_self_coverage_full"
 
 # The types of reports to generate.
 report_types:
-  - "HtmlUnified"
+  - "HtmlReview"    # changelist only, needs diff.file. goes to <output_dir>/review/
+  # - "HtmlUnified"
   - "TextSummary"
   - "Lcov"
   - "RawJson"
@@ -37,9 +37,7 @@ title: "nanovision Self-Coverage (Full Merged)"
 # Logging verbosity for the self-coverage run.
 verbosity: "Verbose"
 
-# A list of glob patterns for files and directories to exclude from the report.
-# This is crucial for ignoring generated files and the vendored tree-sitter grammars,
-# which are not part of the core tool's logic.
+# glob patterns to exclude from the report
 ignore_files:
   - "tree-sitter/**"
   - "**/*_test.go"
@@ -62,7 +60,7 @@ ignore_files:
 # If a metric is not listed here, it will not have a status indicator.
 #
 status_bands:
-  # --- File & Directory Metrics ---
+  # file and directory metrics
   # line_coverage: "60..75"
   statement_coverage: "60..75"
   branch_coverage: "50..70"
@@ -76,33 +74,34 @@ status_bands:
   # patch_statement_methods_hit: "80..90"
   # max_cyclomatic_complexity: "10..20"
 
-  # --- Method & Function Metrics ---
+  # method and function metrics
   # method_line_coverage: "60..75"
   # method_statement_coverage: "60..75"
   # method_patch_line_coverage: "80..90"
   # method_patch_statement_coverage: "80..90"
   # cyclomatic_complexity: "10..20"
 
-# Default Filters
-# A raw URL query string that the HTML report applies automatically the first
-# time it is opened (only when no query string is already present, so manual
-# navigation always wins). Any client-side filter, column, or sort is
-# expressible here using the same keys the UI writes to the URL, e.g.:
-#   diff=changed        only changed files/methods
-#   risk=danger         only danger-status rows
-#   q=internal/         search/path filter
+# filters applied on first open, unless the URL already carries a query string.
+# join them with '&':
+#   diff=changed   only changed files and methods
+#   risk=danger    only danger rows
+#   q=src/         path search
 #   cols=statement_coverage,max_cyclomatic_complexity   visible columns
-# Combine with '&', e.g. "diff=changed&risk=danger".
 # default_filters: "diff=changed&risk=danger"
 
-# Optional settings for patch coverage analysis.
 diff:
-  file: "my_changes.diff" # Path to the .diff file (can also be set via -diff flag)
-  strip: "auto"           # "auto" or an integer (0-6) to strip leading path components
+  file: "my_changes.diff" # also set with -diff
+  strip: "auto"           # "auto", or 0-6 leading path components to strip
 
-# Explicit Display List for UI Reports
-# Specifies which metrics should be included in generated reports.
-# See internal/config/config.go for the full list of supported metrics.
+review:
+  gate:                                # thresholds for the pass/fail verdict
+    patch_statement_coverage: 80       # min % coverage of changed statements
+    max_changed_method_complexity: 15  # max CC of any added or modified method
+  hotspots: 10                         # how many risky changed methods to list
+  # when to exit non-zero: "error", "warning" or "never". also set with -fail-on
+  fail_on: "never"
+
+# metrics shown in the reports, see docs/evaluator_reference.md
 file_metrics:
   # - "line_coverage"
   - "statement_coverage"
@@ -127,6 +126,6 @@ method_metrics:
   - "method_crap_score"
   - "method_patch_crap_score"
   - "method_exposed_risk"
-  - "method_defect_probability" # DPI
+  - "method_defect_probability"
 
 ignore_cache: true

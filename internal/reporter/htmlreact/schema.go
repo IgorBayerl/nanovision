@@ -1,6 +1,9 @@
 package htmlreact
 
-import "github.com/IgorBayerl/nanovision/internal/diagnostics"
+import (
+	"github.com/IgorBayerl/nanovision/internal/diagnostics"
+	"github.com/IgorBayerl/nanovision/internal/review"
+)
 
 type riskLevel string
 
@@ -36,9 +39,7 @@ type methodsFullyCoveredDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
-// scoreDetail represents a standalone scalar metric (e.g. Max Cyclomatic
-// Complexity). Unlike the coverage details it has no percentage; the UI renders
-// it with a "value" card and treats it as a numeric column.
+// a scalar metric with no percentage, e.g. max cyclomatic complexity
 type scoreDetail struct {
 	Value float64 `json:"value"`
 }
@@ -80,12 +81,10 @@ type totals struct {
 
 type statuses map[string]riskLevel
 
-// fileNode is a single entry in the flat node list emitted to the UI.
+// one entry in the node list.
 //
-// The report is delivered as a pre-order (depth-first) flat slice rather than a
-// nested tree: each node carries its ParentID and Depth so the client can rebuild
-// parent/child relationships in a single linear pass instead of walking a tree.
-// This keeps client-side filtering and virtualization O(n).
+// the list is flat and pre-order, not a tree: ParentID and Depth let a client
+// rebuild the hierarchy in one linear pass, which keeps filtering O(n).
 type fileNode struct {
 	ID            string     `json:"id"`
 	Name          string     `json:"name"`
@@ -155,11 +154,9 @@ type subMetric struct {
 }
 
 type metricDefinition struct {
-	Label      string      `json:"label"`
-	ShortLabel string      `json:"shortLabel,omitempty"`
-	// Kind selects how the UI renders this metric. "" or "percentage" (default)
-	// renders a percentage card with a progress bar; "value" renders a plain
-	// scalar number card (e.g. cyclomatic complexity, CRAP score).
+	Label      string `json:"label"`
+	ShortLabel string `json:"shortLabel,omitempty"`
+	// "percentage" (default) or "value" for plain scalars like complexity
 	Kind       string      `json:"kind,omitempty"`
 	SubMetrics []subMetric `json:"subMetrics"`
 }
@@ -175,13 +172,12 @@ type summaryV1 struct {
 	Nodes             []fileNode        `json:"nodes"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
-	// Diagnostics is the flat list of editor-style problems (coverage
-	// warnings/errors) produced by the central diagnostics engine. The UI
-	// renders these in a collapsible "Problems" panel.
+	// flat list of problems (coverage warnings/errors)
 	Diagnostics []diagnostics.Diagnostic `json:"diagnostics,omitempty"`
-	// DefaultFilters is a raw URL query string (e.g. "diff=changed&risk=danger")
-	// that the UI applies on first load when no query string is already present.
+	// URL query string applied on first load, e.g. "diff=changed&risk=danger"
 	DefaultFilters string `json:"defaultFilters,omitempty"`
+	// gate verdict from review.Evaluate; set only for changelist reports
+	Review *review.Result `json:"review,omitempty"`
 }
 
 type detailsV1 struct {
@@ -195,7 +191,6 @@ type detailsV1 struct {
 	Methods           []methodDetail    `json:"methods,omitempty"`
 	Lines             []lineDetail      `json:"lines"`
 	Reports           []report          `json:"reports,omitempty"`
-	// DefaultFilters is a raw URL query string applied by the UI on first load
-	// when no query string is already present.
+	// URL query string applied on first load, e.g. "diff=changed&risk=danger"
 	DefaultFilters string `json:"defaultFilters,omitempty"`
 }
