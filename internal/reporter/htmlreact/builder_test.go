@@ -260,3 +260,88 @@ func TestBuildMetricsMap_GuardsSkipEmptyData(t *testing.T) {
 	_, hasMethods := metrics[string(config.MethodsHit)]
 	assert.False(t, hasMethods, "methods_hit should be skipped when MethodsValid == 0")
 }
+
+// Every metric the UI can show needs a tooltip description, so a new metric
+// cannot ship without one.
+func TestBuildMetricDefinitions_EveryMetricIsDescribed(t *testing.T) {
+	b := &HtmlReactReportBuilder{config: &config.AppConfig{
+		ActiveFileMetrics: map[config.MetricKey]bool{
+			config.StatementCoverage:       true,
+			config.LineCoverage:            true,
+			config.BranchCoverage:          true,
+			config.MethodsHit:              true,
+			config.MethodsFullyCovered:     true,
+			config.PatchStatementCoverage:  true,
+			config.PatchLineCoverage:       true,
+			config.PatchMethodsHit:         true,
+			config.MaxCyclomaticComplexity: true,
+		},
+		ActiveMethodMetrics: map[config.MetricKey]bool{
+			config.MethodStatementCoverage:      true,
+			config.MethodLineCoverage:           true,
+			config.MethodPatchStatementCoverage: true,
+			config.MethodPatchLineCoverage:      true,
+			config.MethodBranchCoverage:         true,
+			config.CyclomaticComplexity:         true,
+			config.MethodCrapScore:              true,
+			config.MethodPatchCrapScore:         true,
+			config.MethodExposedRisk:            true,
+			config.MethodDefectProbability:      true,
+		},
+	}}
+
+	defs := b.buildMetricDefinitions()
+	assert.NotEmpty(t, defs)
+
+	for key, def := range defs {
+		assert.NotEmpty(t, def.Description, "metric %q has no tooltip description", key)
+	}
+
+	// Descriptions come from the evaluators, not a copy kept in the reporter.
+	assert.Equal(t, "Percentage of covered code branches.", defs[string(config.BranchCoverage)].Description)
+}
+
+func TestUniqueReportLabels(t *testing.T) {
+	tests := []struct {
+		name  string
+		paths []string
+		want  []string
+	}{
+		{
+			name:  "distinct file names need no directories",
+			paths: []string{"reports/coverage-unit.out", "reports/coverage-integration.out", "cobertura.xml"},
+			want:  []string{"coverage-unit.out", "coverage-integration.out", "cobertura.xml"},
+		},
+		{
+			name:  "shared file names grow until they differ",
+			paths: []string{"shard1/coverage.out", "shard2/coverage.out", "reports/cobertura.xml"},
+			want:  []string{"shard1/coverage.out", "shard2/coverage.out", "cobertura.xml"},
+		},
+		{
+			name:  "only the ambiguous ones grow",
+			paths: []string{"a/out/coverage.out", "b/out/coverage.out", "lcov.info"},
+			want:  []string{"a/out/coverage.out", "b/out/coverage.out", "lcov.info"},
+		},
+		{
+			name:  "windows separators are treated as paths",
+			paths: []string{`C:\ci\unit\coverage.out`, `C:\ci\e2e\coverage.out`},
+			want:  []string{"unit/coverage.out", "e2e/coverage.out"},
+		},
+		{
+			name:  "identical paths stop once fully spelled out",
+			paths: []string{"reports/coverage.out", "reports/coverage.out"},
+			want:  []string{"reports/coverage.out", "reports/coverage.out"},
+		},
+		{
+			name:  "a bare file name survives",
+			paths: []string{"coverage.out"},
+			want:  []string{"coverage.out"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, uniqueReportLabels(tc.paths))
+		})
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/IgorBayerl/nanovision/internal/aggregator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/diagnostics"
 	"github.com/IgorBayerl/nanovision/internal/model"
@@ -146,6 +147,8 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		}
 	}
 
+	reports, indexes := b.buildReportIndexes(tree)
+
 	return summaryV1{
 		SchemaVersion:     1,
 		GeneratedAt:       generatedAt.Format(time.RFC3339),
@@ -157,7 +160,130 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		Diagnostics:       diags,
 		DefaultFilters:    defaultFilters,
 		Review:            reviewResult,
+		Reports:           reports,
+		ReportIndexes:     indexes,
+		StatusBands:       b.buildStatusBands(),
 	}, nil
+}
+
+// buildReportIndexes compresses every emitted file into per-report buckets so
+// the UI can recompute metrics for any subset of reports. Returns nothing when
+// a single report was parsed, since there is nothing to toggle.
+func (b *HtmlReactReportBuilder) buildReportIndexes(tree *model.SummaryTree) ([]report, map[string]reportIndex) {
+	if len(tree.ReportNames) < 2 {
+		return nil, nil
+	}
+
+	fileMap := make(map[string]*model.FileNode)
+	collectFiles(tree.Root, fileMap)
+
+	indexes := make(map[string]reportIndex, len(fileMap))
+	for path, file := range fileMap {
+		if b.review && !isChangedFile(file) {
+			continue
+		}
+		idx := aggregator.BuildFileReportIndex(file, len(tree.ReportNames), b.config.ActiveFileMetrics)
+		if len(idx) == 0 {
+			continue
+		}
+		converted := make(reportIndex, len(idx))
+		for key, buckets := range idx {
+			converted[string(key)] = buckets
+		}
+		indexes[path] = converted
+	}
+
+	if len(indexes) == 0 {
+		return nil, nil
+	}
+	return buildGlobalReports(tree), indexes
+}
+
+// buildGlobalReports lists every parsed report in the order the coverage masks
+// address them, so one selection means the same thing on every screen.
+func buildGlobalReports(tree *model.SummaryTree) []report {
+	labels := uniqueReportLabels(tree.ReportNames)
+
+	reports := make([]report, 0, len(tree.ReportNames))
+	for i, name := range tree.ReportNames {
+		reports = append(reports, report{
+			Name: labels[i],
+			Path: name,
+		})
+	}
+	return reports
+}
+
+// uniqueReportLabels names each report by its file name, keeping just enough
+// parent directories to tell apart reports that share one. Merging test shards
+// routinely produces several coverage.out files, and "coverage.out" three times
+// over is a list nobody can use. The full path is still on the report, for the
+// UI to show on hover.
+func uniqueReportLabels(paths []string) []string {
+	segments := make([][]string, len(paths))
+	depths := make([]int, len(paths))
+	for i, path := range paths {
+		segments[i] = splitPathSegments(path)
+		depths[i] = 1
+	}
+
+	// Each pass lengthens every still-ambiguous label by one directory. Paths
+	// that are genuinely identical stop growing once fully spelled out.
+	for range paths {
+		counts := make(map[string]int, len(paths))
+		for i := range paths {
+			counts[trailingSegments(segments[i], depths[i])]++
+		}
+
+		grew := false
+		for i := range paths {
+			if counts[trailingSegments(segments[i], depths[i])] > 1 && depths[i] < len(segments[i]) {
+				depths[i]++
+				grew = true
+			}
+		}
+		if !grew {
+			break
+		}
+	}
+
+	labels := make([]string, len(paths))
+	for i := range paths {
+		labels[i] = trailingSegments(segments[i], depths[i])
+	}
+	return labels
+}
+
+func splitPathSegments(path string) []string {
+	normalised := strings.ReplaceAll(path, "\\", "/")
+	segments := make([]string, 0, strings.Count(normalised, "/")+1)
+	for _, segment := range strings.Split(normalised, "/") {
+		if segment != "" && segment != "." {
+			segments = append(segments, segment)
+		}
+	}
+	if len(segments) == 0 {
+		return []string{path}
+	}
+	return segments
+}
+
+func trailingSegments(segments []string, depth int) string {
+	if depth >= len(segments) {
+		return strings.Join(segments, "/")
+	}
+	return strings.Join(segments[len(segments)-depth:], "/")
+}
+
+func (b *HtmlReactReportBuilder) buildStatusBands() map[string]statusBand {
+	if len(b.config.StatusBands) == 0 {
+		return nil
+	}
+	bands := make(map[string]statusBand, len(b.config.StatusBands))
+	for key, band := range b.config.StatusBands {
+		bands[string(key)] = statusBand{Min: band.Min, Max: band.Max}
+	}
+	return bands
 }
 
 // first-load URL state: changed rows only, patch metrics as columns.
@@ -610,7 +736,46 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		}
 	}
 
+	for key, def := range defs {
+		def.Description = describeMetric(key)
+		defs[key] = def
+	}
+
 	return defs
+}
+
+// uiMetricKeys maps the sort-prefixed method metric keys the UI uses back to
+// the config key whose evaluator owns the description.
+var uiMetricKeys = map[string]config.MetricKey{
+	MethodUIStmtCoverage:         config.MethodStatementCoverage,
+	MethodUILineCoverage:         config.MethodLineCoverage,
+	MethodUIPatchStmtCoverage:    config.MethodPatchStatementCoverage,
+	MethodUIPatchLineCoverage:    config.MethodPatchLineCoverage,
+	MethodUIBranchCoverage:       config.MethodBranchCoverage,
+	MethodUICyclomaticComplexity: config.CyclomaticComplexity,
+	MethodUICrapScore:            config.MethodCrapScore,
+	MethodUIPatchCrapScore:       config.MethodPatchCrapScore,
+	MethodUIExposedRisk:          config.MethodExposedRisk,
+	MethodUIDefectProbability:    config.MethodDefectProbability,
+}
+
+// Descriptions for metrics the UI shows but no evaluator classifies.
+var unevaluatedMetricDescriptions = map[config.MetricKey]string{
+	config.MethodBranchCoverage: "Percentage of covered branches inside methods.",
+}
+
+// describeMetric returns the one-line explanation shown in the UI tooltips. The
+// evaluator is the source of truth, so a metric is documented in one place.
+func describeMetric(key string) string {
+	metricKey := config.MetricKey(key)
+	if mapped, ok := uiMetricKeys[key]; ok {
+		metricKey = mapped
+	}
+
+	if evaluator, ok := evaluators.Registry[metricKey]; ok {
+		return evaluator.Description()
+	}
+	return unevaluatedMetricDescriptions[metricKey]
 }
 
 func countFlatNodes(nodes []fileNode) (files, folders int) {

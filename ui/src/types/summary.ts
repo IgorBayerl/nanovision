@@ -62,6 +62,8 @@ export type MetricKind = 'percentage' | 'value'
 export type MetricDefinition = {
     label: string
     shortLabel?: string
+    /** One-line explanation of the metric, shown in the UI's hover tooltips. */
+    description?: string
     kind?: MetricKind
     subMetrics: SubMetric[]
 }
@@ -125,6 +127,11 @@ export interface SummaryV1 {
     defaultFilters?: string
     /** Present only in review reports; switches the UI to the review layout. */
     review?: ReviewResult
+    /** Every parsed report, indexed as the coverage masks address them. */
+    reports?: Report[]
+    /** File path -> compressed per-report coverage. */
+    reportIndexes?: Record<string, ReportIndex>
+    statusBands?: Record<string, StatusBand>
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'
@@ -154,6 +161,27 @@ export type LineStatus = 'covered' | 'uncovered' | 'not-coverable' | 'partial'
 export interface Report {
     name: string
     path: string
+    /** Details pages only: this report contributed a hit to the file. */
+    relevant?: boolean
+}
+
+/**
+ * One group of entities (lines, statements or methods) sharing a coverage
+ * requirement. They are covered when every report bitmask in `m` intersects the
+ * active selection. See lib/reportSelection.ts.
+ */
+export interface ReportBucket {
+    m: number[]
+    n: number
+}
+
+/** Compressed per-report coverage for one file, keyed by metric. */
+export type ReportIndex = Record<string, ReportBucket[]>
+
+/** Risk thresholds, so the UI can re-classify recomputed numbers. */
+export interface StatusBand {
+    min: number
+    max: number
 }
 
 export interface LineDetails {
@@ -192,6 +220,9 @@ export interface DetailsV1 {
     metadata?: MetadataItem[]
     methods?: Method[]
     reports?: Report[]
+    /** Compressed per-report coverage for this file, keyed by metric. */
+    reportIndex?: ReportIndex
+    statusBands?: Record<string, StatusBand>
     /** Raw URL query string auto-applied on first load (no existing query). */
     defaultFilters?: string
 }

@@ -1,5 +1,6 @@
 import { AlertCircle, AlertTriangle, ChevronRight, Info } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import InfoTooltip from '@/components/InfoTooltip'
 import { cn } from '@/lib/utils'
 import type { Diagnostic, FileNode } from '@/lib/validation'
 
@@ -47,6 +48,9 @@ export default function ProblemsPanel({ diagnostics, nodes }: ProblemsPanelProps
             >
                 <ChevronRight className={cn('h-4 w-4 shrink-0 transition-transform', open && 'rotate-90')} />
                 <span className="font-semibold text-sm">Problems</span>
+                <InfoTooltip label="How problems are evaluated" className="mt-0.5">
+                    Coverage rules evaluated against all reports. The report selection does not change this list.
+                </InfoTooltip>
                 <span className="ml-1 flex items-center gap-3 text-muted-foreground text-xs">
                     <span className="flex items-center gap-1">
                         <AlertCircle className="h-3.5 w-3.5 text-uncovered" />

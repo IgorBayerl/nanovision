@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { useMemo } from 'react'
 import DiffStatusBadge from '@/components/DiffStatusBadge'
+import InfoTooltip from '@/components/InfoTooltip'
 import { useUrlState } from '@/hooks/useUrlState'
 import { scrollToLine } from '@/lib/scrollToLine'
 import { camelCaseToTitleCase, cn } from '@/lib/utils'
@@ -24,6 +25,7 @@ const SortIcon = ({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) => 
 const SortableTh = ({
     columnKey,
     label,
+    description,
     align = 'right',
     sortKey,
     sortDir,
@@ -31,6 +33,7 @@ const SortableTh = ({
 }: {
     columnKey: string
     label: string
+    description?: string
     align?: 'left' | 'right'
     sortKey: string
     sortDir: 'asc' | 'desc'
@@ -43,17 +46,23 @@ const SortableTh = ({
             columnKey === 'name' && 'w-full',
         )}
     >
-        <button
-            type="button"
-            onClick={() => onSort(columnKey)}
-            className={cn(
-                'inline-flex items-center gap-1 hover:text-foreground',
-                align === 'right' && 'flex-row-reverse',
-            )}
-        >
-            <span>{label}</span>
-            <SortIcon active={sortKey === columnKey} dir={sortDir} />
-        </button>
+        {/* The info icon sits beside the sort button rather than inside it, so
+            hovering the explanation cannot re-sort the table. It always trails
+            the label: only the button reverses, putting the sort arrow first. */}
+        <div className="inline-flex items-center gap-1.5">
+            <button
+                type="button"
+                onClick={() => onSort(columnKey)}
+                className={cn(
+                    'inline-flex items-center gap-1 hover:text-foreground',
+                    align === 'right' && 'flex-row-reverse',
+                )}
+            >
+                <span>{label}</span>
+                <SortIcon active={sortKey === columnKey} dir={sortDir} />
+            </button>
+            <InfoTooltip label={`What ${label} means`}>{description}</InfoTooltip>
+        </div>
     </th>
 )
 
@@ -83,6 +92,7 @@ export default function MethodsTable({
                     id,
                     label: def?.label ?? camelCaseToTitleCase(id),
                     shortLabel: def?.shortLabel ?? camelCaseToTitleCase(id),
+                    description: def?.description,
                 }
             })
     }, [methods, metricDefinitions])
@@ -155,6 +165,7 @@ export default function MethodsTable({
                                     key={mc.id}
                                     columnKey={mc.id}
                                     label={mc.shortLabel}
+                                    description={mc.description}
                                     align="right"
                                     sortKey={sortKey}
                                     sortDir={sortDir}

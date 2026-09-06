@@ -9,18 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildReportFilter(t *testing.T) {
-	builder := &HtmlReactReportBuilder{}
+func TestBuildDetailsReports(t *testing.T) {
 	tree := &model.SummaryTree{
 		ReportNames: []string{"report_A.json", "report_B.json", "report_C.json"},
 	}
 
 	tests := []struct {
-		name                 string
-		fileNode             *model.FileNode
-		expectedReportsSize  int
-		expectedGlobalMapLen int
-		expectedFallback     bool
+		name             string
+		fileNode         *model.FileNode
+		expectedRelevant []bool
 	}{
 		{
 			name: "Partial overlap - only report A and C have hits",
@@ -30,30 +27,26 @@ func TestBuildReportFilter(t *testing.T) {
 					2: {ReportHits: []int{0, 0, 2}}, // hit in C
 				},
 			},
-			expectedReportsSize:  2,
-			expectedGlobalMapLen: 2,
+			expectedRelevant: []bool{true, false, true},
 		},
 		{
-			name: "No hits anywhere - trigger fallback to show all reports",
+			name: "No hits anywhere - every report is listed but none is relevant",
 			fileNode: &model.FileNode{
 				Lines: map[int]model.LineMetrics{
 					1: {ReportHits: []int{0, 0, 0}},
 				},
 			},
-			expectedReportsSize:  3,
-			expectedGlobalMapLen: 0, // Fallback implies map is nil or not used
-			expectedFallback:     true,
+			expectedRelevant: []bool{false, false, false},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			reportsList, globalMap := builder.buildReportFilter(tree, tc.fileNode)
-			assert.Len(t, reportsList, tc.expectedReportsSize)
-			if tc.expectedFallback {
-				assert.Nil(t, globalMap)
-			} else {
-				assert.Len(t, globalMap, tc.expectedGlobalMapLen)
+			reportsList := buildDetailsReports(tree, tc.fileNode)
+			// The list is always global, so masks mean the same on every screen.
+			assert.Len(t, reportsList, len(tree.ReportNames))
+			for i, want := range tc.expectedRelevant {
+				assert.Equal(t, want, reportsList[i].Relevant, "report %d", i)
 			}
 		})
 	}
@@ -73,10 +66,8 @@ func TestBuildLineDetails(t *testing.T) {
 		},
 	}
 	sourceLines := []string{"add", "mod", "none"}
-	reportsList := []report{{Name: "Report A"}, {Name: "Report B"}}
-	globalToLocalMap := map[int]int{0: 0, 1: 1}
 
-	details := builder.buildLineDetails(fileNode, sourceLines, reportsList, globalToLocalMap, 2)
+	details := builder.buildLineDetails(fileNode, sourceLines, 2)
 
 	assert.Len(t, details, 3)
 

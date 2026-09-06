@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/IgorBayerl/nanovision/internal/aggregator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/model"
@@ -53,10 +54,10 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 	sourceLines := b.readSourceLines(fileNode)
 
 	// 2. Data Filtering Phase
-	reportsList, globalToLocalMap := b.buildReportFilter(tree, fileNode)
+	reportsList := buildDetailsReports(tree, fileNode)
 
 	// 3. Line & Method Mapping Phase
-	detailsLines := b.buildLineDetails(fileNode, sourceLines, reportsList, globalToLocalMap, len(tree.ReportNames))
+	detailsLines := b.buildLineDetails(fileNode, sourceLines, len(tree.ReportNames))
 	detailsMethods, totalBranches, coveredBranches, maxCyclo := b.buildMethodDetails(fileNode)
 
 	// 4. Totals Calculation Phase
@@ -73,8 +74,27 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 		Methods:           detailsMethods,
 		Lines:             detailsLines,
 		Reports:           reportsList,
+		ReportIndex:       b.buildDetailsReportIndex(tree, fileNode),
+		StatusBands:       b.buildStatusBands(),
 		DefaultFilters:    b.config.DefaultFilters,
 	}, nil
+}
+
+// buildDetailsReportIndex is the summary index narrowed to one file, so the
+// details cards recompute from the same data the summary does.
+func (b *HtmlReactReportBuilder) buildDetailsReportIndex(tree *model.SummaryTree, fileNode *model.FileNode) reportIndex {
+	if len(tree.ReportNames) < 2 {
+		return nil
+	}
+	idx := aggregator.BuildFileReportIndex(fileNode, len(tree.ReportNames), b.config.ActiveFileMetrics)
+	if len(idx) == 0 {
+		return nil
+	}
+	converted := make(reportIndex, len(idx))
+	for key, buckets := range idx {
+		converted[string(key)] = buckets
+	}
+	return converted
 }
 
 // -----------------------------------------------------------------------------
@@ -116,48 +136,31 @@ func generateEmptyLines(fileNode *model.FileNode) []string {
 // Pipeline Stage 2: Report Filtering
 // -----------------------------------------------------------------------------
 
-func (b *HtmlReactReportBuilder) buildReportFilter(tree *model.SummaryTree, fileNode *model.FileNode) ([]report, map[int]int) {
-	isReportRelevant := make(map[int]bool)
+// buildDetailsReports lists every parsed report, keeping the global order the
+// coverage masks use so a selection carries across screens. Reports that never
+// touched this file are flagged so the UI can dim them instead of hiding them.
+func buildDetailsReports(tree *model.SummaryTree, fileNode *model.FileNode) []report {
+	relevant := make(map[int]bool)
 	for _, line := range fileNode.Lines {
 		for reportIdx, hits := range line.ReportHits {
 			if hits > 0 {
-				isReportRelevant[reportIdx] = true
+				relevant[reportIdx] = true
 			}
 		}
 	}
 
-	globalToLocalMap := make(map[int]int)
-	var reportsList []report
-
-	for globalIdx, name := range tree.ReportNames {
-		if isReportRelevant[globalIdx] {
-			globalToLocalMap[globalIdx] = len(reportsList)
-			reportsList = append(reportsList, report{
-				Name: fmt.Sprintf("Report %d: %s", globalIdx+1, filepath.Base(name)),
-				Path: name,
-			})
-		}
+	reports := buildGlobalReports(tree)
+	for i := range reports {
+		reports[i].Relevant = relevant[i]
 	}
-
-	// Fallback: If no report has covered lines, show all reports to avoid empty UI
-	if len(reportsList) == 0 {
-		for i, name := range tree.ReportNames {
-			reportsList = append(reportsList, report{
-				Name: fmt.Sprintf("Report %d: %s", i+1, filepath.Base(name)),
-				Path: name,
-			})
-		}
-		return reportsList, nil
-	}
-
-	return reportsList, globalToLocalMap
+	return reports
 }
 
 // -----------------------------------------------------------------------------
 // Pipeline Stage 3: Data Mapping (Lines & Methods)
 // -----------------------------------------------------------------------------
 
-func (b *HtmlReactReportBuilder) buildLineDetails(fileNode *model.FileNode, sourceLines []string, reportsList []report, globalToLocalMap map[int]int, totalReports int) []lineDetail {
+func (b *HtmlReactReportBuilder) buildLineDetails(fileNode *model.FileNode, sourceLines []string, totalReports int) []lineDetail {
 	detailsLines := make([]lineDetail, len(sourceLines))
 
 	for i, content := range sourceLines {
@@ -182,7 +185,7 @@ func (b *HtmlReactReportBuilder) buildLineDetails(fileNode *model.FileNode, sour
 				ld.Status = StatusCovered
 			}
 
-			ld.Hits = mapHitsToLocal(lm.ReportHits, reportsList, globalToLocalMap, totalReports)
+			ld.Hits = denseHits(lm.ReportHits, totalReports)
 
 			if lm.TotalBranches > 0 {
 				ld.BranchInfo = &branchInfo{Covered: lm.CoveredBranches, Total: lm.TotalBranches}
@@ -198,23 +201,14 @@ func (b *HtmlReactReportBuilder) buildLineDetails(fileNode *model.FileNode, sour
 	return detailsLines
 }
 
-func mapHitsToLocal(reportHits []int, reportsList []report, globalToLocal map[int]int, totalReports int) []int {
+// denseHits pads the per-report hit counts to the global report count so the
+// slice index is always the report index the masks use.
+func denseHits(reportHits []int, totalReports int) []int {
 	if len(reportHits) == 0 {
 		return nil
 	}
-	if globalToLocal != nil {
-		localHits := make([]int, len(reportsList))
-		for globalIdx, hitCount := range reportHits {
-			if localIdx, ok := globalToLocal[globalIdx]; ok {
-				localHits[localIdx] = hitCount
-			}
-		}
-		return localHits
-	}
-
-	n := min(totalReports, len(reportHits))
-	dense := make([]int, n)
-	copy(dense, reportHits[:n])
+	dense := make([]int, totalReports)
+	copy(dense, reportHits[:min(totalReports, len(reportHits))])
 	return dense
 }
 

@@ -42,7 +42,7 @@ export default function Layout({ children, title, showBackButton, leftSidebar, r
                         />
                     )}
                     {showBackButton && (
-                        <a href="./index.html" title="Back to summary">
+                        <a href={`./index.html${window.location.search}`} title="Back to summary">
                             <Button variant="outline" size="sm" className="h-8 w-8 rounded-sm p-0">
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
