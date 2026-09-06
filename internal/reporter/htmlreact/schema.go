@@ -1,6 +1,7 @@
 package htmlreact
 
 import (
+	"github.com/IgorBayerl/nanovision/internal/aggregator"
 	"github.com/IgorBayerl/nanovision/internal/diagnostics"
 	"github.com/IgorBayerl/nanovision/internal/review"
 )
@@ -139,6 +140,20 @@ type methodDetail struct {
 type report struct {
 	Name string `json:"name"`
 	Path string `json:"path"`
+	// set on details pages only: this report contributed a hit to the file
+	Relevant bool `json:"relevant,omitempty"`
+}
+
+// reportIndex is the compressed per-report coverage data the UI needs to
+// recompute metrics for any subset of reports, keyed by metric.
+// See aggregator.BuildFileReportIndex for the bucket semantics.
+type reportIndex map[string][]aggregator.ReportBucket
+
+// statusBand mirrors config.Band so the UI can re-classify risk after the
+// report selection changes the underlying numbers.
+type statusBand struct {
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
 }
 
 type metadataItem struct {
@@ -156,6 +171,8 @@ type subMetric struct {
 type metricDefinition struct {
 	Label      string `json:"label"`
 	ShortLabel string `json:"shortLabel,omitempty"`
+	// one-line explanation of the metric, shown in the UI's hover tooltips
+	Description string `json:"description,omitempty"`
 	// "percentage" (default) or "value" for plain scalars like complexity
 	Kind       string      `json:"kind,omitempty"`
 	SubMetrics []subMetric `json:"subMetrics"`
@@ -178,6 +195,12 @@ type summaryV1 struct {
 	DefaultFilters string `json:"defaultFilters,omitempty"`
 	// gate verdict from review.Evaluate; set only for changelist reports
 	Review *review.Result `json:"review,omitempty"`
+	// every parsed report, indexed exactly as the masks in ReportIndexes
+	Reports []report `json:"reports,omitempty"`
+	// file path -> compressed per-report coverage; absent when a single report
+	// was parsed, or when there are too many to address with a bitmask
+	ReportIndexes map[string]reportIndex `json:"reportIndexes,omitempty"`
+	StatusBands   map[string]statusBand  `json:"statusBands,omitempty"`
 }
 
 type detailsV1 struct {
@@ -191,6 +214,9 @@ type detailsV1 struct {
 	Methods           []methodDetail    `json:"methods,omitempty"`
 	Lines             []lineDetail      `json:"lines"`
 	Reports           []report          `json:"reports,omitempty"`
+	// compressed per-report coverage for this file, keyed by metric
+	ReportIndex reportIndex           `json:"reportIndex,omitempty"`
+	StatusBands map[string]statusBand `json:"statusBands,omitempty"`
 	// URL query string applied on first load, e.g. "diff=changed&risk=danger"
 	DefaultFilters string `json:"defaultFilters,omitempty"`
 }

@@ -1,6 +1,7 @@
 import { CheckCircle2, Flame, XCircle } from 'lucide-react'
 import { useMemo } from 'react'
 import DiffStatusBadge from '@/components/DiffStatusBadge'
+import InfoTooltip from '@/components/InfoTooltip'
 import { cn } from '@/lib/utils'
 import type { FileNode, Review } from '@/lib/validation'
 import type { DiffStatus } from '@/types/summary'
@@ -53,8 +54,12 @@ export default function ReviewSummary({ review, nodes }: ReviewSummaryProps) {
                         <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     )}
                     <div>
-                        <div className="font-semibold">
+                        <div className="flex items-center gap-1.5 font-semibold">
                             {review.passed ? 'Review gate passed' : 'Review gate failed'}
+                            <InfoTooltip label="How the gate is evaluated">
+                                The gate and the changelist numbers are evaluated against all reports. The report
+                                selection does not change them.
+                            </InfoTooltip>
                         </div>
                         {failedChecks.length > 0 && (
                             <ul className="mt-1 list-inside list-disc">

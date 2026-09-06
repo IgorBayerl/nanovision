@@ -1,4 +1,5 @@
 import { AlertCircle, AlertTriangle, ShieldCheck } from 'lucide-react'
+import InfoTooltip from '@/components/InfoTooltip'
 import { cn } from '@/lib/utils'
 import type { CoverageDetail, MetricDefinition, RiskLevel, ScoreDetail } from '@/types/summary'
 import { Card } from '@/ui/card'
@@ -11,10 +12,11 @@ export const StatusIcon = ({ status, showOk = true }: { status: RiskLevel; showO
     return <ShieldCheck className="h-4 w-4 text-primary" />
 }
 
-const CardLabel = ({ label, status }: { label: string; status?: RiskLevel }) => (
+const CardLabel = ({ label, status, description }: { label: string; status?: RiskLevel; description?: string }) => (
     <div className="flex min-w-0 items-center gap-1.5">
         {status && <StatusIcon status={status} />}
         <span className="truncate font-medium text-muted-foreground text-xs uppercase tracking-wide">{label}</span>
+        <InfoTooltip label={`What ${label} means`}>{description}</InfoTooltip>
     </div>
 )
 
@@ -40,7 +42,14 @@ const isScoreDetail = (d: CoverageDetail | ScoreDetail | undefined): d is ScoreD
 
 export default function MetricCard({ label, details, status, definition, compact }: MetricCardProps) {
     if (definition?.kind === 'value' || isScoreDetail(details)) {
-        return <ValueCardBody label={label} details={details as ScoreDetail | undefined} status={status} />
+        return (
+            <ValueCardBody
+                label={label}
+                details={details as ScoreDetail | undefined}
+                status={status}
+                description={definition?.description}
+            />
+        )
     }
 
     const cov = details as CoverageDetail | undefined
@@ -50,7 +59,7 @@ export default function MetricCard({ label, details, status, definition, compact
     return (
         <Card className="flex w-full flex-col gap-2 rounded-md px-3 py-2.5">
             <div className="flex items-center justify-between gap-2">
-                <CardLabel label={label} status={status} />
+                <CardLabel label={label} status={status} description={definition?.description} />
                 <span
                     className={cn(
                         'font-bold text-foreground leading-none tabular-nums',
@@ -80,17 +89,19 @@ function ValueCardBody({
     label,
     details,
     status,
+    description,
 }: {
     label: string
     details: ScoreDetail | undefined
     status?: RiskLevel
+    description?: string
 }) {
     const value = details?.value
     const display = value === undefined ? 'N/A' : Number.isInteger(value) ? String(value) : value.toFixed(2)
 
     return (
         <Card className="flex w-full flex-row items-center justify-between gap-2 rounded-md px-3 py-2.5">
-            <CardLabel label={label} status={status} />
+            <CardLabel label={label} status={status} description={description} />
             <span className="font-bold text-2xl text-foreground leading-none tabular-nums">{display}</span>
         </Card>
     )

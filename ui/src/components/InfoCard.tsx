@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { MetadataItem } from '@/types/summary'
 import { Card } from '@/ui/card'
 
@@ -23,21 +24,30 @@ const ValueDisplay = ({ value }: { value: MetadataItem['value'] }) => {
 }
 
 interface InfoCardProps {
-    title: string
-    items: MetadataItem[]
+    title?: string
+    items?: MetadataItem[]
+    /** Extra content closing the card, e.g. the report selection tree. */
+    footer?: ReactNode
 }
 
-export default function InfoCard({ title, items }: InfoCardProps) {
+export default function InfoCard({ title, items = [], footer }: InfoCardProps) {
+    const hasItems = items.length > 0
+
     return (
         <Card className="flex w-full flex-col gap-2 rounded-md px-3 py-2.5">
-            <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{title}</span>
-            <div className="flex flex-col gap-0.5">
-                {items.map((item) => (
-                    <InfoRow key={item.label} label={item.label}>
-                        <ValueDisplay value={item.value} />
-                    </InfoRow>
-                ))}
-            </div>
+            {title && hasItems && (
+                <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">{title}</span>
+            )}
+            {hasItems && (
+                <div className="flex flex-col gap-0.5">
+                    {items.map((item) => (
+                        <InfoRow key={item.label} label={item.label}>
+                            <ValueDisplay value={item.value} />
+                        </InfoRow>
+                    ))}
+                </div>
+            )}
+            {footer && <div className={hasItems ? 'mt-0.5 border-border border-t pt-2.5' : undefined}>{footer}</div>}
         </Card>
     )
 }

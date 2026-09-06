@@ -1,5 +1,6 @@
 import { Pin, PinOff } from 'lucide-react'
 import HeaderRangeSlider from '@/components/HeaderRangeSlider'
+import InfoTooltip from '@/components/InfoTooltip'
 import { cn } from '@/lib/utils'
 import type { FilterRange, MetricConfig, MetricKey, SortDir, SortKey } from '@/types/summary'
 import { Button } from '@/ui/button'
@@ -93,7 +94,12 @@ export default function FileExplorerHeader({
                                     index < enabledMetrics.length - 1 && 'border-r',
                                 )}
                             >
-                                <div className="whitespace-nowrap px-2 font-bold text-foreground">{m.shortLabel}</div>
+                                <div className="flex items-center gap-1.5 whitespace-nowrap px-2 font-bold text-foreground">
+                                    {m.shortLabel}
+                                    <InfoTooltip label={`What ${m.label} means`}>
+                                        {m.definition?.description}
+                                    </InfoTooltip>
+                                </div>
 
                                 <div className="px-2">
                                     <HeaderRangeSlider

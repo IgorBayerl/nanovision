@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import FunctionNav from '@/components/FunctionNav'
 import Layout from '@/components/Layout'
 import MethodsTable from '@/components/MethodsTable'
@@ -6,6 +6,8 @@ import ReportsSelector from '@/components/ReportsSelector'
 import SourceCodeViewer from '@/components/SourceCodeViewer'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
+import { useReportSelection } from '@/hooks/useReportSelection'
+import { applyReportSelectionToTotals, unfilterableMetrics } from '@/lib/reportSelection'
 import type { DetailsV1 } from '@/lib/validation'
 import { validateDetailsData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
@@ -40,47 +42,45 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
         return { validatedData: data, metricKeys: keys, reportInfo }
     }, [validationResult, rawData])
 
-    const [activeReportIndices, setActiveReportIndices] = useState<Set<number>>(
-        () => new Set(validatedData?.reports?.map((_, i) => i) ?? []),
-    )
+    const reportSelection = useReportSelection(validatedData?.reports)
 
-    const handleToggleReport = (index: number) => {
-        setActiveReportIndices((prev) => {
-            const newSet = new Set(prev)
-            if (newSet.has(index)) {
-                newSet.delete(index)
-            } else {
-                newSet.add(index)
-            }
-            return newSet
-        })
-    }
+    const totals = useMemo(() => {
+        if (!validatedData) return undefined
+        return applyReportSelectionToTotals(
+            validatedData.totals,
+            validatedData.reportIndex,
+            validatedData.statusBands,
+            reportSelection.selection,
+        )
+    }, [validatedData, reportSelection.selection])
+
+    const frozenMetricLabels = useMemo(() => {
+        if (!validatedData?.reportIndex) return []
+        return unfilterableMetrics(metricKeys, { file: validatedData.reportIndex }).map(
+            (id) => validatedData.metricDefinitions[id]?.label ?? id,
+        )
+    }, [validatedData, metricKeys])
 
     const title = validatedData?.title ?? (rawData as Partial<DetailsV1>)?.title ?? 'Coverage Details'
 
-    const leftSidebar = validatedData ? (
-        <>
-            <SidebarHeader>
-                <div className="font-semibold text-sm">Overview</div>
-            </SidebarHeader>
-            <SidebarContent>
-                {validatedData.reports && validatedData.reports.length > 0 && (
-                    <ReportsSelector
-                        reports={validatedData.reports}
-                        activeReportIndices={activeReportIndices}
-                        onToggleReport={handleToggleReport}
+    const leftSidebar =
+        validatedData && totals ? (
+            <>
+                <SidebarHeader>
+                    <div className="font-semibold text-sm">Overview</div>
+                </SidebarHeader>
+                <SidebarContent>
+                    <SummaryMetrics
+                        info={reportInfo}
+                        metrics={totals}
+                        metricOrder={metricKeys}
+                        metricDefinitions={validatedData.metricDefinitions}
+                        infoFooter={<ReportsSelector state={reportSelection} frozenMetricLabels={frozenMetricLabels} />}
+                        variant="sidebar"
                     />
-                )}
-                <SummaryMetrics
-                    info={reportInfo}
-                    metrics={validatedData.totals}
-                    metricOrder={metricKeys}
-                    metricDefinitions={validatedData.metricDefinitions}
-                    variant="sidebar"
-                />
-            </SidebarContent>
-        </>
-    ) : undefined
+                </SidebarContent>
+            </>
+        ) : undefined
 
     const rightSidebar =
         validatedData?.methods && validatedData.methods.length > 0 ? (
@@ -102,7 +102,7 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
                     <SourceCodeViewer
                         fileName={validatedData.fileName}
                         lines={validatedData.lines}
-                        activeReportIndices={activeReportIndices}
+                        selection={reportSelection.selection}
                         reports={validatedData.reports}
                     />
                 </>

@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import CodeLine from '@/components/CodeLine'
 import SourceCodeHeader from '@/components/SourceCodeHeader'
+import type { ReportSelection } from '@/lib/reportSelection'
+import { isReportSelected } from '@/lib/reportSelection'
 import type { DetailsV1 } from '@/lib/validation'
 import type { LineStatus } from '@/types/summary'
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
@@ -8,11 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card'
 interface SourceCodeViewerProps {
     fileName: string
     lines: DetailsV1['lines']
-    activeReportIndices: Set<number>
+    /** Bitmask of the active reports; hits are indexed the same way. */
+    selection: ReportSelection
     reports?: DetailsV1['reports']
 }
 
-export default function SourceCodeViewer({ fileName, lines, activeReportIndices, reports }: SourceCodeViewerProps) {
+export default function SourceCodeViewer({ fileName, lines, selection, reports }: SourceCodeViewerProps) {
     const processedLines = useMemo(() => {
         return lines.map((line) => {
             if (line.status === 'not-coverable') {
@@ -21,7 +24,7 @@ export default function SourceCodeViewer({ fileName, lines, activeReportIndices,
 
             const totalHits =
                 line.hits?.reduce((sum, hitCount, index) => {
-                    if (activeReportIndices.has(index)) {
+                    if (isReportSelected(selection, index)) {
                         return sum + hitCount
                     }
                     return sum
@@ -31,7 +34,7 @@ export default function SourceCodeViewer({ fileName, lines, activeReportIndices,
             // this line (hits > 0), used for the hit-count tooltip.
             const reportHits =
                 line.hits?.reduce<{ name: string; hits: number }[]>((acc, hitCount, index) => {
-                    if (hitCount > 0 && activeReportIndices.has(index)) {
+                    if (hitCount > 0 && isReportSelected(selection, index)) {
                         acc.push({ name: reports?.[index]?.name ?? `Report ${index + 1}`, hits: hitCount })
                     }
                     return acc
@@ -46,7 +49,7 @@ export default function SourceCodeViewer({ fileName, lines, activeReportIndices,
 
             return { ...line, hits: totalHits, status, reportHits }
         })
-    }, [lines, activeReportIndices, reports])
+    }, [lines, selection, reports])
 
     return (
         <Card>

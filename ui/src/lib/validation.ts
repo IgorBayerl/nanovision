@@ -25,6 +25,28 @@ const metricsSchema = z.record(z.string(), coverageDetailSchema.or(scoreDetailSc
 
 const diffStatusSchema = z.enum(['added', 'modified', 'unchanged', 'removed'])
 
+// Compressed per-report coverage. A bucket holds every entity (line, statement
+// or method) sharing one coverage requirement: `n` of them are covered when all
+// of the report bitmasks in `m` intersect the active selection.
+const reportBucketSchema = z.object({
+    m: z.array(z.number().int().nonnegative()),
+    n: z.number().int().nonnegative(),
+})
+
+const reportIndexSchema = z.record(z.string(), z.array(reportBucketSchema))
+
+const statusBandSchema = z.object({
+    min: z.number(),
+    max: z.number(),
+})
+
+const reportSchema = z.object({
+    name: z.string(),
+    path: z.string(),
+    // details pages only: this report contributed a hit to the file
+    relevant: z.boolean().optional(),
+})
+
 // A single file or folder node in the flat node list.
 export type FileNode = {
     id: string
@@ -79,6 +101,8 @@ const subMetricSchema = z.object({
 const metricDefinitionSchema = z.object({
     label: z.string(),
     shortLabel: z.string().optional(),
+    /** One-line explanation of the metric, shown in the UI's hover tooltips. */
+    description: z.string().optional(),
     kind: z.enum(['percentage', 'value']).optional(),
     subMetrics: z.array(subMetricSchema),
 })
@@ -137,6 +161,11 @@ const reviewSchema = z.object({
 
 export type Review = z.infer<typeof reviewSchema>
 
+export type ReportBucket = z.infer<typeof reportBucketSchema>
+export type ReportIndex = z.infer<typeof reportIndexSchema>
+export type StatusBand = z.infer<typeof statusBandSchema>
+export type ReportRef = z.infer<typeof reportSchema>
+
 export const summaryV1Schema = z.object({
     schemaVersion: z.literal(1, { message: 'This report requires schemaVersion 1.' }),
     generatedAt: z
@@ -151,6 +180,9 @@ export const summaryV1Schema = z.object({
     diagnostics: z.array(diagnosticSchema).optional(),
     defaultFilters: z.string().optional(),
     review: reviewSchema.optional(),
+    reports: z.array(reportSchema).optional(),
+    reportIndexes: z.record(z.string(), reportIndexSchema).optional(),
+    statusBands: z.record(z.string(), statusBandSchema).optional(),
 })
 
 export type SummaryV1 = z.infer<typeof summaryV1Schema>
@@ -166,11 +198,6 @@ export function validateSummaryData(data: unknown) {
 
 // Schema for a single line of code
 const lineStatusSchema = z.enum(['covered', 'uncovered', 'not-coverable', 'partial'])
-
-const reportSchema = z.object({
-    name: z.string(),
-    path: z.string(),
-})
 
 const lineDetailsSchema = z.object({
     lineNumber: z.number().int().positive(),
@@ -213,6 +240,8 @@ export const detailsV1Schema = z.object({
     metadata: z.array(metadataItemSchema).optional(),
     methods: z.array(methodSchema).optional(),
     reports: z.array(reportSchema).optional(),
+    reportIndex: reportIndexSchema.optional(),
+    statusBands: z.record(z.string(), statusBandSchema).optional(),
     defaultFilters: z.string().optional(),
 })
 
