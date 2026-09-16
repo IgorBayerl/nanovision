@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func intPtr(v int) *int           { return &v }
-func floatPtr(v float64) *float64 { return &v }
+//go:fix inline
+func floatPtr(v float64) *float64 { return new(v) }
 
 // one changed file, three methods: untested+added (CC 12), covered+modified
 // (CC 4), and an unchanged one that must be ignored.
@@ -23,20 +23,20 @@ func buildTree() *model.SummaryTree {
 			{
 				Name: "Untested", StartLine: 10, EndLine: 30,
 				DiffStatus:           "added",
-				CyclomaticComplexity: intPtr(12),
+				CyclomaticComplexity: new(12),
 				StatementsValid:      10, StatementsCovered: 0,
 				PatchStatementsValid: 10, PatchStatementsCovered: 0,
 			},
 			{
 				Name: "Covered", StartLine: 40, EndLine: 60,
 				DiffStatus:           "modified",
-				CyclomaticComplexity: intPtr(4),
+				CyclomaticComplexity: new(4),
 				StatementsValid:      8, StatementsCovered: 8,
 				PatchStatementsValid: 4, PatchStatementsCovered: 4,
 			},
 			{
 				Name: "Unchanged", StartLine: 70, EndLine: 90,
-				CyclomaticComplexity: intPtr(30),
+				CyclomaticComplexity: new(30),
 				StatementsValid:      5, StatementsCovered: 0,
 			},
 		},
@@ -87,7 +87,7 @@ func TestEvaluate_GateFailsAndPasses(t *testing.T) {
 		Review: config.ReviewConfig{
 			Gate: config.ReviewGate{
 				PatchStatementCoverage:     floatPtr(80),
-				MaxChangedMethodComplexity: intPtr(10),
+				MaxChangedMethodComplexity: new(10),
 			},
 		},
 	}
@@ -104,7 +104,7 @@ func TestEvaluate_GateFailsAndPasses(t *testing.T) {
 		Review: config.ReviewConfig{
 			Gate: config.ReviewGate{
 				PatchStatementCoverage:     floatPtr(20),
-				MaxChangedMethodComplexity: intPtr(15),
+				MaxChangedMethodComplexity: new(15),
 			},
 		},
 	}

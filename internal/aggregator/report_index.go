@@ -1,6 +1,7 @@
 package aggregator
 
 import (
+	"slices"
 	"sort"
 	"strings"
 
@@ -329,7 +330,7 @@ func normaliseMasks(masks []uint32) []uint32 {
 
 	sorted := make([]uint32, len(masks))
 	copy(sorted, masks)
-	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+	slices.Sort(sorted)
 
 	if sorted[0] == 0 {
 		return []uint32{0}

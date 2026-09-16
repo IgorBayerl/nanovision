@@ -1,6 +1,6 @@
 import { resolve } from 'node:path'
 import { defineConfig, mergeConfig } from 'vite'
-import { baseConfig } from './vite.config.base'
+import { baseConfig } from './vite.config.base.ts'
 
 export default defineConfig(
     mergeConfig(baseConfig, {
@@ -8,10 +8,10 @@ export default defineConfig(
             // Important to keep this false
             // We are generating 2 builds in one command, this makes sure we do not overwrite the first one.
             emptyOutDir: false,
-            outDir: resolve(__dirname, '../internal/reporter/htmlreact/assets/dist'),
-            rollupOptions: {
+            outDir: resolve(import.meta.dirname, '../internal/reporter/htmlreact/assets/dist'),
+            rolldownOptions: {
                 input: {
-                    details: resolve(__dirname, 'details.html'),
+                    details: resolve(import.meta.dirname, 'details.html'),
                 },
             },
         },

@@ -100,13 +100,13 @@ func (a *GdScriptAnalyzer) Analyze(sourceCode []byte) (analyzer.AnalysisResult, 
 
 	q, qerr := sitter.NewQuery(lang, funcQueryString)
 	if qerr != nil {
-		return analyzer.AnalysisResult{}, fmt.Errorf("compile function query: %w", qerr)
+		return analyzer.AnalysisResult{}, fmt.Errorf("compile function query: %w", *qerr)
 	}
 	defer q.Close()
 
 	stmtQ, stmtQErr := sitter.NewQuery(lang, statementQueryString)
 	if stmtQErr != nil {
-		return analyzer.AnalysisResult{}, fmt.Errorf("compile statement query: %w", stmtQErr)
+		return analyzer.AnalysisResult{}, fmt.Errorf("compile statement query: %w", *stmtQErr)
 	}
 	defer stmtQ.Close()
 

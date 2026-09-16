@@ -28,7 +28,7 @@ import (
 	"regexp"
 	"strings"
 
-	yaml "gopkg.in/yaml.v3"
+	yaml "go.yaml.in/yaml/v3"
 )
 
 const (
@@ -138,9 +138,9 @@ func installGoTreeSitter(baseDir string, force bool) error {
 		// --- ROBUST LOGIC HERE ---
 		// If a file is in lib/src/, copy it to the destination, preserving its sub-path.
 		// This handles files at the root (e.g., lib.c) and in subdirectories (e.g., unicode/utf8.h, portable/endian.h).
-		if strings.HasPrefix(rel, "lib/src/") {
+		if after, ok := strings.CutPrefix(rel, "lib/src/"); ok {
 			// e.g., "lib/src/portable/endian.h" -> "portable/endian.h"
-			subPath := strings.TrimPrefix(rel, "lib/src/")
+			subPath := after
 			if subPath != "" && !strings.HasSuffix(subPath, "/") { // Ignore the src directory itself
 				out := filepath.Join(dest, filepath.FromSlash(subPath))
 				die(extractDirAware(coreZR, name, out))

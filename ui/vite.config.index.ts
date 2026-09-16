@@ -1,15 +1,15 @@
 import { resolve } from 'node:path'
 import { defineConfig, mergeConfig } from 'vite'
-import { baseConfig } from './vite.config.base'
+import { baseConfig } from './vite.config.base.ts'
 
 export default defineConfig(
     mergeConfig(baseConfig, {
         build: {
             emptyOutDir: true,
-            outDir: resolve(__dirname, '../internal/reporter/htmlreact/assets/dist'),
-            rollupOptions: {
+            outDir: resolve(import.meta.dirname, '../internal/reporter/htmlreact/assets/dist'),
+            rolldownOptions: {
                 input: {
-                    main: resolve(__dirname, 'index.html'),
+                    main: resolve(import.meta.dirname, 'index.html'),
                 },
             },
         },

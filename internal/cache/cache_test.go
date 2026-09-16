@@ -254,10 +254,10 @@ func TestManager_Concurrency(t *testing.T) {
 	iterations := 100
 
 	wg.Add(workers)
-	for w := 0; w < workers; w++ {
+	for w := range workers {
 		go func(workerID int) {
 			defer wg.Done()
-			for i := 0; i < iterations; i++ {
+			for i := range iterations {
 				char := byte((workerID + i) % 10) // 10 unique content variations — some overlap intentional
 				content := []byte{char, char, char}
 
@@ -281,12 +281,10 @@ func TestManager_ConcurrentSave(t *testing.T) {
 	m.Put([]byte("data"), CachedData{TotalLines: 1})
 
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 10 {
+		wg.Go(func() {
 			_ = m.Save()
-		}()
+		})
 	}
 	wg.Wait()
 

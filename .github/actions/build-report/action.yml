@@ -3,7 +3,7 @@ description: Run E2E and produce self-coverage report as artifact
 inputs:
   go-version:
     description: Go version
-    default: '1.25.x'
+    default: '1.27.x'
   python-version:
     description: Python version
     default: '3.12'

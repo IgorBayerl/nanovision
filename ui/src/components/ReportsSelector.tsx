@@ -74,6 +74,7 @@ export default function ReportsSelector({ state, frozenMetricLabels = [] }: Repo
                     }
 
                     return (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: the index is the report's identity (its bit in the selection mask) and the list never reorders
                         <div key={`${index}-${report.path}`} className="flex items-center gap-2">
                             <Checkbox
                                 id={`${checkboxId}-${index}`}

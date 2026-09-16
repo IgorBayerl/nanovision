@@ -193,14 +193,8 @@ func bandHint(bands config.StatusBands, key config.MetricKey) string {
 }
 
 func lineRange(m *model.MethodMetrics) (int, int) {
-	start := m.StartLine
-	if start < 1 {
-		start = 1
-	}
-	end := m.EndLine
-	if end < start {
-		end = start
-	}
+	start := max(m.StartLine, 1)
+	end := max(m.EndLine, start)
 	return start, end
 }
 

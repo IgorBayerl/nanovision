@@ -9,7 +9,7 @@ import (
 
 	"github.com/IgorBayerl/nanovision/internal/filtering"
 	"github.com/IgorBayerl/nanovision/internal/logging"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // -------- Status bands parsing ----------

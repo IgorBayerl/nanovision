@@ -74,7 +74,7 @@ export default function MetricRow({ label, details, status, definition, band, ha
                 {target !== undefined && (
                     <div
                         aria-hidden
-                        className="-top-0.5 -bottom-0.5 absolute w-0.5 rounded-full bg-foreground/50"
+                        className="absolute -top-0.5 -bottom-0.5 w-0.5 rounded-full bg-foreground/50"
                         style={{ left: `calc(${target}% - 1px)` }}
                     />
                 )}

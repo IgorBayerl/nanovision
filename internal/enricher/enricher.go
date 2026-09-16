@@ -100,7 +100,7 @@ func (e *Enricher) EnrichTree(tree *model.SummaryTree) {
 	jobs := make(chan *model.FileNode, len(fileNodeMap))
 	var wg sync.WaitGroup
 
-	for i := 0; i < numWorkers; i++ {
+	for range numWorkers {
 		go func() {
 			for fileNode := range jobs {
 				e.enrichFileNode(fileNode)

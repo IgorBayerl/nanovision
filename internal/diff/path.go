@@ -16,10 +16,10 @@ func Normalize(p string) string {
 	p = strings.ReplaceAll(p, "\\", "/")
 
 	// Strip git-style prefixes (only check once at the start)
-	if strings.HasPrefix(p, "a/") {
-		p = strings.TrimPrefix(p, "a/")
-	} else if strings.HasPrefix(p, "b/") {
-		p = strings.TrimPrefix(p, "b/")
+	if after, ok := strings.CutPrefix(p, "a/"); ok {
+		p = after
+	} else if after, ok := strings.CutPrefix(p, "b/"); ok {
+		p = after
 	}
 
 	// Clean the path to remove "." and "./" components

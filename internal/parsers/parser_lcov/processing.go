@@ -88,8 +88,8 @@ func (o *processingOrchestrator) processLines(lines []string) ([]parsers.FileCov
 		}
 
 		// Handle Line Data: DA:<lineNumber>,<hits>[,<checksum>]
-		if strings.HasPrefix(line, "DA:") {
-			parts := strings.Split(strings.TrimPrefix(line, "DA:"), ",")
+		if after, ok := strings.CutPrefix(line, "DA:"); ok {
+			parts := strings.Split(after, ",")
 			if len(parts) >= 2 {
 				ln, err1 := strconv.Atoi(parts[0])
 				hits, err2 := strconv.Atoi(parts[1])
@@ -104,8 +104,8 @@ func (o *processingOrchestrator) processLines(lines []string) ([]parsers.FileCov
 		}
 
 		// Handle Branch Data: BRDA:<lineNumber>,<blockNumber>,<branchNumber>,<taken>
-		if strings.HasPrefix(line, "BRDA:") {
-			parts := strings.Split(strings.TrimPrefix(line, "BRDA:"), ",")
+		if after, ok := strings.CutPrefix(line, "BRDA:"); ok {
+			parts := strings.Split(after, ",")
 			if len(parts) >= 4 {
 				ln, err := strconv.Atoi(parts[0])
 				if err == nil && ln > 0 {

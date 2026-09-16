@@ -264,7 +264,7 @@ func uniqueReportLabels(paths []string) []string {
 func splitPathSegments(path string) []string {
 	normalised := strings.ReplaceAll(path, "\\", "/")
 	segments := make([]string, 0, strings.Count(normalised, "/")+1)
-	for _, segment := range strings.Split(normalised, "/") {
+	for segment := range strings.SplitSeq(normalised, "/") {
 		if segment != "" && segment != "." {
 			segments = append(segments, segment)
 		}

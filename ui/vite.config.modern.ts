@@ -37,16 +37,16 @@ export default defineConfig({
         // copy for dependencies like @tanstack/react-virtual, breaking hook calls.
         dedupe: ['react', 'react-dom'],
         alias: {
-            '@': resolve(__dirname, './src'),
+            '@': resolve(import.meta.dirname, './src'),
         },
     },
 
     build: {
-        outDir: resolve(__dirname, 'dist'),
-        rollupOptions: {
+        outDir: resolve(import.meta.dirname, 'dist'),
+        rolldownOptions: {
             input: {
-                main: resolve(__dirname, 'index.html'),
-                details: resolve(__dirname, 'details.html'),
+                main: resolve(import.meta.dirname, 'index.html'),
+                details: resolve(import.meta.dirname, 'details.html'),
             },
         },
     },

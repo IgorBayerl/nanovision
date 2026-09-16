@@ -75,7 +75,7 @@ A simplified diagram that shows the main parts of the system:
 
 Native setup works on macOS/Linux/Windows:
 
-* **Go:** ≥ **1.25**
+* **Go:** ≥ **1.27**
 * **Python:** ≥ **3.x**
 * **Node.js:** ≥ **20.x**
   * Only for the React project, not necessary if you are not touching the UI side.
@@ -133,7 +133,7 @@ You can simulate the CI release process locally using Docker. This builds all bi
 docker run --rm --privileged `
   -v "${PWD}:/src" `
   -w /src `
-  ghcr.io/goreleaser/goreleaser-cross:v1.25.3 `
+  ghcr.io/goreleaser/goreleaser-cross:v1.27.1 `
   release --clean --snapshot --skip=publish
 ```
 
@@ -142,7 +142,7 @@ docker run --rm --privileged `
 docker run --rm --privileged \
   -v "$PWD:/src" \
   -w /src \
-  ghcr.io/goreleaser/goreleaser-cross:v1.25.3 \
+  ghcr.io/goreleaser/goreleaser-cross:v1.27.1 \
   release --clean --snapshot --skip=publish
 ```
 

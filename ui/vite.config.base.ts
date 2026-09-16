@@ -25,7 +25,7 @@ export const baseConfig: UserConfig = {
     plugins: [react(), tailwindcss(), nodePolyfills(), classicScriptPlugin()],
     resolve: {
         alias: {
-            '@': resolve(__dirname, './src'),
+            '@': resolve(import.meta.dirname, './src'),
         },
     },
     server: { port: 5173 },

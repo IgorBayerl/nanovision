@@ -33,7 +33,7 @@ jobs:
           git push origin ${{ inputs.version }}
 
       - name: Run GoReleaser Cross
-        uses: docker://ghcr.io/goreleaser/goreleaser-cross:v1.25.3
+        uses: docker://ghcr.io/goreleaser/goreleaser-cross:v1.27.1
         with:
           args: release --clean --draft
         env:

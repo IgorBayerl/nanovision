@@ -1,5 +1,6 @@
-import { ArrowLeft, Github, Maximize2, Minimize2, PanelLeft, PanelRight } from 'lucide-react'
+import { ArrowLeft, Maximize2, Minimize2, PanelLeft, PanelRight } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { GithubIcon } from '@/components/GithubIcon'
 import Footer from '@/components/Layout.Footer'
 import { ThemeSwitch } from '@/components/Theme.Switch'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
@@ -55,7 +56,7 @@ export default function Layout({ children, title, showBackButton, leftSidebar, r
                 <div className="flex items-center gap-2">
                     <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                         <Button variant="outline" size="sm" className="h-8 w-8 rounded-sm p-0" title="GitHub">
-                            <Github className="h-4 w-4" />
+                            <GithubIcon className="h-4 w-4" />
                         </Button>
                     </a>
                     <Button
