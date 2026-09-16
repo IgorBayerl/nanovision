@@ -191,6 +191,8 @@ type summaryV1 struct {
 	Metadata          []metadataItem    `json:"metadata,omitempty"`
 	// flat list of problems (coverage warnings/errors)
 	Diagnostics []diagnostics.Diagnostic `json:"diagnostics,omitempty"`
+	// problems.show turned off: the diagnostics stay in the data, the panel is not drawn
+	HideProblems bool `json:"hideProblems,omitempty"`
 	// URL query string applied on first load, e.g. "diff=changed&risk=danger"
 	DefaultFilters string `json:"defaultFilters,omitempty"`
 	// gate verdict from review.Evaluate; set only for changelist reports

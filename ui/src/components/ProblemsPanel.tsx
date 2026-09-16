@@ -22,10 +22,10 @@ const severityIcon = (severity: Diagnostic['severity']) => {
  * when expanded, scrolls internally with a bounded max height.
  */
 export default function ProblemsPanel({ diagnostics, nodes }: ProblemsPanelProps) {
-    // Default to expanded when there are errors, collapsed otherwise.
     const errorCount = diagnostics.filter((d) => d.severity === 'error').length
     const warningCount = diagnostics.filter((d) => d.severity === 'warning').length
-    const [open, setOpen] = useState(errorCount > 0)
+    // Collapsed on load; the header's counts say whether it is worth opening.
+    const [open, setOpen] = useState(false)
 
     // Map file path -> details page URL so each problem can link to its file.
     const urlByPath = useMemo(() => {

@@ -135,12 +135,17 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		title = "Coverage Report"
 	}
 
-	diags := diagnostics.Extract(tree, b.config, evaluators.Registry)
+	var diags []diagnostics.Diagnostic
+	if b.config.Problems.Generate {
+		diags = diagnostics.Extract(tree, b.config, evaluators.Registry)
+		if b.review {
+			diags = diagnostics.OnlyChanged(diags)
+		}
+	}
 	defaultFilters := b.config.DefaultFilters
 
 	var reviewResult *review.Result
 	if b.review {
-		diags = diagnostics.OnlyChanged(diags)
 		reviewResult = review.Evaluate(tree, b.config)
 		if defaultFilters == "" {
 			defaultFilters = b.reviewDefaultFilters()
@@ -158,6 +163,7 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		MetricDefinitions: b.buildMetricDefinitions(),
 		Metadata:          b.buildMetadata(tree, generatedAt),
 		Diagnostics:       diags,
+		HideProblems:      !b.config.Problems.Show,
 		DefaultFilters:    defaultFilters,
 		Review:            reviewResult,
 		Reports:           reports,

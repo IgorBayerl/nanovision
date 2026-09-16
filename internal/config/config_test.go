@@ -3,6 +3,8 @@ package config
 import (
 	"reflect"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func defaultCLIInput() RawConfigInput {
@@ -160,5 +162,19 @@ func TestConfig_MethodMetrics_UnknownKeysPassConfig(t *testing.T) {
 	err := cfg.validate()
 	if err != nil {
 		t.Fatalf("expected no validation error (validation moved to main.go), got: %v", err)
+	}
+}
+
+func TestConfig_Problems_DefaultsSurvivePartialYAML(t *testing.T) {
+	cfg := GetDefaultConfig()
+	if err := yaml.Unmarshal([]byte("problems:\n  show: false\n"), cfg); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	if !cfg.Problems.Generate {
+		t.Error("expected problems.generate to keep its default of true")
+	}
+	if cfg.Problems.Show {
+		t.Error("expected problems.show to be false")
 	}
 }

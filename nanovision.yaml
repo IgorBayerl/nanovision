@@ -101,6 +101,11 @@ review:
   # when to exit non-zero: "error", "warning" or "never". also set with -fail-on
   fail_on: "never"
 
+# the Problems panel of the HTML reports
+problems:
+  generate: true  # evaluate the problems and embed them in the report data
+  show: true      # show the panel; when false the problems are still embedded
+
 # metrics shown in the reports, see docs/evaluator_reference.md
 file_metrics:
   # - "line_coverage"

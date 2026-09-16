@@ -178,6 +178,7 @@ export const summaryV1Schema = z.object({
     metricDefinitions: z.record(z.string(), metricDefinitionSchema),
     metadata: z.array(metadataItemSchema).optional(),
     diagnostics: z.array(diagnosticSchema).optional(),
+    hideProblems: z.boolean().optional(),
     defaultFilters: z.string().optional(),
     review: reviewSchema.optional(),
     reports: z.array(reportSchema).optional(),

@@ -158,6 +158,15 @@ type ReviewConfig struct {
 	FailOn string `yaml:"fail_on"`
 }
 
+// ProblemsConfig controls the Problems panel of the HTML reports. It does not
+// affect the Sarif and Annotations report types or the review.fail_on exit code.
+type ProblemsConfig struct {
+	// evaluate the problems and embed them in the report data
+	Generate bool `yaml:"generate"`
+	// render the panel; when false the problems are still embedded
+	Show bool `yaml:"show"`
+}
+
 type RawConfigInput struct {
 	ReportPatterns string
 	SourceDirs     string
@@ -201,6 +210,7 @@ type AppConfig struct {
 	IgnoreCache         bool               `yaml:"ignore_cache"`
 	Diff                DiffConfig         `yaml:"diff"`
 	Review              ReviewConfig       `yaml:"review"`
+	Problems            ProblemsConfig     `yaml:"problems"`
 	// URL query string applied on first load, e.g. "diff=changed&risk=danger"
 	DefaultFilters string `yaml:"default_filters"`
 
@@ -275,6 +285,10 @@ func GetDefaultConfig() *AppConfig {
 		Verbosity:   "Info",
 		Diff: DiffConfig{
 			Strip: "auto",
+		},
+		Problems: ProblemsConfig{
+			Generate: true,
+			Show:     true,
 		},
 	}
 }

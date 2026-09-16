@@ -112,9 +112,11 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
             {validatedData ? (
                 <>
                     {validatedData.review && <ReviewSummary review={validatedData.review} nodes={nodes} />}
-                    {validatedData.diagnostics && validatedData.diagnostics.length > 0 && (
-                        <ProblemsPanel diagnostics={validatedData.diagnostics} nodes={nodes} />
-                    )}
+                    {!validatedData.hideProblems &&
+                        validatedData.diagnostics &&
+                        validatedData.diagnostics.length > 0 && (
+                            <ProblemsPanel diagnostics={validatedData.diagnostics} nodes={nodes} />
+                        )}
                     <FileExplorer
                         nodes={nodes}
                         availableMetrics={metricKeys}
