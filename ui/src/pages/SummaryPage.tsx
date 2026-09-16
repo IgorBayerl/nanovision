@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import FileExplorer from '@/components/FileExplorer'
 import Layout from '@/components/Layout'
 import ProblemsPanel from '@/components/ProblemsPanel'
-import ReportsSelector from '@/components/ReportsSelector'
 import ReviewSummary from '@/components/ReviewSummary'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
@@ -11,7 +10,7 @@ import { applyReportSelection, unfilterableMetrics } from '@/lib/reportSelection
 import type { SummaryV1 } from '@/lib/validation'
 import { validateSummaryData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
-import { SidebarContent, SidebarHeader } from '@/ui/sidebar'
+import { SidebarContent } from '@/ui/sidebar'
 
 const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
 
@@ -94,21 +93,17 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
 
     const leftSidebar =
         validatedData && totals ? (
-            <>
-                <SidebarHeader>
-                    <div className="font-semibold text-sm">Overview</div>
-                </SidebarHeader>
-                <SidebarContent>
-                    <SummaryMetrics
-                        info={reportInfo}
-                        metrics={totals}
-                        metricOrder={metricKeys}
-                        metricDefinitions={validatedData.metricDefinitions}
-                        infoFooter={<ReportsSelector state={reportSelection} frozenMetricLabels={frozenMetricLabels} />}
-                        variant="sidebar"
-                    />
-                </SidebarContent>
-            </>
+            <SidebarContent className="gap-0 p-0">
+                <SummaryMetrics
+                    info={reportInfo}
+                    metrics={totals}
+                    metricOrder={metricKeys}
+                    metricDefinitions={validatedData.metricDefinitions}
+                    statusBands={validatedData.statusBands}
+                    reportSelection={reportSelection}
+                    frozenMetricLabels={frozenMetricLabels}
+                />
+            </SidebarContent>
         ) : undefined
 
     return (

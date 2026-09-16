@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import type { RiskFilter } from '@/types/summary'
 import { Button } from '@/ui/button'
-import { StatusIcon } from './MetricCard'
+import { StatusIcon } from './MetricRow'
 
 export default function RiskSegment({ value, onChange }: { value: RiskFilter; onChange: (v: RiskFilter) => void }) {
     const opts: RiskFilter[] = ['all', 'danger', 'warning', 'safe']

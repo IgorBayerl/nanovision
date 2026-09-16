@@ -29,8 +29,8 @@ export default function FunctionNav({ methods }: { methods: Method[] }) {
 
     return (
         <>
-            <SidebarHeader>
-                <div className="font-semibold text-sm">Methods</div>
+            <SidebarHeader className="gap-3 border-sidebar-border border-b px-5 py-4">
+                <h2 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Methods</h2>
                 <Input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -38,9 +38,11 @@ export default function FunctionNav({ methods }: { methods: Method[] }) {
                     className="h-8"
                 />
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="px-3 py-3">
                 <SidebarGroup>
-                    <SidebarGroupLabel>{filtered.length} methods</SidebarGroupLabel>
+                    <SidebarGroupLabel className="px-2 normal-case tracking-normal">
+                        {filtered.length} {filtered.length === 1 ? 'method' : 'methods'}
+                    </SidebarGroupLabel>
                     <SidebarMenu>
                         {filtered.map((method) => (
                             <SidebarMenuItem key={`${method.name}-${method.startLine}`}>

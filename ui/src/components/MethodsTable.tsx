@@ -8,7 +8,7 @@ import { camelCaseToTitleCase, cn } from '@/lib/utils'
 import type { Method, MetricDefinitions } from '@/types/summary'
 import { Card, CardContent, CardHeader } from '@/ui/card'
 import { Input } from '@/ui/input'
-import { StatusIcon } from './MetricCard'
+import { StatusIcon } from './MetricRow'
 
 // Parses the leading number out of a method metric value ("12", "3 / 5", "80%").
 const parseMetricNumber = (value?: string): number => {

@@ -1,6 +1,6 @@
 import type { RiskLevel } from '@/types/summary'
 import { Progress } from '@/ui/progress'
-import { StatusIcon } from './MetricCard'
+import { StatusIcon } from './MetricRow'
 
 export default function InlineCoverage({
     percentage,

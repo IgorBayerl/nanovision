@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import FunctionNav from '@/components/FunctionNav'
 import Layout from '@/components/Layout'
 import MethodsTable from '@/components/MethodsTable'
-import ReportsSelector from '@/components/ReportsSelector'
 import SourceCodeViewer from '@/components/SourceCodeViewer'
 import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
@@ -11,7 +10,7 @@ import { applyReportSelectionToTotals, unfilterableMetrics } from '@/lib/reportS
 import type { DetailsV1 } from '@/lib/validation'
 import { validateDetailsData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
-import { SidebarContent, SidebarHeader } from '@/ui/sidebar'
+import { SidebarContent } from '@/ui/sidebar'
 
 const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
 const isMetricKey = (key: string): boolean => !NON_METRIC_KEYS.has(key)
@@ -65,21 +64,17 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
 
     const leftSidebar =
         validatedData && totals ? (
-            <>
-                <SidebarHeader>
-                    <div className="font-semibold text-sm">Overview</div>
-                </SidebarHeader>
-                <SidebarContent>
-                    <SummaryMetrics
-                        info={reportInfo}
-                        metrics={totals}
-                        metricOrder={metricKeys}
-                        metricDefinitions={validatedData.metricDefinitions}
-                        infoFooter={<ReportsSelector state={reportSelection} frozenMetricLabels={frozenMetricLabels} />}
-                        variant="sidebar"
-                    />
-                </SidebarContent>
-            </>
+            <SidebarContent className="gap-0 p-0">
+                <SummaryMetrics
+                    info={reportInfo}
+                    metrics={totals}
+                    metricOrder={metricKeys}
+                    metricDefinitions={validatedData.metricDefinitions}
+                    statusBands={validatedData.statusBands}
+                    reportSelection={reportSelection}
+                    frozenMetricLabels={frozenMetricLabels}
+                />
+            </SidebarContent>
         ) : undefined
 
     const rightSidebar =
