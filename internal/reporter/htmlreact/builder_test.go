@@ -345,3 +345,12 @@ func TestUniqueReportLabels(t *testing.T) {
 		})
 	}
 }
+
+func TestMetricOrder_FollowsConfiguredFileMetrics(t *testing.T) {
+	cfg := &config.AppConfig{
+		FileMetrics: []config.MetricKey{config.StatementCoverage, config.PatchMethodsHit, config.MaxCyclomaticComplexity, config.BranchCoverage},
+	}
+	b := NewHtmlReactReportBuilder(t.TempDir(), slog.New(slog.NewTextHandler(os.Stdout, nil)), false, cfg).(*HtmlReactReportBuilder)
+
+	assert.Equal(t, []string{"statement_coverage", "patch_methods_hit", "max_cyclomatic_complexity", "branch_coverage"}, b.metricOrder())
+}

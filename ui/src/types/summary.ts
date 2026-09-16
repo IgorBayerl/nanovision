@@ -122,6 +122,8 @@ export interface SummaryV1 {
     /** Flat, pre-ordered (depth-first) list of all file and folder nodes. */
     nodes: FileNode[]
     metricDefinitions: MetricDefinitions
+    /** file_metrics in configured order; every metric list follows it. */
+    metricOrder?: string[]
     metadata?: MetadataItem[]
     /** Raw URL query string auto-applied on first load (no existing query). */
     defaultFilters?: string
@@ -216,6 +218,8 @@ export interface DetailsV1 {
     fileName: string
     totals: Totals
     metricDefinitions: MetricDefinitions
+    /** file_metrics in configured order; every metric list follows it. */
+    metricOrder?: string[]
     lines: LineDetails[]
     metadata?: MetadataItem[]
     methods?: Method[]

@@ -188,7 +188,9 @@ type summaryV1 struct {
 	Totals            totals            `json:"totals"`
 	Nodes             []fileNode        `json:"nodes"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
-	Metadata          []metadataItem    `json:"metadata,omitempty"`
+	// file_metrics in configured order; the UI lists metrics in this order
+	MetricOrder []string       `json:"metricOrder,omitempty"`
+	Metadata    []metadataItem `json:"metadata,omitempty"`
 	// flat list of problems (coverage warnings/errors)
 	Diagnostics []diagnostics.Diagnostic `json:"diagnostics,omitempty"`
 	// problems.show turned off: the diagnostics stay in the data, the panel is not drawn
@@ -213,9 +215,11 @@ type detailsV1 struct {
 	Metadata          []metadataItem    `json:"metadata"`
 	Totals            totals            `json:"totals"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
-	Methods           []methodDetail    `json:"methods,omitempty"`
-	Lines             []lineDetail      `json:"lines"`
-	Reports           []report          `json:"reports,omitempty"`
+	// file_metrics in configured order; the UI lists metrics in this order
+	MetricOrder []string       `json:"metricOrder,omitempty"`
+	Methods     []methodDetail `json:"methods,omitempty"`
+	Lines       []lineDetail   `json:"lines"`
+	Reports     []report       `json:"reports,omitempty"`
 	// compressed per-report coverage for this file, keyed by metric
 	ReportIndex reportIndex           `json:"reportIndex,omitempty"`
 	StatusBands map[string]statusBand `json:"statusBands,omitempty"`

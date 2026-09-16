@@ -71,6 +71,7 @@ func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryT
 		Metadata:          []metadataItem{},
 		Totals:            totalsData,
 		MetricDefinitions: b.buildMetricDefinitions(),
+		MetricOrder:       b.metricOrder(),
 		Methods:           detailsMethods,
 		Lines:             detailsLines,
 		Reports:           reportsList,

@@ -7,16 +7,11 @@ import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
 import { useReportSelection, withReportSelection } from '@/hooks/useReportSelection'
 import { applyReportSelection, unfilterableMetrics } from '@/lib/reportSelection'
+import { orderedMetricKeys } from '@/lib/utils'
 import type { SummaryV1 } from '@/lib/validation'
 import { validateSummaryData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
 import { SidebarContent } from '@/ui/sidebar'
-
-const NON_METRIC_KEYS = new Set(['files', 'folders', 'statuses'])
-
-const isMetricKey = (key: string): boolean => {
-    return !NON_METRIC_KEYS.has(key)
-}
 
 export default function SummaryPage({ data: rawData }: { data: unknown }) {
     const validationResult = useMemo(() => validateSummaryData(rawData), [rawData])
@@ -27,7 +22,7 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
             return {
                 validatedData: null,
                 reportInfo: undefined,
-                metricKeys: partialData.totals ? Object.keys(partialData.totals).filter(isMetricKey) : [],
+                metricKeys: orderedMetricKeys(partialData.totals, partialData.metricOrder),
             }
         }
 
@@ -46,7 +41,7 @@ export default function SummaryPage({ data: rawData }: { data: unknown }) {
             }
         }
 
-        const keys = Object.keys(data.totals).filter(isMetricKey)
+        const keys = orderedMetricKeys(data.totals, data.metricOrder)
 
         return {
             validatedData: data,

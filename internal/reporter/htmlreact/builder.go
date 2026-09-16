@@ -161,6 +161,7 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		Totals:            totalsData,
 		Nodes:             nodes,
 		MetricDefinitions: b.buildMetricDefinitions(),
+		MetricOrder:       b.metricOrder(),
 		Metadata:          b.buildMetadata(tree, generatedAt),
 		Diagnostics:       diags,
 		HideProblems:      !b.config.Problems.Show,
@@ -279,6 +280,16 @@ func trailingSegments(segments []string, depth int) string {
 		return strings.Join(segments, "/")
 	}
 	return strings.Join(segments[len(segments)-depth:], "/")
+}
+
+// metricOrder is file_metrics as configured, so every metric list in the UI
+// shows them in the order the user wrote them.
+func (b *HtmlReactReportBuilder) metricOrder() []string {
+	order := make([]string, len(b.config.FileMetrics))
+	for i, key := range b.config.FileMetrics {
+		order[i] = string(key)
+	}
+	return order
 }
 
 func (b *HtmlReactReportBuilder) buildStatusBands() map[string]statusBand {
