@@ -7,6 +7,7 @@ import SummaryMetrics from '@/components/SummaryMetrics'
 import ValidationAlerts from '@/components/ValidationAlerts'
 import { useReportSelection, withReportSelection } from '@/hooks/useReportSelection'
 import { applyReportSelection, unfilterableMetrics } from '@/lib/reportSelection'
+import { useRememberSummaryQuery } from '@/lib/summaryQuery'
 import { orderedMetricKeys } from '@/lib/utils'
 import type { SummaryV1 } from '@/lib/validation'
 import { validateSummaryData } from '@/lib/validation'
@@ -15,6 +16,7 @@ import { SidebarContent } from '@/ui/sidebar'
 
 export default function SummaryPage({ data: rawData }: { data: unknown }) {
     const validationResult = useMemo(() => validateSummaryData(rawData), [rawData])
+    useRememberSummaryQuery()
 
     const { reportInfo, metricKeys, validatedData } = useMemo(() => {
         if (!validationResult.success) {

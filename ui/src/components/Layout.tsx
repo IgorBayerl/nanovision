@@ -4,6 +4,7 @@ import Footer from '@/components/Layout.Footer'
 import { ThemeSwitch } from '@/components/Theme.Switch'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { GITHUB_URL } from '@/lib/consts'
+import { summaryHref } from '@/lib/summaryQuery'
 import { cn } from '@/lib/utils'
 import { Button } from '@/ui/button'
 import { SIDEBAR_DEFAULT_WIDTH, Sidebar, SidebarInset, SidebarProvider, SidebarTrigger } from '@/ui/sidebar'
@@ -42,7 +43,7 @@ export default function Layout({ children, title, showBackButton, leftSidebar, r
                         />
                     )}
                     {showBackButton && (
-                        <a href={`./index.html${window.location.search}`} title="Back to summary">
+                        <a href={summaryHref()} title="Back to summary">
                             <Button variant="outline" size="sm" className="h-8 w-8 rounded-sm p-0">
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
