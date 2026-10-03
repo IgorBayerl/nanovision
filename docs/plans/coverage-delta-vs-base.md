@@ -239,8 +239,7 @@ Notes:
 
 ### 7.1 What nanovision calculates
 
-1. The headline metric is statement coverage when both runs have statements. Otherwise it is line coverage. The review hotspots use the same rule.
-2. For each coverage metric in `file_metrics` that both runs have, nanovision shows the base value, the current value, the delta, and the counts.
+1. The headline metric is statement coverage when both runs have statements. Otherwise it is line coverage.2. For each coverage metric in `file_metrics` that both runs have, nanovision shows the base value, the current value, the delta, and the counts.
 3. For each file, nanovision calculates the delta of the headline metric. The output lists the 5 files with the largest delta.
 4. Each listed file has a label: `added`, `modified`, or `not in diff`. The label comes from the diff. Without a diff, the output has no label.
 5. The block also shows the patch coverage. nanovision calculates these numbers today. The block only repeats them.

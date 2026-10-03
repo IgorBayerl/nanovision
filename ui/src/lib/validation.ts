@@ -121,7 +121,7 @@ const metricDefinitionSchema = z.object({
     subMetrics: z.array(subMetricSchema),
 })
 
-// gate verdict, changelist stats and hotspots of a run measured with a diff;
+// gate verdict and changelist stats of a run measured with a diff;
 // the Changes tab shows them.
 const reviewGateCheckSchema = z.object({
     key: z.string(),
@@ -129,16 +129,6 @@ const reviewGateCheckSchema = z.object({
     value: z.number(),
     threshold: z.number(),
     passed: z.boolean(),
-})
-
-const reviewHotspotSchema = z.object({
-    file: z.string(),
-    method: z.string(),
-    startLine: z.number(),
-    diffStatus: z.string(),
-    complexity: z.number().optional(),
-    patchCoverage: z.number().optional(),
-    risk: z.number(),
 })
 
 const reviewStatsSchema = z.object({
@@ -155,7 +145,6 @@ const reviewSchema = z.object({
     passed: z.boolean(),
     checks: z.array(reviewGateCheckSchema).optional(),
     stats: reviewStatsSchema,
-    hotspots: z.array(reviewHotspotSchema).optional(),
 })
 
 export type Review = z.infer<typeof reviewSchema>

@@ -297,7 +297,7 @@ export default function ChangesTab({ comparison, review, nodes }: ChangesTabProp
                 </p>
             )}
             {/* a change of tests alone has no changed code to judge */}
-            {review && review.stats.changedFiles > 0 && <ReviewSummary review={review} nodes={nodes} />}
+            {review && review.stats.changedFiles > 0 && <ReviewSummary review={review} />}
             <ChangedFiles nodes={nodes} files={comparison?.files ?? []} />
         </div>
     )

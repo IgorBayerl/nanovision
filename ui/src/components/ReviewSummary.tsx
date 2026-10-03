@@ -1,35 +1,21 @@
-import { CheckCircle2, Flame, XCircle } from 'lucide-react'
-import { useMemo } from 'react'
-import DiffStatusBadge from '@/components/DiffStatusBadge'
+import { CheckCircle2, XCircle } from 'lucide-react'
 import InfoTooltip from '@/components/InfoTooltip'
 import { cn } from '@/lib/utils'
-import type { FileNode, Review } from '@/lib/validation'
-import type { DiffStatus } from '@/types/summary'
+import type { Review } from '@/lib/validation'
 
 interface ReviewSummaryProps {
     review: Review
-    /** Flat node list, used to resolve a hotspot's file to its details page URL. */
-    nodes: FileNode[]
 }
 
 const formatPct = (value: number) => `${value.toFixed(1)}%`
 
 /**
- * The verdict on the changed code: gate banner, changelist stat cards and the
- * risk-hotspot table. A report carries a `review` block when its run was
- * measured with a diff.
+ * The verdict on the changed code: gate banner and changelist stat cards. A
+ * report carries a `review` block when its run was measured with a diff.
  */
-export default function ReviewSummary({ review, nodes }: ReviewSummaryProps) {
-    const { stats, checks = [], hotspots = [] } = review
+export default function ReviewSummary({ review }: ReviewSummaryProps) {
+    const { stats, checks = [] } = review
     const failedChecks = checks.filter((c) => !c.passed)
-
-    const urlByPath = useMemo(() => {
-        const map = new Map<string, string>()
-        for (const node of nodes) {
-            if (node.type === 'file' && node.targetUrl) map.set(node.path, node.targetUrl)
-        }
-        return map
-    }, [nodes])
 
     const patchPct =
         stats.patchStatementsValid > 0 ? (100 * stats.patchStatementsCovered) / stats.patchStatementsValid : null
@@ -104,86 +90,6 @@ export default function ReviewSummary({ review, nodes }: ReviewSummaryProps) {
                     tone={complexityCheck ? (complexityCheck.passed ? 'good' : 'bad') : 'neutral'}
                 />
             </div>
-
-            {hotspots.length > 0 && (
-                <div className="overflow-hidden rounded-md border border-border bg-card">
-                    <div className="flex items-center gap-2 border-border border-b bg-muted/40 px-3 py-2">
-                        <Flame className="h-4 w-4 shrink-0 text-partial" />
-                        <span className="font-semibold text-sm">Review hotspots</span>
-                        <span className="text-muted-foreground text-xs">
-                            changed methods ranked by risk (complexity × untested)
-                        </span>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="text-left text-muted-foreground text-xs">
-                                    <th className="px-3 py-1.5 font-medium">Method</th>
-                                    <th className="px-3 py-1.5 font-medium">File</th>
-                                    <th className="px-2 py-1.5 text-center font-medium">Change</th>
-                                    <th className="px-2 py-1.5 text-right font-medium">Complexity</th>
-                                    <th className="px-2 py-1.5 text-right font-medium">Patch coverage</th>
-                                    <th className="px-3 py-1.5 text-right font-medium">Risk</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {hotspots.map((h) => {
-                                    const url = urlByPath.get(h.file)
-                                    const location = `${h.file}:${h.startLine}`
-                                    return (
-                                        <tr
-                                            key={`${h.file}-${h.startLine}-${h.method}`}
-                                            className="border-border border-t hover:bg-muted/40"
-                                        >
-                                            <td
-                                                className="max-w-64 truncate px-3 py-1.5 font-mono text-xs"
-                                                title={h.method}
-                                            >
-                                                {h.method}
-                                            </td>
-                                            <td
-                                                className="max-w-72 truncate px-3 py-1.5 font-mono text-xs"
-                                                title={location}
-                                            >
-                                                {url ? (
-                                                    <a href={url} className="text-primary hover:underline">
-                                                        {location}
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-muted-foreground">{location}</span>
-                                                )}
-                                            </td>
-                                            <td className="px-2 py-1.5 text-center">
-                                                <DiffStatusBadge status={h.diffStatus as DiffStatus} />
-                                            </td>
-                                            <td className="px-2 py-1.5 text-right tabular-nums">
-                                                {h.complexity !== undefined ? h.complexity.toFixed(0) : '—'}
-                                            </td>
-                                            <td
-                                                className={cn(
-                                                    'px-2 py-1.5 text-right tabular-nums',
-                                                    h.patchCoverage !== undefined &&
-                                                        h.patchCoverage < 50 &&
-                                                        'text-uncovered',
-                                                    h.patchCoverage !== undefined &&
-                                                        h.patchCoverage >= 50 &&
-                                                        h.patchCoverage < 80 &&
-                                                        'text-partial',
-                                                )}
-                                            >
-                                                {h.patchCoverage !== undefined ? formatPct(h.patchCoverage) : '—'}
-                                            </td>
-                                            <td className="px-3 py-1.5 text-right font-semibold tabular-nums">
-                                                {h.risk.toFixed(1)}
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

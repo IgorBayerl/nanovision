@@ -5,7 +5,7 @@
  *
  * Generated from the nanovision self-coverage reports (full merged) with a
  * git diff applied, plus the `review` block (gate verdict,
- * changelist stats, risk hotspots) so the review header renders in dev.
+ * changelist stats) so the review header renders in dev.
  *
  * Regenerate with: python scripts/gen_ui_fixture.py
  * Schema version: 1 (flat node list)
@@ -9161,99 +9161,7 @@ window.__NANOVISION_SUMMARY__ = {
    "patchStatementsValid": 3461,
    "patchStatementsCovered": 2760,
    "maxChangedComplexity": 31
-  },
-  "hotspots": [
-   {
-    "file": "cmd/serve.go",
-    "method": "runServe",
-    "startLine": 26,
-    "diffStatus": "added",
-    "complexity": 16,
-    "patchCoverage": 0,
-    "risk": 16
-   },
-   {
-    "file": "cmd/main.go",
-    "method": "main",
-    "startLine": 215,
-    "diffStatus": "modified",
-    "complexity": 27,
-    "patchCoverage": 67.6470588235294,
-    "risk": 11.903225806451614
-   },
-   {
-    "file": "cmd/storecmd.go",
-    "method": "resolveStoreDir",
-    "startLine": 84,
-    "diffStatus": "added",
-    "complexity": 9,
-    "patchCoverage": 10.526315789473685,
-    "risk": 8.052631578947368
-   },
-   {
-    "file": "internal/server/maintenance.go",
-    "method": "(*Server).maintain",
-    "startLine": 33,
-    "diffStatus": "added",
-    "complexity": 8,
-    "patchCoverage": 0,
-    "risk": 8
-   },
-   {
-    "file": "internal/config/config.go",
-    "method": "(*AppConfig).mergeCliOverrides",
-    "startLine": 428,
-    "diffStatus": "modified",
-    "complexity": 28,
-    "patchCoverage": 86.20689655172414,
-    "risk": 7.924528301886793
-   },
-   {
-    "file": "internal/store/blob/analysis.go",
-    "method": "DecodeAnalysis",
-    "startLine": 71,
-    "diffStatus": "added",
-    "complexity": 31,
-    "patchCoverage": 75,
-    "risk": 7.75
-   },
-   {
-    "file": "internal/reporter/htmlreact/builder.go",
-    "method": "(*HtmlReactReportBuilder).createSingleFileReport",
-    "startLine": 77,
-    "diffStatus": "modified",
-    "complexity": 7,
-    "patchCoverage": 0,
-    "risk": 7
-   },
-   {
-    "file": "internal/server/ui.go",
-    "method": "(*Server).handleUI",
-    "startLine": 44,
-    "diffStatus": "added",
-    "complexity": 12,
-    "patchCoverage": 44.44444444444444,
-    "risk": 6.666666666666667
-   },
-   {
-    "file": "cmd/storecmd.go",
-    "method": "runStoreCommand",
-    "startLine": 28,
-    "diffStatus": "added",
-    "complexity": 13,
-    "patchCoverage": 53.65853658536585,
-    "risk": 6.024390243902438
-   },
-   {
-    "file": "internal/reporter/textsummary/terminal.go",
-    "method": "WriteTerminal",
-    "startLine": 34,
-    "diffStatus": "added",
-    "complexity": 29,
-    "patchCoverage": 80,
-    "risk": 5.799999999999999
-   }
-  ]
+  }
  },
  "comparing": [
   {

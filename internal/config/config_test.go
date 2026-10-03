@@ -429,7 +429,7 @@ func TestConfig_SetFlag(t *testing.T) {
 	cli.Reports = []string{"a.out"}
 	cli.Set = []string{
 		"title=123",
-		"review.hotspots=5",
+		"history.keep_local=5",
 		"review.gate.patch_statement_coverage=80",
 		"diff.only_changed=true",
 		"nested_configs=false",
@@ -441,9 +441,9 @@ func TestConfig_SetFlag(t *testing.T) {
 	if err := loadFlags(cfg, cli); err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Title != "123" || cfg.Review.Hotspots != 5 || !cfg.Diff.OnlyChanged || cfg.NestedConfigs || cfg.VCS.BaseBranch != "origin/dev" {
-		t.Errorf("got title %q, hotspots %d, only_changed %v, nested %v, base branch %q",
-			cfg.Title, cfg.Review.Hotspots, cfg.Diff.OnlyChanged, cfg.NestedConfigs, cfg.VCS.BaseBranch)
+	if cfg.Title != "123" || cfg.History.KeepLocal != 5 || !cfg.Diff.OnlyChanged || cfg.NestedConfigs || cfg.VCS.BaseBranch != "origin/dev" {
+		t.Errorf("got title %q, keep_local %d, only_changed %v, nested %v, base branch %q",
+			cfg.Title, cfg.History.KeepLocal, cfg.Diff.OnlyChanged, cfg.NestedConfigs, cfg.VCS.BaseBranch)
 	}
 	if g := cfg.Review.Gate.PatchStatementCoverage; g == nil || *g != 80 {
 		t.Errorf("review.gate.patch_statement_coverage: got %v", g)
@@ -452,7 +452,7 @@ func TestConfig_SetFlag(t *testing.T) {
 		t.Errorf("a list key takes one -set for each item: got %v", cfg.IgnoreFiles)
 	}
 
-	for _, bad := range []string{"titel=x", "overrides=x", "review=x", "review.hotspots=many", "novalue"} {
+	for _, bad := range []string{"titel=x", "overrides=x", "review=x", "history.keep_local=many", "novalue"} {
 		cli.Set = []string{bad}
 		if err := loadFlags(GetDefaultConfig(), cli); err == nil {
 			t.Errorf("-set %s: expected an error", bad)

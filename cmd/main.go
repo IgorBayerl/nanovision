@@ -54,7 +54,7 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.Var((*repeatedStringFlag)(&rawInput.FileMetrics), "file-metric", "File metric to show: 'name' or 'name=min..max' with a warning range. Repeat it, in column order. See -list-metrics.")
 	flag.Var((*repeatedStringFlag)(&rawInput.MethodMetrics), "method-metric", "Method metric to show: 'name' or 'name=min..max'. Repeat it, in column order. See -list-metrics.")
 	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Warning range of a metric: 'name=min..max', or 'methods.name=min..max' for a method metric. Repeat it.")
-	flag.Var((*repeatedStringFlag)(&rawInput.Set), "set", "Set any config key: 'key=value', e.g. 'review.hotspots=5'. Repeat it. 'nanovision config docs' lists the keys.")
+	flag.Var((*repeatedStringFlag)(&rawInput.Set), "set", "Set any config key: 'key=value', e.g. 'history.keep_local=5'. Repeat it. 'nanovision config docs' lists the keys.")
 	flag.StringVar(&rawInput.VCS, "vcs", "", "Version control system: 'git' or 'perforce' (vcs.type)")
 	flag.StringVar(&rawInput.OutputDir, "output", "coverage-report", "Output directory for generated reports")
 	flag.StringVar(&rawInput.ReportTypes, "reporttypes", "TextSummary,Html", "Report types (comma-separated)")

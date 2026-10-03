@@ -56,7 +56,7 @@ func buildTree() *model.SummaryTree {
 	}
 }
 
-func TestEvaluate_StatsAndHotspots(t *testing.T) {
+func TestEvaluate_Stats(t *testing.T) {
 	cfg := &config.AppConfig{}
 	res := review.Evaluate(buildTree(), cfg)
 
@@ -70,16 +70,6 @@ func TestEvaluate_StatsAndHotspots(t *testing.T) {
 	assert.Equal(t, 12, res.Stats.MaxChangedComplexity, "unchanged method's CC 30 must not count")
 	assert.Equal(t, 14, res.Stats.PatchStatementsValid)
 	assert.Equal(t, 4, res.Stats.PatchStatementsCovered)
-
-	// Only the two changed methods are hotspots, riskiest first.
-	assert.Len(t, res.Hotspots, 2)
-	assert.Equal(t, "Untested", res.Hotspots[0].Method)
-	assert.InDelta(t, 12.0, res.Hotspots[0].Risk, 0.001) // CC 12 * fully uncovered
-	assert.Equal(t, "Covered", res.Hotspots[1].Method)
-	assert.InDelta(t, 0.0, res.Hotspots[1].Risk, 0.001)
-	if assert.NotNil(t, res.Hotspots[0].PatchCoverage) {
-		assert.InDelta(t, 0.0, *res.Hotspots[0].PatchCoverage, 0.001)
-	}
 }
 
 func TestEvaluate_GateFailsAndPasses(t *testing.T) {
@@ -110,13 +100,6 @@ func TestEvaluate_GateFailsAndPasses(t *testing.T) {
 	}
 	res = review.Evaluate(buildTree(), passing)
 	assert.True(t, res.Passed)
-}
-
-func TestEvaluate_HotspotLimit(t *testing.T) {
-	cfg := &config.AppConfig{Review: config.ReviewConfig{Hotspots: 1}}
-	res := review.Evaluate(buildTree(), cfg)
-	assert.Len(t, res.Hotspots, 1)
-	assert.Equal(t, "Untested", res.Hotspots[0].Method)
 }
 
 func TestEvaluate_NilTree(t *testing.T) {

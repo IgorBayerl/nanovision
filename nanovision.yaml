@@ -107,7 +107,6 @@ review:
   gate:                                # thresholds for the pass/fail verdict
     patch_statement_coverage: 80       # min % coverage of changed statements
     max_changed_method_complexity: 15  # max CC of any added or modified method
-  hotspots: 10                         # how many risky changed methods to list
   # when to exit non-zero: "error", "warning" or "never". also set with -fail-on
   fail_on: "never"
 

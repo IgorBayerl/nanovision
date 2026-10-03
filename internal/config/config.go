@@ -156,9 +156,8 @@ type ReviewGate struct {
 }
 
 type ReviewConfig struct {
-	Gate     ReviewGate `yaml:"gate" doc:"Limits for the changed code."`
-	Hotspots int        `yaml:"hotspots" doc:"Number of risky changed methods to list."`
-	FailOn   string     `yaml:"fail_on" flag:"fail-on" doc:"Fail the build on errors in changed code, or also on warnings." values:"never,error,warning"`
+	Gate   ReviewGate `yaml:"gate" doc:"Limits for the changed code."`
+	FailOn string     `yaml:"fail_on" flag:"fail-on" doc:"Fail the build on errors in changed code, or also on warnings." values:"never,error,warning"`
 }
 
 // HistoryConfig turns on the run store. An empty Store keeps history off.
@@ -199,7 +198,7 @@ type RawConfigInput struct {
 	// entry, separated by ";"
 	Reports    []string
 	SourceDirs string
-	// each "key=value" for a config key, e.g. "review.hotspots=5"
+	// each "key=value" for a config key, e.g. "history.keep_local=5"
 	Set         []string
 	ReportTypes string
 	FileFilters string
@@ -418,8 +417,7 @@ func GetDefaultConfig() *AppConfig {
 			Strip: "auto",
 		},
 		Review: ReviewConfig{
-			Hotspots: 10,
-			FailOn:   "never",
+			FailOn: "never",
 		},
 		History: HistoryConfig{
 			Profile:     "default",
@@ -601,7 +599,7 @@ func settingsFromFlags(entries []string, old []MetricSetting) ([]MetricSetting, 
 }
 
 // applySet applies -set key=value, which sets any plain config key by its
-// name in the config file, e.g. -set review.hotspots=5. A key that holds a
+// name in the config file, e.g. -set history.keep_local=5. A key that holds a
 // list takes one -set for each item.
 func (c *AppConfig) applySet(entries []string) error {
 	if len(entries) == 0 {
@@ -758,9 +756,6 @@ func (c *AppConfig) computeDerivedFields() error {
 	c.Review.FailOn = strings.ToLower(c.Review.FailOn)
 	if c.Review.FailOn == "" {
 		c.Review.FailOn = "never"
-	}
-	if c.Review.Hotspots <= 0 {
-		c.Review.Hotspots = 10
 	}
 
 	return nil

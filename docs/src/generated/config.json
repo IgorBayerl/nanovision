@@ -188,12 +188,6 @@
           ]
         },
         {
-          "key": "review.hotspots",
-          "type": "number",
-          "doc": "Number of risky changed methods to list.",
-          "default": "10"
-        },
-        {
           "key": "review.fail_on",
           "type": "string",
           "doc": "Fail the build on errors in changed code, or also on warnings.",

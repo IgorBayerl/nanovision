@@ -86,17 +86,6 @@ export interface ReviewGateCheck {
     passed: boolean
 }
 
-/** A changed method ranked by exposed risk (complexity × uncovered ratio). */
-export interface ReviewHotspot {
-    file: string
-    method: string
-    startLine: number
-    diffStatus: string
-    complexity?: number
-    patchCoverage?: number
-    risk: number
-}
-
 export interface ReviewStats {
     changedFiles: number
     methodsAdded: number
@@ -112,7 +101,6 @@ export interface ReviewResult {
     passed: boolean
     checks?: ReviewGateCheck[]
     stats: ReviewStats
-    hotspots?: ReviewHotspot[]
 }
 
 export interface SummaryV1 {

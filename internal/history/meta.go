@@ -55,7 +55,6 @@ type ConfigSnapshot struct {
 	// warning ranges that single folders set for themselves, outer folders first
 	FolderBands    []FolderBands `json:"folderBands,omitempty"`
 	Gate           Gate          `json:"gate"`
-	Hotspots       int           `json:"hotspots,omitempty"`
 	DefaultFilters string        `json:"defaultFilters,omitempty"`
 	// file_filters and ignore_files, as filter rules
 	Filters []string `json:"filters,omitempty"`
@@ -81,7 +80,6 @@ func SnapshotConfig(cfg *config.AppConfig) ConfigSnapshot {
 		FileMetrics:    cfg.FileMetrics,
 		MethodMetrics:  cfg.MethodMetrics,
 		Gate:           Gate{PatchStatementCoverage: cfg.Review.Gate.PatchStatementCoverage, MaxChangedMethodComplexity: cfg.Review.Gate.MaxChangedMethodComplexity},
-		Hotspots:       cfg.Review.Hotspots,
 		DefaultFilters: cfg.DefaultFilters,
 	}
 	snap.StatusBands = snapshotBands(cfg.StatusBands)
@@ -149,10 +147,6 @@ func (m Meta) AppConfig() (*config.AppConfig, error) {
 		cfg.FolderBands = append(cfg.FolderBands, config.FolderBand{Path: f.Path, Bands: restoreBands(f.Bands)})
 	}
 	cfg.Review.Gate = config.ReviewGate{PatchStatementCoverage: snap.Gate.PatchStatementCoverage, MaxChangedMethodComplexity: snap.Gate.MaxChangedMethodComplexity}
-	cfg.Review.Hotspots = snap.Hotspots
-	if cfg.Review.Hotspots <= 0 {
-		cfg.Review.Hotspots = 10
-	}
 	cfg.Review.FailOn = "never"
 	cfg.DefaultFilters = snap.DefaultFilters
 

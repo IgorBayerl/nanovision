@@ -7,8 +7,8 @@ The fixture is what the Vite dev server (pnpm dev in ui/) renders; in
 production the Go reporter writes a real data.js next to index.html. This
 script produces a fixture that exercises everything the summary page can
 show: the full merged self-coverage tree, patch coverage from a git diff
-and the review block (gate verdict, changelist stats,
-risk hotspots) that a run with a diff carries.
+and the review block (gate verdict, changelist stats) that a run with a
+diff carries.
 
 Prerequisites: the self-coverage input files must exist (run
 `python scripts/e2e_test.py --self-cover` first, or have
@@ -34,7 +34,7 @@ HEADER = """/**
  *
  * Generated from the nanovision self-coverage reports (full merged) with a
  * git diff applied, plus the `review` block (gate verdict,
- * changelist stats, risk hotspots) so the review header renders in dev.
+ * changelist stats) so the review header renders in dev.
  *
  * Regenerate with: python scripts/gen_ui_fixture.py
  * Schema version: 1 (flat node list)
@@ -91,7 +91,7 @@ def main():
     size_kb = os.path.getsize(FIXTURE_PATH) // 1024
     review = summary["review"]
     print(f"Wrote {FIXTURE_PATH} ({size_kb} KB)")
-    print(f"review.passed={review['passed']} checks={len(review.get('checks', []))} hotspots={len(review.get('hotspots', []))}")
+    print(f"review.passed={review['passed']} checks={len(review.get('checks', []))}")
     return 0
 
 
