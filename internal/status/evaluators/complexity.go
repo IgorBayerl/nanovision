@@ -76,30 +76,6 @@ func (e MethodCrapScoreEvaluator) Evaluate(m model.CoverageMetrics, band *config
 	return status.ClassifyLowerIsBetter(detail.Value, band)
 }
 
-// MethodPatchCrapScoreEvaluator
-
-type MethodPatchCrapScoreEvaluator struct{}
-
-func (MethodPatchCrapScoreEvaluator) Key() config.MetricKey { return config.MethodPatchCrapScore }
-func (MethodPatchCrapScoreEvaluator) Name() string          { return "Patch CRAP Score" }
-func (MethodPatchCrapScoreEvaluator) Description() string {
-	return "CRAP score applied only to patched statements (lower is better)."
-}
-func (MethodPatchCrapScoreEvaluator) SupportedScopes() status.MetricScope {
-	return status.MethodScope
-}
-
-func (MethodPatchCrapScoreEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
-
-func (e MethodPatchCrapScoreEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
-	calc, exists := m.Calculated[e.Key()]
-	if !exists {
-		return "", false
-	}
-	detail := calc.(model.ScoreDetail)
-	return status.ClassifyLowerIsBetter(detail.Value, band)
-}
-
 // MethodExposedRiskEvaluator
 
 type MethodExposedRiskEvaluator struct{}
@@ -116,30 +92,6 @@ func (MethodExposedRiskEvaluator) SupportedScopes() status.MetricScope {
 func (MethodExposedRiskEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
 
 func (e MethodExposedRiskEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
-	calc, exists := m.Calculated[e.Key()]
-	if !exists {
-		return "", false
-	}
-	detail := calc.(model.ScoreDetail)
-	return status.ClassifyLowerIsBetter(detail.Value, band)
-}
-
-// MethodDefectProbabilityEvaluator
-
-type MethodDefectProbabilityEvaluator struct{}
-
-func (MethodDefectProbabilityEvaluator) Key() config.MetricKey { return config.MethodDefectProbability }
-func (MethodDefectProbabilityEvaluator) Name() string          { return "Defect Probability Index" }
-func (MethodDefectProbabilityEvaluator) Description() string {
-	return "Index representing the probability of defects based on complexity and patch coverage (lower is better)."
-}
-func (MethodDefectProbabilityEvaluator) SupportedScopes() status.MetricScope {
-	return status.MethodScope
-}
-
-func (MethodDefectProbabilityEvaluator) IsApplicable(_ status.Capabilities) bool { return true }
-
-func (e MethodDefectProbabilityEvaluator) Evaluate(m model.CoverageMetrics, band *config.Band) (status.RiskLevel, bool) {
 	calc, exists := m.Calculated[e.Key()]
 	if !exists {
 		return "", false

@@ -2,6 +2,7 @@ package diffapply
 
 import (
 	"log/slog"
+	"path"
 	"strings"
 
 	"github.com/IgorBayerl/nanovision/internal/diff"
@@ -13,6 +14,9 @@ type Resolver interface {
 	// Resolve attempts to map a diff path to a tree path
 	// Returns the resolved path and whether resolution was successful
 	Resolve(diffPath string) (treeRel string, ok bool)
+	// Relative gives the project-relative path of a diff file the tree does not
+	// have, with the same prefix stripping Resolve uses
+	Relative(diffPath string) string
 }
 
 type resolverImpl struct {
@@ -24,6 +28,9 @@ type resolverImpl struct {
 	stripPrefix string   // For H2: common prefix to strip
 	stripN      int      // For H1: number of components to strip (-pN)
 	candidates  []string // For H3/H4: potential matches for suffix matching
+	direct      bool     // some diff paths match tree paths as they are
+	prefixUsed  bool     // stripping stripPrefix matched at least one tree path
+	treeDirs    map[string]bool
 }
 
 // BuildResolver creates a new Resolver using multiple heuristics:
@@ -53,6 +60,18 @@ func BuildResolver(dd *diff.DiffData, fileIndex map[string]*model.FileNode, cove
 	for path := range fileIndex {
 		treePaths = append(treePaths, path)
 	}
+	for _, dp := range diffPaths {
+		if _, ok := fileIndex[dp]; ok {
+			r.direct = true
+			break
+		}
+	}
+	r.treeDirs = make(map[string]bool)
+	for _, tp := range treePaths {
+		for dir := path.Dir(tp); dir != "." && !r.treeDirs[dir]; dir = path.Dir(dir) {
+			r.treeDirs[dir] = true
+		}
+	}
 
 	// Try H1: Strip N path components
 	bestN := r.findBestStripN(diffPaths, treePaths)
@@ -64,6 +83,12 @@ func BuildResolver(dd *diff.DiffData, fileIndex map[string]*model.FileNode, cove
 	// Try H2: Common prefix
 	if prefix := r.findCommonPrefix(diffPaths); prefix != "" {
 		r.stripPrefix = prefix
+		for _, dp := range diffPaths {
+			if _, ok := fileIndex[strings.TrimPrefix(dp, prefix)]; ok {
+				r.prefixUsed = true
+				break
+			}
+		}
 		return r
 	}
 
@@ -115,13 +140,39 @@ func (r *resolverImpl) Resolve(diffPath string) (string, bool) {
 		return result, true
 	}
 
-	// Log warning for unmapped paths
+	// Most unmapped files are expected: tests the filters remove, or files no
+	// report measures. The caller sorts them into groups.
 	if _, warned := r.warned[diffPath]; !warned {
-		r.logger.Warn("unable to map diff path", "path", diffPath)
+		r.logger.Debug("diff path is not in the coverage tree", "path", diffPath)
 		r.warned[diffPath] = struct{}{}
 	}
 
 	return "", false
+}
+
+// Relative trusts only a rule that mapped other files of this diff. Without one,
+// for example when a change only touches tests, it strips the fewest leading
+// folders that leave a folder the tree has.
+func (r *resolverImpl) Relative(diffPath string) string {
+	diffPath = diff.Normalize(diffPath)
+	if r.direct {
+		return diffPath
+	}
+	parts := strings.Split(diffPath, "/")
+	if r.stripN > 0 && len(parts) > r.stripN {
+		return strings.Join(parts[r.stripN:], "/")
+	}
+	if r.prefixUsed {
+		if rel, ok := strings.CutPrefix(diffPath, r.stripPrefix); ok {
+			return rel
+		}
+	}
+	for n := 0; n < len(parts)-1 && n <= 5; n++ {
+		if rel := strings.Join(parts[n:], "/"); r.treeDirs[path.Dir(rel)] {
+			return rel
+		}
+	}
+	return diffPath
 }
 
 func (r *resolverImpl) findBestStripN(diffPaths, treePaths []string) int {

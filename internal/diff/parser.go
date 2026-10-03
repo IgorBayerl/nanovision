@@ -37,6 +37,19 @@ func Parse(path string, logger *slog.Logger) (*DiffData, error) {
 	return p.parseLines(lines)
 }
 
+// ParseText parses diff text that did not come from a file, for example the
+// output of `git diff` or `p4 diff -du` run by a VCS adapter.
+func ParseText(text string, logger *slog.Logger) (*DiffData, error) {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	lines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
+	if n := len(lines); n > 0 && lines[n-1] == "" {
+		lines = lines[:n-1]
+	}
+	return newParser(logger).parseLines(lines)
+}
+
 // parser encapsulates the state required during the parsing process.
 type parser struct {
 	logger *slog.Logger

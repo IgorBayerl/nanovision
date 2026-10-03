@@ -6,6 +6,8 @@ export interface CoverageDetail {
     coverable?: number
     total: number
     percentage: number
+    /** Change against the base run in percentage points; the report page adds it. */
+    delta?: number
 }
 
 export type Metrics = Record<string, CoverageDetail | ScoreDetail>
@@ -36,10 +38,8 @@ export interface Totals {
     folders: number
     statuses?: Statuses
     line_coverage?: CoverageDetail
-    branch_coverage?: CoverageDetail
     methods_covered?: CoverageDetail
     methods_fully_covered?: CoverageDetail
-    method_branch_coverage?: CoverageDetail
     max_cyclomatic_complexity?: ScoreDetail
     [key: string]: CoverageDetail | ScoreDetail | number | Statuses | undefined
 }
@@ -105,7 +105,7 @@ export interface ReviewStats {
     maxChangedComplexity: number
 }
 
-/** Changelist evaluation emitted by the HtmlReview report type. */
+/** The verdict on the changed code of a run measured with a diff. */
 export interface ReviewResult {
     passed: boolean
     checks?: ReviewGateCheck[]
@@ -127,7 +127,7 @@ export interface SummaryV1 {
     metadata?: MetadataItem[]
     /** Raw URL query string auto-applied on first load (no existing query). */
     defaultFilters?: string
-    /** Present only in review reports; switches the UI to the review layout. */
+    /** Present when the run was measured with a diff; shown on the Changes tab. */
     review?: ReviewResult
     /** Every parsed report, indexed as the coverage masks address them. */
     reports?: Report[]
@@ -137,7 +137,6 @@ export interface SummaryV1 {
 }
 
 export type RiskFilter = 'all' | 'danger' | 'warning' | 'safe'
-export type DiffFilter = 'all' | 'changed'
 export type MetricKey = string
 
 export type MetricConfig = {
@@ -148,17 +147,12 @@ export type MetricConfig = {
     definition: MetricDefinition
 }
 
-export type FilterRange = {
-    min: number
-    max: number
-}
-
 export type SortableSubMetricKey = keyof CoverageDetail | string
 
 export type SortKey = 'name' | { metric: MetricKey; subMetric: SortableSubMetricKey }
 export type SortDir = 'asc' | 'desc'
 
-export type LineStatus = 'covered' | 'uncovered' | 'not-coverable' | 'partial'
+export type LineStatus = 'covered' | 'uncovered' | 'not-coverable'
 
 export interface Report {
     name: string
@@ -191,10 +185,6 @@ export interface LineDetails {
     content: string
     status: LineStatus
     hits?: number[]
-    branchInfo?: {
-        covered: number
-        total: number
-    }
     diffStatus?: DiffStatus
 }
 

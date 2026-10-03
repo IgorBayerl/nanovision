@@ -3,14 +3,12 @@ package htmlreact
 import (
 	"fmt"
 	"log/slog"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/IgorBayerl/nanovision/internal/aggregator"
 	"github.com/IgorBayerl/nanovision/internal/config"
-	"github.com/IgorBayerl/nanovision/internal/diagnostics"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/reporter"
 	"github.com/IgorBayerl/nanovision/internal/review"
@@ -21,35 +19,24 @@ type HtmlReactReportBuilder struct {
 	outputDir  string
 	logger     *slog.Logger
 	singleFile bool
-	review     bool
-	config     *config.AppConfig
+	// emit only the changed files and the folders that hold them
+	onlyChanged bool
+	config      *config.AppConfig
+	// set when a server builds the views of a stored run
+	view *ViewOptions
 }
 
 func NewHtmlReactReportBuilder(outputDir string, logger *slog.Logger, singleFile bool, cfg *config.AppConfig) reporter.ReportBuilder {
 	return &HtmlReactReportBuilder{
-		outputDir:  outputDir,
-		logger:     logger,
-		singleFile: singleFile,
-		config:     cfg,
-	}
-}
-
-// changelist-only HTML report: changed files, review block, patch metrics as columns.
-// single-file, written to <outputDir>/review so it can sit next to HtmlUnified.
-func NewHtmlReviewReportBuilder(outputDir string, logger *slog.Logger, cfg *config.AppConfig) reporter.ReportBuilder {
-	return &HtmlReactReportBuilder{
-		outputDir:  filepath.Join(outputDir, "review"),
-		logger:     logger,
-		singleFile: true,
-		review:     true,
-		config:     cfg,
+		outputDir:   outputDir,
+		logger:      logger,
+		singleFile:  singleFile,
+		onlyChanged: cfg.Diff.OnlyChanged,
+		config:      cfg,
 	}
 }
 
 func (b *HtmlReactReportBuilder) ReportType() string {
-	if b.review {
-		return "HtmlReview"
-	}
 	if b.singleFile {
 		return "HtmlUnified"
 	}
@@ -57,10 +44,10 @@ func (b *HtmlReactReportBuilder) ReportType() string {
 }
 
 func (b *HtmlReactReportBuilder) CreateReport(tree *model.SummaryTree) error {
-	b.logger.Info("Starting generation of new React HTML report.", "directory", b.outputDir, "single_file", b.singleFile, "review", b.review)
+	b.logger.Info("Starting generation of new React HTML report.", "directory", b.outputDir, "single_file", b.singleFile, "only_changed", b.onlyChanged)
 
-	if b.review && b.config.Diff.File == "" {
-		return fmt.Errorf("HtmlReview requires a diff: set diff.file in nanovision.yaml or pass -diff")
+	if b.onlyChanged && tree.Change == nil {
+		return fmt.Errorf("diff.only_changed needs a diff: set diff.file in nanovision.yaml, pass -diff, or set vcs.type")
 	}
 
 	if b.singleFile {
@@ -99,9 +86,7 @@ func (b *HtmlReactReportBuilder) createSingleFileReport(tree *model.SummaryTree)
 	collectFiles(tree.Root, fileMap)
 
 	for path, fileNode := range fileMap {
-		// Review reports only carry the changelist; unchanged files get no
-		// details page (they are pruned from the summary nodes as well).
-		if b.review && !isChangedFile(fileNode) {
+		if b.onlyChanged && !isChangedFile(fileNode) {
 			continue
 		}
 		details, err := b.transformFileNodeToDetails(tree, fileNode)
@@ -122,6 +107,9 @@ func (b *HtmlReactReportBuilder) createSingleFileReport(tree *model.SummaryTree)
 
 func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summaryV1, error) {
 	generatedAt := time.Now().UTC()
+	if b.view != nil && !b.view.GeneratedAt.IsZero() {
+		generatedAt = b.view.GeneratedAt.UTC()
+	}
 	nodes := b.buildFlatNodes(tree.Root)
 	totalFiles, totalFolders := countFlatNodes(nodes)
 
@@ -135,21 +123,16 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		title = "Coverage Report"
 	}
 
-	var diags []diagnostics.Diagnostic
-	if b.config.Problems.Generate {
-		diags = diagnostics.Extract(tree, b.config, evaluators.Registry)
-		if b.review {
-			diags = diagnostics.OnlyChanged(diags)
-		}
-	}
 	defaultFilters := b.config.DefaultFilters
 
+	// a run measured with a diff gets the verdict on its changed code
 	var reviewResult *review.Result
-	if b.review {
+	if tree.Change != nil {
 		reviewResult = review.Evaluate(tree, b.config)
-		if defaultFilters == "" {
-			defaultFilters = b.reviewDefaultFilters()
-		}
+	}
+	metadata := b.buildMetadata(tree, generatedAt)
+	if b.view != nil {
+		metadata = b.view.Metadata
 	}
 
 	reports, indexes := b.buildReportIndexes(tree)
@@ -162,11 +145,12 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		Nodes:             nodes,
 		MetricDefinitions: b.buildMetricDefinitions(),
 		MetricOrder:       b.metricOrder(),
-		Metadata:          b.buildMetadata(tree, generatedAt),
-		Diagnostics:       diags,
-		HideProblems:      !b.config.Problems.Show,
+		Metadata:          metadata,
 		DefaultFilters:    defaultFilters,
 		Review:            reviewResult,
+		Comparison:        tree.Comparison,
+		Comparing:         comparingItems(tree),
+		OnlyChanged:       b.onlyChanged,
 		Reports:           reports,
 		ReportIndexes:     indexes,
 		StatusBands:       b.buildStatusBands(),
@@ -186,7 +170,7 @@ func (b *HtmlReactReportBuilder) buildReportIndexes(tree *model.SummaryTree) ([]
 
 	indexes := make(map[string]reportIndex, len(fileMap))
 	for path, file := range fileMap {
-		if b.review && !isChangedFile(file) {
+		if b.onlyChanged && !isChangedFile(file) {
 			continue
 		}
 		idx := aggregator.BuildFileReportIndex(file, len(tree.ReportNames), b.config.ActiveFileMetrics)
@@ -303,29 +287,6 @@ func (b *HtmlReactReportBuilder) buildStatusBands() map[string]statusBand {
 	return bands
 }
 
-// first-load URL state: changed rows only, patch metrics as columns.
-// skips any metric that is not active in this run.
-func (b *HtmlReactReportBuilder) reviewDefaultFilters() string {
-	candidates := []config.MetricKey{
-		config.PatchStatementCoverage,
-		config.PatchLineCoverage,
-		config.PatchMethodsHit,
-		config.PatchStatementMethodsHit,
-		config.MaxCyclomaticComplexity,
-	}
-	var cols []string
-	for _, key := range candidates {
-		if b.config.ActiveFileMetrics[key] {
-			cols = append(cols, string(key))
-		}
-	}
-	filters := "diff=changed"
-	if len(cols) > 0 {
-		filters += "&cols=" + strings.Join(cols, ",")
-	}
-	return filters
-}
-
 func (b *HtmlReactReportBuilder) convertStatuses(modelStatuses map[config.MetricKey]string) statuses {
 	uiStatuses := make(statuses)
 	for key, val := range modelStatuses {
@@ -334,7 +295,7 @@ func (b *HtmlReactReportBuilder) convertStatuses(modelStatuses map[config.Metric
 	return uiStatuses
 }
 
-func addMeta(meta *[]metadataItem, label string, value any, sizeHint ...string) {
+func addMeta(meta *[]MetadataItem, label string, value any, sizeHint ...string) {
 	switch v := value.(type) {
 	case string:
 		if v == "" {
@@ -350,15 +311,15 @@ func addMeta(meta *[]metadataItem, label string, value any, sizeHint ...string) 
 		}
 	}
 
-	item := metadataItem{Label: label, Value: value}
+	item := MetadataItem{Label: label, Value: value}
 	if len(sizeHint) > 0 {
 		item.SizeHint = sizeHint[0]
 	}
 	*meta = append(*meta, item)
 }
 
-func (b *HtmlReactReportBuilder) buildMetadata(tree *model.SummaryTree, generatedAt time.Time) []metadataItem {
-	meta := make([]metadataItem, 0)
+func (b *HtmlReactReportBuilder) buildMetadata(tree *model.SummaryTree, generatedAt time.Time) []MetadataItem {
+	meta := make([]MetadataItem, 0)
 
 	addMeta(&meta, "Generated At", generatedAt.Format("2006-01-02 15:04:05"))
 	if tree.Timestamp > 0 {
@@ -374,17 +335,71 @@ func (b *HtmlReactReportBuilder) buildMetadata(tree *model.SummaryTree, generate
 	return meta
 }
 
+// comparingItems says which two states of the code the report compares: the
+// revisions, the base run the coverage delta uses, and where the changed
+// files come from.
+func comparingItems(tree *model.SummaryTree) []MetadataItem {
+	var meta []MetadataItem
+	if v := tree.Versions; v != nil {
+		addMeta(&meta, "Base", revisionLabel(v.Base))
+		current := revisionLabel(v.Current)
+		switch {
+		case v.Current.Revision == "":
+			current = strings.TrimSpace(v.Current.Stream + " working copy")
+		case v.LocalEdits:
+			current += " + edits"
+		}
+		addMeta(&meta, "Current", current)
+	}
+	if c := tree.Comparison; c != nil {
+		base := shortRevision(c.Base.Revision)
+		switch {
+		case c.Exact:
+		case c.Distance > 0:
+			base += fmt.Sprintf(", %d before base", c.Distance)
+		default:
+			base += ", before base"
+		}
+		addMeta(&meta, "Coverage base", base)
+	}
+	if n := tree.Change.Total(); n > 0 {
+		files := fmt.Sprintf("%d", n)
+		if tree.Versions != nil && tree.Versions.Diff != "" {
+			files += " from " + tree.Versions.Diff
+		}
+		addMeta(&meta, "Changed files", files)
+	}
+	return meta
+}
+
+// revisionLabel is "stream revision"; a Perforce revision already names its stream.
+func revisionLabel(r model.RunRef) string {
+	rev := shortRevision(r.Revision)
+	if r.Stream == "" || strings.Contains(rev, r.Stream) {
+		return rev
+	}
+	return strings.TrimSpace(r.Stream + " " + rev)
+}
+
+// shortRevision cuts a git hash to 8 characters and keeps anything else.
+func shortRevision(rev string) string {
+	if len(rev) != 40 || strings.Trim(rev, "0123456789abcdef") != "" {
+		return rev
+	}
+	return rev[:8]
+}
+
 // depth-first, pre-ordered. siblings go folders first, then files, each sorted by name.
 //
-// review mode emits only changed files and the folders needed to reach them,
-// because the report is a changelist artifact, not a repo browser.
+// With diff.only_changed only the changed files and the folders needed to
+// reach them are emitted.
 func (b *HtmlReactReportBuilder) buildFlatNodes(root *model.DirNode) []fileNode {
 	nodes := make([]fileNode, 0, len(root.Subdirs)+len(root.Files))
 	b.appendFlatNodes(&nodes, root, "", 0)
 	return nodes
 }
 
-// returns false when the subtree emitted nothing, which drops empty folders in review mode.
+// returns false when the subtree emitted nothing, which drops empty folders with diff.only_changed.
 func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.DirNode, parentID string, depth int) bool {
 	emitted := false
 
@@ -399,9 +414,7 @@ func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.Dir
 	for _, subdir := range subdirs {
 		var children []fileNode
 		hasChildren := b.appendFlatNodes(&children, subdir, subdir.Path, depth+1)
-		// Only review mode prunes empty folders; the full report keeps the
-		// tree exactly as before.
-		if b.review && !hasChildren {
+		if b.onlyChanged && !hasChildren {
 			continue
 		}
 		*out = append(*out, fileNode{
@@ -425,12 +438,14 @@ func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.Dir
 	sort.Slice(files, func(i, j int) bool { return files[i].Name < files[j].Name })
 
 	for _, file := range files {
-		if b.review && !isChangedFile(file) {
+		if b.onlyChanged && !isChangedFile(file) {
 			continue
 		}
 
 		target := ""
-		if file.SourceDir != "" {
+		if b.view != nil && b.view.FileURL != nil {
+			target = b.view.FileURL(file.Path)
+		} else if file.SourceDir != "" {
 			if b.singleFile {
 				target = fmt.Sprintf("#/details/%s", file.Path)
 			} else {
@@ -479,9 +494,6 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 	if lc, ok := metrics[string(config.LineCoverage)].(lineCoverageDetail); ok {
 		t.LineCoverage = &lc
 	}
-	if bc, ok := metrics[string(config.BranchCoverage)].(branchCoverageDetail); ok {
-		t.BranchCoverage = &bc
-	}
 	if mc, ok := metrics[string(config.MethodsHit)].(methodsHitDetail); ok {
 		t.MethodsHit = &mc
 	}
@@ -492,7 +504,7 @@ func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, fol
 	if psc, ok := metrics[string(config.PatchStatementCoverage)].(lineCoverageDetail); ok {
 		t.PatchStatementCoverage = &psc
 	}
-	if plc, ok := metrics[string(config.PatchLineCoverage)].(lineCoverageDetail); ok { // Changed branchCoverageDetail to lineCoverageDetail
+	if plc, ok := metrics[string(config.PatchLineCoverage)].(lineCoverageDetail); ok {
 		t.PatchLineCoverage = &plc
 	}
 
@@ -527,10 +539,6 @@ func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metric
 						total = detail.Total
 					}
 					metrics[string(key)] = lineCoverageDetail{Covered: detail.Covered, Uncovered: detail.Uncovered, Coverable: detail.Total, Total: total, Percentage: detail.Percentage}
-				}
-			case config.BranchCoverage:
-				if detail, ok := calcData.(model.CoverageDetail); ok {
-					metrics[string(key)] = branchCoverageDetail{Covered: detail.Covered, Total: detail.Total, Percentage: detail.Percentage}
 				}
 			case config.MethodsHit, config.PatchMethodsHit:
 				if detail, ok := calcData.(model.CoverageDetail); ok {
@@ -583,26 +591,10 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		}
 	}
 
-	if b.config.ActiveMethodMetrics[config.MethodPatchCrapScore] {
-		defs[MethodUIPatchCrapScore] = metricDefinition{
-			Label:      "Patch CRAP Score",
-			ShortLabel: "PCRAP",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
-		}
-	}
-
 	if b.config.ActiveMethodMetrics[config.MethodExposedRisk] {
 		defs[MethodUIExposedRisk] = metricDefinition{
 			Label:      "Exposed Risk",
 			ShortLabel: "Risk",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
-		}
-	}
-
-	if b.config.ActiveMethodMetrics[config.MethodDefectProbability] {
-		defs[MethodUIDefectProbability] = metricDefinition{
-			Label:      "Defect Probability",
-			ShortLabel: "DPI",
 			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
 		}
 	}
@@ -624,34 +616,6 @@ func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 		defs[MethodUILineCoverage] = metricDefinition{
 			Label:      "Lines",
 			ShortLabel: "Lines",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
-		}
-	}
-
-	if b.config.ActiveFileMetrics[config.BranchCoverage] {
-		defs[string(config.BranchCoverage)] = metricDefinition{
-			Label:      "Branches",
-			ShortLabel: "Branches",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 100},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		}
-	}
-	if b.config.ActiveMethodMetrics[config.MethodBranchCoverage] {
-		defs[string(config.MethodBranchCoverage)] = metricDefinition{
-			Label:      "Method Branches",
-			ShortLabel: "Method Branches",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 100},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		}
-		defs[MethodUIBranchCoverage] = metricDefinition{
-			Label:      "Branches",
-			ShortLabel: "Branches",
 			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
 		}
 	}
@@ -768,17 +732,9 @@ var uiMetricKeys = map[string]config.MetricKey{
 	MethodUILineCoverage:         config.MethodLineCoverage,
 	MethodUIPatchStmtCoverage:    config.MethodPatchStatementCoverage,
 	MethodUIPatchLineCoverage:    config.MethodPatchLineCoverage,
-	MethodUIBranchCoverage:       config.MethodBranchCoverage,
 	MethodUICyclomaticComplexity: config.CyclomaticComplexity,
 	MethodUICrapScore:            config.MethodCrapScore,
-	MethodUIPatchCrapScore:       config.MethodPatchCrapScore,
 	MethodUIExposedRisk:          config.MethodExposedRisk,
-	MethodUIDefectProbability:    config.MethodDefectProbability,
-}
-
-// Descriptions for metrics the UI shows but no evaluator classifies.
-var unevaluatedMetricDescriptions = map[config.MetricKey]string{
-	config.MethodBranchCoverage: "Percentage of covered branches inside methods.",
 }
 
 // describeMetric returns the one-line explanation shown in the UI tooltips. The
@@ -792,7 +748,7 @@ func describeMetric(key string) string {
 	if evaluator, ok := evaluators.Registry[metricKey]; ok {
 		return evaluator.Description()
 	}
-	return unevaluatedMetricDescriptions[metricKey]
+	return ""
 }
 
 func countFlatNodes(nodes []fileNode) (files, folders int) {

@@ -35,10 +35,7 @@ type FileReportIndex map[config.MetricKey][]ReportBucket
 // BuildFileReportIndex compresses a file's per-report hit data into buckets for
 // every active metric that varies with the report selection.
 //
-// Branch coverage is absent on purpose: the model merges branch hits across
-// reports without keeping which report covered which branch, so it cannot be
-// recomputed for a subset. Cyclomatic complexity is absent because it does not
-// depend on coverage at all.
+// Cyclomatic complexity is absent because it does not depend on coverage at all.
 func BuildFileReportIndex(file *model.FileNode, numReports int, active map[config.MetricKey]bool) FileReportIndex {
 	if numReports <= 0 || numReports > MaxIndexedReports {
 		return nil

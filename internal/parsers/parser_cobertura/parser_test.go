@@ -26,7 +26,7 @@ func TestCoberturaParser_Parse(t *testing.T) {
 		asserter      func(t *testing.T, result *parsers.ParserResult, err error)
 	}{
 		{
-			name: "Golden Path - Valid report with branch coverage",
+			name: "Golden Path - Valid report; its branch data is ignored",
 			reportContent: `<?xml version="1.0" encoding="utf-8"?>
 <coverage lines-covered="6" lines-valid="8" branches-covered="1" branches-valid="2" timestamp="1672531200">
   <packages>
@@ -74,13 +74,6 @@ func TestCoberturaParser_Parse(t *testing.T) {
 				assert.Equal(t, 0, fileCov.Lines[12].Hits)
 				assert.Equal(t, 0, fileCov.Lines[13].Hits)
 				assert.Equal(t, 1, fileCov.Lines[15].Hits)
-
-				// Assert branch data on the specific line
-				assert.Equal(t, 1, fileCov.Lines[10].CoveredBranches)
-				assert.Equal(t, 2, fileCov.Lines[10].TotalBranches)
-
-				// Assert no branch data on non-branch line
-				assert.Zero(t, fileCov.Lines[5].TotalBranches)
 			},
 		},
 		{

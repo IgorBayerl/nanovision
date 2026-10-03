@@ -9,7 +9,7 @@ import platform
 # Configuration
 SCRIPT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.path.join(SCRIPT_ROOT, "bin")
-MAIN_PACKAGE = "cmd/main.go"
+MAIN_PACKAGE = "./cmd"
 BINARY_NAME = "nanovision"
 
 def get_version_info():

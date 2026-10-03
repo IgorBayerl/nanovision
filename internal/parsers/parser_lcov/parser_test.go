@@ -24,7 +24,7 @@ func TestLcovParser_Parse(t *testing.T) {
 		asserter      func(t *testing.T, result *parsers.ParserResult, err error)
 	}{
 		{
-			name: "Golden Path - Valid report with line and branch coverage",
+			name: "Golden Path - Valid report; its BRDA records are ignored",
 			reportContent: `TN:
 SF:/app/src/utils/math.js
 FN:1,add
@@ -61,10 +61,6 @@ end_of_record
 				assert.Equal(t, 5, fileCov.Lines[1].Hits)
 				assert.Equal(t, 5, fileCov.Lines[2].Hits)
 				assert.Equal(t, 0, fileCov.Lines[3].Hits)
-
-				// Check Branches (Line 2 has 2 branches: one hit(5), one miss(-))
-				assert.Equal(t, 2, fileCov.Lines[2].TotalBranches)
-				assert.Equal(t, 1, fileCov.Lines[2].CoveredBranches)
 			},
 		},
 		{

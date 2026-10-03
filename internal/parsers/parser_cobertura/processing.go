@@ -3,18 +3,12 @@ package parser_cobertura
 import (
 	"log/slog"
 	"path/filepath"
-	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/IgorBayerl/nanovision/internal/filereader"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/parsers"
 	"github.com/IgorBayerl/nanovision/internal/utils"
-)
-
-var (
-	conditionCoverageRegexCobertura = regexp.MustCompile(`\((?P<NumberOfCoveredBranches>\d+)/(?P<NumberOfTotalBranches>\d+)\)$`)
 )
 
 // processingOrchestrator is responsible for converting the raw XML data into
@@ -97,45 +91,6 @@ func (o *processingOrchestrator) mergeLinesIntoFile(lineMetrics map[int]model.Li
 		existingMetric := lineMetrics[lineNumber]
 		existingMetric.Hits += hits
 
-		if lineXML.Branch == "true" || strings.ToLower(lineXML.Branch) == "true" {
-			covered, total := o.parseBranchData(lineXML)
-			existingMetric.CoveredBranches += covered
-			existingMetric.TotalBranches += total
-		}
-
 		lineMetrics[lineNumber] = existingMetric
 	}
-}
-
-// parseBranchData is the updated function that handles both Cobertura styles.
-// It prioritizes the explicit 'condition-coverage' attribute and falls back
-// to the nested '<conditions>' block only if necessary.
-func (o *processingOrchestrator) parseBranchData(lineXML LineXML) (covered, total int) {
-	// STRATEGY 1: Prioritize the 'condition-coverage' attribute.
-	// This format is explicit (e.g., "50% (1/2)") and used by both gcovr (C++) and coverlet (C#).
-	// It is the most reliable source for the line's overall branch statistics.
-	matches := conditionCoverageRegexCobertura.FindStringSubmatch(lineXML.ConditionCoverage)
-	if len(matches) == 3 {
-		covered, _ = strconv.Atoi(matches[1])
-		total, _ = strconv.Atoi(matches[2])
-		// If we successfully parsed this attribute, we trust it and are done.
-		return covered, total
-	}
-
-	// STRATEGY 2: Fallback to counting <condition> elements.
-	// Some tools might omit the 'condition-coverage' attribute and only provide the detailed block.
-	if len(lineXML.Conditions.Condition) > 0 {
-		total = len(lineXML.Conditions.Condition)
-		covered = 0
-		for _, condition := range lineXML.Conditions.Condition {
-			// A condition is considered covered if its coverage is 100%.
-			if strings.HasPrefix(condition.Coverage, "100%") {
-				covered++
-			}
-		}
-		return covered, total
-	}
-
-	// If neither method yields data, return 0, 0.
-	return 0, 0
 }

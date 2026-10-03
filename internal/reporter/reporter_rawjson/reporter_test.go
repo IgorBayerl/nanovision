@@ -22,9 +22,8 @@ func TestRawJsonReportBuilder_CreateReport(t *testing.T) {
 		Name: "Root",
 		Path: ".",
 		Metrics: model.CoverageMetrics{
-			LinesCovered:  5,
-			LinesValid:    10,
-			BranchesValid: 2,
+			LinesCovered: 5,
+			LinesValid:   10,
 		},
 		Subdirs: make(map[string]*model.DirNode),
 		Files:   make(map[string]*model.FileNode),
@@ -49,9 +48,8 @@ func TestRawJsonReportBuilder_CreateReport(t *testing.T) {
 		Path:   "file1.go",
 		Parent: rootNode,
 		Metrics: model.CoverageMetrics{
-			LinesCovered:  3,
-			LinesValid:    6,
-			BranchesValid: 2,
+			LinesCovered: 3,
+			LinesValid:   6,
 		},
 		Lines: map[int]model.LineMetrics{
 			5: {Hits: 5},

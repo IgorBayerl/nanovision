@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/ui/button'
 import { SIDEBAR_DEFAULT_WIDTH, Sidebar, SidebarInset, SidebarProvider, SidebarTrigger } from '@/ui/sidebar'
 
-interface LayoutProps {
+export interface LayoutProps {
     children: ReactNode
     title: string
     showBackButton?: boolean
@@ -18,9 +18,24 @@ interface LayoutProps {
     leftSidebar?: ReactNode
     /** Content for the right sidebar (function navigation). Omit to hide it. */
     rightSidebar?: ReactNode
+    /** Replaces the title, e.g. with breadcrumbs when a server shows the report. */
+    nav?: ReactNode
+    /** Replaces the GitHub and theme buttons. */
+    actions?: ReactNode
+    /** Where the back button goes; the summary of this report by default. */
+    backHref?: string
 }
 
-export default function Layout({ children, title, showBackButton, leftSidebar, rightSidebar }: LayoutProps) {
+export default function Layout({
+    children,
+    title,
+    showBackButton,
+    leftSidebar,
+    rightSidebar,
+    nav,
+    actions,
+    backHref,
+}: LayoutProps) {
     const [isFullWidth, setIsFullWidth] = useLocalStorage('layout-isFullWidth', false)
     const [leftOpen, setLeftOpen] = useLocalStorage('sidebar-left-open', true)
     const [rightOpen, setRightOpen] = useLocalStorage('sidebar-right-open', true)
@@ -44,21 +59,25 @@ export default function Layout({ children, title, showBackButton, leftSidebar, r
                         />
                     )}
                     {showBackButton && (
-                        <a href={summaryHref()} title="Back to summary">
+                        <a href={backHref ?? summaryHref()} title="Back to summary">
                             <Button variant="outline" size="sm" className="h-8 w-8 rounded-sm p-0">
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
                         </a>
                     )}
-                    <h1 className="truncate font-bold text-2xl tracking-tight">{title || 'Coverage Report'}</h1>
+                    {nav ?? (
+                        <h1 className="truncate font-bold text-2xl tracking-tight">{title || 'Coverage Report'}</h1>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm" className="h-8 w-8 rounded-sm p-0" title="GitHub">
-                            <GithubIcon className="h-4 w-4" />
-                        </Button>
-                    </a>
+                    {!actions && (
+                        <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="sm" className="h-8 w-8 rounded-sm p-0" title="GitHub">
+                                <GithubIcon className="h-4 w-4" />
+                            </Button>
+                        </a>
+                    )}
                     <Button
                         variant="outline"
                         size="sm"
@@ -68,7 +87,7 @@ export default function Layout({ children, title, showBackButton, leftSidebar, r
                     >
                         {isFullWidth ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                     </Button>
-                    <ThemeSwitch />
+                    {actions ?? <ThemeSwitch />}
                     {rightSidebar && (
                         <SidebarTrigger
                             onClick={() => setRightOpen(!rightOpen)}
@@ -88,13 +107,14 @@ export default function Layout({ children, title, showBackButton, leftSidebar, r
                     onWidthChange={setLeftWidth}
                 >
                     {leftSidebar}
+                    <Footer />
                 </Sidebar>
             )}
 
             <SidebarInset>
                 <div className={cn('w-full flex-1 space-y-5 p-6', { 'mx-auto max-w-7xl': !isFullWidth })}>
                     {children}
-                    <Footer />
+                    {!leftSidebar && <Footer />}
                 </div>
             </SidebarInset>
 

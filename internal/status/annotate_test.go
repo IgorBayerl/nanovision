@@ -35,8 +35,6 @@ func TestAnnotate_Integration(t *testing.T) {
 		Metrics: model.CoverageMetrics{
 			LinesCovered:            90,
 			LinesValid:              100,
-			BranchesCovered:         40,
-			BranchesValid:           100,
 			StatementsCovered:       70,
 			StatementsValid:         100,
 			MaxCyclomaticComplexity: 15,
@@ -63,8 +61,6 @@ func TestAnnotate_Integration(t *testing.T) {
 		Metrics: model.CoverageMetrics{
 			LinesCovered:            90,
 			LinesValid:              100,
-			BranchesCovered:         40,
-			BranchesValid:           100,
 			StatementsCovered:       70,
 			StatementsValid:         100,
 			MaxCyclomaticComplexity: 15,
@@ -76,7 +72,6 @@ func TestAnnotate_Integration(t *testing.T) {
 	cfg := &config.AppConfig{
 		StatusBands: config.StatusBands{
 			config.LineCoverage:            config.Band{Min: 60, Max: 80},
-			config.BranchCoverage:          config.Band{Min: 60, Max: 80},
 			config.StatementCoverage:       config.Band{Min: 60, Max: 80},
 			config.MaxCyclomaticComplexity: config.Band{Min: 5, Max: 10},
 			config.MethodLineCoverage:      config.Band{Min: 60, Max: 80},
@@ -85,7 +80,6 @@ func TestAnnotate_Integration(t *testing.T) {
 		},
 		ActiveFileMetrics: map[config.MetricKey]bool{
 			config.LineCoverage:            true,
-			config.BranchCoverage:          true,
 			config.StatementCoverage:       true,
 			config.MaxCyclomaticComplexity: true,
 		},
@@ -97,7 +91,6 @@ func TestAnnotate_Integration(t *testing.T) {
 	}
 
 	caps := status.Capabilities{
-		HasBranchCoverage:    true,
 		HasMethodCoverage:    true,
 		HasStatementCoverage: true,
 	}
@@ -109,8 +102,6 @@ func TestAnnotate_Integration(t *testing.T) {
 	require.NotNil(t, fileNode.Statuses)
 	// 90% line coverage > 80 max → safe
 	assert.Equal(t, "safe", fileNode.Statuses[config.LineCoverage])
-	// 40% branch coverage < 60 min → danger
-	assert.Equal(t, "danger", fileNode.Statuses[config.BranchCoverage])
 	// 70% statement coverage in [60,80] → warning
 	assert.Equal(t, "warning", fileNode.Statuses[config.StatementCoverage])
 	// complexity 15 > 10 max → danger (lower is better)
@@ -119,7 +110,7 @@ func TestAnnotate_Integration(t *testing.T) {
 	// ---------- Verify dir node statuses ----------
 	require.NotNil(t, rootDir.Statuses)
 	assert.Equal(t, "safe", rootDir.Statuses[config.LineCoverage])
-	assert.Equal(t, "danger", rootDir.Statuses[config.BranchCoverage])
+	assert.Equal(t, "warning", rootDir.Statuses[config.StatementCoverage])
 
 	// ---------- Verify method node statuses ----------
 	require.Len(t, fileNode.Methods, 1)
@@ -130,58 +121,6 @@ func TestAnnotate_Integration(t *testing.T) {
 	assert.Equal(t, "warning", fileNode.Methods[0].Statuses[config.MethodStatementCoverage])
 	// complexity 15 > 10 → danger
 	assert.Equal(t, "danger", fileNode.Methods[0].Statuses[config.CyclomaticComplexity])
-}
-
-// TestAnnotate_BranchNotApplicable ensures branch coverage is skipped when
-// HasBranchCoverage is false.
-func TestAnnotate_BranchNotApplicable(t *testing.T) {
-	fileNode := &model.FileNode{
-		Name: "main.go",
-		Path: "src/main.go",
-		Metrics: model.CoverageMetrics{
-			LinesCovered:    90,
-			LinesValid:      100,
-			BranchesCovered: 40,
-			BranchesValid:   100,
-		},
-	}
-
-	rootDir := &model.DirNode{
-		Name:    "root",
-		Path:    "/",
-		Subdirs: map[string]*model.DirNode{},
-		Files:   map[string]*model.FileNode{"main.go": fileNode},
-		Metrics: model.CoverageMetrics{
-			LinesCovered:    90,
-			LinesValid:      100,
-			BranchesCovered: 40,
-			BranchesValid:   100,
-		},
-	}
-
-	tree := &model.SummaryTree{Root: rootDir}
-
-	cfg := &config.AppConfig{
-		StatusBands: config.StatusBands{
-			config.LineCoverage:   config.Band{Min: 60, Max: 80},
-			config.BranchCoverage: config.Band{Min: 60, Max: 80},
-		},
-		ActiveFileMetrics: map[config.MetricKey]bool{
-			config.LineCoverage:   true,
-			config.BranchCoverage: true,
-		},
-		ActiveMethodMetrics: map[config.MetricKey]bool{},
-	}
-
-	// HasBranchCoverage = false → branch coverage should not appear
-	caps := status.Capabilities{HasBranchCoverage: false}
-
-	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, cfg.ActiveMethodMetrics)
-	status.Annotate(tree, cfg, caps, evaluators.Registry)
-
-	assert.Equal(t, "safe", fileNode.Statuses[config.LineCoverage])
-	_, hasBranch := fileNode.Statuses[config.BranchCoverage]
-	assert.False(t, hasBranch, "branch_coverage status should not be set when HasBranchCoverage is false")
 }
 
 // TestAnnotate_MethodsHitViaRegistry verifies that metrics previously handled

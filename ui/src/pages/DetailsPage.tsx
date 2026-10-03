@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import FunctionNav from '@/components/FunctionNav'
-import Layout from '@/components/Layout'
+import Layout, { type LayoutProps } from '@/components/Layout'
 import MethodsTable from '@/components/MethodsTable'
 import SourceCodeViewer from '@/components/SourceCodeViewer'
 import SummaryMetrics from '@/components/SummaryMetrics'
@@ -13,7 +13,12 @@ import { validateDetailsData } from '@/lib/validation'
 import type { MetadataItem } from '@/types/summary'
 import { SidebarContent } from '@/ui/sidebar'
 
-export default function DetailsPage({ data: rawData }: { data: unknown }) {
+interface DetailsPageProps {
+    data: unknown
+    layout?: Pick<LayoutProps, 'nav' | 'actions' | 'backHref'>
+}
+
+export default function DetailsPage({ data: rawData, layout }: DetailsPageProps) {
     const validationResult = useMemo(() => validateDetailsData(rawData), [rawData])
 
     const { validatedData, metricKeys, reportInfo } = useMemo(() => {
@@ -81,7 +86,7 @@ export default function DetailsPage({ data: rawData }: { data: unknown }) {
         ) : undefined
 
     return (
-        <Layout title={title} showBackButton leftSidebar={leftSidebar} rightSidebar={rightSidebar}>
+        <Layout title={title} showBackButton leftSidebar={leftSidebar} rightSidebar={rightSidebar} {...layout}>
             {!validationResult.success && <ValidationAlerts issues={validationResult.error.issues} />}
 
             {validatedData ? (

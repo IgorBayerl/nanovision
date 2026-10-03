@@ -1,8 +1,28 @@
-import { ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
 import DiffStatusBadge from '@/components/DiffStatusBadge'
 import InlineCoverage from '@/components/InlineCoverage'
 import { cn } from '@/lib/utils'
 import type { DiffStatus, FileNode, MetricConfig, Metrics, RiskLevel } from '@/types/summary'
+
+/** The sub-column the explorer adds to a metric that was compared with a base run. */
+export const CHANGE_COLUMN = 'delta'
+
+/** How far a percentage moved against the base run: an arrow and the points. */
+function Change({ delta }: { delta: number | undefined }) {
+    if (!delta) return null
+    const up = delta > 0
+    const Arrow = up ? ArrowUp : ArrowDown
+    const abs = Math.abs(delta)
+    return (
+        <span
+            className={cn('inline-flex items-center gap-0.5', up ? 'text-covered' : 'text-uncovered')}
+            title={`${up ? '+' : ''}${delta.toFixed(2)} percentage points against the base run`}
+        >
+            <Arrow className="h-3 w-3 shrink-0" strokeWidth={2.5} />
+            {abs.toFixed(abs < 1 ? 2 : 1)}%
+        </span>
+    )
+}
 
 const RISK_ORDER: Record<RiskLevel, number> = { safe: 0, warning: 1, danger: 2 }
 
@@ -145,6 +165,8 @@ export function TreeRow({
                 >
                     {enabledMetrics.map((cfg, index) => {
                         const metricData = metrics?.[cfg.id]
+                        const percentage =
+                            metricData !== undefined && 'percentage' in metricData ? metricData : undefined
                         return (
                             <div
                                 key={cfg.id}
@@ -169,6 +191,13 @@ export function TreeRow({
                                                 ) : (
                                                     <span className="text-muted-foreground text-xs">-</span>
                                                 )}
+                                            </div>
+                                        )
+                                    }
+                                    if (subMetric.id === CHANGE_COLUMN) {
+                                        return (
+                                            <div key={subMetric.id} className="px-2 text-right text-xs tabular-nums">
+                                                <Change delta={percentage?.delta} />
                                             </div>
                                         )
                                     }

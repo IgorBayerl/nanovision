@@ -14,3 +14,6 @@ var reactDist embed.FS
 func getReactDist() (fs.FS, error) {
 	return fs.Sub(reactDist, "assets/dist")
 }
+
+// DistFS is the built web UI, for `nanovision serve`.
+func DistFS() (fs.FS, error) { return getReactDist() }

@@ -14,10 +14,7 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/utils"
 )
 
-var (
-	lineCoverageRegex   = regexp.MustCompile(`^\s*(?P<Visits>-|#####|=====|\d+):\s*(?P<LineNumber>[1-9]\d*):.*`)
-	branchCoverageRegex = regexp.MustCompile(`^branch\s*\d+\s*(taken\s*(?P<Visits>\d+)%?|never executed)`)
-)
+var lineCoverageRegex = regexp.MustCompile(`^\s*(?P<Visits>-|#####|=====|\d+):\s*(?P<LineNumber>[1-9]\d*):.*`)
 
 type processingOrchestrator struct {
 	fileReader filereader.Reader
@@ -58,13 +55,11 @@ func (o *processingOrchestrator) processLines(lines []string) (*parsers.FileCove
 	}
 
 	lineMetrics := make(map[int]model.LineMetrics)
-	var lastCoverableLineNumber int
 
 	for _, line := range lines {
 		if match := lineCoverageRegex.FindStringSubmatch(line); match != nil {
 			visitsText := match[1]
 			lineNumber, _ := strconv.Atoi(match[2])
-			lastCoverableLineNumber = lineNumber
 			if visitsText == "-" {
 				continue
 			}
@@ -73,14 +68,6 @@ func (o *processingOrchestrator) processLines(lines []string) (*parsers.FileCove
 				metric.Hits, _ = strconv.Atoi(visitsText)
 			}
 			lineMetrics[lineNumber] = metric
-		} else if match := branchCoverageRegex.FindStringSubmatch(line); match != nil {
-			if metric, ok := lineMetrics[lastCoverableLineNumber]; ok {
-				metric.TotalBranches++
-				if len(match) > 2 && match[2] != "" && match[2] != "0" {
-					metric.CoveredBranches++
-				}
-				lineMetrics[lastCoverableLineNumber] = metric
-			}
 		}
 	}
 

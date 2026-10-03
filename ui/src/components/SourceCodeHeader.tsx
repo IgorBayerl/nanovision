@@ -1,4 +1,4 @@
-const gridTemplateColumns = '1.5rem 4rem 4rem 1.5rem 1.5rem 1fr'
+const gridTemplateColumns = '1.5rem 4rem 4rem 1.5rem 1fr'
 
 export default function SourceCodeHeader() {
     return (
@@ -14,9 +14,6 @@ export default function SourceCodeHeader() {
 
             {/* Hit Count */}
             <div className="border-border/50 border-r px-4 py-2 text-center">Hits</div>
-
-            {/* Branch Indicator */}
-            <div className="py-2 text-center" />
 
             {/* Diff Indicator */}
             <div className="border-border/50 border-r py-2" />

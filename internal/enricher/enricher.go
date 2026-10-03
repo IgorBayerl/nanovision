@@ -35,6 +35,7 @@ package enricher
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"log/slog"
 	"os"
 	"runtime"
@@ -147,6 +148,8 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 		e.logger.Warn("Could not read source file", "file", path, "error", err)
 		return
 	}
+	// the run store keys the source text and its analysis by this hash
+	fileNode.ContentHash = sha256.Sum256(content)
 
 	// CACHE CHECK
 	if e.cacheManager != nil {
@@ -154,7 +157,7 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 			// CACHE HIT: Apply cached data and return
 			fileNode.TotalLines = cached.TotalLines
 			fileNode.Metrics.TotalLines = cached.TotalLines
-			e.applyAnalysisToFileNode(fileNode, cached.Result)
+			ApplyAnalysis(fileNode, cached.Result)
 			return
 		}
 	}
@@ -187,7 +190,7 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 			e.logger.Warn("Static analysis failed", "file", path, "error", err)
 			return
 		}
-		e.applyAnalysisToFileNode(fileNode, analysisResult)
+		ApplyAnalysis(fileNode, analysisResult)
 	} else {
 		// If no analyzer found, cache just the line count to avoid re-reading file later
 		if e.cacheManager != nil {
@@ -217,13 +220,13 @@ func (e *Enricher) enrichFileNode(fileNode *model.FileNode) {
 	}
 }
 
-// applyAnalysisToFileNode translates the generic results from an analyzer into
-// the specific data structures of the application's model.
+// ApplyAnalysis translates the generic results from an analyzer into the
+// specific data structures of the application's model.
 //
 // It iterates through the functions found by the analyzer, converts them into
 // model.MethodMetrics, calculates their specific code coverage, and attaches
-// them to the FileNode.
-func (e *Enricher) applyAnalysisToFileNode(fileNode *model.FileNode, analysis analyzer.AnalysisResult) {
+// them to the FileNode. The run store calls it too, to rebuild a stored file.
+func ApplyAnalysis(fileNode *model.FileNode, analysis analyzer.AnalysisResult) {
 	calculateStatementCoverage(fileNode, analysis.Statements)
 
 	// Store statements on the FileNode for later use by the aggregator (e.g., patch coverage)
@@ -285,13 +288,13 @@ func calculateStatementCoverage(fileNode *model.FileNode, statements []analyzer.
 	}
 }
 
-// calculateMethodCoverage computes the line and branch coverage for a single method
+// calculateMethodCoverage computes the line coverage for a single method
 // by examining the coverage data of the lines within its start and end boundaries.
 //
 // This provides a more granular view than the overall file coverage, helping to
 // identify specific functions that are poorly tested. For example, if a method
-// spans lines 10 to 20, this function will sum the covered lines and branches
-// only within that range from the parent file's line data.
+// spans lines 10 to 20, this function will sum the covered lines only within
+// that range from the parent file's line data.
 func calculateMethodCoverage(file *model.FileNode, method *model.MethodMetrics) {
 	for i := method.StartLine; i <= method.EndLine; i++ {
 		if line, ok := file.Lines[i]; ok {
@@ -301,8 +304,6 @@ func calculateMethodCoverage(file *model.FileNode, method *model.MethodMetrics) 
 					method.LinesCovered++
 				}
 			}
-			method.BranchesValid += line.TotalBranches
-			method.BranchesCovered += line.CoveredBranches
 		}
 	}
 }

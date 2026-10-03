@@ -4,7 +4,7 @@
 //
 // The process works in a dedicated "ANNOTATE" stage in the main pipeline:
 //  1. The `AppConfig` loads risk thresholds from `nanovision.yaml` into `status_bands`.
-//  2. The `deriveCapabilities` function checks which metrics (like branch coverage)
+//  2. The `DeriveCapabilities` function checks which metrics (like statement coverage)
 //     are actually present in the parsed report data.
 //  3. The `Annotate` function is called once. It traverses the entire in-memory
 //     data tree (`model.SummaryTree`).
@@ -31,15 +31,13 @@ const (
 // available in the current dataset. This is crucial for handling different report
 // formats that may lack certain features.
 //
-// For example, Go's native 'gocover' format does not produce branch coverage data.
-// By setting `HasBranchCoverage` to false, the `Annotate` function will know to skip
-// adding a status for `branch_coverage`, preventing a misleading "0% danger" status
-// from appearing in reports for a metric that was never measured.
+// For example, a file without an analyzer has no statements. With
+// `HasStatementCoverage` false, the `Annotate` function skips the status of
+// `statement_coverage`, so a metric that was never measured does not show a
+// misleading "0% danger".
 //
-// This struct is populated by the `deriveCapabilities` function in `main.go` after
-// all data has been aggregated.
+// This struct is populated by `DeriveCapabilities` after all data has been aggregated.
 type Capabilities struct {
-	HasBranchCoverage    bool
 	HasMethodCoverage    bool
 	HasStatementCoverage bool
 }

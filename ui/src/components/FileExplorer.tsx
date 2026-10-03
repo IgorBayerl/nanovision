@@ -2,27 +2,63 @@ import { useMemo } from 'react'
 import FileExplorerBody from '@/components/FileExplorer.Body'
 import FileExplorerHeader from '@/components/FileExplorer.Header'
 import FileExplorerToolbar from '@/components/FileExplorer.Toolbar'
+import { CHANGE_COLUMN } from '@/components/Tree.Row'
 import { useFileExplorerState } from '@/hooks/useFileExplorerState'
 import { useFilteredAndSortedTree } from '@/hooks/useFilteredAndSortedTree'
 import { aggregateFolderDiff } from '@/lib/aggregateFolderDiff'
 import { camelCaseToTitleCase } from '@/lib/utils'
-import type { FileNode, MetricDefinitions } from '@/types/summary'
+import type { FileNode, MetricDefinition, MetricDefinitions } from '@/types/summary'
 import { Card, CardContent, CardHeader } from '@/ui/card'
 
 function getShortLabel(metricId: string): string {
-    const knownPrefixes = ['line', 'branch', 'method', 'statement', 'function']
+    const knownPrefixes = ['line', 'method', 'statement', 'function']
     const knownMatch = knownPrefixes.find((p) => metricId.toLowerCase().startsWith(p))
     if (knownMatch) return knownMatch.charAt(0).toUpperCase() + knownMatch.slice(1)
     return metricId.length > 4 ? `${metricId.slice(0, 3)}.` : metricId
+}
+
+/** Adds a last column to a metric: how far its percentage moved against the base run. */
+function withChangeColumn(definition: MetricDefinition): MetricDefinition {
+    const at = definition.subMetrics.findIndex((sub) => sub.id === 'percentage')
+    if (at < 0) return definition
+    const subMetrics = [...definition.subMetrics]
+    subMetrics.splice(at + 1, 0, { id: CHANGE_COLUMN, label: 'Change', width: 76 })
+    return { ...definition, subMetrics }
 }
 
 interface FileExplorerProps {
     nodes: FileNode[]
     availableMetrics: string[]
     metricDefinitions: MetricDefinitions
+    /** Path -> metric -> change against the base run, in percentage points. */
+    deltas?: Record<string, Record<string, number>>
+    /** The metrics the base run was compared on; each gets a Change column. */
+    deltaMetrics?: string[]
 }
 
-export default function FileExplorer({ nodes, availableMetrics, metricDefinitions }: FileExplorerProps) {
+export default function FileExplorer({
+    nodes: reportNodes,
+    availableMetrics,
+    metricDefinitions,
+    deltas,
+    deltaMetrics,
+}: FileExplorerProps) {
+    // The change is put next to the numbers it belongs to, so a row reads and
+    // sorts like any other column.
+    const nodes = useMemo(() => {
+        if (!deltas) return reportNodes
+        return reportNodes.map((node) => {
+            const moved = deltas[node.path]
+            if (!moved || !node.metrics) return node
+            const metrics = { ...node.metrics }
+            for (const [id, delta] of Object.entries(moved)) {
+                const metric = metrics[id]
+                if (metric && 'percentage' in metric) metrics[id] = { ...metric, delta }
+            }
+            return { ...node, metrics }
+        })
+    }, [reportNodes, deltas])
+
     const { state, setters, searchRef } = useFileExplorerState(nodes, availableMetrics)
 
     const metricConfigs = useMemo(
@@ -34,10 +70,10 @@ export default function FileExplorer({ nodes, availableMetrics, metricDefinition
                     label: definition?.label ?? camelCaseToTitleCase(id),
                     shortLabel: definition?.shortLabel ?? getShortLabel(id),
                     enabled: state.enabledMetrics.includes(id),
-                    definition: definition,
+                    definition: definition && deltaMetrics?.includes(id) ? withChangeColumn(definition) : definition,
                 }
             }),
-        [availableMetrics, metricDefinitions, state.enabledMetrics],
+        [availableMetrics, metricDefinitions, state.enabledMetrics, deltaMetrics],
     )
 
     const enabledMetrics = useMemo(() => metricConfigs.filter((m) => m.enabled), [metricConfigs])
@@ -46,30 +82,11 @@ export default function FileExplorer({ nodes, availableMetrics, metricDefinition
     // descendant file was added/modified).
     const folderDiffMap = useMemo(() => aggregateFolderDiff(nodes), [nodes])
 
-    // Data-derived upper bound for value (non-percentage) metrics, so their range
-    // sliders span the actual observed values instead of a fixed 0–100.
-    const metricMaxes = useMemo(() => {
-        const maxes: Record<string, number> = {}
-        for (const cfg of metricConfigs) {
-            if (cfg.definition?.kind !== 'value') continue
-            let max = 0
-            for (const node of nodes) {
-                const metric = node.metrics?.[cfg.id]
-                const val = metric && 'value' in metric ? metric.value : undefined
-                if (typeof val === 'number' && val > max) max = val
-            }
-            maxes[cfg.id] = max
-        }
-        return maxes
-    }, [metricConfigs, nodes])
-
     const finalView = useFilteredAndSortedTree({
         nodes,
         query: state.query,
         searchMode: state.searchMode,
         riskFilter: state.riskFilter,
-        diffFilter: state.diffFilter,
-        filterRanges: state.filterRanges,
         sortKey: state.sortKey,
         sortDir: state.sortDir,
         viewMode: state.viewMode,
@@ -104,10 +121,7 @@ export default function FileExplorer({ nodes, availableMetrics, metricDefinition
                             sortKey={state.sortKey}
                             sortDir={state.sortDir}
                             onHeaderClick={setters.handleHeaderClick}
-                            filterRanges={state.filterRanges}
-                            onRangeUpdate={setters.updateFilterRange}
                             totalMetricsWidth={totalMetricsWidth}
-                            metricMaxes={metricMaxes}
                         />
                         <FileExplorerBody
                             nodes={finalView}

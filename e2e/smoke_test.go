@@ -38,7 +38,7 @@ func buildBinary(t *testing.T, root string) string {
 	}
 	binaryPath := filepath.Join(tmpDir, binaryName)
 
-	cmd := exec.Command("go", "build", "-mod=vendor", "-o", binaryPath, filepath.Join(root, "cmd", "main.go"))
+	cmd := exec.Command("go", "build", "-mod=vendor", "-o", binaryPath, filepath.Join(root, "cmd"))
 	cmd.Dir = root
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -75,9 +75,9 @@ func TestSmokeDefaultMetrics(t *testing.T) {
 	}
 	txtContent := string(txtBytes)
 
-	// Default file metrics include statement_coverage and branch_coverage
+	// Default file metrics include statement_coverage and methods_hit
 	// (line_coverage is NOT in defaults). Check that the defaults render.
-	for _, want := range []string{"Statement Coverage", "Branch Coverage"} {
+	for _, want := range []string{"Statement Coverage", "Methods Hit"} {
 		if !strings.Contains(txtContent, want) {
 			t.Errorf("text output missing %q\nContent:\n%s", want, txtContent)
 		}
@@ -97,7 +97,7 @@ func TestSmokeDefaultMetrics(t *testing.T) {
 	dataContent := string(dataBytes)
 
 	// The summary JSON embeds metric keys as object keys (e.g. "statement_coverage":).
-	for _, wantKey := range []string{`"statement_coverage"`, `"branch_coverage"`} {
+	for _, wantKey := range []string{`"statement_coverage"`, `"methods_hit"`} {
 		if !strings.Contains(dataContent, wantKey) {
 			t.Errorf("report data missing metric key %s", wantKey)
 		}
@@ -135,7 +135,7 @@ func TestSmokeLineCoverageOnly(t *testing.T) {
 	if !strings.Contains(txtContent, "Line Coverage:") {
 		t.Errorf("text output missing 'Line Coverage:'")
 	}
-	for _, notWant := range []string{"Statement Coverage:", "Branch Coverage:", "(Stmt)", "(Branch)"} {
+	for _, notWant := range []string{"Statement Coverage:", "Methods Hit:", "(Stmt)"} {
 		if strings.Contains(txtContent, notWant) {
 			t.Errorf("text output should NOT contain %q when only line_coverage is configured\nContent:\n%s", notWant, txtContent)
 		}
@@ -151,7 +151,7 @@ func TestSmokeLineCoverageOnly(t *testing.T) {
 	if !strings.Contains(dataContent, `"line_coverage"`) {
 		t.Errorf("report data missing metric key \"line_coverage\"")
 	}
-	for _, notWantKey := range []string{`"statement_coverage"`, `"branch_coverage"`} {
+	for _, notWantKey := range []string{`"statement_coverage"`, `"methods_hit"`} {
 		if strings.Contains(dataContent, notWantKey) {
 			t.Errorf("report data should NOT contain %s when only line_coverage is configured", notWantKey)
 		}

@@ -82,6 +82,11 @@ func (b *TextReportBuilder) CreateReport(tree *model.SummaryTree) error {
 		}
 	}
 
+	if tree.Comparison != nil {
+		fmt.Fprintln(f)
+		WriteComparison(f, tree.Comparison)
+	}
+
 	// TODO: Create a better visualization of this table, maybe separate in different report
 	// Print the hierarchical summary table.
 	// tw := tabwriter.NewWriter(f, 0, 0, 2, ' ', 0)

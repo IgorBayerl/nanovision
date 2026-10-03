@@ -4,7 +4,7 @@
  * real data.js next to index.html.
  *
  * Generated from the nanovision self-coverage reports (full merged) with a
- * git diff applied, plus the HtmlReview `review` block (gate verdict,
+ * git diff applied, plus the `review` block (gate verdict,
  * changelist stats, risk hotspots) so the review header renders in dev.
  *
  * Regenerate with: python scripts/gen_ui_fixture.py
@@ -12,53 +12,46 @@
  */
 window.__NANOVISION_SUMMARY__ = {
  "schemaVersion": 1,
- "generatedAt": "2026-09-06T14:11:48Z",
+ "generatedAt": "2026-10-03T15:00:30Z",
  "title": "nanovision Self-Coverage (dev fixture)",
  "totals": {
   "statement_coverage": {
-   "covered": 2977,
-   "uncovered": 886,
-   "coverable": 3863,
-   "total": 3863,
-   "percentage": 77.06
-  },
-  "branch_coverage": {
-   "covered": 39,
-   "total": 58,
-   "percentage": 67.24
+   "covered": 5044,
+   "uncovered": 1416,
+   "coverable": 6460,
+   "total": 6460,
+   "percentage": 78.08
   },
   "methods_hit": {
-   "covered": 420,
-   "total": 501,
-   "percentage": 83.83
+   "covered": 643,
+   "total": 727,
+   "percentage": 88.44
   },
   "methods_fully_covered": {
-   "covered": 275,
-   "total": 501,
-   "percentage": 54.89
+   "covered": 375,
+   "total": 727,
+   "percentage": 51.58
   },
   "max_cyclomatic_complexity": {
-   "value": 31
+   "value": 38
   },
   "patch_statement_coverage": {
-   "covered": 376,
-   "uncovered": 251,
-   "coverable": 627,
-   "total": 627,
-   "percentage": 59.96
+   "covered": 215,
+   "uncovered": 58,
+   "coverable": 273,
+   "total": 273,
+   "percentage": 78.75
   },
   "patch_methods_hit": {
-   "covered": 105,
-   "total": 143,
-   "percentage": 73.42
+   "covered": 46,
+   "total": 51,
+   "percentage": 90.19
   },
-  "files": 88,
-  "folders": 48,
+  "files": 121,
+  "folders": 56,
   "statuses": {
-   "branch_coverage": "warning",
-   "methods_fully_covered": "warning",
-   "patch_methods_hit": "danger",
-   "patch_statement_coverage": "danger",
+   "patch_methods_hit": "safe",
+   "patch_statement_coverage": "warning",
    "statement_coverage": "safe"
   }
  },
@@ -71,44 +64,77 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 0,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 28
+     "value": 38
     },
     "methods_fully_covered": {
-     "covered": 6,
-     "total": 13,
-     "percentage": 46.15
+     "covered": 7,
+     "total": 28,
+     "percentage": 25
     },
     "methods_hit": {
-     "covered": 13,
-     "total": 13,
-     "percentage": 100
+     "covered": 25,
+     "total": 28,
+     "percentage": 89.28
     },
     "patch_methods_hit": {
-     "covered": 4,
-     "total": 5,
-     "percentage": 80
+     "covered": 6,
+     "total": 6,
+     "percentage": 100
     },
     "patch_statement_coverage": {
-     "covered": 21,
-     "uncovered": 25,
-     "coverable": 46,
-     "total": 46,
-     "percentage": 45.65
+     "covered": 47,
+     "uncovered": 10,
+     "coverable": 57,
+     "total": 57,
+     "percentage": 82.45
     },
     "statement_coverage": {
-     "covered": 179,
-     "uncovered": 112,
-     "coverable": 291,
-     "total": 291,
-     "percentage": 61.51
+     "covered": 286,
+     "uncovered": 244,
+     "coverable": 530,
+     "total": 530,
+     "percentage": 53.96
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
-    "patch_methods_hit": "warning",
-    "patch_statement_coverage": "danger",
-    "statement_coverage": "warning"
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
+    "statement_coverage": "danger"
    }
+  },
+  {
+   "id": "cmd/history.go",
+   "name": "history.go",
+   "type": "file",
+   "path": "cmd/history.go",
+   "parentId": "cmd",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 21
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 12,
+     "percentage": 8.33
+    },
+    "methods_hit": {
+     "covered": 12,
+     "total": 12,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 118,
+     "uncovered": 38,
+     "coverable": 156,
+     "total": 156,
+     "percentage": 75.64
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "cmd_history.go.html"
   },
   {
    "id": "cmd/main.go",
@@ -119,46 +145,113 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 1,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 28
+     "value": 38
     },
     "methods_fully_covered": {
      "covered": 6,
-     "total": 13,
-     "percentage": 46.15
+     "total": 11,
+     "percentage": 54.54
     },
     "methods_hit": {
-     "covered": 13,
-     "total": 13,
+     "covered": 11,
+     "total": 11,
      "percentage": 100
     },
     "patch_methods_hit": {
-     "covered": 4,
-     "total": 5,
-     "percentage": 80
+     "covered": 6,
+     "total": 6,
+     "percentage": 100
     },
     "patch_statement_coverage": {
-     "covered": 21,
-     "uncovered": 25,
-     "coverable": 46,
-     "total": 46,
-     "percentage": 45.65
+     "covered": 47,
+     "uncovered": 10,
+     "coverable": 57,
+     "total": 57,
+     "percentage": 82.45
     },
     "statement_coverage": {
-     "covered": 179,
-     "uncovered": 112,
-     "coverable": 291,
-     "total": 291,
-     "percentage": 61.51
+     "covered": 144,
+     "uncovered": 80,
+     "coverable": 224,
+     "total": 224,
+     "percentage": 64.28
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
-    "patch_methods_hit": "warning",
-    "patch_statement_coverage": "danger",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "warning"
    },
    "targetUrl": "cmd_main.go.html",
    "diffStatus": "modified"
+  },
+  {
+   "id": "cmd/serve.go",
+   "name": "serve.go",
+   "type": "file",
+   "path": "cmd/serve.go",
+   "parentId": "cmd",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 16
+    },
+    "methods_fully_covered": {
+     "covered": 0,
+     "total": 3,
+     "percentage": 0
+    },
+    "methods_hit": {
+     "covered": 0,
+     "total": 3,
+     "percentage": 0
+    },
+    "statement_coverage": {
+     "covered": 0,
+     "uncovered": 90,
+     "coverable": 90,
+     "total": 90,
+     "percentage": 0
+    }
+   },
+   "statuses": {
+    "statement_coverage": "danger"
+   },
+   "targetUrl": "cmd_serve.go.html"
+  },
+  {
+   "id": "cmd/storecmd.go",
+   "name": "storecmd.go",
+   "type": "file",
+   "path": "cmd/storecmd.go",
+   "parentId": "cmd",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 13
+    },
+    "methods_fully_covered": {
+     "covered": 0,
+     "total": 2,
+     "percentage": 0
+    },
+    "methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 24,
+     "uncovered": 36,
+     "coverable": 60,
+     "total": 60,
+     "percentage": 40
+    }
+   },
+   "statuses": {
+    "statement_coverage": "danger"
+   },
+   "targetUrl": "cmd_storecmd.go.html"
   },
   {
    "id": "demo_projects",
@@ -167,11 +260,6 @@ window.__NANOVISION_SUMMARY__ = {
    "path": "demo_projects",
    "depth": 0,
    "metrics": {
-    "branch_coverage": {
-     "covered": 39,
-     "total": 58,
-     "percentage": 67.24
-    },
     "max_cyclomatic_complexity": {
      "value": 9
     },
@@ -185,11 +273,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 33,
      "percentage": 72.72
     },
-    "patch_methods_hit": {
-     "covered": 1,
-     "total": 1,
-     "percentage": 100
-    },
     "statement_coverage": {
      "covered": 76,
      "uncovered": 32,
@@ -199,9 +282,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "branch_coverage": "warning",
-    "methods_fully_covered": "warning",
-    "patch_methods_hit": "safe",
     "statement_coverage": "warning"
    }
   },
@@ -213,11 +293,6 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects",
    "depth": 1,
    "metrics": {
-    "branch_coverage": {
-     "covered": 21,
-     "total": 34,
-     "percentage": 61.76
-    },
     "max_cyclomatic_complexity": {
      "value": 6
     },
@@ -240,8 +315,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "branch_coverage": "warning",
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -253,11 +326,6 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/cpp",
    "depth": 2,
    "metrics": {
-    "branch_coverage": {
-     "covered": 21,
-     "total": 34,
-     "percentage": 61.76
-    },
     "max_cyclomatic_complexity": {
      "value": 6
     },
@@ -280,8 +348,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "branch_coverage": "warning",
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -293,11 +359,6 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/cpp/project",
    "depth": 3,
    "metrics": {
-    "branch_coverage": {
-     "covered": 21,
-     "total": 34,
-     "percentage": 61.76
-    },
     "max_cyclomatic_complexity": {
      "value": 6
     },
@@ -320,8 +381,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "branch_coverage": "warning",
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -333,11 +392,6 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/cpp/project/src",
    "depth": 4,
    "metrics": {
-    "branch_coverage": {
-     "covered": 9,
-     "total": 14,
-     "percentage": 64.28
-    },
     "max_cyclomatic_complexity": {
      "value": 4
     },
@@ -360,8 +414,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "branch_coverage": "warning",
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -373,11 +425,6 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/cpp/project/src/utils",
    "depth": 5,
    "metrics": {
-    "branch_coverage": {
-     "covered": 9,
-     "total": 14,
-     "percentage": 64.28
-    },
     "max_cyclomatic_complexity": {
      "value": 4
     },
@@ -400,8 +447,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "branch_coverage": "warning",
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    },
    "targetUrl": "demo_projects_cpp_project_src_utils_math_utils.cpp.html"
@@ -414,11 +459,6 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/cpp/project/src",
    "depth": 4,
    "metrics": {
-    "branch_coverage": {
-     "covered": 6,
-     "total": 12,
-     "percentage": 50
-    },
     "max_cyclomatic_complexity": {
      "value": 6
     },
@@ -441,8 +481,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "branch_coverage": "warning",
-    "methods_fully_covered": "danger",
     "statement_coverage": "warning"
    },
    "targetUrl": "demo_projects_cpp_project_src_advanced_calculator.cpp.html"
@@ -455,11 +493,6 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/cpp/project/src",
    "depth": 4,
    "metrics": {
-    "branch_coverage": {
-     "covered": 6,
-     "total": 8,
-     "percentage": 75
-    },
     "max_cyclomatic_complexity": {
      "value": 3
     },
@@ -482,8 +515,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "branch_coverage": "safe",
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
    "targetUrl": "demo_projects_cpp_project_src_calculator.cpp.html"
@@ -496,17 +527,9 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects",
    "depth": 1,
    "metrics": {
-    "branch_coverage": {
-     "covered": 18,
-     "total": 24,
-     "percentage": 75
-    },
     "max_cyclomatic_complexity": {
      "value": 0
     }
-   },
-   "statuses": {
-    "branch_coverage": "safe"
    }
   },
   {
@@ -517,17 +540,9 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/csharp",
    "depth": 2,
    "metrics": {
-    "branch_coverage": {
-     "covered": 18,
-     "total": 24,
-     "percentage": 75
-    },
     "max_cyclomatic_complexity": {
      "value": 0
     }
-   },
-   "statuses": {
-    "branch_coverage": "safe"
    }
   },
   {
@@ -538,17 +553,9 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/csharp/project",
    "depth": 3,
    "metrics": {
-    "branch_coverage": {
-     "covered": 18,
-     "total": 24,
-     "percentage": 75
-    },
     "max_cyclomatic_complexity": {
      "value": 0
     }
-   },
-   "statuses": {
-    "branch_coverage": "safe"
    }
   },
   {
@@ -643,17 +650,9 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/csharp/project/Test",
    "depth": 4,
    "metrics": {
-    "branch_coverage": {
-     "covered": 4,
-     "total": 4,
-     "percentage": 100
-    },
     "max_cyclomatic_complexity": {
      "value": 0
     }
-   },
-   "statuses": {
-    "branch_coverage": "safe"
    },
    "targetUrl": "demo_projects_csharp_project_Test_CodeContract_Target.cs.html"
   },
@@ -707,17 +706,9 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/csharp/project/Test",
    "depth": 4,
    "metrics": {
-    "branch_coverage": {
-     "covered": 2,
-     "total": 4,
-     "percentage": 50
-    },
     "max_cyclomatic_complexity": {
      "value": 0
     }
-   },
-   "statuses": {
-    "branch_coverage": "warning"
    },
    "targetUrl": "demo_projects_csharp_project_Test_PartialClass.cs.html"
   },
@@ -785,17 +776,9 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/csharp/project/Test",
    "depth": 4,
    "metrics": {
-    "branch_coverage": {
-     "covered": 4,
-     "total": 8,
-     "percentage": 50
-    },
     "max_cyclomatic_complexity": {
      "value": 0
     }
-   },
-   "statuses": {
-    "branch_coverage": "warning"
    },
    "targetUrl": "demo_projects_csharp_project_Test_TestClass.cs.html"
   },
@@ -807,17 +790,9 @@ window.__NANOVISION_SUMMARY__ = {
    "parentId": "demo_projects/csharp/project/Test",
    "depth": 4,
    "metrics": {
-    "branch_coverage": {
-     "covered": 8,
-     "total": 8,
-     "percentage": 100
-    },
     "max_cyclomatic_complexity": {
      "value": 0
     }
-   },
-   "statuses": {
-    "branch_coverage": "safe"
    },
    "targetUrl": "demo_projects_csharp_project_Test_TestClass2.cs.html"
   },
@@ -842,11 +817,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 24,
      "percentage": 66.66
     },
-    "patch_methods_hit": {
-     "covered": 1,
-     "total": 1,
-     "percentage": 100
-    },
     "statement_coverage": {
      "covered": 42,
      "uncovered": 23,
@@ -856,8 +826,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
-    "patch_methods_hit": "safe",
     "statement_coverage": "warning"
    }
   },
@@ -882,11 +850,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 24,
      "percentage": 66.66
     },
-    "patch_methods_hit": {
-     "covered": 1,
-     "total": 1,
-     "percentage": 100
-    },
     "statement_coverage": {
      "covered": 42,
      "uncovered": 23,
@@ -896,8 +859,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
-    "patch_methods_hit": "safe",
     "statement_coverage": "warning"
    }
   },
@@ -922,11 +883,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 13,
      "percentage": 84.61
     },
-    "patch_methods_hit": {
-     "covered": 1,
-     "total": 1,
-     "percentage": 100
-    },
     "statement_coverage": {
      "covered": 29,
      "uncovered": 9,
@@ -936,8 +892,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
-    "patch_methods_hit": "safe",
     "statement_coverage": "safe"
    }
   },
@@ -962,11 +916,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 7,
      "percentage": 85.71
     },
-    "patch_methods_hit": {
-     "covered": 1,
-     "total": 1,
-     "percentage": 100
-    },
     "statement_coverage": {
      "covered": 20,
      "uncovered": 6,
@@ -976,12 +925,9 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
-    "patch_methods_hit": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "demo_projects_go_project_calculator_calculator.go.html",
-   "diffStatus": "modified"
+   "targetUrl": "demo_projects_go_project_calculator_calculator.go.html"
   },
   {
    "id": "demo_projects/go/project/calculator/entities.go",
@@ -1013,7 +959,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "warning"
    },
    "targetUrl": "demo_projects_go_project_calculator_entities.go.html"
@@ -1048,7 +993,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "danger"
    }
   },
@@ -1082,7 +1026,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "warning"
    },
    "targetUrl": "demo_projects_go_project_calculator_2_calculator.go.html"
@@ -1117,7 +1060,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "danger"
    },
    "targetUrl": "demo_projects_go_project_calculator_2_entities.go.html"
@@ -1130,42 +1072,41 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 0,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 31
+     "value": 33
     },
     "methods_fully_covered": {
-     "covered": 255,
-     "total": 455,
-     "percentage": 56.04
+     "covered": 354,
+     "total": 666,
+     "percentage": 53.15
     },
     "methods_hit": {
-     "covered": 383,
-     "total": 455,
-     "percentage": 84.17
+     "covered": 594,
+     "total": 666,
+     "percentage": 89.18
     },
     "patch_methods_hit": {
-     "covered": 100,
-     "total": 137,
-     "percentage": 72.99
+     "covered": 40,
+     "total": 45,
+     "percentage": 88.88
     },
     "patch_statement_coverage": {
-     "covered": 355,
-     "uncovered": 226,
-     "coverable": 581,
-     "total": 581,
-     "percentage": 61.1
+     "covered": 168,
+     "uncovered": 48,
+     "coverable": 216,
+     "total": 216,
+     "percentage": 77.77
     },
     "statement_coverage": {
-     "covered": 2722,
-     "uncovered": 742,
-     "coverable": 3464,
-     "total": 3464,
-     "percentage": 78.57
+     "covered": 4682,
+     "uncovered": 1140,
+     "coverable": 5822,
+     "total": 5822,
+     "percentage": 80.41
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
+    "patch_methods_hit": "warning",
+    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -1190,16 +1131,29 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 31,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 1,
+     "uncovered": 0,
+     "coverable": 1,
+     "total": 1,
+     "percentage": 100
+    },
     "statement_coverage": {
-     "covered": 331,
+     "covered": 328,
      "uncovered": 16,
-     "coverable": 347,
-     "total": 347,
-     "percentage": 95.38
+     "coverable": 344,
+     "total": 344,
+     "percentage": 95.34
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    }
   },
@@ -1225,18 +1179,18 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 165,
+     "covered": 163,
      "uncovered": 5,
-     "coverable": 170,
-     "total": 170,
-     "percentage": 97.05
+     "coverable": 168,
+     "total": 168,
+     "percentage": 97.02
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_aggregator_aggrgator.go.html"
+   "targetUrl": "internal_aggregator_aggrgator.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/aggregator/report_index.go",
@@ -1259,19 +1213,33 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 18,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 1,
+     "uncovered": 0,
+     "coverable": 1,
+     "total": 1,
+     "percentage": 100
+    },
     "statement_coverage": {
-     "covered": 166,
+     "covered": 165,
      "uncovered": 11,
-     "coverable": 177,
-     "total": 177,
-     "percentage": 93.78
+     "coverable": 176,
+     "total": 176,
+     "percentage": 93.75
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_aggregator_report_index.go.html"
+   "targetUrl": "internal_aggregator_report_index.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/analyzer",
@@ -1294,6 +1262,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 16,
      "percentage": 93.75
     },
+    "patch_methods_hit": {
+     "covered": 0,
+     "total": 3,
+     "percentage": 0
+    },
+    "patch_statement_coverage": {
+     "covered": 0,
+     "uncovered": 6,
+     "coverable": 6,
+     "total": 6,
+     "percentage": 0
+    },
     "statement_coverage": {
      "covered": 212,
      "uncovered": 27,
@@ -1303,7 +1283,8 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "danger",
+    "patch_statement_coverage": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -1328,6 +1309,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 6,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 0,
+     "total": 1,
+     "percentage": 0
+    },
+    "patch_statement_coverage": {
+     "covered": 0,
+     "uncovered": 2,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 0
+    },
     "statement_coverage": {
      "covered": 81,
      "uncovered": 9,
@@ -1337,7 +1330,8 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "danger",
+    "patch_statement_coverage": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -1362,6 +1356,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 6,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 0,
+     "total": 1,
+     "percentage": 0
+    },
+    "patch_statement_coverage": {
+     "covered": 0,
+     "uncovered": 2,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 0
+    },
     "statement_coverage": {
      "covered": 81,
      "uncovered": 9,
@@ -1371,10 +1377,12 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "danger",
+    "patch_statement_coverage": "danger",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_analyzer_cpp_analyzer.go.html"
+   "targetUrl": "internal_analyzer_cpp_analyzer.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/analyzer/gdscript",
@@ -1397,6 +1405,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 5,
      "percentage": 80
     },
+    "patch_methods_hit": {
+     "covered": 0,
+     "total": 1,
+     "percentage": 0
+    },
+    "patch_statement_coverage": {
+     "covered": 0,
+     "uncovered": 2,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 0
+    },
     "statement_coverage": {
      "covered": 60,
      "uncovered": 9,
@@ -1406,7 +1426,8 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "danger",
+    "patch_statement_coverage": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -1431,6 +1452,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 5,
      "percentage": 80
     },
+    "patch_methods_hit": {
+     "covered": 0,
+     "total": 1,
+     "percentage": 0
+    },
+    "patch_statement_coverage": {
+     "covered": 0,
+     "uncovered": 2,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 0
+    },
     "statement_coverage": {
      "covered": 60,
      "uncovered": 9,
@@ -1440,10 +1473,12 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "danger",
+    "patch_statement_coverage": "danger",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_analyzer_gdscript_analyzer.go.html"
+   "targetUrl": "internal_analyzer_gdscript_analyzer.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/analyzer/go",
@@ -1466,6 +1501,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 5,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 0,
+     "total": 1,
+     "percentage": 0
+    },
+    "patch_statement_coverage": {
+     "covered": 0,
+     "uncovered": 2,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 0
+    },
     "statement_coverage": {
      "covered": 71,
      "uncovered": 9,
@@ -1475,7 +1522,8 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "danger",
+    "patch_statement_coverage": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -1500,6 +1548,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 5,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 0,
+     "total": 1,
+     "percentage": 0
+    },
+    "patch_statement_coverage": {
+     "covered": 0,
+     "uncovered": 2,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 0
+    },
     "statement_coverage": {
      "covered": 71,
      "uncovered": 9,
@@ -1509,10 +1569,12 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "danger",
+    "patch_statement_coverage": "danger",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_analyzer_go_analyzer.go.html"
+   "targetUrl": "internal_analyzer_go_analyzer.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/bootlog",
@@ -1526,9 +1588,9 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 9
     },
     "methods_fully_covered": {
-     "covered": 1,
+     "covered": 2,
      "total": 2,
-     "percentage": 50
+     "percentage": 100
     },
     "methods_hit": {
      "covered": 2,
@@ -1536,15 +1598,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 28,
-     "uncovered": 1,
+     "covered": 29,
+     "uncovered": 0,
      "coverable": 29,
      "total": 29,
-     "percentage": 96.55
+     "percentage": 100
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -1560,9 +1621,9 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 9
     },
     "methods_fully_covered": {
-     "covered": 1,
+     "covered": 2,
      "total": 2,
-     "percentage": 50
+     "percentage": 100
     },
     "methods_hit": {
      "covered": 2,
@@ -1570,15 +1631,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 28,
-     "uncovered": 1,
+     "covered": 29,
+     "uncovered": 0,
      "coverable": 29,
      "total": 29,
-     "percentage": 96.55
+     "percentage": 100
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_bootlog_bootlog.go.html"
@@ -1595,25 +1655,24 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 7
     },
     "methods_fully_covered": {
-     "covered": 4,
+     "covered": 6,
      "total": 11,
-     "percentage": 36.36
+     "percentage": 54.54
     },
     "methods_hit": {
-     "covered": 8,
+     "covered": 9,
      "total": 11,
-     "percentage": 72.72
+     "percentage": 81.81
     },
     "statement_coverage": {
-     "covered": 80,
-     "uncovered": 14,
+     "covered": 83,
+     "uncovered": 11,
      "coverable": 94,
      "total": 94,
-     "percentage": 85.1
+     "percentage": 88.29
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -1629,9 +1688,9 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 7
     },
     "methods_fully_covered": {
-     "covered": 4,
+     "covered": 5,
      "total": 8,
-     "percentage": 50
+     "percentage": 62.5
     },
     "methods_hit": {
      "covered": 8,
@@ -1639,15 +1698,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 80,
-     "uncovered": 11,
+     "covered": 82,
+     "uncovered": 9,
      "coverable": 91,
      "total": 91,
-     "percentage": 87.91
+     "percentage": 90.1
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_cache_cache.go.html"
@@ -1664,25 +1722,24 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 2
     },
     "methods_fully_covered": {
-     "covered": 0,
+     "covered": 1,
      "total": 3,
-     "percentage": 0
+     "percentage": 33.33
     },
     "methods_hit": {
-     "covered": 0,
+     "covered": 1,
      "total": 3,
-     "percentage": 0
+     "percentage": 33.33
     },
     "statement_coverage": {
-     "covered": 0,
-     "uncovered": 3,
+     "covered": 1,
+     "uncovered": 2,
      "coverable": 3,
      "total": 3,
-     "percentage": 0
+     "percentage": 33.33
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "danger"
    },
    "targetUrl": "internal_cache_cache_validator.go.html"
@@ -1699,40 +1756,25 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 21
     },
     "methods_fully_covered": {
-     "covered": 26,
-     "total": 61,
-     "percentage": 42.62
+     "covered": 28,
+     "total": 49,
+     "percentage": 57.14
     },
     "methods_hit": {
-     "covered": 36,
-     "total": 61,
-     "percentage": 59.01
-    },
-    "patch_methods_hit": {
-     "covered": 36,
-     "total": 56,
-     "percentage": 64.28
-    },
-    "patch_statement_coverage": {
-     "covered": 85,
-     "uncovered": 45,
-     "coverable": 130,
-     "total": 130,
-     "percentage": 65.38
+     "covered": 34,
+     "total": 49,
+     "percentage": 69.38
     },
     "statement_coverage": {
-     "covered": 140,
-     "uncovered": 65,
-     "coverable": 205,
-     "total": 205,
-     "percentage": 68.29
+     "covered": 136,
+     "uncovered": 22,
+     "coverable": 158,
+     "total": 158,
+     "percentage": 86.07
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
-    "statement_coverage": "warning"
+    "statement_coverage": "safe"
    }
   },
   {
@@ -1744,43 +1786,28 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 2,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 10
+     "value": 5
     },
     "methods_fully_covered": {
-     "covered": 22,
-     "total": 57,
-     "percentage": 38.59
+     "covered": 24,
+     "total": 45,
+     "percentage": 53.33
     },
     "methods_hit": {
-     "covered": 32,
-     "total": 57,
-     "percentage": 56.14
-    },
-    "patch_methods_hit": {
-     "covered": 32,
-     "total": 52,
-     "percentage": 61.53
-    },
-    "patch_statement_coverage": {
-     "covered": 49,
-     "uncovered": 45,
-     "coverable": 94,
-     "total": 94,
-     "percentage": 52.12
+     "covered": 30,
+     "total": 45,
+     "percentage": 66.66
     },
     "statement_coverage": {
-     "covered": 77,
-     "uncovered": 65,
-     "coverable": 142,
-     "total": 142,
-     "percentage": 54.22
+     "covered": 73,
+     "uncovered": 22,
+     "coverable": 95,
+     "total": 95,
+     "percentage": 76.84
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
-    "statement_coverage": "danger"
+    "statement_coverage": "safe"
    },
    "targetUrl": "internal_calculator_calculators.go.html",
    "diffStatus": "modified"
@@ -1806,18 +1833,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 4,
      "percentage": 100
     },
-    "patch_methods_hit": {
-     "covered": 4,
-     "total": 4,
-     "percentage": 100
-    },
-    "patch_statement_coverage": {
-     "covered": 36,
-     "uncovered": 0,
-     "coverable": 36,
-     "total": 36,
-     "percentage": 100
-    },
     "statement_coverage": {
      "covered": 63,
      "uncovered": 0,
@@ -1827,13 +1842,143 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
-    "patch_methods_hit": "safe",
-    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_calculator_engine.go.html",
-   "diffStatus": "modified"
+   "targetUrl": "internal_calculator_engine.go.html"
+  },
+  {
+   "id": "internal/client",
+   "name": "client",
+   "type": "folder",
+   "path": "internal/client",
+   "parentId": "internal",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 10
+    },
+    "methods_fully_covered": {
+     "covered": 3,
+     "total": 10,
+     "percentage": 30
+    },
+    "methods_hit": {
+     "covered": 10,
+     "total": 10,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 50,
+     "uncovered": 16,
+     "coverable": 66,
+     "total": 66,
+     "percentage": 75.75
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   }
+  },
+  {
+   "id": "internal/client/client.go",
+   "name": "client.go",
+   "type": "file",
+   "path": "internal/client/client.go",
+   "parentId": "internal/client",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 10
+    },
+    "methods_fully_covered": {
+     "covered": 3,
+     "total": 10,
+     "percentage": 30
+    },
+    "methods_hit": {
+     "covered": 10,
+     "total": 10,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 50,
+     "uncovered": 16,
+     "coverable": 66,
+     "total": 66,
+     "percentage": 75.75
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_client_client.go.html"
+  },
+  {
+   "id": "internal/compare",
+   "name": "compare",
+   "type": "folder",
+   "path": "internal/compare",
+   "parentId": "internal",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 27
+    },
+    "methods_fully_covered": {
+     "covered": 5,
+     "total": 9,
+     "percentage": 55.55
+    },
+    "methods_hit": {
+     "covered": 9,
+     "total": 9,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 137,
+     "uncovered": 11,
+     "coverable": 148,
+     "total": 148,
+     "percentage": 92.56
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   }
+  },
+  {
+   "id": "internal/compare/compare.go",
+   "name": "compare.go",
+   "type": "file",
+   "path": "internal/compare/compare.go",
+   "parentId": "internal/compare",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 27
+    },
+    "methods_fully_covered": {
+     "covered": 5,
+     "total": 9,
+     "percentage": 55.55
+    },
+    "methods_hit": {
+     "covered": 9,
+     "total": 9,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 137,
+     "uncovered": 11,
+     "coverable": 148,
+     "total": 148,
+     "percentage": 92.56
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_compare_compare.go.html"
   },
   {
    "id": "internal/config",
@@ -1844,43 +1989,42 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 1,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 28
+     "value": 33
     },
     "methods_fully_covered": {
-     "covered": 3,
-     "total": 9,
-     "percentage": 33.33
+     "covered": 4,
+     "total": 10,
+     "percentage": 40
     },
     "methods_hit": {
-     "covered": 9,
-     "total": 9,
+     "covered": 10,
+     "total": 10,
      "percentage": 100
     },
     "patch_methods_hit": {
-     "covered": 4,
-     "total": 4,
+     "covered": 6,
+     "total": 6,
      "percentage": 100
     },
     "patch_statement_coverage": {
-     "covered": 12,
-     "uncovered": 3,
-     "coverable": 15,
-     "total": 15,
-     "percentage": 80
+     "covered": 18,
+     "uncovered": 13,
+     "coverable": 31,
+     "total": 31,
+     "percentage": 58.06
     },
     "statement_coverage": {
-     "covered": 124,
-     "uncovered": 42,
-     "coverable": 166,
-     "total": 166,
-     "percentage": 74.69
+     "covered": 103,
+     "uncovered": 89,
+     "coverable": 192,
+     "total": 192,
+     "percentage": 53.64
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "patch_methods_hit": "safe",
-    "patch_statement_coverage": "warning",
-    "statement_coverage": "warning"
+    "patch_statement_coverage": "danger",
+    "statement_coverage": "danger"
    }
   },
   {
@@ -1892,43 +2036,42 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 2,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 28
+     "value": 33
     },
     "methods_fully_covered": {
-     "covered": 3,
-     "total": 9,
-     "percentage": 33.33
+     "covered": 4,
+     "total": 10,
+     "percentage": 40
     },
     "methods_hit": {
-     "covered": 9,
-     "total": 9,
+     "covered": 10,
+     "total": 10,
      "percentage": 100
     },
     "patch_methods_hit": {
-     "covered": 4,
-     "total": 4,
+     "covered": 6,
+     "total": 6,
      "percentage": 100
     },
     "patch_statement_coverage": {
-     "covered": 12,
-     "uncovered": 3,
-     "coverable": 15,
-     "total": 15,
-     "percentage": 80
+     "covered": 18,
+     "uncovered": 13,
+     "coverable": 31,
+     "total": 31,
+     "percentage": 58.06
     },
     "statement_coverage": {
-     "covered": 124,
-     "uncovered": 42,
-     "coverable": 166,
-     "total": 166,
-     "percentage": 74.69
+     "covered": 103,
+     "uncovered": 89,
+     "coverable": 192,
+     "total": 192,
+     "percentage": 53.64
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "patch_methods_hit": "safe",
-    "patch_statement_coverage": "warning",
-    "statement_coverage": "warning"
+    "patch_statement_coverage": "danger",
+    "statement_coverage": "danger"
    },
    "targetUrl": "internal_config_config.go.html",
    "diffStatus": "modified"
@@ -1945,39 +2088,38 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 10
     },
     "methods_fully_covered": {
-     "covered": 3,
+     "covered": 4,
      "total": 11,
-     "percentage": 27.27
+     "percentage": 36.36
     },
     "methods_hit": {
-     "covered": 9,
+     "covered": 10,
      "total": 11,
-     "percentage": 81.81
+     "percentage": 90.9
     },
     "patch_methods_hit": {
-     "covered": 9,
-     "total": 11,
-     "percentage": 81.81
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
     },
     "patch_statement_coverage": {
-     "covered": 55,
-     "uncovered": 25,
-     "coverable": 80,
-     "total": 80,
-     "percentage": 68.75
+     "covered": 2,
+     "uncovered": 0,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 100
     },
     "statement_coverage": {
      "covered": 55,
-     "uncovered": 25,
-     "coverable": 80,
-     "total": 80,
-     "percentage": 68.75
+     "uncovered": 21,
+     "coverable": 76,
+     "total": 76,
+     "percentage": 72.36
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "warning",
-    "patch_statement_coverage": "danger",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "warning"
    }
   },
@@ -1993,43 +2135,42 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 10
     },
     "methods_fully_covered": {
-     "covered": 3,
+     "covered": 4,
      "total": 11,
-     "percentage": 27.27
+     "percentage": 36.36
     },
     "methods_hit": {
-     "covered": 9,
+     "covered": 10,
      "total": 11,
-     "percentage": 81.81
+     "percentage": 90.9
     },
     "patch_methods_hit": {
-     "covered": 9,
-     "total": 11,
-     "percentage": 81.81
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
     },
     "patch_statement_coverage": {
-     "covered": 55,
-     "uncovered": 25,
-     "coverable": 80,
-     "total": 80,
-     "percentage": 68.75
+     "covered": 2,
+     "uncovered": 0,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 100
     },
     "statement_coverage": {
      "covered": 55,
-     "uncovered": 25,
-     "coverable": 80,
-     "total": 80,
-     "percentage": 68.75
+     "uncovered": 21,
+     "coverable": 76,
+     "total": 76,
+     "percentage": 72.36
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "warning",
-    "patch_statement_coverage": "danger",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "warning"
    },
    "targetUrl": "internal_diagnostics_diagnostics.go.html",
-   "diffStatus": "added"
+   "diffStatus": "modified"
   },
   {
    "id": "internal/diff",
@@ -2043,25 +2184,38 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 12
     },
     "methods_fully_covered": {
-     "covered": 6,
-     "total": 13,
-     "percentage": 46.15
+     "covered": 8,
+     "total": 14,
+     "percentage": 57.14
     },
     "methods_hit": {
+     "covered": 14,
+     "total": 14,
+     "percentage": 100
+    },
+    "patch_methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
      "covered": 13,
+     "uncovered": 0,
+     "coverable": 13,
      "total": 13,
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 122,
-     "uncovered": 11,
-     "coverable": 133,
-     "total": 133,
-     "percentage": 91.72
+     "covered": 132,
+     "uncovered": 10,
+     "coverable": 142,
+     "total": 142,
+     "percentage": 92.95
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    }
   },
@@ -2077,28 +2231,42 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 12
     },
     "methods_fully_covered": {
-     "covered": 6,
-     "total": 12,
-     "percentage": 50
+     "covered": 8,
+     "total": 13,
+     "percentage": 61.53
     },
     "methods_hit": {
-     "covered": 12,
-     "total": 12,
+     "covered": 13,
+     "total": 13,
+     "percentage": 100
+    },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 7,
+     "uncovered": 0,
+     "coverable": 7,
+     "total": 7,
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 113,
-     "uncovered": 10,
-     "coverable": 123,
-     "total": 123,
-     "percentage": 91.86
+     "covered": 121,
+     "uncovered": 9,
+     "coverable": 130,
+     "total": 130,
+     "percentage": 93.07
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_diff_parser.go.html"
+   "targetUrl": "internal_diff_parser.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/diff/path.go",
@@ -2121,19 +2289,33 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 1,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 6,
+     "uncovered": 0,
+     "coverable": 6,
+     "total": 6,
+     "percentage": 100
+    },
     "statement_coverage": {
-     "covered": 9,
+     "covered": 11,
      "uncovered": 1,
-     "coverable": 10,
-     "total": 10,
-     "percentage": 90
+     "coverable": 12,
+     "total": 12,
+     "percentage": 91.66
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_diff_path.go.html"
+   "targetUrl": "internal_diff_path.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/diffapply",
@@ -2144,28 +2326,41 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 1,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 15
+     "value": 19
     },
     "methods_fully_covered": {
-     "covered": 3,
-     "total": 7,
-     "percentage": 42.85
+     "covered": 2,
+     "total": 8,
+     "percentage": 25
     },
     "methods_hit": {
-     "covered": 7,
-     "total": 7,
+     "covered": 8,
+     "total": 8,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 4,
+     "total": 4,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 50,
+     "uncovered": 8,
+     "coverable": 58,
+     "total": 58,
+     "percentage": 86.2
+    },
     "statement_coverage": {
-     "covered": 148,
-     "uncovered": 12,
-     "coverable": 160,
-     "total": 160,
-     "percentage": 92.5
+     "covered": 194,
+     "uncovered": 17,
+     "coverable": 211,
+     "total": 211,
+     "percentage": 91.94
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    }
   },
@@ -2178,7 +2373,7 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 2,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 13
+     "value": 19
     },
     "methods_fully_covered": {
      "covered": 1,
@@ -2190,19 +2385,33 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 2,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 23,
+     "uncovered": 1,
+     "coverable": 24,
+     "total": 24,
+     "percentage": 95.83
+    },
     "statement_coverage": {
-     "covered": 29,
-     "uncovered": 4,
-     "coverable": 33,
-     "total": 33,
-     "percentage": 87.87
+     "covered": 48,
+     "uncovered": 3,
+     "coverable": 51,
+     "total": 51,
+     "percentage": 94.11
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_diffapply_apply.go.html"
+   "targetUrl": "internal_diffapply_apply.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/diffapply/resolver.go",
@@ -2216,28 +2425,42 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 15
     },
     "methods_fully_covered": {
-     "covered": 2,
-     "total": 5,
-     "percentage": 40
+     "covered": 1,
+     "total": 6,
+     "percentage": 16.66
     },
     "methods_hit": {
-     "covered": 5,
-     "total": 5,
+     "covered": 6,
+     "total": 6,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 3,
+     "total": 3,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 27,
+     "uncovered": 7,
+     "coverable": 34,
+     "total": 34,
+     "percentage": 79.41
+    },
     "statement_coverage": {
-     "covered": 119,
-     "uncovered": 8,
-     "coverable": 127,
-     "total": 127,
-     "percentage": 93.7
+     "covered": 146,
+     "uncovered": 14,
+     "coverable": 160,
+     "total": 160,
+     "percentage": 91.25
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_diffapply_resolver.go.html"
+   "targetUrl": "internal_diffapply_resolver.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/enricher",
@@ -2260,16 +2483,29 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 8,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 3,
+     "uncovered": 1,
+     "coverable": 4,
+     "total": 4,
+     "percentage": 75
+    },
     "statement_coverage": {
-     "covered": 94,
-     "uncovered": 18,
-     "coverable": 112,
-     "total": 112,
-     "percentage": 83.92
+     "covered": 97,
+     "uncovered": 12,
+     "coverable": 109,
+     "total": 109,
+     "percentage": 88.99
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -2294,19 +2530,33 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 8,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 3,
+     "uncovered": 1,
+     "coverable": 4,
+     "total": 4,
+     "percentage": 75
+    },
     "statement_coverage": {
-     "covered": 94,
-     "uncovered": 18,
-     "coverable": 112,
-     "total": 112,
-     "percentage": 83.92
+     "covered": 97,
+     "uncovered": 12,
+     "coverable": 109,
+     "total": 109,
+     "percentage": 88.99
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_enricher_enricher.go.html"
+   "targetUrl": "internal_enricher_enricher.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/filereader",
@@ -2321,24 +2571,37 @@ window.__NANOVISION_SUMMARY__ = {
     },
     "methods_fully_covered": {
      "covered": 4,
-     "total": 8,
-     "percentage": 50
+     "total": 10,
+     "percentage": 40
     },
     "methods_hit": {
-     "covered": 7,
-     "total": 8,
-     "percentage": 87.5
+     "covered": 9,
+     "total": 10,
+     "percentage": 90
+    },
+    "patch_methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 16,
+     "uncovered": 4,
+     "coverable": 20,
+     "total": 20,
+     "percentage": 80
     },
     "statement_coverage": {
-     "covered": 54,
-     "uncovered": 7,
-     "coverable": 61,
-     "total": 61,
-     "percentage": 88.52
+     "covered": 71,
+     "uncovered": 10,
+     "coverable": 81,
+     "total": 81,
+     "percentage": 87.65
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -2372,7 +2635,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_filereader_default_reader.go.html"
@@ -2390,27 +2652,41 @@ window.__NANOVISION_SUMMARY__ = {
     },
     "methods_fully_covered": {
      "covered": 0,
-     "total": 3,
+     "total": 5,
      "percentage": 0
     },
     "methods_hit": {
-     "covered": 3,
-     "total": 3,
+     "covered": 5,
+     "total": 5,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 16,
+     "uncovered": 4,
+     "coverable": 20,
+     "total": 20,
+     "percentage": 80
+    },
     "statement_coverage": {
-     "covered": 50,
-     "uncovered": 6,
-     "coverable": 56,
-     "total": 56,
-     "percentage": 89.28
+     "covered": 67,
+     "uncovered": 9,
+     "coverable": 76,
+     "total": 76,
+     "percentage": 88.15
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_filereader_filereader.go.html"
+   "targetUrl": "internal_filereader_filereader.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/filtering",
@@ -2442,7 +2718,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -2476,10 +2751,178 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_filtering_filter.go.html"
+  },
+  {
+   "id": "internal/history",
+   "name": "history",
+   "type": "folder",
+   "path": "internal/history",
+   "parentId": "internal",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 18
+    },
+    "methods_fully_covered": {
+     "covered": 11,
+     "total": 22,
+     "percentage": 50
+    },
+    "methods_hit": {
+     "covered": 22,
+     "total": 22,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 275,
+     "uncovered": 36,
+     "coverable": 311,
+     "total": 311,
+     "percentage": 88.42
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   }
+  },
+  {
+   "id": "internal/history/capture.go",
+   "name": "capture.go",
+   "type": "file",
+   "path": "internal/history/capture.go",
+   "parentId": "internal/history",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 11
+    },
+    "methods_fully_covered": {
+     "covered": 7,
+     "total": 9,
+     "percentage": 77.77
+    },
+    "methods_hit": {
+     "covered": 9,
+     "total": 9,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 67,
+     "uncovered": 2,
+     "coverable": 69,
+     "total": 69,
+     "percentage": 97.1
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_history_capture.go.html"
+  },
+  {
+   "id": "internal/history/meta.go",
+   "name": "meta.go",
+   "type": "file",
+   "path": "internal/history/meta.go",
+   "parentId": "internal/history",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 9
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 3,
+     "percentage": 33.33
+    },
+    "methods_hit": {
+     "covered": 3,
+     "total": 3,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 39,
+     "uncovered": 7,
+     "coverable": 46,
+     "total": 46,
+     "percentage": 84.78
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_history_meta.go.html"
+  },
+  {
+   "id": "internal/history/rebuild.go",
+   "name": "rebuild.go",
+   "type": "file",
+   "path": "internal/history/rebuild.go",
+   "parentId": "internal/history",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 18
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 3,
+     "percentage": 33.33
+    },
+    "methods_hit": {
+     "covered": 3,
+     "total": 3,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 72,
+     "uncovered": 11,
+     "coverable": 83,
+     "total": 83,
+     "percentage": 86.74
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_history_rebuild.go.html"
+  },
+  {
+   "id": "internal/history/record.go",
+   "name": "record.go",
+   "type": "file",
+   "path": "internal/history/record.go",
+   "parentId": "internal/history",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 15
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 7,
+     "percentage": 28.57
+    },
+    "methods_hit": {
+     "covered": 7,
+     "total": 7,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 97,
+     "uncovered": 16,
+     "coverable": 113,
+     "total": 113,
+     "percentage": 85.84
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_history_record.go.html"
   },
   {
    "id": "internal/logging",
@@ -2493,9 +2936,9 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 13
     },
     "methods_fully_covered": {
-     "covered": 5,
+     "covered": 6,
      "total": 10,
-     "percentage": 50
+     "percentage": 60
     },
     "methods_hit": {
      "covered": 7,
@@ -2503,15 +2946,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 70
     },
     "statement_coverage": {
-     "covered": 53,
-     "uncovered": 10,
+     "covered": 54,
+     "uncovered": 9,
      "coverable": 63,
      "total": 63,
-     "percentage": 84.12
+     "percentage": 85.71
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -2527,9 +2969,9 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 13
     },
     "methods_fully_covered": {
-     "covered": 5,
+     "covered": 6,
      "total": 10,
-     "percentage": 50
+     "percentage": 60
     },
     "methods_hit": {
      "covered": 7,
@@ -2537,15 +2979,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 70
     },
     "statement_coverage": {
-     "covered": 53,
-     "uncovered": 10,
+     "covered": 54,
+     "uncovered": 9,
      "coverable": 63,
      "total": 63,
-     "percentage": 84.12
+     "percentage": 85.71
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_logging_logging.go.html"
@@ -2559,12 +3000,45 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 1,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 3
+     "value": 4
     },
     "methods_fully_covered": {
-     "covered": 3,
-     "total": 3,
+     "covered": 5,
+     "total": 6,
+     "percentage": 83.33
+    },
+    "methods_hit": {
+     "covered": 6,
+     "total": 6,
      "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 19,
+     "uncovered": 2,
+     "coverable": 21,
+     "total": 21,
+     "percentage": 90.47
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   }
+  },
+  {
+   "id": "internal/model/comparison.go",
+   "name": "comparison.go",
+   "type": "file",
+   "path": "internal/model/comparison.go",
+   "parentId": "internal/model",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 4
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 3,
+     "percentage": 66.66
     },
     "methods_hit": {
      "covered": 3,
@@ -2572,17 +3046,17 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 11,
-     "uncovered": 0,
-     "coverable": 11,
-     "total": 11,
-     "percentage": 100
+     "covered": 8,
+     "uncovered": 2,
+     "coverable": 10,
+     "total": 10,
+     "percentage": 80
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
-   }
+   },
+   "targetUrl": "internal_model_comparison.go.html"
   },
   {
    "id": "internal/model/diff.go",
@@ -2614,7 +3088,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_model_diff.go.html"
@@ -2628,28 +3101,41 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 1,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 22
+     "value": 16
     },
     "methods_fully_covered": {
      "covered": 19,
-     "total": 37,
-     "percentage": 51.35
+     "total": 36,
+     "percentage": 52.77
     },
     "methods_hit": {
-     "covered": 34,
-     "total": 37,
-     "percentage": 91.89
+     "covered": 33,
+     "total": 36,
+     "percentage": 91.66
+    },
+    "patch_methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 4,
+     "uncovered": 0,
+     "coverable": 4,
+     "total": 4,
+     "percentage": 100
     },
     "statement_coverage": {
-     "covered": 265,
-     "uncovered": 56,
-     "coverable": 321,
-     "total": 321,
-     "percentage": 82.55
+     "covered": 236,
+     "uncovered": 48,
+     "coverable": 284,
+     "total": 284,
+     "percentage": 83.09
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    }
   },
@@ -2666,24 +3152,23 @@ window.__NANOVISION_SUMMARY__ = {
     },
     "methods_fully_covered": {
      "covered": 3,
-     "total": 10,
-     "percentage": 30
+     "total": 9,
+     "percentage": 33.33
     },
     "methods_hit": {
-     "covered": 10,
-     "total": 10,
+     "covered": 9,
+     "total": 9,
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 77,
-     "uncovered": 23,
-     "coverable": 100,
-     "total": 100,
-     "percentage": 77
+     "covered": 68,
+     "uncovered": 15,
+     "coverable": 83,
+     "total": 83,
+     "percentage": 81.92
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -2717,7 +3202,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_parsers_parser_cobertura_parser.go.html"
@@ -2735,27 +3219,27 @@ window.__NANOVISION_SUMMARY__ = {
     },
     "methods_fully_covered": {
      "covered": 1,
-     "total": 4,
-     "percentage": 25
+     "total": 3,
+     "percentage": 33.33
     },
     "methods_hit": {
-     "covered": 4,
-     "total": 4,
+     "covered": 3,
+     "total": 3,
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 40,
-     "uncovered": 11,
-     "coverable": 51,
-     "total": 51,
-     "percentage": 78.43
+     "covered": 31,
+     "uncovered": 3,
+     "coverable": 34,
+     "total": 34,
+     "percentage": 91.17
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_parsers_parser_cobertura_processing.go.html"
+   "targetUrl": "internal_parsers_parser_cobertura_processing.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/parsers/parser_gcov",
@@ -2766,7 +3250,7 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 2,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 14
+     "value": 9
     },
     "methods_fully_covered": {
      "covered": 3,
@@ -2779,15 +3263,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 54,
+     "covered": 45,
      "uncovered": 4,
-     "coverable": 58,
-     "total": 58,
-     "percentage": 93.1
+     "coverable": 49,
+     "total": 49,
+     "percentage": 91.83
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -2821,7 +3304,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_parsers_parser_gcov_parser.go.html"
@@ -2835,7 +3317,7 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 3,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 14
+     "value": 9
     },
     "methods_fully_covered": {
      "covered": 1,
@@ -2848,18 +3330,18 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 35,
+     "covered": 26,
      "uncovered": 1,
-     "coverable": 36,
-     "total": 36,
-     "percentage": 97.22
+     "coverable": 27,
+     "total": 27,
+     "percentage": 96.29
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_parsers_parser_gcov_processing.go.html"
+   "targetUrl": "internal_parsers_parser_gcov_processing.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/parsers/parser_gocover",
@@ -2882,6 +3364,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 9,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 1,
+     "uncovered": 0,
+     "coverable": 1,
+     "total": 1,
+     "percentage": 100
+    },
     "statement_coverage": {
      "covered": 63,
      "uncovered": 6,
@@ -2891,7 +3385,8 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    }
   },
@@ -2925,7 +3420,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_parsers_parser_gocover_parser.go.html"
@@ -2951,6 +3445,18 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 4,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 1,
+     "uncovered": 0,
+     "coverable": 1,
+     "total": 1,
+     "percentage": 100
+    },
     "statement_coverage": {
      "covered": 29,
      "uncovered": 0,
@@ -2960,10 +3466,12 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_parsers_parser_gocover_processing.go.html"
+   "targetUrl": "internal_parsers_parser_gocover_processing.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/parsers/parser_lcov",
@@ -2974,7 +3482,7 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 2,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 22
+     "value": 16
     },
     "methods_fully_covered": {
      "covered": 3,
@@ -2986,17 +3494,30 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 6,
      "percentage": 83.33
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 3,
+     "uncovered": 0,
+     "coverable": 3,
+     "total": 3,
+     "percentage": 100
+    },
     "statement_coverage": {
-     "covered": 60,
+     "covered": 49,
      "uncovered": 19,
-     "coverable": 79,
-     "total": 79,
-     "percentage": 75.94
+     "coverable": 68,
+     "total": 68,
+     "percentage": 72.05
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
-    "statement_coverage": "safe"
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
+    "statement_coverage": "warning"
    }
   },
   {
@@ -3029,7 +3550,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "danger"
    },
    "targetUrl": "internal_parsers_parser_lcov_parser.go.html"
@@ -3043,7 +3563,7 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 3,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 22
+     "value": 16
     },
     "methods_fully_covered": {
      "covered": 1,
@@ -3055,19 +3575,33 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 2,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 3,
+     "uncovered": 0,
+     "coverable": 3,
+     "total": 3,
+     "percentage": 100
+    },
     "statement_coverage": {
-     "covered": 52,
+     "covered": 41,
      "uncovered": 4,
-     "coverable": 56,
-     "total": 56,
-     "percentage": 92.85
+     "coverable": 45,
+     "total": 45,
+     "percentage": 91.11
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_parsers_parser_lcov_processing.go.html"
+   "targetUrl": "internal_parsers_parser_lcov_processing.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/parsers/factory.go",
@@ -3099,7 +3633,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "warning"
    },
    "targetUrl": "internal_parsers_factory.go.html"
@@ -3134,10 +3667,76 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "warning"
    },
    "targetUrl": "internal_parsers_parser_config.go.html"
+  },
+  {
+   "id": "internal/pipeline",
+   "name": "pipeline",
+   "type": "folder",
+   "path": "internal/pipeline",
+   "parentId": "internal",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 9
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 5,
+     "percentage": 40
+    },
+    "methods_hit": {
+     "covered": 5,
+     "total": 5,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 64,
+     "uncovered": 22,
+     "coverable": 86,
+     "total": 86,
+     "percentage": 74.41
+    }
+   },
+   "statuses": {
+    "statement_coverage": "warning"
+   }
+  },
+  {
+   "id": "internal/pipeline/pipeline.go",
+   "name": "pipeline.go",
+   "type": "file",
+   "path": "internal/pipeline/pipeline.go",
+   "parentId": "internal/pipeline",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 9
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 5,
+     "percentage": 40
+    },
+    "methods_hit": {
+     "covered": 5,
+     "total": 5,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 64,
+     "uncovered": 22,
+     "coverable": 86,
+     "total": 86,
+     "percentage": 74.41
+    }
+   },
+   "statuses": {
+    "statement_coverage": "warning"
+   },
+   "targetUrl": "internal_pipeline_pipeline.go.html"
   },
   {
    "id": "internal/reporter",
@@ -3148,43 +3747,42 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 1,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 31
+     "value": 29
     },
     "methods_fully_covered": {
-     "covered": 21,
-     "total": 71,
-     "percentage": 29.57
+     "covered": 29,
+     "total": 90,
+     "percentage": 32.22
     },
     "methods_hit": {
-     "covered": 49,
-     "total": 71,
-     "percentage": 69.01
+     "covered": 63,
+     "total": 90,
+     "percentage": 70
     },
     "patch_methods_hit": {
-     "covered": 21,
-     "total": 36,
-     "percentage": 58.33
+     "covered": 18,
+     "total": 20,
+     "percentage": 90
     },
     "patch_statement_coverage": {
-     "covered": 108,
-     "uncovered": 134,
-     "coverable": 242,
-     "total": 242,
-     "percentage": 44.62
+     "covered": 59,
+     "uncovered": 16,
+     "coverable": 75,
+     "total": 75,
+     "percentage": 78.66
     },
     "statement_coverage": {
-     "covered": 506,
-     "uncovered": 362,
-     "coverable": 868,
-     "total": 868,
-     "percentage": 58.29
+     "covered": 632,
+     "uncovered": 375,
+     "coverable": 1007,
+     "total": 1007,
+     "percentage": 62.76
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
-    "statement_coverage": "danger"
+    "patch_methods_hit": "warning",
+    "patch_statement_coverage": "warning",
+    "statement_coverage": "warning"
    }
   },
   {
@@ -3208,18 +3806,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 5,
      "percentage": 0
     },
-    "patch_methods_hit": {
-     "covered": 0,
-     "total": 5,
-     "percentage": 0
-    },
-    "patch_statement_coverage": {
-     "covered": 0,
-     "uncovered": 32,
-     "coverable": 32,
-     "total": 32,
-     "percentage": 0
-    },
     "statement_coverage": {
      "covered": 0,
      "uncovered": 32,
@@ -3229,9 +3815,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
     "statement_coverage": "danger"
    }
   },
@@ -3256,18 +3839,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 5,
      "percentage": 0
     },
-    "patch_methods_hit": {
-     "covered": 0,
-     "total": 5,
-     "percentage": 0
-    },
-    "patch_statement_coverage": {
-     "covered": 0,
-     "uncovered": 32,
-     "coverable": 32,
-     "total": 32,
-     "percentage": 0
-    },
     "statement_coverage": {
      "covered": 0,
      "uncovered": 32,
@@ -3277,13 +3848,9 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
     "statement_coverage": "danger"
    },
-   "targetUrl": "internal_reporter_annotations_reporter.go.html",
-   "diffStatus": "added"
+   "targetUrl": "internal_reporter_annotations_reporter.go.html"
   },
   {
    "id": "internal/reporter/htmlreact",
@@ -3294,42 +3861,41 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 2,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 31
+     "value": 22
     },
     "methods_fully_covered": {
-     "covered": 17,
-     "total": 46,
-     "percentage": 36.95
+     "covered": 21,
+     "total": 54,
+     "percentage": 38.88
     },
     "methods_hit": {
-     "covered": 40,
-     "total": 46,
-     "percentage": 86.95
+     "covered": 43,
+     "total": 54,
+     "percentage": 79.62
     },
     "patch_methods_hit": {
-     "covered": 21,
-     "total": 25,
-     "percentage": 84
+     "covered": 17,
+     "total": 19,
+     "percentage": 89.47
     },
     "patch_statement_coverage": {
-     "covered": 108,
-     "uncovered": 69,
-     "coverable": 177,
-     "total": 177,
-     "percentage": 61.01
+     "covered": 56,
+     "uncovered": 16,
+     "coverable": 72,
+     "total": 72,
+     "percentage": 77.77
     },
     "statement_coverage": {
-     "covered": 403,
-     "uncovered": 244,
-     "coverable": 647,
-     "total": 647,
-     "percentage": 62.28
+     "covered": 421,
+     "uncovered": 237,
+     "coverable": 658,
+     "total": 658,
+     "percentage": 63.98
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "patch_methods_hit": "warning",
-    "patch_statement_coverage": "danger",
+    "patch_statement_coverage": "warning",
     "statement_coverage": "warning"
    }
   },
@@ -3342,43 +3908,42 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 3,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 21
+     "value": 17
     },
     "methods_fully_covered": {
-     "covered": 6,
-     "total": 22,
-     "percentage": 27.27
+     "covered": 11,
+     "total": 25,
+     "percentage": 44
     },
     "methods_hit": {
-     "covered": 19,
-     "total": 22,
-     "percentage": 86.36
+     "covered": 22,
+     "total": 25,
+     "percentage": 88
     },
     "patch_methods_hit": {
-     "covered": 14,
-     "total": 18,
-     "percentage": 77.77
+     "covered": 13,
+     "total": 14,
+     "percentage": 92.85
     },
     "patch_statement_coverage": {
-     "covered": 80,
-     "uncovered": 61,
-     "coverable": 141,
-     "total": 141,
-     "percentage": 56.73
+     "covered": 47,
+     "uncovered": 8,
+     "coverable": 55,
+     "total": 55,
+     "percentage": 85.45
     },
     "statement_coverage": {
-     "covered": 192,
-     "uncovered": 114,
-     "coverable": 306,
-     "total": 306,
-     "percentage": 62.74
+     "covered": 247,
+     "uncovered": 67,
+     "coverable": 314,
+     "total": 314,
+     "percentage": 78.66
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
-    "statement_coverage": "warning"
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
+    "statement_coverage": "safe"
    },
    "targetUrl": "internal_reporter_htmlreact_builder.go.html",
    "diffStatus": "modified"
@@ -3392,12 +3957,12 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 3,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 31
+     "value": 22
     },
     "methods_fully_covered": {
-     "covered": 10,
+     "covered": 9,
      "total": 18,
-     "percentage": 55.55
+     "percentage": 50
     },
     "methods_hit": {
      "covered": 17,
@@ -3405,30 +3970,29 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 94.44
     },
     "patch_methods_hit": {
-     "covered": 7,
-     "total": 7,
+     "covered": 4,
+     "total": 4,
      "percentage": 100
     },
     "patch_statement_coverage": {
-     "covered": 28,
-     "uncovered": 8,
-     "coverable": 36,
-     "total": 36,
-     "percentage": 77.77
+     "covered": 9,
+     "uncovered": 7,
+     "coverable": 16,
+     "total": 16,
+     "percentage": 56.25
     },
     "statement_coverage": {
-     "covered": 162,
-     "uncovered": 42,
-     "coverable": 204,
-     "total": 204,
-     "percentage": 79.41
+     "covered": 125,
+     "uncovered": 66,
+     "coverable": 191,
+     "total": 191,
+     "percentage": 65.44
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "patch_methods_hit": "safe",
     "patch_statement_coverage": "danger",
-    "statement_coverage": "safe"
+    "statement_coverage": "warning"
    },
    "targetUrl": "internal_reporter_htmlreact_details_generator.go.html",
    "diffStatus": "modified"
@@ -3446,27 +4010,41 @@ window.__NANOVISION_SUMMARY__ = {
     },
     "methods_fully_covered": {
      "covered": 1,
-     "total": 1,
-     "percentage": 100
+     "total": 2,
+     "percentage": 50
     },
     "methods_hit": {
      "covered": 1,
+     "total": 2,
+     "percentage": 50
+    },
+    "patch_methods_hit": {
+     "covered": 0,
      "total": 1,
-     "percentage": 100
+     "percentage": 0
+    },
+    "patch_statement_coverage": {
+     "covered": 0,
+     "uncovered": 1,
+     "coverable": 1,
+     "total": 1,
+     "percentage": 0
     },
     "statement_coverage": {
      "covered": 1,
-     "uncovered": 0,
-     "coverable": 1,
-     "total": 1,
-     "percentage": 100
+     "uncovered": 1,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 50
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
-    "statement_coverage": "safe"
+    "patch_methods_hit": "danger",
+    "patch_statement_coverage": "danger",
+    "statement_coverage": "danger"
    },
-   "targetUrl": "internal_reporter_htmlreact_embed.go.html"
+   "targetUrl": "internal_reporter_htmlreact_embed.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/reporter/htmlreact/emit.go",
@@ -3498,7 +4076,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_reporter_htmlreact_emit.go.html"
@@ -3533,7 +4110,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "warning"
    },
    "targetUrl": "internal_reporter_htmlreact_generator.go.html"
@@ -3568,10 +4144,43 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "danger"
    },
    "targetUrl": "internal_reporter_htmlreact_generator_single.go.html"
+  },
+  {
+   "id": "internal/reporter/htmlreact/views.go",
+   "name": "views.go",
+   "type": "file",
+   "path": "internal/reporter/htmlreact/views.go",
+   "parentId": "internal/reporter/htmlreact",
+   "depth": 3,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 2
+    },
+    "methods_fully_covered": {
+     "covered": 0,
+     "total": 4,
+     "percentage": 0
+    },
+    "methods_hit": {
+     "covered": 0,
+     "total": 4,
+     "percentage": 0
+    },
+    "statement_coverage": {
+     "covered": 0,
+     "uncovered": 15,
+     "coverable": 15,
+     "total": 15,
+     "percentage": 0
+    }
+   },
+   "statuses": {
+    "statement_coverage": "danger"
+   },
+   "targetUrl": "internal_reporter_htmlreact_views.go.html"
   },
   {
    "id": "internal/reporter/lcov",
@@ -3582,7 +4191,7 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 2,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 22
+     "value": 14
     },
     "methods_fully_covered": {
      "covered": 2,
@@ -3595,15 +4204,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 80
     },
     "statement_coverage": {
-     "covered": 69,
-     "uncovered": 15,
-     "coverable": 84,
-     "total": 84,
-     "percentage": 82.14
+     "covered": 52,
+     "uncovered": 12,
+     "coverable": 64,
+     "total": 64,
+     "percentage": 81.25
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -3616,7 +4224,7 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 3,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 22
+     "value": 14
     },
     "methods_fully_covered": {
      "covered": 2,
@@ -3629,18 +4237,18 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 80
     },
     "statement_coverage": {
-     "covered": 69,
-     "uncovered": 15,
-     "coverable": 84,
-     "total": 84,
-     "percentage": 82.14
+     "covered": 52,
+     "uncovered": 12,
+     "coverable": 64,
+     "total": 64,
+     "percentage": 81.25
     }
    },
    "statuses": {
-    "methods_fully_covered": "warning",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_reporter_lcov_reporter.go.html"
+   "targetUrl": "internal_reporter_lcov_reporter.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/reporter/reporter_rawjson",
@@ -3672,7 +4280,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "warning"
    }
   },
@@ -3706,7 +4313,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "warning"
    },
    "targetUrl": "internal_reporter_reporter_rawjson_reporter.go.html"
@@ -3732,18 +4338,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 6,
      "percentage": 0
     },
-    "patch_methods_hit": {
-     "covered": 0,
-     "total": 6,
-     "percentage": 0
-    },
-    "patch_statement_coverage": {
-     "covered": 0,
-     "uncovered": 33,
-     "coverable": 33,
-     "total": 33,
-     "percentage": 0
-    },
     "statement_coverage": {
      "covered": 0,
      "uncovered": 33,
@@ -3753,9 +4347,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
     "statement_coverage": "danger"
    }
   },
@@ -3780,18 +4371,6 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 6,
      "percentage": 0
     },
-    "patch_methods_hit": {
-     "covered": 0,
-     "total": 6,
-     "percentage": 0
-    },
-    "patch_statement_coverage": {
-     "covered": 0,
-     "uncovered": 33,
-     "coverable": 33,
-     "total": 33,
-     "percentage": 0
-    },
     "statement_coverage": {
      "covered": 0,
      "uncovered": 33,
@@ -3801,13 +4380,9 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "danger",
-    "patch_statement_coverage": "danger",
     "statement_coverage": "danger"
    },
-   "targetUrl": "internal_reporter_sarif_reporter.go.html",
-   "diffStatus": "added"
+   "targetUrl": "internal_reporter_sarif_reporter.go.html"
   },
   {
    "id": "internal/reporter/textsummary",
@@ -3818,30 +4393,77 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 2,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 9
+     "value": 29
     },
     "methods_fully_covered": {
-     "covered": 1,
-     "total": 6,
-     "percentage": 16.66
+     "covered": 5,
+     "total": 17,
+     "percentage": 29.41
     },
     "methods_hit": {
+     "covered": 14,
+     "total": 17,
+     "percentage": 82.35
+    },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
      "covered": 3,
-     "total": 6,
-     "percentage": 50
+     "uncovered": 0,
+     "coverable": 3,
+     "total": 3,
+     "percentage": 100
     },
     "statement_coverage": {
-     "covered": 26,
-     "uncovered": 35,
-     "coverable": 61,
-     "total": 61,
-     "percentage": 42.62
+     "covered": 151,
+     "uncovered": 58,
+     "coverable": 209,
+     "total": 209,
+     "percentage": 72.24
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "statement_coverage": "danger"
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
+    "statement_coverage": "warning"
    }
+  },
+  {
+   "id": "internal/reporter/textsummary/comparison.go",
+   "name": "comparison.go",
+   "type": "file",
+   "path": "internal/reporter/textsummary/comparison.go",
+   "parentId": "internal/reporter/textsummary",
+   "depth": 3,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 17
+    },
+    "methods_fully_covered": {
+     "covered": 3,
+     "total": 8,
+     "percentage": 37.5
+    },
+    "methods_hit": {
+     "covered": 8,
+     "total": 8,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 65,
+     "uncovered": 10,
+     "coverable": 75,
+     "total": 75,
+     "percentage": 86.66
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_reporter_textsummary_comparison.go.html"
   },
   {
    "id": "internal/reporter/textsummary/reporter.go",
@@ -3852,7 +4474,7 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 3,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 9
+     "value": 10
     },
     "methods_fully_covered": {
      "covered": 1,
@@ -3864,19 +4486,67 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 6,
      "percentage": 50
     },
+    "patch_methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 3,
+     "uncovered": 0,
+     "coverable": 3,
+     "total": 3,
+     "percentage": 100
+    },
     "statement_coverage": {
-     "covered": 26,
+     "covered": 29,
      "uncovered": 35,
-     "coverable": 61,
-     "total": 61,
-     "percentage": 42.62
+     "coverable": 64,
+     "total": 64,
+     "percentage": 45.31
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "danger"
    },
-   "targetUrl": "internal_reporter_textsummary_reporter.go.html"
+   "targetUrl": "internal_reporter_textsummary_reporter.go.html",
+   "diffStatus": "modified"
+  },
+  {
+   "id": "internal/reporter/textsummary/terminal.go",
+   "name": "terminal.go",
+   "type": "file",
+   "path": "internal/reporter/textsummary/terminal.go",
+   "parentId": "internal/reporter/textsummary",
+   "depth": 3,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 29
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 3,
+     "percentage": 33.33
+    },
+    "methods_hit": {
+     "covered": 3,
+     "total": 3,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 57,
+     "uncovered": 13,
+     "coverable": 70,
+     "total": 70,
+     "percentage": 81.42
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_reporter_textsummary_terminal.go.html"
   },
   {
    "id": "internal/review",
@@ -3890,39 +4560,24 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 19
     },
     "methods_fully_covered": {
-     "covered": 1,
+     "covered": 2,
      "total": 6,
-     "percentage": 16.66
+     "percentage": 33.33
     },
     "methods_hit": {
      "covered": 6,
      "total": 6,
      "percentage": 100
     },
-    "patch_methods_hit": {
-     "covered": 6,
-     "total": 6,
-     "percentage": 100
-    },
-    "patch_statement_coverage": {
-     "covered": 61,
-     "uncovered": 13,
-     "coverable": 74,
-     "total": 74,
-     "percentage": 82.43
-    },
     "statement_coverage": {
-     "covered": 61,
-     "uncovered": 13,
+     "covered": 62,
+     "uncovered": 12,
      "coverable": 74,
      "total": 74,
-     "percentage": 82.43
+     "percentage": 83.78
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "safe",
-    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -3938,43 +4593,298 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 19
     },
     "methods_fully_covered": {
-     "covered": 1,
+     "covered": 2,
      "total": 6,
-     "percentage": 16.66
+     "percentage": 33.33
     },
     "methods_hit": {
      "covered": 6,
      "total": 6,
      "percentage": 100
     },
-    "patch_methods_hit": {
-     "covered": 6,
-     "total": 6,
-     "percentage": 100
-    },
-    "patch_statement_coverage": {
-     "covered": 61,
-     "uncovered": 13,
-     "coverable": 74,
-     "total": 74,
-     "percentage": 82.43
-    },
     "statement_coverage": {
-     "covered": 61,
-     "uncovered": 13,
+     "covered": 62,
+     "uncovered": 12,
      "coverable": 74,
      "total": 74,
-     "percentage": 82.43
+     "percentage": 83.78
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
-    "patch_methods_hit": "safe",
-    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_review_review.go.html",
-   "diffStatus": "added"
+   "targetUrl": "internal_review_review.go.html"
+  },
+  {
+   "id": "internal/server",
+   "name": "server",
+   "type": "folder",
+   "path": "internal/server",
+   "parentId": "internal",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 12
+    },
+    "methods_fully_covered": {
+     "covered": 12,
+     "total": 40,
+     "percentage": 30
+    },
+    "methods_hit": {
+     "covered": 37,
+     "total": 40,
+     "percentage": 92.5
+    },
+    "statement_coverage": {
+     "covered": 315,
+     "uncovered": 125,
+     "coverable": 440,
+     "total": 440,
+     "percentage": 71.59
+    }
+   },
+   "statuses": {
+    "statement_coverage": "warning"
+   }
+  },
+  {
+   "id": "internal/server/api.go",
+   "name": "api.go",
+   "type": "file",
+   "path": "internal/server/api.go",
+   "parentId": "internal/server",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 9
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 14,
+     "percentage": 14.28
+    },
+    "methods_hit": {
+     "covered": 13,
+     "total": 14,
+     "percentage": 92.85
+    },
+    "statement_coverage": {
+     "covered": 129,
+     "uncovered": 43,
+     "coverable": 172,
+     "total": 172,
+     "percentage": 75
+    }
+   },
+   "statuses": {
+    "statement_coverage": "warning"
+   },
+   "targetUrl": "internal_server_api.go.html"
+  },
+  {
+   "id": "internal/server/cache.go",
+   "name": "cache.go",
+   "type": "file",
+   "path": "internal/server/cache.go",
+   "parentId": "internal/server",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 5
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 4,
+     "percentage": 50
+    },
+    "methods_hit": {
+     "covered": 4,
+     "total": 4,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 38,
+     "uncovered": 9,
+     "coverable": 47,
+     "total": 47,
+     "percentage": 80.85
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_server_cache.go.html"
+  },
+  {
+   "id": "internal/server/maintenance.go",
+   "name": "maintenance.go",
+   "type": "file",
+   "path": "internal/server/maintenance.go",
+   "parentId": "internal/server",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 8
+    },
+    "methods_fully_covered": {
+     "covered": 0,
+     "total": 2,
+     "percentage": 0
+    },
+    "methods_hit": {
+     "covered": 0,
+     "total": 2,
+     "percentage": 0
+    },
+    "statement_coverage": {
+     "covered": 0,
+     "uncovered": 24,
+     "coverable": 24,
+     "total": 24,
+     "percentage": 0
+    }
+   },
+   "statuses": {
+    "statement_coverage": "danger"
+   },
+   "targetUrl": "internal_server_maintenance.go.html"
+  },
+  {
+   "id": "internal/server/server.go",
+   "name": "server.go",
+   "type": "file",
+   "path": "internal/server/server.go",
+   "parentId": "internal/server",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 7
+    },
+    "methods_fully_covered": {
+     "covered": 7,
+     "total": 11,
+     "percentage": 63.63
+    },
+    "methods_hit": {
+     "covered": 11,
+     "total": 11,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 55,
+     "uncovered": 7,
+     "coverable": 62,
+     "total": 62,
+     "percentage": 88.7
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_server_server.go.html"
+  },
+  {
+   "id": "internal/server/ui.go",
+   "name": "ui.go",
+   "type": "file",
+   "path": "internal/server/ui.go",
+   "parentId": "internal/server",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 12
+    },
+    "methods_fully_covered": {
+     "covered": 0,
+     "total": 2,
+     "percentage": 0
+    },
+    "methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 24,
+     "uncovered": 17,
+     "coverable": 41,
+     "total": 41,
+     "percentage": 58.53
+    }
+   },
+   "statuses": {
+    "statement_coverage": "danger"
+   },
+   "targetUrl": "internal_server_ui.go.html"
+  },
+  {
+   "id": "internal/server/upload.go",
+   "name": "upload.go",
+   "type": "file",
+   "path": "internal/server/upload.go",
+   "parentId": "internal/server",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 6
+    },
+    "methods_fully_covered": {
+     "covered": 0,
+     "total": 3,
+     "percentage": 0
+    },
+    "methods_hit": {
+     "covered": 3,
+     "total": 3,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 34,
+     "uncovered": 14,
+     "coverable": 48,
+     "total": 48,
+     "percentage": 70.83
+    }
+   },
+   "statuses": {
+    "statement_coverage": "warning"
+   },
+   "targetUrl": "internal_server_upload.go.html"
+  },
+  {
+   "id": "internal/server/wire.go",
+   "name": "wire.go",
+   "type": "file",
+   "path": "internal/server/wire.go",
+   "parentId": "internal/server",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 9
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 4,
+     "percentage": 25
+    },
+    "methods_hit": {
+     "covered": 4,
+     "total": 4,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 35,
+     "uncovered": 11,
+     "coverable": 46,
+     "total": 46,
+     "percentage": 76.08
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_server_wire.go.html"
   },
   {
    "id": "internal/status",
@@ -3985,42 +4895,27 @@ window.__NANOVISION_SUMMARY__ = {
    "depth": 1,
    "metrics": {
     "max_cyclomatic_complexity": {
-     "value": 6
+     "value": 7
     },
     "methods_fully_covered": {
-     "covered": 110,
-     "total": 135,
-     "percentage": 81.48
+     "covered": 102,
+     "total": 118,
+     "percentage": 86.44
     },
     "methods_hit": {
-     "covered": 124,
-     "total": 135,
-     "percentage": 91.85
-    },
-    "patch_methods_hit": {
-     "covered": 24,
-     "total": 24,
-     "percentage": 100
-    },
-    "patch_statement_coverage": {
-     "covered": 34,
-     "uncovered": 6,
-     "coverable": 40,
-     "total": 40,
-     "percentage": 85
+     "covered": 111,
+     "total": 118,
+     "percentage": 94.06
     },
     "statement_coverage": {
-     "covered": 225,
-     "uncovered": 41,
-     "coverable": 266,
-     "total": 266,
-     "percentage": 84.58
+     "covered": 229,
+     "uncovered": 20,
+     "coverable": 249,
+     "total": 249,
+     "percentage": 91.96
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
-    "patch_methods_hit": "safe",
-    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    }
   },
@@ -4036,76 +4931,26 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 2
     },
     "methods_fully_covered": {
-     "covered": 103,
-     "total": 126,
-     "percentage": 81.74
+     "covered": 94,
+     "total": 108,
+     "percentage": 87.03
     },
     "methods_hit": {
-     "covered": 115,
-     "total": 126,
-     "percentage": 91.26
-    },
-    "patch_methods_hit": {
-     "covered": 24,
-     "total": 24,
-     "percentage": 100
-    },
-    "patch_statement_coverage": {
-     "covered": 34,
-     "uncovered": 6,
-     "coverable": 40,
-     "total": 40,
-     "percentage": 85
+     "covered": 101,
+     "total": 108,
+     "percentage": 93.51
     },
     "statement_coverage": {
-     "covered": 171,
-     "uncovered": 39,
-     "coverable": 210,
-     "total": 210,
-     "percentage": 81.42
+     "covered": 163,
+     "uncovered": 17,
+     "coverable": 180,
+     "total": 180,
+     "percentage": 90.55
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
-    "patch_methods_hit": "safe",
-    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    }
-  },
-  {
-   "id": "internal/status/evaluators/branch_coverage.go",
-   "name": "branch_coverage.go",
-   "type": "file",
-   "path": "internal/status/evaluators/branch_coverage.go",
-   "parentId": "internal/status/evaluators",
-   "depth": 3,
-   "metrics": {
-    "max_cyclomatic_complexity": {
-     "value": 2
-    },
-    "methods_fully_covered": {
-     "covered": 6,
-     "total": 6,
-     "percentage": 100
-    },
-    "methods_hit": {
-     "covered": 6,
-     "total": 6,
-     "percentage": 100
-    },
-    "statement_coverage": {
-     "covered": 10,
-     "uncovered": 0,
-     "coverable": 10,
-     "total": 10,
-     "percentage": 100
-    }
-   },
-   "statuses": {
-    "methods_fully_covered": "safe",
-    "statement_coverage": "safe"
-   },
-   "targetUrl": "internal_status_evaluators_branch_coverage.go.html"
   },
   {
    "id": "internal/status/evaluators/complexity.go",
@@ -4119,39 +4964,24 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 2
     },
     "methods_fully_covered": {
-     "covered": 31,
-     "total": 36,
-     "percentage": 86.11
+     "covered": 22,
+     "total": 24,
+     "percentage": 91.66
     },
     "methods_hit": {
-     "covered": 36,
-     "total": 36,
-     "percentage": 100
-    },
-    "patch_methods_hit": {
      "covered": 24,
      "total": 24,
      "percentage": 100
     },
-    "patch_statement_coverage": {
-     "covered": 34,
-     "uncovered": 6,
+    "statement_coverage": {
+     "covered": 38,
+     "uncovered": 2,
      "coverable": 40,
      "total": 40,
-     "percentage": 85
-    },
-    "statement_coverage": {
-     "covered": 53,
-     "uncovered": 7,
-     "coverable": 60,
-     "total": 60,
-     "percentage": 88.33
+     "percentage": 95
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
-    "patch_methods_hit": "safe",
-    "patch_statement_coverage": "warning",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_evaluators_complexity.go.html",
@@ -4169,26 +4999,25 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 2
     },
     "methods_fully_covered": {
-     "covered": 8,
+     "covered": 9,
      "total": 12,
-     "percentage": 66.66
+     "percentage": 75
     },
     "methods_hit": {
-     "covered": 8,
+     "covered": 10,
      "total": 12,
-     "percentage": 66.66
+     "percentage": 83.33
     },
     "statement_coverage": {
-     "covered": 12,
-     "uncovered": 8,
+     "covered": 17,
+     "uncovered": 3,
      "coverable": 20,
      "total": 20,
-     "percentage": 60
+     "percentage": 85
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
-    "statement_coverage": "warning"
+    "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_evaluators_line_coverage.go.html"
   },
@@ -4222,7 +5051,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_evaluators_methods_fully_covered.go.html"
@@ -4257,7 +5085,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_evaluators_methods_hit.go.html"
@@ -4274,26 +5101,25 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 2
     },
     "methods_fully_covered": {
-     "covered": 8,
+     "covered": 10,
      "total": 12,
-     "percentage": 66.66
+     "percentage": 83.33
     },
     "methods_hit": {
-     "covered": 8,
+     "covered": 10,
      "total": 12,
-     "percentage": 66.66
+     "percentage": 83.33
     },
     "statement_coverage": {
-     "covered": 12,
-     "uncovered": 8,
+     "covered": 18,
+     "uncovered": 2,
      "coverable": 20,
      "total": 20,
-     "percentage": 60
+     "percentage": 90
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
-    "statement_coverage": "warning"
+    "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_evaluators_patch_line_coverage.go.html"
   },
@@ -4309,9 +5135,9 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 2
     },
     "methods_fully_covered": {
-     "covered": 5,
+     "covered": 6,
      "total": 6,
-     "percentage": 83.33
+     "percentage": 100
     },
     "methods_hit": {
      "covered": 6,
@@ -4319,15 +5145,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 8,
-     "uncovered": 2,
+     "covered": 10,
+     "uncovered": 0,
      "coverable": 10,
      "total": 10,
-     "percentage": 80
+     "percentage": 100
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_evaluators_patch_methods_hit.go.html"
@@ -4344,9 +5169,9 @@ window.__NANOVISION_SUMMARY__ = {
      "value": 2
     },
     "methods_fully_covered": {
-     "covered": 10,
+     "covered": 12,
      "total": 12,
-     "percentage": 83.33
+     "percentage": 100
     },
     "methods_hit": {
      "covered": 12,
@@ -4354,15 +5179,14 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 16,
-     "uncovered": 4,
+     "covered": 20,
+     "uncovered": 0,
      "coverable": 20,
      "total": 20,
-     "percentage": 80
+     "percentage": 100
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_evaluators_patch_statement_coverage.go.html"
@@ -4397,7 +5221,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "warning"
    },
    "targetUrl": "internal_status_evaluators_patch_statement_methods_hit.go.html"
@@ -4432,7 +5255,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_evaluators_statement_coverage.go.html"
@@ -4467,7 +5289,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "warning"
    },
    "targetUrl": "internal_status_evaluators_statement_methods_fully_covered.go.html"
@@ -4502,7 +5323,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "warning"
    },
    "targetUrl": "internal_status_evaluators_statement_methods_hit.go.html"
@@ -4529,18 +5349,52 @@ window.__NANOVISION_SUMMARY__ = {
      "percentage": 100
     },
     "statement_coverage": {
-     "covered": 39,
-     "uncovered": 2,
+     "covered": 38,
+     "uncovered": 3,
      "coverable": 41,
      "total": 41,
-     "percentage": 95.12
+     "percentage": 92.68
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_status_annotate.go.html"
+   "targetUrl": "internal_status_annotate.go.html",
+   "diffStatus": "modified"
+  },
+  {
+   "id": "internal/status/capabilities.go",
+   "name": "capabilities.go",
+   "type": "file",
+   "path": "internal/status/capabilities.go",
+   "parentId": "internal/status",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 7
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "methods_hit": {
+     "covered": 1,
+     "total": 1,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 13,
+     "uncovered": 0,
+     "coverable": 13,
+     "total": 13,
+     "percentage": 100
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_status_capabilities.go.html"
   },
   {
    "id": "internal/status/classifier.go",
@@ -4572,10 +5426,381 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_status_classifier.go.html"
+  },
+  {
+   "id": "internal/store",
+   "name": "store",
+   "type": "folder",
+   "path": "internal/store",
+   "parentId": "internal",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 31
+    },
+    "methods_fully_covered": {
+     "covered": 44,
+     "total": 96,
+     "percentage": 45.83
+    },
+    "methods_hit": {
+     "covered": 90,
+     "total": 96,
+     "percentage": 93.75
+    },
+    "statement_coverage": {
+     "covered": 763,
+     "uncovered": 169,
+     "coverable": 932,
+     "total": 932,
+     "percentage": 81.86
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   }
+  },
+  {
+   "id": "internal/store/blob",
+   "name": "blob",
+   "type": "folder",
+   "path": "internal/store/blob",
+   "parentId": "internal/store",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 31
+    },
+    "methods_fully_covered": {
+     "covered": 33,
+     "total": 62,
+     "percentage": 53.22
+    },
+    "methods_hit": {
+     "covered": 59,
+     "total": 62,
+     "percentage": 95.16
+    },
+    "statement_coverage": {
+     "covered": 478,
+     "uncovered": 88,
+     "coverable": 566,
+     "total": 566,
+     "percentage": 84.45
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   }
+  },
+  {
+   "id": "internal/store/blob/analysis.go",
+   "name": "analysis.go",
+   "type": "file",
+   "path": "internal/store/blob/analysis.go",
+   "parentId": "internal/store/blob",
+   "depth": 3,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 31
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 4,
+     "percentage": 25
+    },
+    "methods_hit": {
+     "covered": 4,
+     "total": 4,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 94,
+     "uncovered": 23,
+     "coverable": 117,
+     "total": 117,
+     "percentage": 80.34
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_store_blob_analysis.go.html"
+  },
+  {
+   "id": "internal/store/blob/blob.go",
+   "name": "blob.go",
+   "type": "file",
+   "path": "internal/store/blob/blob.go",
+   "parentId": "internal/store/blob",
+   "depth": 3,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 7
+    },
+    "methods_fully_covered": {
+     "covered": 20,
+     "total": 31,
+     "percentage": 64.51
+    },
+    "methods_hit": {
+     "covered": 30,
+     "total": 31,
+     "percentage": 96.77
+    },
+    "statement_coverage": {
+     "covered": 103,
+     "uncovered": 18,
+     "coverable": 121,
+     "total": 121,
+     "percentage": 85.12
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_store_blob_blob.go.html"
+  },
+  {
+   "id": "internal/store/blob/coverage.go",
+   "name": "coverage.go",
+   "type": "file",
+   "path": "internal/store/blob/coverage.go",
+   "parentId": "internal/store/blob",
+   "depth": 3,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 17
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 7,
+     "percentage": 14.28
+    },
+    "methods_hit": {
+     "covered": 7,
+     "total": 7,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 104,
+     "uncovered": 17,
+     "coverable": 121,
+     "total": 121,
+     "percentage": 85.95
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_store_blob_coverage.go.html"
+  },
+  {
+   "id": "internal/store/blob/diff.go",
+   "name": "diff.go",
+   "type": "file",
+   "path": "internal/store/blob/diff.go",
+   "parentId": "internal/store/blob",
+   "depth": 3,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 12
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 5,
+     "percentage": 40
+    },
+    "methods_hit": {
+     "covered": 5,
+     "total": 5,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 77,
+     "uncovered": 14,
+     "coverable": 91,
+     "total": 91,
+     "percentage": 84.61
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_store_blob_diff.go.html"
+  },
+  {
+   "id": "internal/store/blob/manifest.go",
+   "name": "manifest.go",
+   "type": "file",
+   "path": "internal/store/blob/manifest.go",
+   "parentId": "internal/store/blob",
+   "depth": 3,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 14
+    },
+    "methods_fully_covered": {
+     "covered": 9,
+     "total": 15,
+     "percentage": 60
+    },
+    "methods_hit": {
+     "covered": 13,
+     "total": 15,
+     "percentage": 86.66
+    },
+    "statement_coverage": {
+     "covered": 100,
+     "uncovered": 16,
+     "coverable": 116,
+     "total": 116,
+     "percentage": 86.2
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_store_blob_manifest.go.html"
+  },
+  {
+   "id": "internal/store/blobs.go",
+   "name": "blobs.go",
+   "type": "file",
+   "path": "internal/store/blobs.go",
+   "parentId": "internal/store",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 9
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 10,
+     "percentage": 20
+    },
+    "methods_hit": {
+     "covered": 8,
+     "total": 10,
+     "percentage": 80
+    },
+    "statement_coverage": {
+     "covered": 68,
+     "uncovered": 34,
+     "coverable": 102,
+     "total": 102,
+     "percentage": 66.66
+    }
+   },
+   "statuses": {
+    "statement_coverage": "warning"
+   },
+   "targetUrl": "internal_store_blobs.go.html"
+  },
+  {
+   "id": "internal/store/maintenance.go",
+   "name": "maintenance.go",
+   "type": "file",
+   "path": "internal/store/maintenance.go",
+   "parentId": "internal/store",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 13
+    },
+    "methods_fully_covered": {
+     "covered": 2,
+     "total": 7,
+     "percentage": 28.57
+    },
+    "methods_hit": {
+     "covered": 7,
+     "total": 7,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 79,
+     "uncovered": 19,
+     "coverable": 98,
+     "total": 98,
+     "percentage": 80.61
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_store_maintenance.go.html"
+  },
+  {
+   "id": "internal/store/runs.go",
+   "name": "runs.go",
+   "type": "file",
+   "path": "internal/store/runs.go",
+   "parentId": "internal/store",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 14
+    },
+    "methods_fully_covered": {
+     "covered": 6,
+     "total": 11,
+     "percentage": 54.54
+    },
+    "methods_hit": {
+     "covered": 11,
+     "total": 11,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 101,
+     "uncovered": 12,
+     "coverable": 113,
+     "total": 113,
+     "percentage": 89.38
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_store_runs.go.html"
+  },
+  {
+   "id": "internal/store/store.go",
+   "name": "store.go",
+   "type": "file",
+   "path": "internal/store/store.go",
+   "parentId": "internal/store",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 8
+    },
+    "methods_fully_covered": {
+     "covered": 1,
+     "total": 6,
+     "percentage": 16.66
+    },
+    "methods_hit": {
+     "covered": 5,
+     "total": 6,
+     "percentage": 83.33
+    },
+    "statement_coverage": {
+     "covered": 37,
+     "uncovered": 16,
+     "coverable": 53,
+     "total": 53,
+     "percentage": 69.81
+    }
+   },
+   "statuses": {
+    "statement_coverage": "warning"
+   },
+   "targetUrl": "internal_store_store.go.html"
   },
   {
    "id": "internal/tree",
@@ -4598,16 +5823,29 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 6,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 2,
+     "uncovered": 0,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 100
+    },
     "statement_coverage": {
-     "covered": 87,
-     "uncovered": 6,
-     "coverable": 93,
-     "total": 93,
-     "percentage": 93.54
+     "covered": 79,
+     "uncovered": 5,
+     "coverable": 84,
+     "total": 84,
+     "percentage": 94.04
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    }
   },
@@ -4632,19 +5870,33 @@ window.__NANOVISION_SUMMARY__ = {
      "total": 6,
      "percentage": 100
     },
+    "patch_methods_hit": {
+     "covered": 2,
+     "total": 2,
+     "percentage": 100
+    },
+    "patch_statement_coverage": {
+     "covered": 2,
+     "uncovered": 0,
+     "coverable": 2,
+     "total": 2,
+     "percentage": 100
+    },
     "statement_coverage": {
-     "covered": 87,
-     "uncovered": 6,
-     "coverable": 93,
-     "total": 93,
-     "percentage": 93.54
+     "covered": 79,
+     "uncovered": 5,
+     "coverable": 84,
+     "total": 84,
+     "percentage": 94.04
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
+    "patch_methods_hit": "safe",
+    "patch_statement_coverage": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_tree_builder.go.html"
+   "targetUrl": "internal_tree_builder.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/utils",
@@ -4676,7 +5928,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    }
   },
@@ -4710,7 +5961,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_utils_analyzer.go.html"
@@ -4745,10 +5995,10 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "safe",
     "statement_coverage": "safe"
    },
-   "targetUrl": "internal_utils_line_sorter.go.html"
+   "targetUrl": "internal_utils_line_sorter.go.html",
+   "diffStatus": "modified"
   },
   {
    "id": "internal/utils/math.go",
@@ -4780,7 +6030,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "danger"
    },
    "targetUrl": "internal_utils_math.go.html"
@@ -4815,10 +6064,144 @@ window.__NANOVISION_SUMMARY__ = {
     }
    },
    "statuses": {
-    "methods_fully_covered": "danger",
     "statement_coverage": "safe"
    },
    "targetUrl": "internal_utils_paths.go.html"
+  },
+  {
+   "id": "internal/vcs",
+   "name": "vcs",
+   "type": "folder",
+   "path": "internal/vcs",
+   "parentId": "internal",
+   "depth": 1,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 14
+    },
+    "methods_fully_covered": {
+     "covered": 10,
+     "total": 32,
+     "percentage": 31.25
+    },
+    "methods_hit": {
+     "covered": 30,
+     "total": 32,
+     "percentage": 93.75
+    },
+    "statement_coverage": {
+     "covered": 201,
+     "uncovered": 39,
+     "coverable": 240,
+     "total": 240,
+     "percentage": 83.75
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   }
+  },
+  {
+   "id": "internal/vcs/git.go",
+   "name": "git.go",
+   "type": "file",
+   "path": "internal/vcs/git.go",
+   "parentId": "internal/vcs",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 7
+    },
+    "methods_fully_covered": {
+     "covered": 3,
+     "total": 12,
+     "percentage": 25
+    },
+    "methods_hit": {
+     "covered": 12,
+     "total": 12,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 65,
+     "uncovered": 14,
+     "coverable": 79,
+     "total": 79,
+     "percentage": 82.27
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_vcs_git.go.html"
+  },
+  {
+   "id": "internal/vcs/perforce.go",
+   "name": "perforce.go",
+   "type": "file",
+   "path": "internal/vcs/perforce.go",
+   "parentId": "internal/vcs",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 14
+    },
+    "methods_fully_covered": {
+     "covered": 4,
+     "total": 15,
+     "percentage": 26.66
+    },
+    "methods_hit": {
+     "covered": 13,
+     "total": 15,
+     "percentage": 86.66
+    },
+    "statement_coverage": {
+     "covered": 106,
+     "uncovered": 19,
+     "coverable": 125,
+     "total": 125,
+     "percentage": 84.8
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_vcs_perforce.go.html"
+  },
+  {
+   "id": "internal/vcs/vcs.go",
+   "name": "vcs.go",
+   "type": "file",
+   "path": "internal/vcs/vcs.go",
+   "parentId": "internal/vcs",
+   "depth": 2,
+   "metrics": {
+    "max_cyclomatic_complexity": {
+     "value": 8
+    },
+    "methods_fully_covered": {
+     "covered": 3,
+     "total": 5,
+     "percentage": 60
+    },
+    "methods_hit": {
+     "covered": 5,
+     "total": 5,
+     "percentage": 100
+    },
+    "statement_coverage": {
+     "covered": 30,
+     "uncovered": 6,
+     "coverable": 36,
+     "total": 36,
+     "percentage": 83.33
+    }
+   },
+   "statuses": {
+    "statement_coverage": "safe"
+   },
+   "targetUrl": "internal_vcs_vcs.go.html"
   }
  ],
  "metricDefinitions": {
@@ -4834,44 +6217,10 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
-  "branch_coverage": {
-   "label": "Branches",
-   "shortLabel": "Branches",
-   "description": "Percentage of covered code branches.",
-   "subMetrics": [
-    {
-     "id": "covered",
-     "label": "Covered",
-     "width": 100
-    },
-    {
-     "id": "total",
-     "label": "Total",
-     "width": 80
-    },
-    {
-     "id": "percentage",
-     "label": "Percentage %",
-     "width": 160
-    }
-   ]
-  },
   "c_patch_statement_coverage": {
    "label": "Patch Statements",
    "shortLabel": "Patch Stmts",
    "description": "Statement coverage of changed (patched) code only.",
-   "subMetrics": [
-    {
-     "id": "total",
-     "label": "Value",
-     "width": 100
-    }
-   ]
-  },
-  "e_branch_coverage": {
-   "label": "Branches",
-   "shortLabel": "Branches",
-   "description": "Percentage of covered branches inside methods.",
    "subMetrics": [
     {
      "id": "total",
@@ -4905,34 +6254,10 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
-  "h_patch_crap_score": {
-   "label": "Patch CRAP Score",
-   "shortLabel": "PCRAP",
-   "description": "CRAP score applied only to patched statements (lower is better).",
-   "subMetrics": [
-    {
-     "id": "total",
-     "label": "Value",
-     "width": 100
-    }
-   ]
-  },
   "i_exposed_risk": {
    "label": "Exposed Risk",
    "shortLabel": "Risk",
    "description": "Absolute volume of complexity that is unprotected by tests (lower is better).",
-   "subMetrics": [
-    {
-     "id": "total",
-     "label": "Value",
-     "width": 100
-    }
-   ]
-  },
-  "j_defect_probability": {
-   "label": "Defect Probability",
-   "shortLabel": "DPI",
-   "description": "Index representing the probability of defects based on complexity and patch coverage (lower is better).",
    "subMetrics": [
     {
      "id": "total",
@@ -4951,28 +6276,6 @@ window.__NANOVISION_SUMMARY__ = {
      "id": "value",
      "label": "Value",
      "width": 140
-    }
-   ]
-  },
-  "method_branch_coverage": {
-   "label": "Method Branches",
-   "shortLabel": "Method Branches",
-   "description": "Percentage of covered branches inside methods.",
-   "subMetrics": [
-    {
-     "id": "covered",
-     "label": "Covered",
-     "width": 100
-    },
-    {
-     "id": "total",
-     "label": "Total",
-     "width": 80
-    },
-    {
-     "id": "percentage",
-     "label": "Percentage %",
-     "width": 160
     }
    ]
   },
@@ -5097,929 +6400,155 @@ window.__NANOVISION_SUMMARY__ = {
    ]
   }
  },
+ "metricOrder": [
+  "statement_coverage",
+  "methods_hit",
+  "methods_fully_covered",
+  "patch_methods_hit",
+  "patch_statement_coverage",
+  "statement_methods_hit",
+  "statement_methods_fully_covered",
+  "patch_statement_methods_hit",
+  "max_cyclomatic_complexity"
+ ],
  "metadata": [
   {
    "label": "Generated At",
-   "value": "2026-09-06 14:11:48"
+   "value": "2026-10-03 15:00:30"
   },
   {
    "label": "Parser",
    "value": "Cobertura | GCov | GoCover"
   }
  ],
- "diagnostics": [
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "cmd/main.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 46.1% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "patch_methods_hit",
-   "ruleName": "Patch Methods Hit",
-   "severity": "warning",
-   "file": "cmd/main.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Methods Hit 80.0% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "error",
-   "file": "cmd/main.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 45.6% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "cmd/main.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 61.5% (threshold 60..75)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "branch_coverage",
-   "ruleName": "Branch Coverage",
-   "severity": "warning",
-   "file": "demo_projects/cpp/project/src/advanced_calculator.cpp",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Branch Coverage 50.0% (threshold 50..70)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "demo_projects/cpp/project/src/advanced_calculator.cpp",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "demo_projects/cpp/project/src/advanced_calculator.cpp",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 75.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "demo_projects/cpp/project/src/calculator.cpp",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 60.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "branch_coverage",
-   "ruleName": "Branch Coverage",
-   "severity": "warning",
-   "file": "demo_projects/cpp/project/src/utils/math_utils.cpp",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Branch Coverage 64.3% (threshold 50..70)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "demo_projects/cpp/project/src/utils/math_utils.cpp",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "branch_coverage",
-   "ruleName": "Branch Coverage",
-   "severity": "warning",
-   "file": "demo_projects/csharp/project/Test/PartialClass.cs",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Branch Coverage 50.0% (threshold 50..70)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "branch_coverage",
-   "ruleName": "Branch Coverage",
-   "severity": "warning",
-   "file": "demo_projects/csharp/project/Test/TestClass.cs",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Branch Coverage 50.0% (threshold 50..70)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "demo_projects/go/project/calculator/calculator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 42.9% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "demo_projects/go/project/calculator/entities.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 75.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "demo_projects/go/project/calculator_2/calculator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 40.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "demo_projects/go/project/calculator_2/calculator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 66.7% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "demo_projects/go/project/calculator_2/entities.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 16.7% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "demo_projects/go/project/calculator_2/entities.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 25.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/analyzer/cpp/analyzer.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/analyzer/gdscript/analyzer.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 40.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/analyzer/go/analyzer.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 60.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/bootlog/bootlog.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/cache/cache.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/cache/cache_validator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "internal/cache/cache_validator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 0.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/calculator/calculators.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 38.6% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "patch_methods_hit",
-   "ruleName": "Patch Methods Hit",
-   "severity": "error",
-   "file": "internal/calculator/calculators.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Methods Hit 61.5% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "error",
-   "file": "internal/calculator/calculators.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 52.1% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "internal/calculator/calculators.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 54.2% (threshold 60..75)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/config/config.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 33.3% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "warning",
-   "file": "internal/config/config.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 80.0% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/config/config.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 74.7% (threshold 60..75)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/diagnostics/diagnostics.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 27.3% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "patch_methods_hit",
-   "ruleName": "Patch Methods Hit",
-   "severity": "warning",
-   "file": "internal/diagnostics/diagnostics.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Methods Hit 81.8% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "error",
-   "file": "internal/diagnostics/diagnostics.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 68.8% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/diagnostics/diagnostics.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 68.8% (threshold 60..75)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/diff/parser.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/diff/path.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/diffapply/apply.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/diffapply/resolver.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 40.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/filereader/filereader.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/filtering/filter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/logging/logging.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/parsers/factory.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 75.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/parsers/parser_cobertura/parser.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 33.3% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/parsers/parser_cobertura/processing.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 25.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/parsers/parser_config.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 66.7% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/parsers/parser_gcov/parser.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/parsers/parser_gcov/processing.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/parsers/parser_gocover/parser.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 40.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/parsers/parser_lcov/parser.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "internal/parsers/parser_lcov/parser.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 34.8% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/parsers/parser_lcov/processing.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 50.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/reporter/annotations/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "patch_methods_hit",
-   "ruleName": "Patch Methods Hit",
-   "severity": "error",
-   "file": "internal/reporter/annotations/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Methods Hit 0.0% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "error",
-   "file": "internal/reporter/annotations/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 0.0% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "internal/reporter/annotations/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 0.0% (threshold 60..75)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/reporter/htmlreact/builder.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 27.3% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "patch_methods_hit",
-   "ruleName": "Patch Methods Hit",
-   "severity": "error",
-   "file": "internal/reporter/htmlreact/builder.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Methods Hit 77.8% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "error",
-   "file": "internal/reporter/htmlreact/builder.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 56.7% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/reporter/htmlreact/builder.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 62.7% (threshold 60..75)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/reporter/htmlreact/details_generator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 55.5% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "error",
-   "file": "internal/reporter/htmlreact/details_generator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 77.8% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/reporter/htmlreact/emit.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/reporter/htmlreact/generator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/reporter/htmlreact/generator.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 68.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/reporter/htmlreact/generator_single.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "internal/reporter/htmlreact/generator_single.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 0.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "warning",
-   "file": "internal/reporter/lcov/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 40.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/reporter/reporter_rawjson/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 33.3% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/reporter/reporter_rawjson/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 72.7% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/reporter/sarif/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "patch_methods_hit",
-   "ruleName": "Patch Methods Hit",
-   "severity": "error",
-   "file": "internal/reporter/sarif/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Methods Hit 0.0% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "error",
-   "file": "internal/reporter/sarif/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 0.0% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "internal/reporter/sarif/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 0.0% (threshold 60..75)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/reporter/textsummary/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 16.7% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "internal/reporter/textsummary/reporter.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 42.6% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/review/review.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 16.7% (threshold 40..60)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "warning",
-   "file": "internal/review/review.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 82.4% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "added"
-  },
-  {
-   "ruleId": "patch_statement_coverage",
-   "ruleName": "Patch Statement Coverage",
-   "severity": "warning",
-   "file": "internal/status/evaluators/complexity.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Patch Statement Coverage 85.0% (threshold 80..90)",
-   "scope": "file",
-   "diffStatus": "modified"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/status/evaluators/line_coverage.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 60.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/status/evaluators/patch_line_coverage.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 60.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/status/evaluators/patch_statement_methods_hit.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 70.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/status/evaluators/statement_methods_fully_covered.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 70.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "warning",
-   "file": "internal/status/evaluators/statement_methods_hit.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 70.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/utils/math.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "statement_coverage",
-   "ruleName": "Statement Coverage",
-   "severity": "error",
-   "file": "internal/utils/math.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Statement Coverage 50.0% (threshold 60..75)",
-   "scope": "file"
-  },
-  {
-   "ruleId": "methods_fully_covered",
-   "ruleName": "Methods Fully Covered",
-   "severity": "error",
-   "file": "internal/utils/paths.go",
-   "startLine": 1,
-   "endLine": 1,
-   "message": "Methods Fully Covered 0.0% (threshold 40..60)",
-   "scope": "file"
+ "review": {
+  "passed": false,
+  "checks": [
+   {
+    "key": "patch_statement_coverage",
+    "label": "Patch statement coverage",
+    "value": 78.75457875457876,
+    "threshold": 80,
+    "passed": false
+   },
+   {
+    "key": "max_changed_method_complexity",
+    "label": "Max changed-method complexity",
+    "value": 38,
+    "threshold": 15,
+    "passed": false
+   }
+  ],
+  "stats": {
+   "changedFiles": 28,
+   "methodsAdded": 11,
+   "methodsModified": 45,
+   "untestedChangedMethods": 8,
+   "patchStatementsValid": 273,
+   "patchStatementsCovered": 215,
+   "maxChangedComplexity": 38
+  },
+  "hotspots": [
+   {
+    "file": "cmd/main.go",
+    "method": "main",
+    "startLine": 220,
+    "diffStatus": "modified",
+    "complexity": 38,
+    "patchCoverage": 74.19354838709677,
+    "risk": 17.08527131782946
+   },
+   {
+    "file": "internal/config/config.go",
+    "method": "(*AppConfig).mergeCliOverrides",
+    "startLine": 347,
+    "diffStatus": "modified",
+    "complexity": 33,
+    "patchCoverage": 63.63636363636363,
+    "risk": 15.04411764705882
+   },
+   {
+    "file": "internal/reporter/htmlreact/details_generator.go",
+    "method": "(*HtmlReactReportBuilder).buildMethodDetails",
+    "startLine": 229,
+    "diffStatus": "modified",
+    "complexity": 22,
+    "patchCoverage": 0,
+    "risk": 11.314285714285713
+   },
+   {
+    "file": "internal/reporter/htmlreact/builder.go",
+    "method": "(*HtmlReactReportBuilder).createSingleFileReport",
+    "startLine": 77,
+    "diffStatus": "modified",
+    "complexity": 7,
+    "patchCoverage": 0,
+    "risk": 7
+   },
+   {
+    "file": "internal/config/config.go",
+    "method": "(*AppConfig).validate",
+    "startLine": 460,
+    "diffStatus": "modified",
+    "complexity": 15,
+    "patchCoverage": 75,
+    "risk": 6.923076923076923
+   },
+   {
+    "file": "internal/config/config.go",
+    "method": "Load",
+    "startLine": 291,
+    "diffStatus": "modified",
+    "complexity": 11,
+    "patchCoverage": 50,
+    "risk": 4.7142857142857135
+   },
+   {
+    "file": "internal/reporter/htmlreact/builder.go",
+    "method": "addMeta",
+    "startLine": 298,
+    "diffStatus": "modified",
+    "complexity": 8,
+    "patchCoverage": 100,
+    "risk": 3.2
+   },
+   {
+    "file": "internal/enricher/enricher.go",
+    "method": "(*Enricher).enrichFileNode",
+    "startLine": 135,
+    "diffStatus": "modified",
+    "complexity": 11,
+    "patchCoverage": 66.66666666666667,
+    "risk": 3.1842105263157894
+   },
+   {
+    "file": "internal/reporter/htmlreact/builder.go",
+    "method": "describeMetric",
+    "startLine": 742,
+    "diffStatus": "modified",
+    "complexity": 3,
+    "patchCoverage": 0,
+    "risk": 3
+   },
+   {
+    "file": "internal/config/config.go",
+    "method": "(*AppConfig).computeDerivedFields",
+    "startLine": 514,
+    "diffStatus": "modified",
+    "complexity": 11,
+    "patchCoverage": 40,
+    "risk": 2.933333333333334
+   }
+  ]
+ },
+ "comparing": [
+  {
+   "label": "Current",
+   "value": "working copy"
+  },
+  {
+   "label": "Changed files",
+   "value": "188 from fixture.diff"
   }
  ],
  "reports": [
@@ -6045,19 +6574,19 @@ window.__NANOVISION_SUMMARY__ = {
   }
  ],
  "reportIndexes": {
-  "cmd/main.go": {
+  "cmd/history.go": {
    "methods_fully_covered": [
     {
      "m": [
       0
      ],
-     "n": 7
+     "n": 11
     },
     {
      "m": [
       2
      ],
-     "n": 6
+     "n": 1
     }
    ],
    "methods_hit": [
@@ -6065,43 +6594,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 13
-    }
-   ],
-   "patch_methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 4
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 1
-    }
-   ],
-   "patch_statement_coverage": [
-    {
-     "m": [
-      0
-     ],
-     "n": 25
-    },
-    {
-     "m": [
-      2
-     ],
-     "n": 21
-    }
-   ],
-   "patch_statement_methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 5
+     "n": 12
     }
    ],
    "statement_coverage": [
@@ -6109,13 +6602,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 179
+     "n": 118
     },
     {
      "m": [
       0
      ],
-     "n": 112
+     "n": 38
     }
    ],
    "statement_methods_fully_covered": [
@@ -6123,13 +6616,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 7
+     "n": 11
     },
     {
      "m": [
       2
      ],
-     "n": 6
+     "n": 1
     }
    ],
    "statement_methods_hit": [
@@ -6137,7 +6630,187 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 13
+     "n": 12
+    }
+   ]
+  },
+  "cmd/main.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      2
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 11
+    }
+   ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 6
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 47
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 10
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 6
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 144
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 80
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      2
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 11
+    }
+   ]
+  },
+  "cmd/serve.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 90
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    }
+   ]
+  },
+  "cmd/storecmd.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 36
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 24
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
     }
    ]
   },
@@ -6334,22 +7007,6 @@ window.__NANOVISION_SUMMARY__ = {
     {
      "m": [
       0
-     ],
-     "n": 1
-    }
-   ],
-   "patch_methods_hit": [
-    {
-     "m": [
-      16
-     ],
-     "n": 1
-    }
-   ],
-   "patch_statement_methods_hit": [
-    {
-     "m": [
-      16
      ],
      "n": 1
     }
@@ -6619,20 +7276,14 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 5
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 4
+     "n": 8
     },
     {
      "m": [
       1,
       3
      ],
-     "n": 2
+     "n": 3
     },
     {
      "m": [
@@ -6653,27 +7304,21 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 8
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 5
+     "n": 13
     }
    ],
    "statement_coverage": [
     {
      "m": [
-      1
+      3
      ],
-     "n": 86
+     "n": 143
     },
     {
      "m": [
-      3
+      1
      ],
-     "n": 76
+     "n": 17
     },
     {
      "m": [
@@ -6693,20 +7338,14 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 5
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 4
+     "n": 8
     },
     {
      "m": [
       1,
       3
      ],
-     "n": 2
+     "n": 3
     },
     {
      "m": [
@@ -6727,13 +7366,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 8
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 5
+     "n": 13
     }
    ]
   },
@@ -6779,12 +7412,36 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 2
     }
    ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
    "statement_coverage": [
     {
      "m": [
       3
      ],
-     "n": 119
+     "n": 118
     },
     {
      "m": [
@@ -6874,6 +7531,30 @@ window.__NANOVISION_SUMMARY__ = {
       2
      ],
      "n": 2
+    }
+   ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
     }
    ],
    "statement_coverage": [
@@ -6974,6 +7655,30 @@ window.__NANOVISION_SUMMARY__ = {
     {
      "m": [
       3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      1
      ],
      "n": 1
     }
@@ -7086,6 +7791,30 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 2
     }
    ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
    "statement_coverage": [
     {
      "m": [
@@ -7145,15 +7874,9 @@ window.__NANOVISION_SUMMARY__ = {
    "methods_fully_covered": [
     {
      "m": [
-      0
-     ],
-     "n": 1
-    },
-    {
-     "m": [
       2
      ],
-     "n": 1
+     "n": 2
     }
    ],
    "methods_hit": [
@@ -7169,27 +7892,15 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 28
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 1
+     "n": 29
     }
    ],
    "statement_methods_fully_covered": [
     {
      "m": [
-      0
-     ],
-     "n": 1
-    },
-    {
-     "m": [
       2
      ],
-     "n": 1
+     "n": 2
     }
    ],
    "statement_methods_hit": [
@@ -7207,19 +7918,34 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 4
+     "n": 3
     },
     {
      "m": [
-      1
+      1,
+      3
      ],
-     "n": 4
+     "n": 3
+    },
+    {
+     "m": [
+      1,
+      2,
+      3
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
     }
    ],
    "methods_hit": [
     {
      "m": [
-      1
+      3
      ],
      "n": 8
     }
@@ -7227,15 +7953,27 @@ window.__NANOVISION_SUMMARY__ = {
    "statement_coverage": [
     {
      "m": [
+      3
+     ],
+     "n": 65
+    },
+    {
+     "m": [
       1
      ],
-     "n": 80
+     "n": 15
     },
     {
      "m": [
       0
      ],
-     "n": 11
+     "n": 9
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 2
     }
    ],
    "statement_methods_fully_covered": [
@@ -7243,19 +7981,34 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 4
+     "n": 3
     },
     {
      "m": [
-      1
+      1,
+      3
      ],
-     "n": 4
+     "n": 3
+    },
+    {
+     "m": [
+      1,
+      2,
+      3
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
     }
    ],
    "statement_methods_hit": [
     {
      "m": [
-      1
+      3
      ],
      "n": 8
     }
@@ -7267,7 +8020,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
     }
    ],
    "methods_hit": [
@@ -7275,7 +8034,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
     }
    ],
    "statement_coverage": [
@@ -7283,7 +8048,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
     }
    ],
    "statement_methods_fully_covered": [
@@ -7291,7 +8062,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
     }
    ],
    "statement_methods_hit": [
@@ -7299,7 +8076,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
     }
    ]
   },
@@ -7307,15 +8090,15 @@ window.__NANOVISION_SUMMARY__ = {
    "methods_fully_covered": [
     {
      "m": [
-      0
+      2
      ],
-     "n": 35
+     "n": 24
     },
     {
      "m": [
-      2
+      0
      ],
-     "n": 22
+     "n": 21
     }
    ],
    "methods_hit": [
@@ -7323,55 +8106,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 32
+     "n": 30
     },
     {
      "m": [
       0
      ],
-     "n": 25
-    }
-   ],
-   "patch_methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 32
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 20
-    }
-   ],
-   "patch_statement_coverage": [
-    {
-     "m": [
-      2
-     ],
-     "n": 49
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 45
-    }
-   ],
-   "patch_statement_methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 32
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 20
+     "n": 15
     }
    ],
    "statement_coverage": [
@@ -7379,27 +8120,27 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 77
+     "n": 73
     },
     {
      "m": [
       0
      ],
-     "n": 65
+     "n": 22
     }
    ],
    "statement_methods_fully_covered": [
     {
      "m": [
-      0
+      2
      ],
-     "n": 35
+     "n": 24
     },
     {
      "m": [
-      2
+      0
      ],
-     "n": 22
+     "n": 21
     }
    ],
    "statement_methods_hit": [
@@ -7407,13 +8148,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 32
+     "n": 30
     },
     {
      "m": [
       0
      ],
-     "n": 25
+     "n": 15
     }
    ]
   },
@@ -7427,30 +8168,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ],
    "methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 4
-    }
-   ],
-   "patch_methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 4
-    }
-   ],
-   "patch_statement_coverage": [
-    {
-     "m": [
-      2
-     ],
-     "n": 36
-    }
-   ],
-   "patch_statement_methods_hit": [
     {
      "m": [
       2
@@ -7483,6 +8200,152 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
+  "internal/client/client.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 7
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 10
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 50
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 16
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 7
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 10
+    }
+   ]
+  },
+  "internal/compare/compare.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 9
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 116
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 20
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 9
+    }
+   ]
+  },
   "internal/config/config.go": {
    "methods_fully_covered": [
     {
@@ -7495,7 +8358,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 2
+     "n": 3
     },
     {
      "m": [
@@ -7509,7 +8372,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 5
+     "n": 6
     },
     {
      "m": [
@@ -7523,7 +8386,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 3
+     "n": 5
     },
     {
      "m": [
@@ -7535,27 +8398,27 @@ window.__NANOVISION_SUMMARY__ = {
    "patch_statement_coverage": [
     {
      "m": [
+      0
+     ],
+     "n": 13
+    },
+    {
+     "m": [
       3
      ],
-     "n": 6
+     "n": 8
     },
     {
      "m": [
       2
      ],
-     "n": 4
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 3
+     "n": 6
     },
     {
      "m": [
       1
      ],
-     "n": 2
+     "n": 4
     }
    ],
    "patch_statement_methods_hit": [
@@ -7563,7 +8426,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 3
+     "n": 4
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
     },
     {
      "m": [
@@ -7575,27 +8444,27 @@ window.__NANOVISION_SUMMARY__ = {
    "statement_coverage": [
     {
      "m": [
-      3
+      0
      ],
-     "n": 56
+     "n": 89
     },
     {
      "m": [
       2
      ],
-     "n": 52
+     "n": 45
     },
     {
      "m": [
-      0
+      3
      ],
-     "n": 42
+     "n": 43
     },
     {
      "m": [
       1
      ],
-     "n": 16
+     "n": 15
     }
    ],
    "statement_methods_fully_covered": [
@@ -7603,17 +8472,11 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 6
+     "n": 9
     },
     {
      "m": [
       3
-     ],
-     "n": 2
-    },
-    {
-     "m": [
-      2
      ],
      "n": 1
     }
@@ -7630,6 +8493,12 @@ window.__NANOVISION_SUMMARY__ = {
       2
      ],
      "n": 4
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
     }
    ]
   },
@@ -7639,13 +8508,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 8
+     "n": 7
     },
     {
      "m": [
       2
      ],
-     "n": 3
+     "n": 4
     }
    ],
    "methods_hit": [
@@ -7653,13 +8522,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 9
+     "n": 10
     },
     {
      "m": [
       0
      ],
-     "n": 2
+     "n": 1
     }
    ],
    "patch_methods_hit": [
@@ -7667,13 +8536,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 9
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 2
+     "n": 1
     }
    ],
    "patch_statement_coverage": [
@@ -7681,13 +8544,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 55
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 25
+     "n": 2
     }
    ],
    "patch_statement_methods_hit": [
@@ -7695,13 +8552,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 9
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 2
+     "n": 1
     }
    ],
    "statement_coverage": [
@@ -7715,7 +8566,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 25
+     "n": 21
     }
    ],
    "statement_methods_fully_covered": [
@@ -7723,13 +8574,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 8
+     "n": 7
     },
     {
      "m": [
       2
      ],
-     "n": 3
+     "n": 4
     }
    ],
    "statement_methods_hit": [
@@ -7737,13 +8588,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 9
+     "n": 10
     },
     {
      "m": [
       0
      ],
-     "n": 2
+     "n": 1
     }
    ]
   },
@@ -7753,22 +8604,55 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 6
+     "n": 5
     },
     {
      "m": [
-      1
+      3
      ],
-     "n": 6
+     "n": 5
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1,
+      2,
+      3
+     ],
+     "n": 1
     }
    ],
    "methods_hit": [
     {
      "m": [
-      1
+      3
      ],
-     "n": 11
-    },
+     "n": 13
+    }
+   ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 7
+    }
+   ],
+   "patch_statement_methods_hit": [
     {
      "m": [
       3
@@ -7779,21 +8663,21 @@ window.__NANOVISION_SUMMARY__ = {
    "statement_coverage": [
     {
      "m": [
+      3
+     ],
+     "n": 95
+    },
+    {
+     "m": [
       1
      ],
-     "n": 109
+     "n": 25
     },
     {
      "m": [
       0
      ],
-     "n": 10
-    },
-    {
-     "m": [
-      3
-     ],
-     "n": 3
+     "n": 9
     },
     {
      "m": [
@@ -7807,27 +8691,36 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 6
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 6
-    }
-   ],
-   "statement_methods_hit": [
-    {
-     "m": [
-      1
-     ],
-     "n": 11
+     "n": 5
     },
     {
      "m": [
       3
      ],
+     "n": 5
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1,
+      2,
+      3
+     ],
      "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 13
     }
    ]
   },
@@ -7843,7 +8736,37 @@ window.__NANOVISION_SUMMARY__ = {
    "methods_hit": [
     {
      "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 4
+    },
+    {
+     "m": [
       1
+     ],
+     "n": 2
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      3
      ],
      "n": 1
     }
@@ -7851,9 +8774,15 @@ window.__NANOVISION_SUMMARY__ = {
    "statement_coverage": [
     {
      "m": [
-      1
+      3
      ],
      "n": 9
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
     },
     {
      "m": [
@@ -7873,7 +8802,7 @@ window.__NANOVISION_SUMMARY__ = {
    "statement_methods_hit": [
     {
      "m": [
-      1
+      3
      ],
      "n": 1
     }
@@ -7889,7 +8818,7 @@ window.__NANOVISION_SUMMARY__ = {
     },
     {
      "m": [
-      1
+      3
      ],
      "n": 1
     }
@@ -7897,23 +8826,65 @@ window.__NANOVISION_SUMMARY__ = {
    "methods_hit": [
     {
      "m": [
-      1
+      3
      ],
      "n": 2
     }
    ],
-   "statement_coverage": [
+   "patch_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 17
+    },
     {
      "m": [
       1
      ],
-     "n": 29
+     "n": 6
     },
     {
      "m": [
       0
      ],
-     "n": 4
+     "n": 1
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 40
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 3
     }
    ],
    "statement_methods_fully_covered": [
@@ -7925,7 +8896,7 @@ window.__NANOVISION_SUMMARY__ = {
     },
     {
      "m": [
-      1
+      3
      ],
      "n": 1
     }
@@ -7933,7 +8904,7 @@ window.__NANOVISION_SUMMARY__ = {
    "statement_methods_hit": [
     {
      "m": [
-      1
+      3
      ],
      "n": 2
     }
@@ -7945,35 +8916,78 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 5
     },
     {
      "m": [
-      1
+      1,
+      3
      ],
-     "n": 2
+     "n": 1
     }
    ],
    "methods_hit": [
     {
      "m": [
-      1
+      3
      ],
-     "n": 5
+     "n": 6
     }
    ],
-   "statement_coverage": [
+   "patch_methods_hit": [
     {
      "m": [
-      1
+      3
      ],
-     "n": 119
+     "n": 3
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 26
     },
     {
      "m": [
       0
      ],
-     "n": 8
+     "n": 7
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 3
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 97
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 49
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 14
     }
    ],
    "statement_methods_fully_covered": [
@@ -7981,21 +8995,22 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 5
     },
     {
      "m": [
-      1
+      1,
+      3
      ],
-     "n": 2
+     "n": 1
     }
    ],
    "statement_methods_hit": [
     {
      "m": [
-      1
+      3
      ],
-     "n": 5
+     "n": 6
     }
    ]
   },
@@ -8034,24 +9049,54 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 3
     }
    ],
-   "statement_coverage": [
+   "patch_methods_hit": [
     {
      "m": [
       2
      ],
-     "n": 49
-    },
+     "n": 2
+    }
+   ],
+   "patch_statement_coverage": [
     {
      "m": [
-      3
+      2
      ],
-     "n": 45
+     "n": 3
     },
     {
      "m": [
       0
      ],
-     "n": 18
+     "n": 1
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 54
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 43
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 12
     }
    ],
    "statement_methods_fully_covered": [
@@ -8167,47 +9212,77 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 5
     }
    ],
    "methods_hit": [
     {
      "m": [
-      3
+      1
      ],
-     "n": 2
+     "n": 3
     },
     {
      "m": [
-      1
+      3
      ],
-     "n": 1
+     "n": 2
     }
    ],
-   "statement_coverage": [
-    {
-     "m": [
-      3
-     ],
-     "n": 29
-    },
+   "patch_methods_hit": [
     {
      "m": [
       1
      ],
-     "n": 19
+     "n": 2
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 16
     },
     {
      "m": [
       0
      ],
-     "n": 6
+     "n": 4
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 36
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 30
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 9
     },
     {
      "m": [
       2
      ],
-     "n": 2
+     "n": 1
     }
    ],
    "statement_methods_fully_covered": [
@@ -8215,21 +9290,21 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 5
     }
    ],
    "statement_methods_hit": [
     {
      "m": [
-      3
+      1
      ],
-     "n": 2
+     "n": 3
     },
     {
      "m": [
-      1
+      3
      ],
-     "n": 1
+     "n": 2
     }
    ]
   },
@@ -8274,13 +9349,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 33
+     "n": 34
     },
     {
      "m": [
       1
      ],
-     "n": 12
+     "n": 11
     },
     {
      "m": [
@@ -8325,7 +9400,243 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
-  "internal/logging/logging.go": {
+  "internal/history/capture.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      3
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 61
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      3
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/history/meta.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      2,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 26
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 12
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 7
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      2,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/history/rebuild.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 3
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 72
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 11
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 3
+    }
+   ]
+  },
+  "internal/history/record.go": {
    "methods_fully_covered": [
     {
      "m": [
@@ -8337,7 +9648,103 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
+     "n": 1
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 77
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 18
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 16
+    },
+    {
+     "m": [
+      2
+     ],
      "n": 2
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/logging/logging.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 3
     },
     {
      "m": [
@@ -8378,25 +9785,25 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 22
+     "n": 23
     },
     {
      "m": [
       3
      ],
-     "n": 16
+     "n": 17
     },
     {
      "m": [
       1
      ],
-     "n": 15
+     "n": 14
     },
     {
      "m": [
       0
      ],
-     "n": 10
+     "n": 9
     }
    ],
    "statement_methods_fully_covered": [
@@ -8404,13 +9811,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 5
+     "n": 4
     },
     {
      "m": [
       2
      ],
-     "n": 2
+     "n": 3
     },
     {
      "m": [
@@ -8439,6 +9846,66 @@ window.__NANOVISION_SUMMARY__ = {
      ],
      "n": 3
     },
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ]
+  },
+  "internal/model/comparison.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
     {
      "m": [
       2
@@ -8453,7 +9920,14 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       1
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
     }
    ],
    "methods_hit": [
@@ -8461,7 +9935,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       1
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
     }
    ],
    "statement_coverage": [
@@ -8469,7 +9949,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       1
      ],
-     "n": 11
+     "n": 9
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
     }
    ],
    "statement_methods_fully_covered": [
@@ -8477,7 +9963,14 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       1
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
     }
    ],
    "statement_methods_hit": [
@@ -8485,7 +9978,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       1
      ],
-     "n": 3
+     "n": 2
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
     }
    ]
   },
@@ -8659,7 +10158,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 2
     },
     {
      "m": [
@@ -8673,7 +10172,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 4
+     "n": 3
     }
    ],
    "statement_coverage": [
@@ -8681,13 +10180,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 39
+     "n": 30
     },
     {
      "m": [
       0
      ],
-     "n": 11
+     "n": 3
     },
     {
      "m": [
@@ -8701,7 +10200,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 3
+     "n": 2
     },
     {
      "m": [
@@ -8715,7 +10214,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 4
+     "n": 3
     }
    ]
   },
@@ -8903,7 +10402,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 32
+     "n": 23
     },
     {
      "m": [
@@ -9041,6 +10540,30 @@ window.__NANOVISION_SUMMARY__ = {
       3
      ],
      "n": 4
+    }
+   ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
     }
    ],
    "statement_coverage": [
@@ -9206,12 +10729,36 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 2
     }
    ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 3
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
    "statement_coverage": [
     {
      "m": [
       1
      ],
-     "n": 52
+     "n": 41
     },
     {
      "m": [
@@ -9243,6 +10790,66 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
+  "internal/pipeline/pipeline.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 5
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 64
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 22
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 5
+    }
+   ]
+  },
   "internal/reporter/annotations/reporter.go": {
    "methods_fully_covered": [
     {
@@ -9253,30 +10860,6 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ],
    "methods_hit": [
-    {
-     "m": [
-      0
-     ],
-     "n": 5
-    }
-   ],
-   "patch_methods_hit": [
-    {
-     "m": [
-      0
-     ],
-     "n": 5
-    }
-   ],
-   "patch_statement_coverage": [
-    {
-     "m": [
-      0
-     ],
-     "n": 32
-    }
-   ],
-   "patch_statement_methods_hit": [
     {
      "m": [
       0
@@ -9315,39 +10898,30 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 16
+     "n": 14
     },
     {
      "m": [
-      2
+      3
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      1
      ],
      "n": 2
     },
     {
      "m": [
       1,
-      2,
       3
      ],
-     "n": 1
+     "n": 2
     },
     {
      "m": [
-      1,
-      3
-     ],
-     "n": 1
-    },
-    {
-     "m": [
-      2,
-      3
-     ],
-     "n": 1
-    },
-    {
-     "m": [
-      3
+      2
      ],
      "n": 1
     }
@@ -9355,13 +10929,13 @@ window.__NANOVISION_SUMMARY__ = {
    "methods_hit": [
     {
      "m": [
-      2
+      3
      ],
-     "n": 11
+     "n": 13
     },
     {
      "m": [
-      3
+      2
      ],
      "n": 7
     },
@@ -9375,62 +10949,62 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       1
      ],
-     "n": 1
+     "n": 2
     }
    ],
    "patch_methods_hit": [
     {
      "m": [
-      2
-     ],
-     "n": 8
-    },
-    {
-     "m": [
       3
      ],
      "n": 6
     },
     {
      "m": [
+      2
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    },
+    {
+     "m": [
       0
      ],
-     "n": 4
+     "n": 1
     }
    ],
    "patch_statement_coverage": [
     {
      "m": [
-      0
+      1
      ],
-     "n": 61
-    },
-    {
-     "m": [
-      2
-     ],
-     "n": 50
+     "n": 18
     },
     {
      "m": [
       3
      ],
-     "n": 27
+     "n": 16
     },
-    {
-     "m": [
-      1
-     ],
-     "n": 3
-    }
-   ],
-   "patch_statement_methods_hit": [
     {
      "m": [
       2
      ],
-     "n": 8
+     "n": 13
     },
+    {
+     "m": [
+      0
+     ],
+     "n": 8
+    }
+   ],
+   "patch_statement_methods_hit": [
     {
      "m": [
       3
@@ -9439,35 +11013,47 @@ window.__NANOVISION_SUMMARY__ = {
     },
     {
      "m": [
-      0
-     ],
-     "n": 4
-    }
-   ],
-   "statement_coverage": [
-    {
-     "m": [
-      0
-     ],
-     "n": 114
-    },
-    {
-     "m": [
-      3
-     ],
-     "n": 97
-    },
-    {
-     "m": [
       2
      ],
-     "n": 85
+     "n": 5
     },
     {
      "m": [
       1
      ],
-     "n": 10
+     "n": 2
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 122
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 93
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 67
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 32
     }
    ],
    "statement_methods_fully_covered": [
@@ -9475,11 +11061,30 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 23
+     "n": 17
     },
     {
      "m": [
       3
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      2
      ],
      "n": 1
     }
@@ -9487,13 +11092,13 @@ window.__NANOVISION_SUMMARY__ = {
    "statement_methods_hit": [
     {
      "m": [
-      2
+      3
      ],
-     "n": 11
+     "n": 13
     },
     {
      "m": [
-      3
+      2
      ],
      "n": 7
     },
@@ -9501,7 +11106,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 6
+     "n": 4
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
     }
    ]
   },
@@ -9511,13 +11122,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 8
-    },
-    {
-     "m": [
-      2
-     ],
-     "n": 3
+     "n": 9
     },
     {
      "m": [
@@ -9529,6 +11134,12 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       1,
       3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      2
      ],
      "n": 2
     },
@@ -9563,15 +11174,9 @@ window.__NANOVISION_SUMMARY__ = {
    "patch_methods_hit": [
     {
      "m": [
-      3
-     ],
-     "n": 4
-    },
-    {
-     "m": [
       2
      ],
-     "n": 3
+     "n": 4
     }
    ],
    "patch_statement_coverage": [
@@ -9579,33 +11184,21 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 18
-    },
-    {
-     "m": [
-      3
-     ],
-     "n": 10
+     "n": 9
     },
     {
      "m": [
       0
      ],
-     "n": 8
+     "n": 7
     }
    ],
    "patch_statement_methods_hit": [
     {
      "m": [
-      3
-     ],
-     "n": 4
-    },
-    {
-     "m": [
       2
      ],
-     "n": 3
+     "n": 4
     }
    ],
    "statement_coverage": [
@@ -9613,25 +11206,25 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 101
-    },
-    {
-     "m": [
-      3
-     ],
-     "n": 56
+     "n": 79
     },
     {
      "m": [
       0
      ],
-     "n": 42
+     "n": 66
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 40
     },
     {
      "m": [
       1
      ],
-     "n": 5
+     "n": 6
     }
    ],
    "statement_methods_fully_covered": [
@@ -9639,33 +11232,26 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 8
+     "n": 13
     },
     {
      "m": [
       2
      ],
-     "n": 3
+     "n": 2
     },
     {
      "m": [
       3
      ],
-     "n": 3
+     "n": 2
     },
     {
      "m": [
       1,
       3
      ],
-     "n": 2
-    },
-    {
-     "m": [
-      2,
-      3
-     ],
-     "n": 2
+     "n": 1
     }
    ],
    "statement_methods_hit": [
@@ -9679,11 +11265,17 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 8
+     "n": 7
     },
     {
      "m": [
       0
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      1
      ],
      "n": 1
     }
@@ -9691,6 +11283,12 @@ window.__NANOVISION_SUMMARY__ = {
   },
   "internal/reporter/htmlreact/embed.go": {
    "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    },
     {
      "m": [
       2
@@ -9701,12 +11299,48 @@ window.__NANOVISION_SUMMARY__ = {
    "methods_hit": [
     {
      "m": [
+      0
+     ],
+     "n": 1
+    },
+    {
+     "m": [
       2
      ],
      "n": 1
     }
    ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
    "statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    },
     {
      "m": [
       2
@@ -9717,12 +11351,24 @@ window.__NANOVISION_SUMMARY__ = {
    "statement_methods_fully_covered": [
     {
      "m": [
+      0
+     ],
+     "n": 1
+    },
+    {
+     "m": [
       2
      ],
      "n": 1
     }
    ],
    "statement_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    },
     {
      "m": [
       2
@@ -9869,6 +11515,48 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
+  "internal/reporter/htmlreact/views.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 15
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    }
+   ]
+  },
   "internal/reporter/lcov/reporter.go": {
    "methods_fully_covered": [
     {
@@ -9903,13 +11591,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 69
+     "n": 52
     },
     {
      "m": [
       0
      ],
-     "n": 15
+     "n": 12
     }
    ],
    "statement_methods_fully_covered": [
@@ -10030,30 +11718,6 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 6
     }
    ],
-   "patch_methods_hit": [
-    {
-     "m": [
-      0
-     ],
-     "n": 6
-    }
-   ],
-   "patch_statement_coverage": [
-    {
-     "m": [
-      0
-     ],
-     "n": 33
-    }
-   ],
-   "patch_statement_methods_hit": [
-    {
-     "m": [
-      0
-     ],
-     "n": 6
-    }
-   ],
    "statement_coverage": [
     {
      "m": [
@@ -10076,6 +11740,66 @@ window.__NANOVISION_SUMMARY__ = {
       0
      ],
      "n": 6
+    }
+   ]
+  },
+  "internal/reporter/textsummary/comparison.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 8
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 65
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 10
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 8
     }
    ]
   },
@@ -10108,6 +11832,36 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 3
     }
    ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
    "statement_coverage": [
     {
      "m": [
@@ -10119,13 +11873,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 24
+     "n": 25
     },
     {
      "m": [
       2
      ],
-     "n": 2
+     "n": 4
     }
    ],
    "statement_methods_fully_covered": [
@@ -10157,17 +11911,17 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
-  "internal/review/review.go": {
+  "internal/reporter/textsummary/terminal.go": {
    "methods_fully_covered": [
     {
      "m": [
       0
      ],
-     "n": 5
+     "n": 2
     },
     {
      "m": [
-      1
+      2
      ],
      "n": 1
     }
@@ -10175,47 +11929,17 @@ window.__NANOVISION_SUMMARY__ = {
    "methods_hit": [
     {
      "m": [
-      1
+      2
      ],
-     "n": 6
-    }
-   ],
-   "patch_methods_hit": [
-    {
-     "m": [
-      1
-     ],
-     "n": 6
-    }
-   ],
-   "patch_statement_coverage": [
-    {
-     "m": [
-      1
-     ],
-     "n": 61
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 13
-    }
-   ],
-   "patch_statement_methods_hit": [
-    {
-     "m": [
-      1
-     ],
-     "n": 6
+     "n": 3
     }
    ],
    "statement_coverage": [
     {
      "m": [
-      1
+      2
      ],
-     "n": 61
+     "n": 57
     },
     {
      "m": [
@@ -10229,7 +11953,463 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       0
      ],
-     "n": 5
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ]
+  },
+  "internal/review/review.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      2,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 6
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 49
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 12
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 12
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      2,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 6
+    }
+   ]
+  },
+  "internal/server/api.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 12
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 13
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 129
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 43
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 12
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 13
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/server/cache.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 4
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 38
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 9
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 4
+    }
+   ]
+  },
+  "internal/server/maintenance.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      0
+     ],
+     "n": 24
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ]
+  },
+  "internal/server/server.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      1
+     ],
+     "n": 7
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 11
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 55
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 7
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      1
+     ],
+     "n": 7
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 4
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 11
+    }
+   ]
+  },
+  "internal/server/ui.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 24
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 17
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ]
+  },
+  "internal/server/upload.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 3
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 34
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 14
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 3
+    }
+   ]
+  },
+  "internal/server/wire.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 3
     },
     {
      "m": [
@@ -10238,12 +12418,52 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 1
     }
    ],
-   "statement_methods_hit": [
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 20
+    },
     {
      "m": [
       1
      ],
-     "n": 6
+     "n": 15
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 11
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
     }
    ]
   },
@@ -10289,19 +12509,19 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       3
      ],
-     "n": 34
+     "n": 33
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 3
     },
     {
      "m": [
       2
      ],
      "n": 3
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 2
     },
     {
      "m": [
@@ -10344,6 +12564,48 @@ window.__NANOVISION_SUMMARY__ = {
       3
      ],
      "n": 6
+    }
+   ]
+  },
+  "internal/status/capabilities.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 13
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 1
     }
    ]
   },
@@ -10433,91 +12695,19 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
-  "internal/status/evaluators/branch_coverage.go": {
-   "methods_fully_covered": [
-    {
-     "m": [
-      2
-     ],
-     "n": 3
-    },
-    {
-     "m": [
-      3
-     ],
-     "n": 3
-    }
-   ],
-   "methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 3
-    },
-    {
-     "m": [
-      3
-     ],
-     "n": 3
-    }
-   ],
-   "statement_coverage": [
-    {
-     "m": [
-      3
-     ],
-     "n": 7
-    },
-    {
-     "m": [
-      2
-     ],
-     "n": 3
-    }
-   ],
-   "statement_methods_fully_covered": [
-    {
-     "m": [
-      2
-     ],
-     "n": 3
-    },
-    {
-     "m": [
-      3
-     ],
-     "n": 3
-    }
-   ],
-   "statement_methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 3
-    },
-    {
-     "m": [
-      3
-     ],
-     "n": 3
-    }
-   ]
-  },
   "internal/status/evaluators/complexity.go": {
    "methods_fully_covered": [
     {
      "m": [
       2
      ],
-     "n": 28
+     "n": 19
     },
     {
      "m": [
       0
      ],
-     "n": 5
+     "n": 2
     },
     {
      "m": [
@@ -10538,7 +12728,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 33
+     "n": 21
     },
     {
      "m": [
@@ -10547,54 +12737,24 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 3
     }
    ],
-   "patch_methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 24
-    }
-   ],
-   "patch_statement_coverage": [
-    {
-     "m": [
-      2
-     ],
-     "n": 34
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 6
-    }
-   ],
-   "patch_statement_methods_hit": [
-    {
-     "m": [
-      2
-     ],
-     "n": 24
-    }
-   ],
    "statement_coverage": [
     {
      "m": [
       2
      ],
-     "n": 46
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 7
+     "n": 31
     },
     {
      "m": [
       3
      ],
      "n": 6
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
     },
     {
      "m": [
@@ -10608,13 +12768,13 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 28
+     "n": 19
     },
     {
      "m": [
       0
      ],
-     "n": 5
+     "n": 2
     },
     {
      "m": [
@@ -10635,7 +12795,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 33
+     "n": 21
     },
     {
      "m": [
@@ -10651,22 +12811,23 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 5
+     "n": 6
     },
     {
      "m": [
       0
      ],
-     "n": 4
+     "n": 3
     },
     {
      "m": [
-      1
+      3
      ],
      "n": 2
     },
     {
      "m": [
+      1,
       3
      ],
      "n": 1
@@ -10677,49 +12838,43 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 5
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 4
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 2
+     "n": 7
     },
     {
      "m": [
       3
      ],
-     "n": 1
+     "n": 3
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
     }
    ],
    "statement_coverage": [
     {
      "m": [
-      0
+      2
      ],
-     "n": 8
+     "n": 10
     },
     {
      "m": [
-      1
+      3
      ],
      "n": 6
     },
     {
      "m": [
-      2
+      0
      ],
-     "n": 5
+     "n": 3
     },
     {
      "m": [
-      3
+      1
      ],
      "n": 1
     }
@@ -10729,22 +12884,23 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 5
+     "n": 6
     },
     {
      "m": [
       0
      ],
-     "n": 4
+     "n": 3
     },
     {
      "m": [
-      1
+      3
      ],
      "n": 2
     },
     {
      "m": [
+      1,
       3
      ],
      "n": 1
@@ -10755,25 +12911,19 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 5
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 4
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 2
+     "n": 7
     },
     {
      "m": [
       3
      ],
-     "n": 1
+     "n": 3
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
     }
    ]
   },
@@ -10927,25 +13077,19 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 5
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 4
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 2
+     "n": 7
     },
     {
      "m": [
       3
      ],
-     "n": 1
+     "n": 3
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
     }
    ],
    "methods_hit": [
@@ -10953,51 +13097,39 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 5
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 4
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 2
+     "n": 7
     },
     {
      "m": [
       3
      ],
-     "n": 1
+     "n": 3
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
     }
    ],
    "statement_coverage": [
     {
      "m": [
-      0
-     ],
-     "n": 8
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 6
-    },
-    {
-     "m": [
       2
      ],
-     "n": 5
+     "n": 11
     },
     {
      "m": [
       3
      ],
-     "n": 1
+     "n": 7
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
     }
    ],
    "statement_methods_fully_covered": [
@@ -11005,25 +13137,19 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 5
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 4
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 2
+     "n": 7
     },
     {
      "m": [
       3
      ],
-     "n": 1
+     "n": 3
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
     }
    ],
    "statement_methods_hit": [
@@ -11031,25 +13157,19 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 5
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 4
-    },
-    {
-     "m": [
-      1
-     ],
-     "n": 2
+     "n": 7
     },
     {
      "m": [
       3
      ],
-     "n": 1
+     "n": 3
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
     }
    ]
   },
@@ -11059,13 +13179,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 4
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 1
+     "n": 5
     },
     {
      "m": [
@@ -11093,13 +13207,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 7
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 2
+     "n": 9
     },
     {
      "m": [
@@ -11113,13 +13221,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 4
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 1
+     "n": 5
     },
     {
      "m": [
@@ -11149,13 +13251,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 9
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 2
+     "n": 11
     },
     {
      "m": [
@@ -11183,13 +13279,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 15
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 4
+     "n": 19
     },
     {
      "m": [
@@ -11203,13 +13293,7 @@ window.__NANOVISION_SUMMARY__ = {
      "m": [
       2
      ],
-     "n": 9
-    },
-    {
-     "m": [
-      0
-     ],
-     "n": 2
+     "n": 11
     },
     {
      "m": [
@@ -11629,6 +13713,892 @@ window.__NANOVISION_SUMMARY__ = {
     }
    ]
   },
+  "internal/store/blob/analysis.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 4
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 92
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 23
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 4
+    }
+   ]
+  },
+  "internal/store/blob/blob.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 24
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 78
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 18
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 17
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 8
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 24
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/store/blob/coverage.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 65
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 39
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 17
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ]
+  },
+  "internal/store/blob/diff.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 72
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 14
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 5
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/store/blob/manifest.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      3
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 87
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 16
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 10
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      3
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 6
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/store/blobs.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 64
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 34
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 8
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ]
+  },
+  "internal/store/maintenance.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 61
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 19
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 17
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 4
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/store/runs.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      1,
+      2,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 9
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 75
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 23
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 12
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 3
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    },
+    {
+     "m": [
+      1,
+      2,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 9
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ]
+  },
+  "internal/store/store.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 36
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 16
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 5
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 1
+    }
+   ]
+  },
   "internal/tree/builder.go": {
    "methods_fully_covered": [
     {
@@ -11652,18 +14622,42 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 6
     }
    ],
+   "patch_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
+   "patch_statement_coverage": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
+   "patch_statement_methods_hit": [
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
    "statement_coverage": [
     {
      "m": [
       2
      ],
-     "n": 87
+     "n": 79
     },
     {
      "m": [
       0
      ],
-     "n": 6
+     "n": 5
     }
    ],
    "statement_methods_fully_covered": [
@@ -11886,148 +14880,282 @@ window.__NANOVISION_SUMMARY__ = {
      "n": 2
     }
    ]
+  },
+  "internal/vcs/git.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 9
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      2,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 44
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 19
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 14
+    },
+    {
+     "m": [
+      2
+     ],
+     "n": 2
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 9
+    },
+    {
+     "m": [
+      3
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      2,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 1
+    }
+   ]
+  },
+  "internal/vcs/perforce.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 4
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 13
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      1
+     ],
+     "n": 106
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 19
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 11
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 4
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      1
+     ],
+     "n": 13
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    }
+   ]
+  },
+  "internal/vcs/vcs.go": {
+   "methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ],
+   "statement_coverage": [
+    {
+     "m": [
+      3
+     ],
+     "n": 18
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 12
+    },
+    {
+     "m": [
+      0
+     ],
+     "n": 6
+    }
+   ],
+   "statement_methods_fully_covered": [
+    {
+     "m": [
+      0
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    },
+    {
+     "m": [
+      1,
+      3
+     ],
+     "n": 1
+    }
+   ],
+   "statement_methods_hit": [
+    {
+     "m": [
+      3
+     ],
+     "n": 3
+    },
+    {
+     "m": [
+      1
+     ],
+     "n": 2
+    }
+   ]
   }
  },
  "statusBands": {
-  "branch_coverage": {
-   "min": 50,
-   "max": 70
-  },
-  "methods_fully_covered": {
-   "min": 40,
-   "max": 60
-  },
   "patch_methods_hit": {
    "min": 80,
    "max": 90
   },
   "patch_statement_coverage": {
-   "min": 80,
-   "max": 90
+   "min": 70,
+   "max": 80
   },
   "statement_coverage": {
    "min": 60,
    "max": 75
   }
- },
- "review": {
-  "passed": false,
-  "checks": [
-   {
-    "key": "patch_statement_coverage",
-    "label": "Patch statement coverage",
-    "value": 59.96810207336523,
-    "threshold": 80,
-    "passed": false
-   },
-   {
-    "key": "max_changed_method_complexity",
-    "label": "Max changed-method complexity",
-    "value": 31,
-    "threshold": 15,
-    "passed": false
-   }
-  ],
-  "stats": {
-   "changedFiles": 12,
-   "methodsAdded": 104,
-   "methodsModified": 42,
-   "untestedChangedMethods": 39,
-   "patchStatementsValid": 627,
-   "patchStatementsCovered": 376,
-   "maxChangedComplexity": 31
-  },
-  "hotspots": [
-   {
-    "file": "cmd/main.go",
-    "method": "main",
-    "startLine": 388,
-    "diffStatus": "modified",
-    "complexity": 28,
-    "patchCoverage": 76.47058823529412,
-    "risk": 13.740740740740742
-   },
-   {
-    "file": "internal/reporter/htmlreact/details_generator.go",
-    "method": "(*HtmlReactReportBuilder).buildMethodDetails",
-    "startLine": 215,
-    "diffStatus": "modified",
-    "complexity": 31,
-    "patchCoverage": 42.857142857142854,
-    "risk": 12.020408163265305
-   },
-   {
-    "file": "cmd/main.go",
-    "method": "evaluateReviewGate",
-    "startLine": 336,
-    "diffStatus": "added",
-    "complexity": 11,
-    "patchCoverage": 17.647058823529413,
-    "risk": 9.058823529411764
-   },
-   {
-    "file": "internal/calculator/calculators.go",
-    "method": "(MethodDefectProbabilityCalculator).Calculate",
-    "startLine": 383,
-    "diffStatus": "added",
-    "complexity": 10,
-    "patchCoverage": 27.77777777777778,
-    "risk": 7.222222222222222
-   },
-   {
-    "file": "internal/reporter/htmlreact/builder.go",
-    "method": "(*HtmlReactReportBuilder).createSingleFileReport",
-    "startLine": 90,
-    "diffStatus": "modified",
-    "complexity": 7,
-    "patchCoverage": 0,
-    "risk": 7
-   },
-   {
-    "file": "internal/reporter/htmlreact/builder.go",
-    "method": "uniqueReportLabels",
-    "startLine": 222,
-    "diffStatus": "added",
-    "complexity": 9,
-    "patchCoverage": 25,
-    "risk": 6.75
-   },
-   {
-    "file": "internal/config/config.go",
-    "method": "(*AppConfig).mergeCliOverrides",
-    "startLine": 283,
-    "diffStatus": "modified",
-    "complexity": 28,
-    "patchCoverage": 50,
-    "risk": 6.3859649122807
-   },
-   {
-    "file": "internal/reporter/annotations/reporter.go",
-    "method": "(*builder).CreateReport",
-    "startLine": 34,
-    "diffStatus": "added",
-    "complexity": 6,
-    "patchCoverage": 0,
-    "risk": 6
-   },
-   {
-    "file": "internal/reporter/htmlreact/builder.go",
-    "method": "(*HtmlReactReportBuilder).buildMetricDefinitions",
-    "startLine": 538,
-    "diffStatus": "modified",
-    "complexity": 21,
-    "patchCoverage": 61.53846153846154,
-    "risk": 5.727272727272727
-   },
-   {
-    "file": "internal/config/config.go",
-    "method": "(*AppConfig).validate",
-    "startLine": 372,
-    "diffStatus": "modified",
-    "complexity": 11,
-    "patchCoverage": 50,
-    "risk": 4.277777777777777
-   }
-  ]
  }
 }

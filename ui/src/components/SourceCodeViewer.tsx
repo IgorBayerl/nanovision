@@ -40,12 +40,7 @@ export default function SourceCodeViewer({ fileName, lines, selection, reports }
                     return acc
                 }, []) ?? []
 
-            let status: LineStatus
-            if (totalHits > 0) {
-                status = line.branchInfo ? 'partial' : 'covered'
-            } else {
-                status = 'uncovered'
-            }
+            const status: LineStatus = totalHits > 0 ? 'covered' : 'uncovered'
 
             return { ...line, hits: totalHits, status, reportHits }
         })

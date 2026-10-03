@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -24,12 +25,10 @@ type MetricKey string
 
 const (
 	LineCoverage                 MetricKey = "line_coverage"
-	BranchCoverage               MetricKey = "branch_coverage"
 	MethodsHit                   MetricKey = "methods_hit"
 	MethodsFullyCovered          MetricKey = "methods_fully_covered"
 	PatchLineCoverage            MetricKey = "patch_line_coverage"
 	PatchMethodsHit              MetricKey = "patch_methods_hit"
-	MethodBranchCoverage         MetricKey = "method_branch_coverage"
 	StatementCoverage            MetricKey = "statement_coverage"
 	PatchStatementCoverage       MetricKey = "patch_statement_coverage"
 	StatementMethodsHit          MetricKey = "statement_methods_hit"
@@ -44,9 +43,7 @@ const (
 	CyclomaticComplexity         MetricKey = "cyclomatic_complexity"
 	MethodCrapScore              MetricKey = "method_crap_score"
 
-	MethodPatchCrapScore    MetricKey = "method_patch_crap_score"
-	MethodExposedRisk       MetricKey = "method_exposed_risk"
-	MethodDefectProbability MetricKey = "method_defect_probability"
+	MethodExposedRisk MetricKey = "method_exposed_risk"
 )
 
 // RegisterDefaultMetrics should be called during bootstrap to dynamically
@@ -134,8 +131,11 @@ type DiffPathMap struct {
 
 // DiffConfig holds all settings related to diff processing.
 type DiffConfig struct {
-	File         string        `yaml:"file"`
-	Strip        string        `yaml:"strip"`
+	File  string `yaml:"file"`
+	Strip string `yaml:"strip"`
+	// the HTML report holds only the changed files; for projects too big for
+	// a static report of every file
+	OnlyChanged  bool          `yaml:"only_changed"`
 	RootOverride string        `yaml:"root_override"`
 	PathMaps     []DiffPathMap `yaml:"path_maps"`
 }
@@ -158,13 +158,43 @@ type ReviewConfig struct {
 	FailOn string `yaml:"fail_on"`
 }
 
-// ProblemsConfig controls the Problems panel of the HTML reports. It does not
-// affect the Sarif and Annotations report types or the review.fail_on exit code.
-type ProblemsConfig struct {
-	// evaluate the problems and embed them in the report data
-	Generate bool `yaml:"generate"`
-	// render the panel; when false the problems are still embedded
-	Show bool `yaml:"show"`
+// HistoryConfig turns on the run store. An empty Store keeps history off.
+type HistoryConfig struct {
+	// the team server URL, or a folder for a local store (relative to the project root)
+	Store string `yaml:"store"`
+	// the project name on the team server; empty means the project folder name
+	Project string `yaml:"project"`
+	// keeps runs of different test suites or platforms apart
+	Profile string `yaml:"profile"`
+	// how many revisions back to search for a base run
+	MaxDistance int `yaml:"max_distance"`
+	// newest local runs a local store keeps for each stream
+	KeepLocal int `yaml:"keep_local"`
+}
+
+// IsServer reports whether the store is a team server rather than a local folder.
+func (h HistoryConfig) IsServer() bool {
+	s := strings.ToLower(h.Store)
+	return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://")
+}
+
+// VCSConfig selects the version control adapter. "none" keeps the old behavior.
+type VCSConfig struct {
+	Type string `yaml:"type"` // none (default), auto, git or perforce
+	// git only; empty means origin/HEAD, then origin/main, then origin/master
+	BaseBranch string `yaml:"base_branch"`
+}
+
+// RunFlags describe one run. They only come from flags, because they change
+// with every run.
+type RunFlags struct {
+	Kind         string // submit, review or local (default)
+	Revision     string // the revision this run measured
+	BaseRevision string // the revision to compare with
+	Stream       string // the stream or branch, when no VCS adapter knows it
+	ReviewID     string // the shelved changelist or pull request of a review run
+	Author       string
+	CIURL        string
 }
 
 type RawConfigInput struct {
@@ -181,12 +211,25 @@ type RawConfigInput struct {
 	Verbose        bool
 	DiffFile       string
 	DiffStrip      string
+	OnlyChanged    bool
 	StatusBands    []string
 	FileMetrics    string
 	MethodMetrics  string
 	IgnoreCache    bool
 	DefaultFilters string
 	FailOn         string
+
+	Store        string
+	Project      string
+	Profile      string
+	VCS          string
+	RunKind      string
+	Revision     string
+	BaseRevision string
+	Stream       string
+	ReviewID     string
+	Author       string
+	CIURL        string
 }
 
 type AppConfig struct {
@@ -210,14 +253,19 @@ type AppConfig struct {
 	IgnoreCache         bool               `yaml:"ignore_cache"`
 	Diff                DiffConfig         `yaml:"diff"`
 	Review              ReviewConfig       `yaml:"review"`
-	Problems            ProblemsConfig     `yaml:"problems"`
 	// URL query string applied on first load, e.g. "diff=changed&risk=danger"
-	DefaultFilters string `yaml:"default_filters"`
+	DefaultFilters string        `yaml:"default_filters"`
+	History        HistoryConfig `yaml:"history"`
+	VCS            VCSConfig     `yaml:"vcs"`
+	Run            RunFlags      `yaml:"-"`
 
 	FileFilterInstance filtering.IFilter
 	VerbosityLevel     logging.VerbosityLevel
 	InputPairs         []ReportInputPair
 }
+
+// a profile is part of URLs and store keys
+var profileNameRE = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
 
 // resolveInputPairs matches slices of report patterns and source directories into structured pairs.
 func resolveInputPairs(patterns []string, dirs []string) []ReportInputPair {
@@ -286,10 +334,12 @@ func GetDefaultConfig() *AppConfig {
 		Diff: DiffConfig{
 			Strip: "auto",
 		},
-		Problems: ProblemsConfig{
-			Generate: true,
-			Show:     true,
+		History: HistoryConfig{
+			Profile:     "default",
+			MaxDistance: 50,
+			KeepLocal:   20,
 		},
+		VCS: VCSConfig{Type: "none"},
 	}
 }
 
@@ -334,6 +384,9 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 	if cli.DiffStrip != "" {
 		c.Diff.Strip = cli.DiffStrip
 	}
+	if cli.OnlyChanged {
+		c.Diff.OnlyChanged = true
+	}
 	if cli.IgnoreCache {
 		c.IgnoreCache = true
 	}
@@ -342,6 +395,27 @@ func (c *AppConfig) mergeCliOverrides(cli RawConfigInput) {
 	}
 	if cli.FailOn != "" {
 		c.Review.FailOn = cli.FailOn
+	}
+	if cli.Store != "" {
+		c.History.Store = cli.Store
+	}
+	if cli.Project != "" {
+		c.History.Project = cli.Project
+	}
+	if cli.Profile != "" {
+		c.History.Profile = cli.Profile
+	}
+	if cli.VCS != "" {
+		c.VCS.Type = cli.VCS
+	}
+	c.Run = RunFlags{
+		Kind:         strings.ToLower(strings.TrimSpace(cli.RunKind)),
+		Revision:     strings.TrimSpace(cli.Revision),
+		BaseRevision: strings.TrimSpace(cli.BaseRevision),
+		Stream:       strings.TrimSpace(cli.Stream),
+		ReviewID:     strings.TrimSpace(cli.ReviewID),
+		Author:       strings.TrimSpace(cli.Author),
+		CIURL:        strings.TrimSpace(cli.CIURL),
 	}
 	if len(cli.StatusBands) > 0 {
 		if c.StatusBands == nil {
@@ -407,6 +481,23 @@ func (c *AppConfig) validate() error {
 		return fmt.Errorf("invalid review.fail_on value '%s' (expected 'error', 'warning' or 'never')", c.Review.FailOn)
 	}
 
+	if !profileNameRE.MatchString(c.History.Profile) {
+		return fmt.Errorf("invalid history.profile %q: use letters, digits, '.', '_' and '-'", c.History.Profile)
+	}
+	if c.History.MaxDistance < 0 {
+		return fmt.Errorf("history.max_distance must be 0 or more, got %d", c.History.MaxDistance)
+	}
+	switch strings.ToLower(c.VCS.Type) {
+	case "", "none", "auto", "git", "perforce":
+	default:
+		return fmt.Errorf("invalid vcs.type %q (expected 'none', 'auto', 'git' or 'perforce')", c.VCS.Type)
+	}
+	switch c.Run.Kind {
+	case "", "local", "submit", "review":
+	default:
+		return fmt.Errorf("invalid -run-kind %q (expected 'submit', 'review' or 'local')", c.Run.Kind)
+	}
+
 	if c.Diff.File != "" {
 		stripVal := strings.ToLower(c.Diff.Strip)
 		if stripVal != "auto" {
@@ -449,6 +540,14 @@ func (c *AppConfig) computeDerivedFields() error {
 	c.ActiveMethodMetrics = make(map[MetricKey]bool, len(c.MethodMetrics))
 	for _, m := range c.MethodMetrics {
 		c.ActiveMethodMetrics[m] = true
+	}
+
+	c.VCS.Type = strings.ToLower(c.VCS.Type)
+	if c.VCS.Type == "" {
+		c.VCS.Type = "none"
+	}
+	if c.Run.Kind == "" {
+		c.Run.Kind = "local"
 	}
 
 	c.Review.FailOn = strings.ToLower(c.Review.FailOn)

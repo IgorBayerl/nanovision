@@ -3,8 +3,13 @@ import { useEffect } from 'react'
 // The report selection is shared by every screen, so the details page's value wins.
 const SHARED_PARAM = 'reports'
 
+// A server shows every run at /runs/<id>; its file pages live below that path.
+const serverRun = () =>
+    window.__NANOVISION_MODE__ === 'server' ? window.location.pathname.match(/^\/runs\/\d+/)?.[0] : undefined
+
 // Keyed by the summary document, so two reports open in one tab keep their own filters.
-const storageKey = () => `nanovision-summary-query:${new URL('./index.html', window.location.href).pathname}`
+const storageKey = () =>
+    `nanovision-summary-query:${serverRun() ?? new URL('./index.html', window.location.href).pathname}`
 
 const remember = () => {
     try {
@@ -43,7 +48,8 @@ export function summaryHref(): string {
     } catch {
         // storage blocked
     }
-    if (saved === null) return `./index.html${window.location.search}`
+    const summaryPath = serverRun() ?? './index.html'
+    if (saved === null) return `${summaryPath}${window.location.search}`
 
     const params = new URLSearchParams(saved)
     const shared = new URLSearchParams(window.location.search).get(SHARED_PARAM)
@@ -52,5 +58,5 @@ export function summaryHref(): string {
 
     // URLSearchParams escapes commas; the filters read them back either way.
     const query = params.toString().replaceAll('%2C', ',')
-    return `./index.html${query ? `?${query}` : ''}`
+    return `${summaryPath}${query ? `?${query}` : ''}`
 }

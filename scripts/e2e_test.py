@@ -23,6 +23,9 @@ import sys
 import tempfile
 from dataclasses import dataclass, field
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import e2e_history  # noqa: E402
+
 # ==============================================================================
 #  Configuration: Paths and Constants
 # ==============================================================================
@@ -121,7 +124,6 @@ DEMO_PROJECT_TESTS = [
             f"-report={CPP_GCOV_PATTERN};{CPP_COBERTURA_XML}",
             f"-sourcedirs={CPP_PROJECT_DIR};{CPP_PROJECT_DIR}",
             "-threshold=line_coverage=40..80",
-            "-threshold=branch_coverage=30..70",
         ],
     ),
     TestCase(
@@ -180,8 +182,7 @@ def run_command(command, working_dir=SCRIPT_ROOT, suppress_output=True, critical
 
 def clean_directory(path):
     """Removes a directory and its contents, then recreates it."""
-    if os.path.exists(path):
-        shutil.rmtree(path)
+    e2e_history.remove_tree(path)
     os.makedirs(path, exist_ok=True)
 
 def get_platform_and_binary_name():
@@ -270,7 +271,7 @@ def build_tool(platform, cover=False):
     build_cmd = ["go", "build", "-mod=vendor"]
     if cover:
         build_cmd.append("-cover")
-    build_cmd.extend(["-o", binary_path, os.path.join(SCRIPT_ROOT, "cmd/main.go")])
+    build_cmd.extend(["-o", binary_path, os.path.join(SCRIPT_ROOT, "cmd")])
     run_command(build_cmd, critical=True, suppress_output=False)
     print("--- Build successful ---")
 
@@ -349,7 +350,14 @@ def main():
     parser.add_argument("-sc", "--self-cover", action="store_true", help="Build with coverage and generate a coverage report for the tool itself.")
     parser.add_argument("--report-types", default="Html,TextSummary,Lcov,RawJson", help="Comma-separated list of report types to generate.")
     parser.add_argument("--diff-target", help="Explicit git reference to diff against (e.g. HEAD~3, origin/main). Overrides auto-detection.")
+    parser.add_argument("--history", action="store_true", help="Also check run history: the run store, the delta against the base run, and the team server.")
+    parser.add_argument("--serve", action="store_true", help="Run the history checks, then serve their store at http://localhost:7070 until Ctrl+C.")
+    parser.add_argument("--showcase", action="store_true", help="Everything in one go: the e2e tests, the self-coverage report, the history checks, nanovision's own delta against main, then serve the store at http://localhost:7070.")
     args = parser.parse_args()
+    if args.showcase:
+        args.self_cover = args.serve = True
+    if args.serve:
+        args.history = True
 
     platform, binary_name = get_platform_and_binary_name()
     binary_path = os.path.join(BINARY_DIR, binary_name)
@@ -376,6 +384,10 @@ def main():
 
         primary_tests_failed = any("FAILED" in r["status"] for r in e2e_results)
 
+        # before the self-coverage workflow, so its coverage counts too
+        if args.history:
+            all_results.extend(e2e_history.run_history_workflow(binary_path))
+
         if args.self_cover:
             if primary_tests_failed:
                 print("\n--- SKIPPING self-coverage workflow because primary E2E tests failed. ---", file=sys.stderr)
@@ -384,15 +396,14 @@ def main():
                 self_cover_cli_args = global_cli_args.copy()
                 diff_file_path = generate_diff_file(args.diff_target)
                 if diff_file_path:
-                    # With a diff available, also generate the changelist-only
-                    # review report (published at <output>/review/index.html).
-                    self_cover_cli_args = [f"-reporttypes={args.report_types},HtmlReview"]
+                    # with a diff the report gets its Changes tab
                     self_cover_cli_args.append(f"-diff={diff_file_path}")
-                    for case in SELF_COVERAGE_TESTS:
-                        case.output_files = case.output_files + [os.path.join("review", "index.html")]
 
                 self_cover_results = run_self_coverage_workflow(binary_path, self_cover_cli_args, verbose=args.verbose)
                 all_results.extend(self_cover_results)
+
+                if args.showcase:
+                    all_results.extend(e2e_history.record_self_delta(binary_path, diff_file_path))
 
     finally:
         if temp_cover_dir and os.path.exists(temp_cover_dir):
@@ -400,6 +411,9 @@ def main():
             shutil.rmtree(temp_cover_dir)
 
     print_summary_report(all_results)
+
+    if args.serve:
+        e2e_history.serve_store(binary_path)
 
     if any("FAILED" in r["status"] for r in all_results):
         print("\nOne or more tasks failed. Exiting with error status.")

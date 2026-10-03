@@ -40,8 +40,7 @@ func TestCalculateStatementCoverage(t *testing.T) {
 		},
 	}
 
-	enricher := &Enricher{}
-	enricher.applyAnalysisToFileNode(fileNode, analysis)
+	ApplyAnalysis(fileNode, analysis)
 
 	if fileNode.Metrics.StatementsValid != 2 {
 		t.Errorf("expected 2 valid statements in file, got %d", fileNode.Metrics.StatementsValid)

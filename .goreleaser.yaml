@@ -6,7 +6,7 @@ dist: bin
 builds:
   - id: linux-amd64
     binary: nanovision
-    main: ./cmd/main.go
+    main: ./cmd
     goos:
       - linux
     goarch:
@@ -22,7 +22,7 @@ builds:
 
   - id: linux-arm64
     binary: nanovision
-    main: ./cmd/main.go
+    main: ./cmd
     goos:
       - linux
     goarch:
@@ -38,7 +38,7 @@ builds:
 
   - id: windows-amd64
     binary: nanovision
-    main: ./cmd/main.go
+    main: ./cmd
     goos:
       - windows
     goarch:
@@ -56,7 +56,7 @@ builds:
   # does not include the aarch64-w64-mingw32-gcc compiler by default.
   # - id: windows-arm64
   #   binary: nanovision
-  #   main: ./cmd/main.go
+  #   main: ./cmd
   #   goos:
   #     - windows
   #   goarch:

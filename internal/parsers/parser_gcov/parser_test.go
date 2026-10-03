@@ -51,7 +51,7 @@ branch  1 never executed
 		asserter      func(t *testing.T, result *parsers.ParserResult, err error)
 	}{
 		{
-			name:          "Golden Path - Valid report with branch coverage",
+			name:          "Golden Path - Valid report; its branch lines are ignored",
 			reportContent: gcovReportContent,
 			sourceFiles: map[string]string{
 				absoluteSourcePath: "// C++ source content",
@@ -75,19 +75,6 @@ branch  1 never executed
 				assert.Equal(t, 1, fileCov.Lines[18].Hits)
 				assert.Equal(t, 2, fileCov.Lines[20].Hits)
 				assert.Equal(t, 0, fileCov.Lines[30].Hits) // '#####' is 0 hits
-
-				// Assert branch metrics
-				// Line 17: two branches, both "taken"
-				assert.Equal(t, 2, fileCov.Lines[17].TotalBranches)
-				assert.Equal(t, 2, fileCov.Lines[17].CoveredBranches)
-
-				// Line 24: two branches, both "taken"
-				assert.Equal(t, 2, fileCov.Lines[24].TotalBranches)
-				assert.Equal(t, 2, fileCov.Lines[24].CoveredBranches)
-
-				// Line 26: two branches, one "taken", one "never executed"
-				assert.Equal(t, 2, fileCov.Lines[26].TotalBranches)
-				assert.Equal(t, 1, fileCov.Lines[26].CoveredBranches)
 			},
 		},
 		{

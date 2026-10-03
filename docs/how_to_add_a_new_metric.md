@@ -52,7 +52,7 @@ Add a new `const` entry in the `MetricKey` block:
 ```diff
  const (
      LineCoverage                 MetricKey = "line_coverage"
-     BranchCoverage               MetricKey = "branch_coverage"
+     StatementCoverage            MetricKey = "statement_coverage"
      // ... existing keys ...
 +    MyNewMetric                  MetricKey = "my_new_metric"
  )
@@ -64,7 +64,7 @@ If the metric should be shown **by default**, add it to `DefaultFileMetrics` or 
 
 ```diff
  var DefaultFileMetrics = []MetricKey{
-     BranchCoverage,
+     StatementCoverage,
      MethodsHit,
      // ...
 +    MyNewMetric,
@@ -184,7 +184,7 @@ func (MyNewMetricEvaluator) SupportedScopes() status.MetricScope {
 
 func (MyNewMetricEvaluator) IsApplicable(_ status.Capabilities) bool {
     // Return true if always applicable, or check caps for conditional metrics.
-    // Example for conditional: return caps.HasBranchCoverage
+    // Example for conditional: return caps.HasStatementCoverage
     return true
 }
 
@@ -222,7 +222,6 @@ If your evaluator's `IsApplicable` depends on a new capability flag, add it to:
 
 ```diff
  type Capabilities struct {
-     HasBranchCoverage    bool
      HasMethodCoverage    bool
      HasStatementCoverage bool
 +    HasMyNewMetric       bool

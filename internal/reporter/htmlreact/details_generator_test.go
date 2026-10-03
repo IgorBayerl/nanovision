@@ -61,7 +61,7 @@ func TestBuildLineDetails(t *testing.T) {
 		},
 		Lines: map[int]model.LineMetrics{
 			1: {Hits: 5, ReportHits: []int{5, 0}},
-			2: {Hits: 0, ReportHits: []int{0, 0}, TotalBranches: 2, CoveredBranches: 1},
+			2: {Hits: 0, ReportHits: []int{0, 0}},
 			3: {Hits: -1}, // Not coverable
 		},
 	}
@@ -76,11 +76,9 @@ func TestBuildLineDetails(t *testing.T) {
 	assert.Equal(t, StatusCovered, details[0].Status)
 	assert.Equal(t, []int{5, 0}, details[0].Hits)
 
-	// Line 2: Modified, Uncovered, Partial Branches
+	// Line 2: Modified, Uncovered
 	assert.Equal(t, "modified", details[1].DiffStatus)
-	assert.Equal(t, StatusPartial, details[1].Status) // due to branches (1 of 2)
-	assert.NotNil(t, details[1].BranchInfo)
-	assert.Equal(t, 1, details[1].BranchInfo.Covered)
+	assert.Equal(t, StatusUncovered, details[1].Status)
 
 	// Line 3: Not coverable
 	assert.Equal(t, "", details[2].DiffStatus)
@@ -92,15 +90,12 @@ func TestBuildFileTotals(t *testing.T) {
 		config: &config.AppConfig{
 			ActiveFileMetrics: map[config.MetricKey]bool{
 				config.LineCoverage:            true,
-				config.BranchCoverage:          true,
 				config.PatchStatementCoverage:  true,
 				config.MaxCyclomaticComplexity: true,
 			},
 		},
 	}
 
-	totalBranches := 10
-	coveredBranches := 5
 	maxCyclo := 12
 
 	fileNode := &model.FileNode{
@@ -108,8 +103,6 @@ func TestBuildFileTotals(t *testing.T) {
 			TotalLines:      150,
 			LinesValid:      100,
 			LinesCovered:    50,
-			BranchesValid:   10,
-			BranchesCovered: 5,
 			StatementsValid: 1,
 		},
 		Diff: &model.DiffInfo{}, // Trigger patch generation
@@ -124,14 +117,11 @@ func TestBuildFileTotals(t *testing.T) {
 	}}
 	calculator.CalculateTree(tree, builder.config.ActiveFileMetrics, nil)
 
-	totalsData := builder.buildFileTotals(fileNode, totalBranches, coveredBranches, maxCyclo)
+	totalsData := builder.buildFileTotals(fileNode, maxCyclo)
 
 	// Explicit assignment tests
 	assert.NotNil(t, totalsData.LineCoverage)
 	assert.Equal(t, 150, totalsData.LineCoverage.Total)
-
-	assert.NotNil(t, totalsData.MethodBranchCoverage)
-	assert.Equal(t, 10, totalsData.MethodBranchCoverage.Total)
 
 	assert.NotNil(t, totalsData.MaxCyclomaticComplexity)
 	assert.Equal(t, 12.0, totalsData.MaxCyclomaticComplexity.Value)

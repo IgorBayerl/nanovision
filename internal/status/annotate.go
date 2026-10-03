@@ -92,8 +92,6 @@ func methodToCoverageMetrics(m *model.MethodMetrics) model.CoverageMetrics {
 	cm := model.CoverageMetrics{
 		LinesValid:             m.LinesValid,
 		LinesCovered:           m.LinesCovered,
-		BranchesValid:          m.BranchesValid,
-		BranchesCovered:        m.BranchesCovered,
 		StatementsValid:        m.StatementsValid,
 		StatementsCovered:      m.StatementsCovered,
 		PatchLinesValid:        m.PatchLinesValid,

@@ -33,6 +33,9 @@ func generateDetailsPages(b *HtmlReactReportBuilder, tree *model.SummaryTree) er
 	}
 
 	for _, fileNode := range fileMap {
+		if b.onlyChanged && !isChangedFile(fileNode) {
+			continue
+		}
 		detailsData, err := b.transformFileNodeToDetails(tree, fileNode)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: could not transform details for '%s': %v\n", fileNode.Path, err)
@@ -50,25 +53,42 @@ func generateDetailsPages(b *HtmlReactReportBuilder, tree *model.SummaryTree) er
 // transformFileNodeToDetails executes a clean pipeline to assemble the view model.
 // Cyclomatic Complexity: 1
 func (b *HtmlReactReportBuilder) transformFileNodeToDetails(tree *model.SummaryTree, fileNode *model.FileNode) (*detailsV1, error) {
-	// 1. I/O Phase
-	sourceLines := b.readSourceLines(fileNode)
+	return b.detailsWithSource(tree, fileNode, b.readSourceLines(fileNode))
+}
+
+// detailsWithSource builds the details of a file whose source lines are
+// already known; nil lines give empty ones, as for a file without source.
+func (b *HtmlReactReportBuilder) detailsWithSource(tree *model.SummaryTree, fileNode *model.FileNode, sourceLines []string) (*detailsV1, error) {
+	if sourceLines == nil {
+		sourceLines = generateEmptyLines(fileNode)
+	}
+	generatedAt := time.Now().UTC()
+	metadata := []MetadataItem{}
+	if b.view != nil {
+		if !b.view.GeneratedAt.IsZero() {
+			generatedAt = b.view.GeneratedAt.UTC()
+		}
+		if b.view.Metadata != nil {
+			metadata = b.view.Metadata
+		}
+	}
 
 	// 2. Data Filtering Phase
 	reportsList := buildDetailsReports(tree, fileNode)
 
 	// 3. Line & Method Mapping Phase
 	detailsLines := b.buildLineDetails(fileNode, sourceLines, len(tree.ReportNames))
-	detailsMethods, totalBranches, coveredBranches, maxCyclo := b.buildMethodDetails(fileNode)
+	detailsMethods, maxCyclo := b.buildMethodDetails(fileNode)
 
 	// 4. Totals Calculation Phase
-	totalsData := b.buildFileTotals(fileNode, totalBranches, coveredBranches, maxCyclo)
+	totalsData := b.buildFileTotals(fileNode, maxCyclo)
 
 	return &detailsV1{
 		SchemaVersion:     1,
-		GeneratedAt:       time.Now().UTC().Format(time.RFC3339),
+		GeneratedAt:       generatedAt.Format(time.RFC3339),
 		Title:             strings.Join(tree.ParserNames, " | "),
 		FileName:          fileNode.Path,
-		Metadata:          []metadataItem{},
+		Metadata:          metadata,
 		Totals:            totalsData,
 		MetricDefinitions: b.buildMetricDefinitions(),
 		MetricOrder:       b.metricOrder(),
@@ -187,13 +207,6 @@ func (b *HtmlReactReportBuilder) buildLineDetails(fileNode *model.FileNode, sour
 			}
 
 			ld.Hits = denseHits(lm.ReportHits, totalReports)
-
-			if lm.TotalBranches > 0 {
-				ld.BranchInfo = &branchInfo{Covered: lm.CoveredBranches, Total: lm.TotalBranches}
-				if lm.CoveredBranches > 0 && lm.CoveredBranches < lm.TotalBranches {
-					ld.Status = StatusPartial
-				}
-			}
 		}
 
 		detailsLines[i] = ld
@@ -213,9 +226,9 @@ func denseHits(reportHits []int, totalReports int) []int {
 	return dense
 }
 
-func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([]methodDetail, int, int, int) {
+func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([]methodDetail, int) {
 	var detailsMethods []methodDetail
-	var totalMethodBranches, coveredMethodBranches, maxCyclo int
+	var maxCyclo int
 
 	for _, method := range fileNode.Methods {
 		md := methodDetail{
@@ -237,10 +250,6 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 					if det, ok := calcData.(model.CoverageDetail); ok {
 						md.Metrics[MethodUILineCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
 					}
-				case config.MethodBranchCoverage:
-					if det, ok := calcData.(model.CoverageDetail); ok {
-						md.Metrics[MethodUIBranchCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
-					}
 				case config.MethodPatchLineCoverage:
 					if det, ok := calcData.(model.CoverageDetail); ok {
 						if md.DiffStatus != "" {
@@ -261,30 +270,14 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 					if det, ok := calcData.(model.ScoreDetail); ok {
 						md.Metrics[MethodUICrapScore] = methodMetric{Value: fmt.Sprintf("%.2f", det.Value)}
 					}
-				case config.MethodPatchCrapScore:
-					if det, ok := calcData.(model.ScoreDetail); ok {
-						if md.DiffStatus != "" {
-							md.Metrics[MethodUIPatchCrapScore] = methodMetric{Value: fmt.Sprintf("%.2f", det.Value)}
-						}
-					}
 				case config.MethodExposedRisk:
 					if det, ok := calcData.(model.ScoreDetail); ok {
 						md.Metrics[MethodUIExposedRisk] = methodMetric{Value: fmt.Sprintf("%.2f", det.Value)}
-					}
-				case config.MethodDefectProbability:
-					if det, ok := calcData.(model.ScoreDetail); ok {
-						if md.DiffStatus != "" {
-							md.Metrics[MethodUIDefectProbability] = methodMetric{Value: fmt.Sprintf("%.0f", det.Value)}
-						}
 					}
 				}
 			}
 		}
 
-		if method.BranchesValid > 0 {
-			totalMethodBranches += method.BranchesValid
-			coveredMethodBranches += method.BranchesCovered
-		}
 		if method.CyclomaticComplexity != nil && *method.CyclomaticComplexity > maxCyclo {
 			maxCyclo = *method.CyclomaticComplexity
 		}
@@ -296,14 +289,14 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 		return detailsMethods[i].StartLine < detailsMethods[j].StartLine
 	})
 
-	return detailsMethods, totalMethodBranches, coveredMethodBranches, maxCyclo
+	return detailsMethods, maxCyclo
 }
 
 // -----------------------------------------------------------------------------
 // Pipeline Stage 4: Totals Assembly
 // -----------------------------------------------------------------------------
 
-func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, totalBranches, coveredBranches, maxCyclo int) totals {
+func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, maxCyclo int) totals {
 	fileMetrics := b.buildMetricsMap(fileNode.Metrics)
 
 	t := totals{
@@ -315,7 +308,6 @@ func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, total
 	// Dynamic assignment helpers heavily reduce Cyclomatic Complexity here
 	assignLineMetric(&t.StatementCoverage, fileMetrics, string(config.StatementCoverage))
 	assignLineMetric(&t.LineCoverage, fileMetrics, string(config.LineCoverage))
-	assignBranchMetric(&t.BranchCoverage, fileMetrics, string(config.BranchCoverage))
 	assignMethodHitMetric(&t.MethodsHit, fileMetrics, string(config.MethodsHit))
 	assignMethodFullMetric(&t.MethodsFullyCovered, fileMetrics, string(config.MethodsFullyCovered))
 	assignLineMetric(&t.PatchStatementCoverage, fileMetrics, string(config.PatchStatementCoverage))
@@ -325,14 +317,6 @@ func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, total
 	// Overrides for specific edge cases
 	if b.config.ActiveFileMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil && t.PatchStatementCoverage == nil && fileNode.Metrics.StatementsValid > 0 {
 		t.PatchStatementCoverage = &lineCoverageDetail{Percentage: 100.0} // Fallback to safe when modified but no statements changed
-	}
-
-	if totalBranches > 0 && b.config.ActiveFileMetrics[config.BranchCoverage] {
-		t.MethodBranchCoverage = &branchCoverageDetail{
-			Covered:    coveredBranches,
-			Total:      totalBranches,
-			Percentage: utils.CalculatePercentage(coveredBranches, totalBranches, 2),
-		}
 	}
 
 	if maxCyclo > 0 && b.config.ActiveFileMetrics[config.MaxCyclomaticComplexity] {
@@ -346,12 +330,6 @@ func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, total
 
 func assignLineMetric(target **lineCoverageDetail, fm metricsMap, key string) {
 	if val, ok := fm[key].(lineCoverageDetail); ok {
-		*target = &val
-	}
-}
-
-func assignBranchMetric(target **branchCoverageDetail, fm metricsMap, key string) {
-	if val, ok := fm[key].(branchCoverageDetail); ok {
 		*target = &val
 	}
 }

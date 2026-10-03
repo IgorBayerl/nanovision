@@ -2,7 +2,7 @@ package htmlreact
 
 import (
 	"github.com/IgorBayerl/nanovision/internal/aggregator"
-	"github.com/IgorBayerl/nanovision/internal/diagnostics"
+	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/review"
 )
 
@@ -18,12 +18,6 @@ type lineCoverageDetail struct {
 	Covered    int     `json:"covered"`
 	Uncovered  int     `json:"uncovered"`
 	Coverable  int     `json:"coverable"`
-	Total      int     `json:"total"`
-	Percentage float64 `json:"percentage"`
-}
-
-type branchCoverageDetail struct {
-	Covered    int     `json:"covered"`
 	Total      int     `json:"total"`
 	Percentage float64 `json:"percentage"`
 }
@@ -51,12 +45,9 @@ const (
 	MethodUILineCoverage         = "b_line_coverage"
 	MethodUIPatchStmtCoverage    = "c_patch_statement_coverage"
 	MethodUIPatchLineCoverage    = "d_patch_line_coverage"
-	MethodUIBranchCoverage       = "e_branch_coverage"
 	MethodUICyclomaticComplexity = "f_cyclomatic_complexity"
 	MethodUICrapScore            = "g_crap_score"
-	MethodUIPatchCrapScore       = "h_patch_crap_score"
 	MethodUIExposedRisk          = "i_exposed_risk"
-	MethodUIDefectProbability    = "j_defect_probability"
 )
 
 type metricsMap map[string]any
@@ -64,10 +55,8 @@ type metricsMap map[string]any
 type totals struct {
 	StatementCoverage       *lineCoverageDetail        `json:"statement_coverage,omitempty"`
 	LineCoverage            *lineCoverageDetail        `json:"line_coverage,omitempty"`
-	BranchCoverage          *branchCoverageDetail      `json:"branch_coverage,omitempty"`
 	MethodsHit              *methodsHitDetail          `json:"methods_hit,omitempty"`
 	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
-	MethodBranchCoverage    *branchCoverageDetail      `json:"method_branch_coverage,omitempty"`
 	MaxCyclomaticComplexity *scoreDetail               `json:"max_cyclomatic_complexity,omitempty"`
 
 	// Patch / diff-based metrics.
@@ -107,21 +96,14 @@ const (
 	StatusCovered      lineStatus = "covered"
 	StatusUncovered    lineStatus = "uncovered"
 	StatusNotCoverable lineStatus = "not-coverable"
-	StatusPartial      lineStatus = "partial"
 )
 
-type branchInfo struct {
-	Covered int `json:"covered"`
-	Total   int `json:"total"`
-}
-
 type lineDetail struct {
-	LineNumber int         `json:"lineNumber"`
-	Content    string      `json:"content"`
-	Status     lineStatus  `json:"status"`
-	Hits       []int       `json:"hits,omitempty"`
-	BranchInfo *branchInfo `json:"branchInfo,omitempty"`
-	DiffStatus string      `json:"diffStatus,omitempty"`
+	LineNumber int        `json:"lineNumber"`
+	Content    string     `json:"content"`
+	Status     lineStatus `json:"status"`
+	Hits       []int      `json:"hits,omitempty"`
+	DiffStatus string     `json:"diffStatus,omitempty"`
 }
 
 type methodMetric struct {
@@ -156,7 +138,8 @@ type statusBand struct {
 	Max float64 `json:"max"`
 }
 
-type metadataItem struct {
+// MetadataItem is one line of the information block of a report page.
+type MetadataItem struct {
 	Label    string `json:"label"`
 	Value    any    `json:"value"`
 	SizeHint string `json:"sizeHint,omitempty"`
@@ -190,15 +173,17 @@ type summaryV1 struct {
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	// file_metrics in configured order; the UI lists metrics in this order
 	MetricOrder []string       `json:"metricOrder,omitempty"`
-	Metadata    []metadataItem `json:"metadata,omitempty"`
-	// flat list of problems (coverage warnings/errors)
-	Diagnostics []diagnostics.Diagnostic `json:"diagnostics,omitempty"`
-	// problems.show turned off: the diagnostics stay in the data, the panel is not drawn
-	HideProblems bool `json:"hideProblems,omitempty"`
+	Metadata    []MetadataItem `json:"metadata,omitempty"`
 	// URL query string applied on first load, e.g. "diff=changed&risk=danger"
 	DefaultFilters string `json:"defaultFilters,omitempty"`
-	// gate verdict from review.Evaluate; set only for changelist reports
+	// the verdict on the changed code, for a run measured with a diff
 	Review *review.Result `json:"review,omitempty"`
+	// the delta against the base run, when one was found
+	Comparison *model.Comparison `json:"comparison,omitempty"`
+	// the revisions being compared, as rows for the side panel
+	Comparing []MetadataItem `json:"comparing,omitempty"`
+	// the nodes hold only the changed files; the totals cover the whole run
+	OnlyChanged bool `json:"onlyChanged,omitempty"`
 	// every parsed report, indexed exactly as the masks in ReportIndexes
 	Reports []report `json:"reports,omitempty"`
 	// file path -> compressed per-report coverage; absent when a single report
@@ -212,7 +197,7 @@ type detailsV1 struct {
 	GeneratedAt       string            `json:"generatedAt"`
 	Title             string            `json:"title"`
 	FileName          string            `json:"fileName"`
-	Metadata          []metadataItem    `json:"metadata"`
+	Metadata          []MetadataItem    `json:"metadata"`
 	Totals            totals            `json:"totals"`
 	MetricDefinitions metricDefinitions `json:"metricDefinitions"`
 	// file_metrics in configured order; the UI lists metrics in this order

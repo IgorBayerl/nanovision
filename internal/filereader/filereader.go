@@ -2,6 +2,7 @@ package filereader
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -119,4 +120,44 @@ func ReadLinesInFile(filePath string) ([]string, error) {
 		return nil, err
 	}
 	return lines, nil
+}
+
+// DecodeLines splits file content into lines exactly as ReadLinesInFile does,
+// for content that does not come from disk, like a source text in the run store.
+func DecodeLines(content []byte) ([]string, error) {
+	var reader io.Reader = bytes.NewReader(content)
+	if enc := detectEncodingFromBOM(content); enc != nil {
+		reader = transform.NewReader(reader, enc.NewDecoder())
+	}
+
+	var lines []string
+	scanner := bufio.NewScanner(reader)
+	buf := make([]byte, bufio.MaxScanTokenSize)
+	scanner.Buffer(buf, maxLineLength)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		if errors.Is(err, bufio.ErrTooLong) {
+			return nil, fmt.Errorf("line exceeds maximum allowed length of 50MB: %w", err)
+		}
+		return nil, err
+	}
+	return lines, nil
+}
+
+func detectEncodingFromBOM(bom []byte) encoding.Encoding {
+	var name string
+	switch {
+	case len(bom) >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF:
+		name = "utf-8"
+	case len(bom) >= 2 && bom[0] == 0xFF && bom[1] == 0xFE:
+		name = "utf-16le"
+	case len(bom) >= 2 && bom[0] == 0xFE && bom[1] == 0xFF:
+		name = "utf-16be"
+	default:
+		name = "utf-8"
+	}
+	enc, _ := htmlindex.Get(name)
+	return enc
 }

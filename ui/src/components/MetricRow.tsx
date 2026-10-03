@@ -32,12 +32,19 @@ type MetricRowProps = {
     band?: StatusBand
     /** The report configures bands at all, so a metric without one says so. */
     hasBands?: boolean
+    /** Change against the base run, in percentage points. */
+    delta?: number
+}
+
+const formatDelta = (delta: number) => {
+    const rounded = Number(delta.toFixed(2))
+    return `${rounded > 0 ? '+' : rounded === 0 ? '±' : ''}${rounded.toFixed(2)}`
 }
 
 const isScoreDetail = (d: CoverageDetail | ScoreDetail | undefined): d is ScoreDetail =>
     !!d && 'value' in d && !('percentage' in d)
 
-export default function MetricRow({ label, details, status, definition, band, hasBands }: MetricRowProps) {
+export default function MetricRow({ label, details, status, definition, band, hasBands, delta }: MetricRowProps) {
     if (definition?.kind === 'value' || isScoreDetail(details)) {
         const value = (details as ScoreDetail | undefined)?.value
         const display = value === undefined ? 'N/A' : Number.isInteger(value) ? String(value) : value.toFixed(2)
@@ -58,8 +65,21 @@ export default function MetricRow({ label, details, status, definition, band, ha
         <div className="flex flex-col gap-2 py-3.5 first:pt-2 last:pb-0">
             <div className="flex items-center justify-between gap-3">
                 <RowLabel label={label} status={status} description={definition?.description} />
-                <span className="font-semibold text-foreground text-xl tabular-nums leading-none">
-                    {pct !== undefined ? `${Math.round(pct)}%` : 'N/A'}
+                <span className="flex items-baseline gap-2">
+                    {delta !== undefined && (
+                        <span
+                            className={cn(
+                                'font-medium text-xs tabular-nums leading-none',
+                                delta > 0 ? 'text-covered' : delta < 0 ? 'text-uncovered' : 'text-muted-foreground',
+                            )}
+                            title="Change against the base run, in percentage points"
+                        >
+                            {formatDelta(delta)}
+                        </span>
+                    )}
+                    <span className="font-semibold text-foreground text-xl tabular-nums leading-none">
+                        {pct !== undefined ? `${Math.round(pct)}%` : 'N/A'}
+                    </span>
                 </span>
             </div>
 

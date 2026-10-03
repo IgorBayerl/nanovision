@@ -25,8 +25,8 @@ output_dir: "reports/nanovision_self_coverage_full"
 
 # The types of reports to generate.
 report_types:
-  - "HtmlReview"    # changelist only, needs diff.file. goes to <output_dir>/review/
-  # - "HtmlUnified"
+  - "Html"          # opens on the Changes tab when the run has a diff or a base run
+  # - "HtmlUnified" # the same report as one file
   - "TextSummary"
   - "Lcov"
   - "RawJson"
@@ -63,7 +63,6 @@ status_bands:
   # file and directory metrics
   # line_coverage: "60..75"
   statement_coverage: "60..75"
-  branch_coverage: "50..70"
   # methods_hit: "60..80"
   # methods_fully_covered: "40..60"
   # patch_line_coverage: "80..90"
@@ -83,15 +82,15 @@ status_bands:
 
 # filters applied on first open, unless the URL already carries a query string.
 # join them with '&':
-#   diff=changed   only changed files and methods
 #   risk=danger    only danger rows
 #   q=src/         path search
 #   cols=statement_coverage,max_cyclomatic_complexity   visible columns
-# default_filters: "diff=changed&risk=danger"
+# default_filters: "risk=danger&q=src/"
 
 diff:
   file: "my_changes.diff" # also set with -diff
   strip: "auto"           # "auto", or 0-6 leading path components to strip
+  # only_changed: true    # the HTML report holds only the changed files. also set with -only-changed
 
 review:
   gate:                                # thresholds for the pass/fail verdict
@@ -101,16 +100,10 @@ review:
   # when to exit non-zero: "error", "warning" or "never". also set with -fail-on
   fail_on: "never"
 
-# the Problems panel of the HTML reports
-problems:
-  generate: true  # evaluate the problems and embed them in the report data
-  show: true      # show the panel; when false the problems are still embedded
-
 # metrics shown in the reports, see docs/evaluator_reference.md
 file_metrics:
   # - "line_coverage"
   - "statement_coverage"
-  - "branch_coverage"
   - "methods_hit"
   - "methods_fully_covered"
   # - "patch_line_coverage"
@@ -125,12 +118,9 @@ method_metrics:
   # - "method_line_coverage"
   - "method_statement_coverage"
   - "cyclomatic_complexity"
-  - "method_branch_coverage"
   # - "method_patch_line_coverage"
   - "method_patch_statement_coverage"
   - "method_crap_score"
-  - "method_patch_crap_score"
   - "method_exposed_risk"
-  - "method_defect_probability"
 
 ignore_cache: true

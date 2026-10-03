@@ -100,30 +100,6 @@ func writeLcovFileSection(writer *bufio.Writer, file *model.FileNode) error {
 		return err
 	}
 
-	brf := file.Metrics.BranchesValid
-	brh := file.Metrics.BranchesCovered
-	if brf > 0 {
-		for lineNum, lineMetrics := range file.Lines {
-			if lineMetrics.TotalBranches > 0 {
-				for i := 0; i < lineMetrics.TotalBranches; i++ {
-					hits := "-"
-					if i < lineMetrics.CoveredBranches {
-						hits = "1"
-					}
-					if _, err := writer.WriteString(fmt.Sprintf("BRDA:%d,%d,%d,%s\n", lineNum, 0, i, hits)); err != nil {
-						return err
-					}
-				}
-			}
-		}
-		if _, err := writer.WriteString(fmt.Sprintf("BRF:%d\n", brf)); err != nil {
-			return err
-		}
-		if _, err := writer.WriteString(fmt.Sprintf("BRH:%d\n", brh)); err != nil {
-			return err
-		}
-	}
-
 	if _, err := writer.WriteString("end_of_record\n"); err != nil {
 		return err
 	}

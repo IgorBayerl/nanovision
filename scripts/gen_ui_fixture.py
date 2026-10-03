@@ -6,9 +6,9 @@ self-coverage data.
 The fixture is what the Vite dev server (pnpm dev in ui/) renders; in
 production the Go reporter writes a real data.js next to index.html. This
 script produces a fixture that exercises everything the summary page can
-show: the full merged self-coverage tree, patch coverage from a git diff,
-the Problems panel, and the review header (gate verdict, changelist stats,
-risk hotspots) from the HtmlReview report type.
+show: the full merged self-coverage tree, patch coverage from a git diff
+and the review block (gate verdict, changelist stats,
+risk hotspots) that a run with a diff carries.
 
 Prerequisites: the self-coverage input files must exist (run
 `python scripts/e2e_test.py --self-cover` first, or have
@@ -33,7 +33,7 @@ HEADER = """/**
  * real data.js next to index.html.
  *
  * Generated from the nanovision self-coverage reports (full merged) with a
- * git diff applied, plus the HtmlReview `review` block (gate verdict,
+ * git diff applied, plus the `review` block (gate verdict,
  * changelist stats, risk hotspots) so the review header renders in dev.
  *
  * Regenerate with: python scripts/gen_ui_fixture.py
@@ -54,20 +54,6 @@ def extract_summary_from_data_js(path):
     return json.loads(content[content.index("=") + 1 :].rstrip().rstrip(";"))
 
 
-def extract_review_block(review_index_html):
-    """The single-file review report embeds `__NANOVISION_FULL_DATA__ = <json>;`."""
-    with open(review_index_html, encoding="utf-8") as f:
-        content = f.read()
-    marker = "__NANOVISION_FULL_DATA__ = "
-    start = content.index(marker) + len(marker)
-    end = content.index(";</script>", start)
-    full_data = json.loads(content[start:end])
-    review = full_data["summary"].get("review")
-    if not review:
-        raise SystemExit("HtmlReview output has no 'review' block; aborting.")
-    return review
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--diff-target", default="HEAD~5", help="Git ref to diff against (default: HEAD~5)")
@@ -84,7 +70,7 @@ def main():
             [
                 "go", "run", "./cmd",
                 "-config", "nanovision.yaml",
-                "-reporttypes", "Html,HtmlReview",
+                "-reporttypes", "Html",
                 "-diff", diff_path,
                 "-output", out_dir,
                 "-verbosity", "Warning",
@@ -92,7 +78,8 @@ def main():
         )
 
         summary = extract_summary_from_data_js(os.path.join(out_dir, "data.js"))
-        summary["review"] = extract_review_block(os.path.join(out_dir, "review", "index.html"))
+        if not summary.get("review"):
+            raise SystemExit("The report has no 'review' block; aborting.")
         summary["title"] = "nanovision Self-Coverage (dev fixture)"
 
     with open(FIXTURE_PATH, "w", encoding="utf-8", newline="\n") as f:

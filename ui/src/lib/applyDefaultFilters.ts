@@ -1,6 +1,6 @@
 /**
  * Seeds the URL query string from a report's `defaultFilters` (a raw query
- * string like "diff=changed&risk=danger") on first load. Because filter/column
+ * string like "risk=danger&q=src/") on first load. Because filter/column
  * state is read from the URL by `useUrlState`, seeding the URL before React
  * mounts makes every configured filter apply automatically.
  *

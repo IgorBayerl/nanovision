@@ -20,8 +20,6 @@ func buildTestTree() *model.SummaryTree {
 			StatementsCovered: 5,
 			LinesValid:        20,
 			LinesCovered:      10,
-			BranchesValid:     8,
-			BranchesCovered:   4,
 		},
 		Root: &model.DirNode{
 			Name: "root",
@@ -30,8 +28,6 @@ func buildTestTree() *model.SummaryTree {
 				StatementsCovered: 5,
 				LinesValid:        20,
 				LinesCovered:      10,
-				BranchesValid:     8,
-				BranchesCovered:   4,
 			},
 			Files: map[string]*model.FileNode{
 				"test.go": {
@@ -41,8 +37,6 @@ func buildTestTree() *model.SummaryTree {
 						StatementsCovered: 5,
 						LinesValid:        20,
 						LinesCovered:      10,
-						BranchesValid:     8,
-						BranchesCovered:   4,
 					},
 				},
 			},
@@ -51,7 +45,6 @@ func buildTestTree() *model.SummaryTree {
 	activeActiveFiles := map[config.MetricKey]bool{
 		config.LineCoverage:      true,
 		config.StatementCoverage: true,
-		config.BranchCoverage:    true,
 	}
 	calculator.CalculateTree(tree, activeActiveFiles, nil)
 	return tree
@@ -86,34 +79,15 @@ func runReport(t *testing.T, fileMetrics []config.MetricKey) string {
 	return string(contentBytes)
 }
 
-func TestTextReportBuilder_AllThreeMetrics(t *testing.T) {
+func TestTextReportBuilder_BothMetrics(t *testing.T) {
 	content := runReport(t, []config.MetricKey{
 		config.LineCoverage,
-		config.BranchCoverage,
 		config.StatementCoverage,
 	})
 
-	for _, want := range []string{"Line Coverage:", "Branch Coverage:", "Statement Coverage:"} {
+	for _, want := range []string{"Line Coverage:", "Statement Coverage:"} {
 		if !strings.Contains(content, want) {
 			t.Errorf("Expected report to contain %q, but it did not.\nContent:\n%s", want, content)
-		}
-	}
-}
-
-func TestTextReportBuilder_NoStatementCoverage(t *testing.T) {
-	content := runReport(t, []config.MetricKey{
-		config.LineCoverage,
-		config.BranchCoverage,
-	})
-
-	for _, want := range []string{"Line Coverage:", "Branch Coverage:"} {
-		if !strings.Contains(content, want) {
-			t.Errorf("Expected report to contain %q, but it did not.\nContent:\n%s", want, content)
-		}
-	}
-	for _, notWant := range []string{"Statement Coverage:"} {
-		if strings.Contains(content, notWant) {
-			t.Errorf("Expected report NOT to contain %q, but it did.\nContent:\n%s", notWant, content)
 		}
 	}
 }
@@ -126,7 +100,7 @@ func TestTextReportBuilder_SingleMetricOnly(t *testing.T) {
 	if !strings.Contains(content, "Line Coverage:") {
 		t.Errorf("Expected report to contain 'Line Coverage:', but it did not.\nContent:\n%s", content)
 	}
-	for _, notWant := range []string{"Statement Coverage:", "Branch Coverage:"} {
+	for _, notWant := range []string{"Statement Coverage:"} {
 		if strings.Contains(content, notWant) {
 			t.Errorf("Expected report NOT to contain %q, but it did.\nContent:\n%s", notWant, content)
 		}

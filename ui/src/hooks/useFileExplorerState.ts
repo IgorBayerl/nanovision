@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useKeyboardSearch } from '@/hooks/useKeyboardSearch'
 import { useUrlState } from '@/hooks/useUrlState'
-import type { DiffFilter, FileNode, FilterRange, MetricKey, RiskFilter, SortDir, SortKey } from '@/types/summary'
+import type { FileNode, MetricKey, RiskFilter, SortDir, SortKey } from '@/types/summary'
 
 const getDefaultEnabledMetrics = (metrics: string[]) => metrics.slice(0, 3)
 const EXPANDED_FOLDERS_STORAGE_KEY = 'nanovision-expanded-folders'
@@ -14,7 +14,6 @@ export function useFileExplorerState(nodes: FileNode[], availableMetrics: string
     const [query, setQuery] = useUrlState('q', '')
     const [searchMode, setSearchMode] = useUrlState<'glob' | 'normal'>('qMode', 'normal')
     const [riskFilter, setRiskFilter] = useUrlState<RiskFilter>('risk', 'all')
-    const [diffFilter, setDiffFilter] = useUrlState<DiffFilter>('diff', 'all')
     const [isNameColumnPinned, setIsNameColumnPinned] = useUrlState('pinned', true)
     const [sortKey, setSortKey] = useUrlState<SortKey>('sortKey', 'name')
     const [sortDir, setSortDir] = useUrlState<SortDir>('sortDir', 'asc')
@@ -22,8 +21,6 @@ export function useFileExplorerState(nodes: FileNode[], availableMetrics: string
     const defaultEnabled = getDefaultEnabledMetrics(availableMetrics)
     const [enabledMetricsParam, setEnabledMetricsParam] = useUrlState('cols', defaultEnabled.join(','))
     const enabledMetrics = useMemo(() => enabledMetricsParam.split(','), [enabledMetricsParam])
-
-    const [filterRanges, setFilterRanges] = useUrlState<Record<MetricKey, FilterRange>>('ranges', {})
 
     const [expandedFoldersArray, setExpandedFoldersArray] = useState<string[]>(() => {
         try {
@@ -105,14 +102,6 @@ export function useFileExplorerState(nodes: FileNode[], availableMetrics: string
         setEnabledMetricsParam(newEnabled.join(','))
     }
 
-    const updateFilterRange = (id: MetricKey, vals: [number, number], max = 100) => {
-        const newRanges = { ...filterRanges }
-        // A full-span selection [0, max] means "no filter" for this metric.
-        if (vals[0] === 0 && vals[1] === max) delete newRanges[id]
-        else newRanges[id] = { min: vals[0], max: vals[1] }
-        setFilterRanges(newRanges)
-    }
-
     const handleHeaderClick = (key: SortKey) => {
         if (JSON.stringify(sortKey) === JSON.stringify(key)) {
             setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
@@ -128,12 +117,10 @@ export function useFileExplorerState(nodes: FileNode[], availableMetrics: string
             query,
             searchMode,
             riskFilter,
-            diffFilter,
             isNameColumnPinned,
             sortKey,
             sortDir,
             enabledMetrics,
-            filterRanges,
             expandedFolders,
         },
         setters: {
@@ -141,12 +128,10 @@ export function useFileExplorerState(nodes: FileNode[], availableMetrics: string
             setQuery,
             setSearchMode,
             setRiskFilter,
-            setDiffFilter,
             setIsNameColumnPinned,
             setSortKey,
             setSortDir,
             toggleMetric,
-            updateFilterRange,
             toggleFolder,
             handleHeaderClick,
         },

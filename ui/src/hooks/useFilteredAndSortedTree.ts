@@ -1,17 +1,6 @@
 import micromatch from 'micromatch'
 import { useMemo } from 'react'
-import { useDebounce } from '@/hooks/useDebounce'
-import type {
-    DiffFilter,
-    FileNode,
-    FilterRange,
-    MetricConfig,
-    MetricKey,
-    RiskFilter,
-    RiskLevel,
-    SortDir,
-    SortKey,
-} from '@/types/summary'
+import type { FileNode, MetricConfig, MetricKey, RiskFilter, RiskLevel, SortDir, SortKey } from '@/types/summary'
 
 type RenderNode = FileNode & { depth: number }
 
@@ -20,20 +9,12 @@ interface HookParams {
     query: string
     searchMode: 'glob' | 'normal'
     riskFilter: RiskFilter
-    diffFilter: DiffFilter
-    filterRanges: Record<MetricKey, FilterRange>
     sortKey: SortKey
     sortDir: SortDir
     viewMode: 'tree' | 'flat'
     expandedFolders: Set<string>
     enabledMetrics: MetricConfig[]
 }
-
-/**
- * The delay in milliseconds for debouncing real-time filters.
- * A value of ~150 provides a responsive feel without overwhelming the CPU on large reports.
- */
-const DEBOUNCE_DELAY_MS = 1
 
 /** Sentinel key used for top-level nodes (those with no parentId). */
 const ROOT_KEY = ''
@@ -79,8 +60,6 @@ export function useFilteredAndSortedTree({
     query,
     searchMode,
     riskFilter,
-    diffFilter,
-    filterRanges,
     sortKey,
     sortDir,
     viewMode,
@@ -89,14 +68,9 @@ export function useFilteredAndSortedTree({
 }: HookParams): RenderNode[] {
     const { allFiles, parentMap, childrenMap } = usePrecomputedNodes(nodes)
 
-    // Debounce the filterRanges prop. The expensive filtering logic will only re-run
-    // after the user has stopped dragging the slider for the specified delay.
-    const debouncedFilterRanges = useDebounce(filterRanges, DEBOUNCE_DELAY_MS)
-
     const filteredFiles = useMemo(() => {
         const trimmedQuery = query.trim().toLowerCase()
         const hasQuery = trimmedQuery.length > 0
-        const activeRanges = Object.entries(debouncedFilterRanges)
 
         return allFiles.filter((file) => {
             if (hasQuery) {
@@ -106,29 +80,6 @@ export function useFilteredAndSortedTree({
                         ? micromatch.isMatch(textToMatch, trimmedQuery, { nocase: true })
                         : textToMatch.includes(trimmedQuery)
                 if (!nameMatches) return false
-            }
-
-            if (activeRanges.length > 0) {
-                const rangeMatches = activeRanges.every(([metricId, range]) => {
-                    const metric = file.metrics?.[metricId]
-                    // Percentage metrics filter on their percentage; scalar (value)
-                    // metrics filter on their raw value.
-                    const value =
-                        metric && 'percentage' in metric
-                            ? metric.percentage
-                            : metric && 'value' in metric
-                              ? metric.value
-                              : undefined
-                    if (value === undefined) return true
-                    return value >= range.min && value <= range.max
-                })
-                if (!rangeMatches) return false
-            }
-
-            if (diffFilter === 'changed') {
-                if (file.diffStatus !== 'added' && file.diffStatus !== 'modified') {
-                    return false
-                }
             }
 
             if (riskFilter !== 'all') {
@@ -158,7 +109,7 @@ export function useFilteredAndSortedTree({
 
             return true
         })
-    }, [allFiles, query, searchMode, debouncedFilterRanges, riskFilter, diffFilter, enabledMetrics])
+    }, [allFiles, query, searchMode, riskFilter, enabledMetrics])
 
     // A single comparator shared by both flat and tree views.
     const comparator = useMemo<Comparator>(() => {
@@ -173,7 +124,8 @@ export function useFilteredAndSortedTree({
 
         const readSub = (node: FileNode, key: { metric: MetricKey; subMetric: string }) => {
             const metric = node.metrics?.[key.metric] as Record<string, number> | undefined
-            return metric?.[key.subMetric] ?? -1
+            // a row that did not move sorts between the ones that went down and up
+            return metric?.[key.subMetric] ?? (key.subMetric === 'delta' ? 0 : -1)
         }
 
         const sortByMetric = (a: FileNode, b: FileNode, key: { metric: MetricKey; subMetric: string }) => {
@@ -222,7 +174,7 @@ export function useFilteredAndSortedTree({
             }
         }
 
-        if (visibleNodeIds.size === 0 && (query.trim().length > 0 || diffFilter === 'changed')) return []
+        if (visibleNodeIds.size === 0 && query.trim().length > 0) return []
 
         // Depth-first walk over the pre-sorted sibling groups, honoring expand state.
         const result: RenderNode[] = []
@@ -239,5 +191,5 @@ export function useFilteredAndSortedTree({
         }
         walk(ROOT_KEY, 0)
         return result
-    }, [viewMode, flatNodes, filteredFiles, sortedChildrenMap, parentMap, expandedFolders, query, diffFilter])
+    }, [viewMode, flatNodes, filteredFiles, sortedChildrenMap, parentMap, expandedFolders, query])
 }

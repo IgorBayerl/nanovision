@@ -307,8 +307,6 @@ func resetMethodMetrics(method *model.MethodMetrics) {
 func addMetrics(dest *model.CoverageMetrics, src model.CoverageMetrics) {
 	dest.LinesCovered += src.LinesCovered
 	dest.LinesValid += src.LinesValid
-	dest.BranchesCovered += src.BranchesCovered
-	dest.BranchesValid += src.BranchesValid
 	dest.TotalLines += src.TotalLines
 	dest.MethodsValid += src.MethodsValid
 	dest.MethodsHit += src.MethodsHit

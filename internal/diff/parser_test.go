@@ -323,3 +323,25 @@ func TestParse_PerforceStyleMultiFile(t *testing.T) {
 		}
 	}
 }
+
+func TestParseTextMatchesParse(t *testing.T) {
+	text := "diff --git a/src/a.go b/src/a.go\r\n--- a/src/a.go\r\n+++ b/src/a.go\r\n@@ -1,2 +1,3 @@\r\n line\r\n+added\r\n line\r\n"
+	path := filepath.Join(t.TempDir(), "c.diff")
+	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fromFile, err := Parse(path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fromText, err := ParseText(text, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(fromFile, fromText) {
+		t.Fatalf("ParseText %+v differs from Parse %+v", fromText, fromFile)
+	}
+	if len(fromText.Files) != 1 || len(fromText.Files[0].Hunks[0].AddedLineOffsets) != 1 {
+		t.Fatalf("unexpected parse %+v", fromText)
+	}
+}

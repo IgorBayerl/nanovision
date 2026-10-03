@@ -1,4 +1,3 @@
-import { GitBranch } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { DiffStatus, LineDetails, LineStatus } from '@/types/summary'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip'
@@ -6,14 +5,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip'
 const squareBgClasses: Record<LineStatus, string> = {
     covered: 'bg-covered',
     uncovered: 'bg-uncovered',
-    partial: 'bg-partial',
     'not-coverable': 'bg-transparent',
 }
 
 const lineBgClasses: Record<LineStatus, string> = {
     covered: 'bg-covered/20',
     uncovered: 'bg-uncovered/20',
-    partial: 'bg-partial/20',
     'not-coverable': 'bg-transparent',
 }
 
@@ -27,7 +24,7 @@ const diffSymbolClasses: Partial<Record<DiffStatus, string>> = {
     removed: 'text-uncovered',
 }
 
-const gridTemplateColumns = '1.5rem 4rem 4rem 1.5rem 1.5rem 1fr'
+const gridTemplateColumns = '1.5rem 4rem 4rem 1.5rem 1fr'
 
 interface CodeLineProps extends Omit<LineDetails, 'hits'> {
     hits?: number
@@ -35,15 +32,7 @@ interface CodeLineProps extends Omit<LineDetails, 'hits'> {
     reportHits?: { name: string; hits: number }[]
 }
 
-export default function CodeLine({
-    lineNumber,
-    content,
-    status,
-    hits,
-    branchInfo,
-    diffStatus,
-    reportHits,
-}: CodeLineProps) {
+export default function CodeLine({ lineNumber, content, status, hits, diffStatus, reportHits }: CodeLineProps) {
     const hasHitCount = typeof hits === 'number' && hits > 0
     const diffSymbol = diffStatus ? diffSymbols[diffStatus] : undefined
     const diffClass = diffStatus ? diffSymbolClasses[diffStatus] : undefined
@@ -97,30 +86,12 @@ export default function CodeLine({
                 </div>
             )}
 
-            {/* 4. Branch Indicator */}
-            <div className="flex items-center justify-center py-0.5">
-                {branchInfo && (
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <div className="flex h-full w-full cursor-help items-center justify-center">
-                                <GitBranch className="h-4 w-4 text-partial" />
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>
-                                Branch Coverage: {branchInfo.covered} / {branchInfo.total}
-                            </p>
-                        </TooltipContent>
-                    </Tooltip>
-                )}
-            </div>
-
-            {/* 5. Diff Indicator*/}
+            {/* 4. Diff Indicator*/}
             <div className={cn('select-none border-border/30 border-r px-1 py-0.5 text-center font-bold', diffClass)}>
                 {diffSymbol}
             </div>
 
-            {/* 6. Source Code */}
+            {/* 5. Source Code */}
             <div className="py-0.5 pl-4">
                 <pre className="whitespace-pre">{content || ' '}</pre>
             </div>

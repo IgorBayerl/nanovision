@@ -18,11 +18,9 @@ type ScoreDetail struct {
 
 // CoverageMetrics holds the aggregated coverage data for a node (project, dir, or file).
 type CoverageMetrics struct {
-	LinesCovered    int
-	LinesValid      int
-	BranchesCovered int
-	BranchesValid   int
-	TotalLines      int
+	LinesCovered int
+	LinesValid   int
+	TotalLines   int
 
 	MethodsHit          int
 	MethodsFullyCovered int
@@ -70,9 +68,6 @@ type LineMetrics struct {
 	// corresponds to the ReportNames slice in the SummaryTree.
 	// This is used by reporters that support per-report filtering (e.g., HTML).
 	ReportHits []int
-
-	CoveredBranches int
-	TotalBranches   int
 }
 
 // MethodMetrics holds all analysis and coverage data for a single function or method.
@@ -83,10 +78,8 @@ type MethodMetrics struct {
 	CyclomaticComplexity *int   // Is now a pointer.
 
 	// Per-method coverage metrics.
-	LinesValid      int
-	LinesCovered    int
-	BranchesValid   int
-	BranchesCovered int
+	LinesValid   int
+	LinesCovered int
 
 	StatementsValid   int
 	StatementsCovered int

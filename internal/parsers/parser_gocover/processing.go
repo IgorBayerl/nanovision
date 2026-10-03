@@ -84,12 +84,7 @@ func (o *processingOrchestrator) processFile(filePath string, blocks []GoCoverPr
 			// that the hit count of one of them applies. We take the highest hit count
 			// as the most representative value for that line's execution status.
 			if existing, ok := lineMetrics[l]; !ok || block.HitCount > existing.Hits {
-				lineMetrics[l] = model.LineMetrics{
-					Hits: block.HitCount,
-					// Go coverage profiles do not support branch coverage.
-					TotalBranches:   0,
-					CoveredBranches: 0,
-				}
+				lineMetrics[l] = model.LineMetrics{Hits: block.HitCount}
 			}
 		}
 	}

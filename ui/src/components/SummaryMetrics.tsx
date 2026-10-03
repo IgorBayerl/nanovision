@@ -11,6 +11,8 @@ type SummaryMetricsProps = {
         title: string
         items: MetadataItem[]
     }
+    /** Which revisions the report compares. */
+    comparing?: MetadataItem[]
     metrics: Totals
     metricOrder: string[]
     metricDefinitions: MetricDefinitions
@@ -18,6 +20,8 @@ type SummaryMetricsProps = {
     reportSelection: ReportSelectionState
     /** Metrics that keep their merged value whatever the selection. */
     frozenMetricLabels?: string[]
+    /** Change of each metric against the base run, in percentage points. */
+    deltas?: Record<string, number>
 }
 
 const Section = ({ title, aside, children }: { title?: string; aside?: ReactNode; children: ReactNode }) => (
@@ -41,18 +45,31 @@ const MetadataValue = ({ value }: { value: MetadataItem['value'] }) => {
     )
 }
 
+const InfoList = ({ items }: { items: MetadataItem[] }) => (
+    <dl className="mt-2 flex flex-col gap-1.5 text-xs">
+        {items.map((item) => (
+            <div key={item.label} className="flex items-baseline justify-between gap-3">
+                <dt className="shrink-0 text-muted-foreground">{item.label}</dt>
+                <MetadataValue value={item.value} />
+            </div>
+        ))}
+    </dl>
+)
+
 /**
  * The sidebar overview: report metadata, the report selection and one row per
  * metric, laid out as a single column divided by rules rather than cards.
  */
 export default function SummaryMetrics({
     info,
+    comparing,
     metrics,
     metricOrder,
     metricDefinitions,
     statusBands,
     reportSelection,
     frozenMetricLabels,
+    deltas,
 }: SummaryMetricsProps) {
     const infoItems = info?.items ?? []
     const { reports, isSelected } = reportSelection
@@ -64,14 +81,13 @@ export default function SummaryMetrics({
         <div className="flex flex-col divide-y divide-sidebar-border">
             {infoItems.length > 0 && (
                 <Section title={info?.title}>
-                    <dl className="mt-2 flex flex-col gap-1.5 text-xs">
-                        {infoItems.map((item) => (
-                            <div key={item.label} className="flex items-baseline justify-between gap-3">
-                                <dt className="shrink-0 text-muted-foreground">{item.label}</dt>
-                                <MetadataValue value={item.value} />
-                            </div>
-                        ))}
-                    </dl>
+                    <InfoList items={infoItems} />
+                </Section>
+            )}
+
+            {comparing && comparing.length > 0 && (
+                <Section title="Comparing">
+                    <InfoList items={comparing} />
                 </Section>
             )}
 
@@ -97,6 +113,7 @@ export default function SummaryMetrics({
                                 definition={definition}
                                 band={statusBands?.[metricId]}
                                 hasBands={hasBands}
+                                delta={deltas?.[metricId]}
                             />
                         )
                     })}

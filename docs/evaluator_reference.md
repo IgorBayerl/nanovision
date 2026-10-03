@@ -25,7 +25,7 @@ type Evaluator interface {
 |--------|---------|
 | [Key()](file:///c:/www/nanovision/internal/status/evaluators/complexity.go#12-13) | The config key users write in YAML |
 | [Name()](file:///c:/www/nanovision/internal/status/evaluators/complexity.go#13-14) / [Description()](file:///c:/www/nanovision/internal/status/evaluators/patch_statement_coverage.go#15-16) / [SupportedScopes()](file:///c:/www/nanovision/internal/status/evaluators/line_coverage.go#16-17) | Powers `--list-metrics` and the boot log |
-| [IsApplicable(caps)](file:///c:/www/nanovision/internal/status/evaluators/patch_line_coverage.go#20-21) | Guards against data that doesn't exist (e.g. skip branch coverage if the parser didn't produce branch data) |
+| [IsApplicable(caps)](file:///c:/www/nanovision/internal/status/evaluators/patch_line_coverage.go#20-21) | Guards against data that doesn't exist (e.g. skip statement coverage if no analyzer found statements) |
 | [Evaluate(metrics, band)](file:///c:/www/nanovision/internal/status/evaluators/methods_fully_covered.go#25-32) | The core: extract a number, classify it against the threshold band |
 
 ---
@@ -162,11 +162,11 @@ Create a new evaluator when you have a **numeric metric** that:
 3. **Benefits from threshold-based risk coloring** — users want danger/warning/safe badges
 
 ### Yes, create one for:
-- A new coverage percentage (patch branch coverage, function coverage, etc.)
+- A new coverage percentage (function coverage, etc.)
 - A new code quality number (max nesting depth, average complexity, etc.)
 
 ### No, don't create one for:
-- **Display-only metrics** like `method_branch_coverage` that are computed and shown in reports but don't need risk classification
+- **Display-only metrics** that are computed and shown in reports but don't need risk classification
 - **Counts without a meaningful threshold** — e.g. "total lines of code" (no concept of danger/safe)
 - **Boolean flags** — evaluators work on numeric ranges, not yes/no values
 

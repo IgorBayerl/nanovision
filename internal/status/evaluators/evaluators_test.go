@@ -20,7 +20,7 @@ func TestLineCoverageEvaluator_Key(t *testing.T) {
 
 func TestLineCoverageEvaluator_IsApplicable(t *testing.T) {
 	assert.True(t, LineCoverageEvaluator{}.IsApplicable(status.Capabilities{}))
-	assert.True(t, LineCoverageEvaluator{}.IsApplicable(status.Capabilities{HasBranchCoverage: true}))
+	assert.True(t, LineCoverageEvaluator{}.IsApplicable(status.Capabilities{HasMethodCoverage: true}))
 }
 
 func TestLineCoverageEvaluator_ZeroGuard(t *testing.T) {
@@ -48,50 +48,6 @@ func TestLineCoverageEvaluator_Thresholds(t *testing.T) {
 			m := model.CoverageMetrics{LinesCovered: tt.covered, LinesValid: tt.valid}
 			m.Calculated = map[config.MetricKey]any{config.LineCoverage: model.CoverageDetail{Percentage: utils.CalculatePercentage(tt.covered, tt.valid, 2)}}
 			lvl, show := LineCoverageEvaluator{}.Evaluate(m, band)
-			assert.True(t, show)
-			assert.Equal(t, tt.want, lvl)
-		})
-	}
-}
-
-// ---------------------------------------------------------------------------
-// BranchCoverageEvaluator
-// ---------------------------------------------------------------------------
-
-func TestBranchCoverageEvaluator_Key(t *testing.T) {
-	assert.Equal(t, config.BranchCoverage, BranchCoverageEvaluator{}.Key())
-}
-
-func TestBranchCoverageEvaluator_IsApplicable(t *testing.T) {
-	assert.False(t, BranchCoverageEvaluator{}.IsApplicable(status.Capabilities{HasBranchCoverage: false}))
-	assert.True(t, BranchCoverageEvaluator{}.IsApplicable(status.Capabilities{HasBranchCoverage: true}))
-}
-
-func TestBranchCoverageEvaluator_ZeroGuard(t *testing.T) {
-	m := model.CoverageMetrics{BranchesValid: 0}
-	band := &config.Band{Min: 60, Max: 80}
-	lvl, show := BranchCoverageEvaluator{}.Evaluate(m, band)
-	assert.Equal(t, status.RiskLevel(""), lvl)
-	assert.False(t, show)
-}
-
-func TestBranchCoverageEvaluator_Thresholds(t *testing.T) {
-	band := &config.Band{Min: 60, Max: 80}
-	tests := []struct {
-		name    string
-		covered int
-		valid   int
-		want    status.RiskLevel
-	}{
-		{"danger", 50, 100, status.RiskDanger},
-		{"warning", 70, 100, status.RiskWarning},
-		{"safe", 90, 100, status.RiskSafe},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := model.CoverageMetrics{BranchesCovered: tt.covered, BranchesValid: tt.valid}
-			m.Calculated = map[config.MetricKey]any{config.BranchCoverage: model.CoverageDetail{Percentage: utils.CalculatePercentage(tt.covered, tt.valid, 2)}}
-			lvl, show := BranchCoverageEvaluator{}.Evaluate(m, band)
 			assert.True(t, show)
 			assert.Equal(t, tt.want, lvl)
 		})
@@ -200,7 +156,6 @@ func TestMaxComplexityEvaluator_AboveMaxReturnsDanger(t *testing.T) {
 func TestRegistryContainsAllEvaluators(t *testing.T) {
 	expectedKeys := []config.MetricKey{
 		config.LineCoverage,
-		config.BranchCoverage,
 		config.StatementCoverage,
 		config.MaxCyclomaticComplexity,
 		config.MethodsHit,

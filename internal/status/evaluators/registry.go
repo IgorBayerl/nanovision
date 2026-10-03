@@ -10,7 +10,6 @@ import (
 // up evaluators from this registry.
 var Registry = map[config.MetricKey]status.Evaluator{
 	config.LineCoverage:                 LineCoverageEvaluator{},
-	config.BranchCoverage:               BranchCoverageEvaluator{},
 	config.StatementCoverage:            StatementCoverageEvaluator{},
 	config.MaxCyclomaticComplexity:      MaxComplexityEvaluator{},
 	config.MethodsHit:                   MethodsHitEvaluator{},
@@ -28,7 +27,5 @@ var Registry = map[config.MetricKey]status.Evaluator{
 	config.MethodPatchStatementCoverage: MethodPatchStatementCoverageEvaluator{},
 	config.CyclomaticComplexity:         CyclomaticComplexityEvaluator{},
 	config.MethodCrapScore:              MethodCrapScoreEvaluator{},
-	config.MethodPatchCrapScore:         MethodPatchCrapScoreEvaluator{},
 	config.MethodExposedRisk:            MethodExposedRiskEvaluator{},
-	config.MethodDefectProbability:      MethodDefectProbabilityEvaluator{},
 }

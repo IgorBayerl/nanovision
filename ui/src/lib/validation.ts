@@ -6,7 +6,6 @@ const riskLevelSchema = z.enum(['safe', 'warning', 'danger'])
 const statusesSchema = z.record(z.string(), riskLevelSchema).optional()
 
 // A base schema for individual coverage metrics.
-// for metrics like `branchCoverage` which may not include them.
 const coverageDetailSchema = z.object({
     covered: z.number(),
     uncovered: z.number().optional(),
@@ -107,23 +106,8 @@ const metricDefinitionSchema = z.object({
     subMetrics: z.array(subMetricSchema),
 })
 
-// A single editor-style diagnostic ("problem") produced by the backend
-// diagnostics engine and rendered in the collapsible Problems panel.
-const diagnosticSchema = z.object({
-    ruleId: z.string(),
-    ruleName: z.string(),
-    severity: z.enum(['error', 'warning', 'info']),
-    file: z.string(),
-    startLine: z.number(),
-    endLine: z.number(),
-    message: z.string(),
-    scope: z.enum(['file', 'method']),
-})
-
-export type Diagnostic = z.infer<typeof diagnosticSchema>
-
-// gate verdict, changelist stats and hotspots.
-// when present, the summary page switches to the review layout.
+// gate verdict, changelist stats and hotspots of a run measured with a diff;
+// the Changes tab shows them.
 const reviewGateCheckSchema = z.object({
     key: z.string(),
     label: z.string(),
@@ -161,6 +145,62 @@ const reviewSchema = z.object({
 
 export type Review = z.infer<typeof reviewSchema>
 
+// the delta of a run against its base run
+const runRefSchema = z.object({
+    id: z.number().optional(),
+    revision: z.string().optional(),
+})
+
+const metricDeltaSchema = z.object({
+    key: z.string(),
+    label: z.string(),
+    /** What the counts count, e.g. "statements". */
+    unit: z.string(),
+    baseCovered: z.number(),
+    baseTotal: z.number(),
+    currentCovered: z.number(),
+    currentTotal: z.number(),
+    base: z.number(),
+    current: z.number(),
+    /** Current minus base, in percentage points. */
+    delta: z.number(),
+})
+
+const fileDeltaSchema = z.object({
+    path: z.string(),
+    base: z.number(),
+    current: z.number(),
+    delta: z.number(),
+})
+
+const changeSetSchema = z.object({
+    measured: z.array(z.string()).optional(),
+    ignored: z.array(z.string()).optional(),
+    notInReports: z.array(z.string()).optional(),
+    deleted: z.array(z.string()).optional(),
+})
+
+const comparisonSchema = z.object({
+    base: runRefSchema,
+    /** The base run is at the base revision itself. */
+    exact: z.boolean(),
+    /** Revisions between the base revision and the base run, -1 when unknown. */
+    distance: z.number(),
+    /** The key of the metric that leads. */
+    headline: z.string(),
+    metrics: z.array(metricDeltaSchema),
+    /** Files whose headline metric changed, largest change first. */
+    files: z.array(fileDeltaSchema).optional(),
+    /** Path of a file or folder -> metric -> change in percentage points. */
+    deltas: z.record(z.string(), z.record(z.string(), z.number())).optional(),
+    change: changeSetSchema.optional(),
+    warnings: z.array(z.string()).optional(),
+})
+
+export type Comparison = z.infer<typeof comparisonSchema>
+export type FileDelta = z.infer<typeof fileDeltaSchema>
+export type ChangeSet = z.infer<typeof changeSetSchema>
+
 export type ReportBucket = z.infer<typeof reportBucketSchema>
 export type ReportIndex = z.infer<typeof reportIndexSchema>
 export type StatusBand = z.infer<typeof statusBandSchema>
@@ -178,10 +218,13 @@ export const summaryV1Schema = z.object({
     metricDefinitions: z.record(z.string(), metricDefinitionSchema),
     metricOrder: z.array(z.string()).optional(),
     metadata: z.array(metadataItemSchema).optional(),
-    diagnostics: z.array(diagnosticSchema).optional(),
-    hideProblems: z.boolean().optional(),
     defaultFilters: z.string().optional(),
     review: reviewSchema.optional(),
+    comparison: comparisonSchema.optional(),
+    /** The revisions being compared, as rows for the side panel. */
+    comparing: z.array(metadataItemSchema).optional(),
+    /** The nodes hold only the changed files; the totals cover the whole run. */
+    onlyChanged: z.boolean().optional(),
     reports: z.array(reportSchema).optional(),
     reportIndexes: z.record(z.string(), reportIndexSchema).optional(),
     statusBands: z.record(z.string(), statusBandSchema).optional(),
@@ -199,19 +242,13 @@ export function validateSummaryData(data: unknown) {
 }
 
 // Schema for a single line of code
-const lineStatusSchema = z.enum(['covered', 'uncovered', 'not-coverable', 'partial'])
+const lineStatusSchema = z.enum(['covered', 'uncovered', 'not-coverable'])
 
 const lineDetailsSchema = z.object({
     lineNumber: z.number().int().positive(),
     content: z.string(),
     status: lineStatusSchema,
     hits: z.array(z.number().int()).optional(),
-    branchInfo: z
-        .object({
-            covered: z.number().int(),
-            total: z.number().int(),
-        })
-        .optional(),
     diffStatus: diffStatusSchema.optional(),
 })
 

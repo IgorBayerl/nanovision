@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ServerApp from '@/app/ServerApp'
 import { ThemeProvider } from '@/components/Theme.Context'
 import '@/index.css'
 import ReactDOM from 'react-dom/client'
@@ -11,7 +12,7 @@ import { TooltipProvider } from '@/ui/tooltip'
 declare global {
     interface Window {
         __NANOVISION_SUMMARY__?: unknown
-        __NANOVISION_MODE__?: 'single'
+        __NANOVISION_MODE__?: 'single' | 'server'
         __NANOVISION_FULL_DATA__?: {
             summary: unknown
             details: Record<string, unknown>
@@ -84,7 +85,16 @@ if (!rootEl) {
     console.error('Fatal: Missing #root element in HTML.')
 } else {
     // Branch on NANOVISION_MODE
-    if (window.__NANOVISION_MODE__ === 'single' && window.__NANOVISION_FULL_DATA__) {
+    if (window.__NANOVISION_MODE__ === 'server') {
+        // `nanovision serve`: the data comes from the API, page by page
+        ReactDOM.createRoot(rootEl).render(
+            <ThemeProvider>
+                <TooltipProvider delayDuration={300} skipDelayDuration={300}>
+                    <ServerApp />
+                </TooltipProvider>
+            </ThemeProvider>,
+        )
+    } else if (window.__NANOVISION_MODE__ === 'single' && window.__NANOVISION_FULL_DATA__) {
         applyDefaultFilters(window.__NANOVISION_FULL_DATA__.summary)
         ReactDOM.createRoot(rootEl).render(
             <ThemeProvider>

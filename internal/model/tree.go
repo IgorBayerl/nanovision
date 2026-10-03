@@ -11,6 +11,13 @@ type SummaryTree struct {
 	ReportFiles []string        // List of report files that were parsed.
 	ParserNames []string        // Name of the parser(s) used.
 	ReportNames []string        // Holds the list of reports, the index of an element needs to correspond to the index of LineMetrics.ReportHits
+
+	// the diff files sorted into groups; nil without a diff
+	Change *ChangeSet `json:",omitempty"`
+	// the revisions being compared; nil when nothing is known about them
+	Versions *Versions `json:",omitempty"`
+	// the delta against the base run; nil when history is off or no base run was found
+	Comparison *Comparison `json:",omitempty"`
 }
 
 // DirNode represents a directory in the file system tree.
@@ -43,4 +50,6 @@ type FileNode struct {
 	SourceDir  string                      `json:"sourceDir"`
 	Statuses   map[config.MetricKey]string `json:"statuses,omitempty"`
 	Diff       *DiffInfo                   `json:"diff,omitempty"`
+	// SHA-256 of the source file as the enricher read it; zero when it could not be read
+	ContentHash [32]byte `json:"-"`
 }

@@ -102,3 +102,37 @@ func TestReadLinesInFile_100MBLine(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "line exceeds maximum allowed length of 50MB")
 }
+
+func TestDecodeLinesMatchesReadLinesInFile(t *testing.T) {
+	cases := map[string][]byte{
+		"plain":      []byte("a\nb\r\nc"),
+		"utf8 bom":   append([]byte{0xEF, 0xBB, 0xBF}, []byte("x := 1\ny\n")...),
+		"utf16le":    {0xFF, 0xFE, 'h', 0, 'i', 0, '\n', 0, 'z', 0},
+		"empty":      {},
+		"final line": []byte("only\n"),
+	}
+	for name, content := range cases {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "f.txt")
+			if err := os.WriteFile(path, content, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			want, err := ReadLinesInFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := DecodeLines(content)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(want) != len(got) {
+				t.Fatalf("got %q, want %q", got, want)
+			}
+			for i := range want {
+				if want[i] != got[i] {
+					t.Fatalf("line %d: got %q, want %q", i, got[i], want[i])
+				}
+			}
+		})
+	}
+}

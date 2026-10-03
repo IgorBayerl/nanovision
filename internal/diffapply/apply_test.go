@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/IgorBayerl/nanovision/internal/diff"
+	"github.com/IgorBayerl/nanovision/internal/filtering"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -91,7 +92,7 @@ func TestApply(t *testing.T) {
 		}
 
 		// Act
-		Apply(tree, diffData, logger)
+		Apply(tree, diffData, nil, logger)
 
 		// Assert
 		newFileNode := tree.Root.Subdirs["src"].Files["new.go"]
@@ -129,7 +130,7 @@ func TestApply(t *testing.T) {
 		}
 
 		// Act
-		Apply(tree, diffData, logger)
+		Apply(tree, diffData, nil, logger)
 
 		// Assert
 		// No node for 'filtered.go' exists, so we just check it didn't crash
@@ -152,11 +153,11 @@ func TestApply(t *testing.T) {
 		}
 
 		// Act
-		Apply(tree, diffData, logger)
+		Apply(tree, diffData, nil, logger)
 		firstRunDiff := *tree.Root.Subdirs["src"].Files["main.go"].Diff
 
 		// Apply a second time
-		Apply(tree, diffData, logger)
+		Apply(tree, diffData, nil, logger)
 		secondRunDiff := *tree.Root.Subdirs["src"].Files["main.go"].Diff
 
 		// Assert
@@ -167,11 +168,51 @@ func TestApply(t *testing.T) {
 		tree := createTestTree()
 
 		// This should not panic
-		Apply(nil, &diff.DiffData{}, logger)
-		Apply(tree, nil, logger)
-		Apply(tree, &diff.DiffData{}, logger)
+		Apply(nil, &diff.DiffData{}, nil, logger)
+		Apply(tree, nil, nil, logger)
+		Apply(tree, &diff.DiffData{}, nil, logger)
 
 		// Check that nothing was modified
 		assert.Nil(t, tree.Root.Subdirs["src"].Files["main.go"].Diff)
+	})
+}
+
+func TestApplyGroupsDiffFiles(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	filter, err := filtering.NewDefaultFilter([]string{"-**/*_test.go"}, true)
+	require.NoError(t, err)
+
+	t.Run("a change to code, tests and a script", func(t *testing.T) {
+		tree := createTestTree()
+		dd := &diff.DiffData{Files: []diff.FileDiff{
+			{NewPath: "src/main.go", Kind: "modified", Hunks: []diff.Hunk{{NewStart: 1, AddedLineOffsets: []int{0}}}},
+			{NewPath: "src/main_test.go", Kind: "modified"},
+			{NewPath: "scripts/build.py", Kind: "added"},
+			{OldPath: "src/gone.go", NewPath: "/dev/null", Kind: "modified"},
+		}}
+
+		change := Apply(tree, dd, filter, logger)
+		require.NotNil(t, change)
+		assert.Equal(t, []string{"src/main.go"}, change.Measured)
+		assert.Equal(t, []string{"src/main_test.go"}, change.Ignored)
+		assert.Equal(t, []string{"scripts/build.py"}, change.NotInReports)
+		assert.Equal(t, []string{"src/gone.go"}, change.Deleted)
+		assert.Equal(t, 4, change.Total())
+		assert.False(t, change.TestOnly())
+		assert.Same(t, change, tree.Change)
+	})
+
+	t.Run("a change that only edits tests", func(t *testing.T) {
+		tree := createTestTree()
+		dd := &diff.DiffData{Files: []diff.FileDiff{
+			{NewPath: "src/main_test.go", Kind: "modified"},
+			{NewPath: "src/new_test.go", Kind: "added"},
+		}}
+
+		change := Apply(tree, dd, filter, logger)
+		assert.Empty(t, change.Measured)
+		assert.Len(t, change.Ignored, 2)
+		assert.True(t, change.TestOnly())
+		assert.Nil(t, tree.Root.Subdirs["src"].Files["main.go"].Diff, "no tree file is marked as changed")
 	})
 }

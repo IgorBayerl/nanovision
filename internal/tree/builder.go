@@ -105,7 +105,7 @@ func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree
 
 			reportKey := result.ReportPattern
 			reportIndex := reportNameMap[reportKey]
-			fileNode := b.findOrCreateFileNode(tree.Root, finalPath, result.SourceDirectory)
+			fileNode := AddFile(tree.Root, finalPath, result.SourceDirectory)
 			b.mergeLineMetrics(fileNode, fileCov.Lines, reportIndex, numReports)
 		}
 	}
@@ -116,7 +116,9 @@ func (b *Builder) BuildTree(results []*parsers.ParserResult) (*model.SummaryTree
 	return tree, nil
 }
 
-func (b *Builder) findOrCreateFileNode(startNode *model.DirNode, filePath string, sourceDir string) *model.FileNode {
+// AddFile returns the file node of a slash-separated path below startNode,
+// creating it and its folders when needed.
+func AddFile(startNode *model.DirNode, filePath string, sourceDir string) *model.FileNode {
 	parts := strings.Split(filePath, "/")
 	currentNode := startNode
 
@@ -161,10 +163,6 @@ func (b *Builder) mergeLineMetrics(node *model.FileNode, newLines map[int]model.
 
 		existing.ReportHits[reportIndex] = newLineMetric.Hits
 
-		existing.CoveredBranches += newLineMetric.CoveredBranches
-		if newLineMetric.TotalBranches > 0 {
-			existing.TotalBranches = newLineMetric.TotalBranches
-		}
 		node.Lines[lineNum] = existing
 	}
 }
@@ -179,26 +177,23 @@ func (b *Builder) aggregateMetrics(dir *model.DirNode) model.CoverageMetrics {
 		subDir.Metrics = subDirMetrics
 		dirMetrics.LinesCovered += subDirMetrics.LinesCovered
 		dirMetrics.LinesValid += subDirMetrics.LinesValid
-		dirMetrics.BranchesCovered += subDirMetrics.BranchesCovered
-		dirMetrics.BranchesValid += subDirMetrics.BranchesValid
 		dirMetrics.TotalLines += subDirMetrics.TotalLines
 	}
 
 	// Aggregate from files in the current directory
 	for _, file := range dir.Files {
-		fileMetrics := b.calculateFileMetrics(file)
+		fileMetrics := CalculateFileMetrics(file)
 		file.Metrics = fileMetrics
 		dirMetrics.LinesCovered += fileMetrics.LinesCovered
 		dirMetrics.LinesValid += fileMetrics.LinesValid
-		dirMetrics.BranchesCovered += fileMetrics.BranchesCovered
-		dirMetrics.BranchesValid += fileMetrics.BranchesValid
 		dirMetrics.TotalLines += fileMetrics.TotalLines
 	}
 
 	return dirMetrics
 }
 
-func (b *Builder) calculateFileMetrics(file *model.FileNode) model.CoverageMetrics {
+// CalculateFileMetrics counts the coverable and covered lines of a file.
+func CalculateFileMetrics(file *model.FileNode) model.CoverageMetrics {
 	metrics := model.CoverageMetrics{TotalLines: file.TotalLines}
 	for _, line := range file.Lines {
 		if line.Hits >= 0 { // Is a coverable line
@@ -207,8 +202,6 @@ func (b *Builder) calculateFileMetrics(file *model.FileNode) model.CoverageMetri
 				metrics.LinesCovered++
 			}
 		}
-		metrics.BranchesValid += line.TotalBranches
-		metrics.BranchesCovered += line.CoveredBranches
 	}
 	return metrics
 }

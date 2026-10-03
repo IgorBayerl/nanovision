@@ -1,8 +1,7 @@
 import { Pin, PinOff } from 'lucide-react'
-import HeaderRangeSlider from '@/components/HeaderRangeSlider'
 import InfoTooltip from '@/components/InfoTooltip'
 import { cn } from '@/lib/utils'
-import type { FilterRange, MetricConfig, MetricKey, SortDir, SortKey } from '@/types/summary'
+import type { MetricConfig, SortDir, SortKey } from '@/types/summary'
 import { Button } from '@/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/tooltip'
 
@@ -13,11 +12,7 @@ interface HeaderProps {
     sortKey: SortKey
     sortDir: SortDir
     onHeaderClick: (key: SortKey) => void
-    filterRanges: Record<MetricKey, FilterRange>
-    onRangeUpdate: (id: MetricKey, vals: [number, number], max?: number) => void
     totalMetricsWidth: number
-    /** Data-derived upper bound for value (non-percentage) metrics, by metric id. */
-    metricMaxes: Record<MetricKey, number>
 }
 
 export default function FileExplorerHeader({
@@ -27,10 +22,7 @@ export default function FileExplorerHeader({
     sortKey,
     sortDir,
     onHeaderClick,
-    filterRanges,
-    onRangeUpdate,
     totalMetricsWidth,
-    metricMaxes,
 }: HeaderProps) {
     return (
         <div className="sticky top-0 z-20 grid bg-background font-semibold text-xs">
@@ -83,9 +75,6 @@ export default function FileExplorerHeader({
                 </div>
                 <div className="grid" style={{ gridTemplateColumns: `repeat(${enabledMetrics.length}, 1fr)` }}>
                     {enabledMetrics.map((m, index) => {
-                        const isValue = m.definition.kind === 'value'
-                        const sliderMax = isValue ? Math.max(1, metricMaxes[m.id] ?? 0) : 100
-                        const unit = isValue ? '' : '%'
                         return (
                             <div
                                 key={m.id}
@@ -101,15 +90,6 @@ export default function FileExplorerHeader({
                                     </InfoTooltip>
                                 </div>
 
-                                <div className="px-2">
-                                    <HeaderRangeSlider
-                                        range={filterRanges[m.id] ?? { min: 0, max: sliderMax }}
-                                        onRangeUpdate={(vals) => onRangeUpdate(m.id, vals, sliderMax)}
-                                        max={sliderMax}
-                                        unit={unit}
-                                    />
-                                </div>
-
                                 <div
                                     className="mt-1 grid"
                                     style={{
@@ -122,7 +102,7 @@ export default function FileExplorerHeader({
                                         <button
                                             key={sub.id}
                                             type="button"
-                                            className="flex w-full items-center justify-end gap-1 px-2 text-left text-muted-foreground hover:text-foreground"
+                                            className="flex w-full items-center justify-end gap-1 whitespace-nowrap px-2 text-left text-muted-foreground hover:text-foreground"
                                             onClick={() => onHeaderClick({ metric: m.id, subMetric: sub.id })}
                                             title={`Sort by ${m.label} ${sub.label}`}
                                         >

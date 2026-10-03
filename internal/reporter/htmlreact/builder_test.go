@@ -20,7 +20,7 @@ func TestHtmlReactReportBuilder_ActiveFileMetricsFilter(t *testing.T) {
 	cfg := &config.AppConfig{
 		ActiveFileMetrics: map[config.MetricKey]bool{
 			"line_coverage": true,
-			// implicitly missing statement_coverage, branch_coverage
+			// implicitly missing statement_coverage
 		},
 	}
 
@@ -32,8 +32,6 @@ func TestHtmlReactReportBuilder_ActiveFileMetricsFilter(t *testing.T) {
 			StatementsCovered: 5,
 			LinesValid:        10,
 			LinesCovered:      5,
-			BranchesValid:     10,
-			BranchesCovered:   5,
 		},
 		Root: &model.DirNode{
 			Name: "root",
@@ -42,8 +40,6 @@ func TestHtmlReactReportBuilder_ActiveFileMetricsFilter(t *testing.T) {
 				StatementsCovered: 5,
 				LinesValid:        10,
 				LinesCovered:      5,
-				BranchesValid:     10,
-				BranchesCovered:   5,
 			},
 		},
 	}
@@ -62,9 +58,6 @@ func TestHtmlReactReportBuilder_ActiveFileMetricsFilter(t *testing.T) {
 	if totalsData.StatementCoverage != nil {
 		t.Errorf("Expected StatementCoverage to be nil, got %+v", totalsData.StatementCoverage)
 	}
-	if totalsData.BranchCoverage != nil {
-		t.Errorf("Expected BranchCoverage to be nil, got %+v", totalsData.BranchCoverage)
-	}
 }
 
 // TestBuildMetricsMap_GoldenFile verifies that the provider-loop output is
@@ -75,7 +68,6 @@ func TestBuildMetricsMap_GoldenFile(t *testing.T) {
 		ActiveFileMetrics: map[config.MetricKey]bool{
 			config.StatementCoverage:      true,
 			config.LineCoverage:           true,
-			config.BranchCoverage:         true,
 			config.MethodsHit:             true,
 			config.MethodsFullyCovered:    true,
 			config.PatchStatementCoverage: true,
@@ -91,8 +83,6 @@ func TestBuildMetricsMap_GoldenFile(t *testing.T) {
 		LinesCovered:           80,
 		LinesValid:             100,
 		TotalLines:             150,
-		BranchesCovered:        3,
-		BranchesValid:          5,
 		MethodsHit:             4,
 		MethodsFullyCovered:    2,
 		MethodsValid:           6,
@@ -109,11 +99,10 @@ func TestBuildMetricsMap_GoldenFile(t *testing.T) {
 
 	metrics := b.buildMetricsMap(tree.Root.Metrics)
 
-	// Verify all 8 metric keys are present
+	// Verify all 7 metric keys are present
 	expectedKeys := []string{
 		string(config.StatementCoverage),
 		string(config.LineCoverage),
-		string(config.BranchCoverage),
 		string(config.MethodsHit),
 		string(config.MethodsFullyCovered),
 		string(config.PatchStatementCoverage),
@@ -149,13 +138,6 @@ func TestBuildMetricsMap_GoldenFile(t *testing.T) {
 	assert.Equal(t, 150, lc.Total)
 	assert.Equal(t, 80.0, lc.Percentage)
 
-	// Verify branch_coverage detail shape
-	var bc branchCoverageDetail
-	require.NoError(t, json.Unmarshal(roundTrip[string(config.BranchCoverage)], &bc))
-	assert.Equal(t, 3, bc.Covered)
-	assert.Equal(t, 5, bc.Total)
-	assert.Equal(t, 60.0, bc.Percentage)
-
 	// Verify methods_hit detail shape
 	var mh methodsHitDetail
 	require.NoError(t, json.Unmarshal(roundTrip[string(config.MethodsHit)], &mh))
@@ -190,55 +172,12 @@ func TestBuildMetricsMap_GoldenFile(t *testing.T) {
 	assert.Equal(t, 2, pmh.Total)
 }
 
-// TestBuildMetricsMap_RemoveBranchCoverage confirms that removing branch_coverage
-// from ActiveFileMetrics removes branch data from the rendered file detail view.
-func TestBuildMetricsMap_RemoveBranchCoverage(t *testing.T) {
-	cfg := &config.AppConfig{
-		ActiveFileMetrics: map[config.MetricKey]bool{
-			config.StatementCoverage: true,
-			config.LineCoverage:      true,
-			// branch_coverage intentionally omitted
-		},
-	}
-	b := &HtmlReactReportBuilder{config: cfg}
-
-	m := model.CoverageMetrics{
-		StatementsCovered: 5,
-		StatementsValid:   10,
-		LinesCovered:      50,
-		LinesValid:        100,
-		TotalLines:        100,
-		BranchesCovered:   3,
-		BranchesValid:     5,
-	}
-	tree := &model.SummaryTree{Metrics: m, Root: &model.DirNode{Metrics: m}}
-	calculator.CalculateTree(tree, cfg.ActiveFileMetrics, nil)
-
-	metrics := b.buildMetricsMap(tree.Root.Metrics)
-
-	// Branch data must be absent
-	_, hasBranch := metrics[string(config.BranchCoverage)]
-	assert.False(t, hasBranch, "branch_coverage should be absent when not in ActiveFileMetrics")
-
-	// Statement and line data should be present
-	assert.Contains(t, metrics, string(config.StatementCoverage))
-	assert.Contains(t, metrics, string(config.LineCoverage))
-
-	// Also verify totals mirrors the same behavior
-	// Tree is already calculated above.
-	totalsData := b.buildTotals(tree, 1, 0)
-	assert.Nil(t, totalsData.BranchCoverage, "totals.BranchCoverage should be nil")
-	assert.NotNil(t, totalsData.StatementCoverage, "totals.StatementCoverage should be present")
-	assert.NotNil(t, totalsData.LineCoverage, "totals.LineCoverage should be present")
-}
-
 // TestBuildMetricsMap_GuardsSkipEmptyData confirms that providers with
 // guards (e.g. StatementsValid > 0) skip writing when there's no data.
 func TestBuildMetricsMap_GuardsSkipEmptyData(t *testing.T) {
 	cfg := &config.AppConfig{
 		ActiveFileMetrics: map[config.MetricKey]bool{
 			config.StatementCoverage: true,
-			config.BranchCoverage:    true,
 			config.MethodsHit:        true,
 		},
 	}
@@ -254,9 +193,6 @@ func TestBuildMetricsMap_GuardsSkipEmptyData(t *testing.T) {
 	_, hasStmt := metrics[string(config.StatementCoverage)]
 	assert.False(t, hasStmt, "statement_coverage should be skipped when StatementsValid == 0")
 
-	_, hasBranch := metrics[string(config.BranchCoverage)]
-	assert.False(t, hasBranch, "branch_coverage should be skipped when BranchesValid == 0")
-
 	_, hasMethods := metrics[string(config.MethodsHit)]
 	assert.False(t, hasMethods, "methods_hit should be skipped when MethodsValid == 0")
 }
@@ -268,7 +204,6 @@ func TestBuildMetricDefinitions_EveryMetricIsDescribed(t *testing.T) {
 		ActiveFileMetrics: map[config.MetricKey]bool{
 			config.StatementCoverage:       true,
 			config.LineCoverage:            true,
-			config.BranchCoverage:          true,
 			config.MethodsHit:              true,
 			config.MethodsFullyCovered:     true,
 			config.PatchStatementCoverage:  true,
@@ -281,12 +216,9 @@ func TestBuildMetricDefinitions_EveryMetricIsDescribed(t *testing.T) {
 			config.MethodLineCoverage:           true,
 			config.MethodPatchStatementCoverage: true,
 			config.MethodPatchLineCoverage:      true,
-			config.MethodBranchCoverage:         true,
 			config.CyclomaticComplexity:         true,
 			config.MethodCrapScore:              true,
-			config.MethodPatchCrapScore:         true,
 			config.MethodExposedRisk:            true,
-			config.MethodDefectProbability:      true,
 		},
 	}}
 
@@ -298,7 +230,7 @@ func TestBuildMetricDefinitions_EveryMetricIsDescribed(t *testing.T) {
 	}
 
 	// Descriptions come from the evaluators, not a copy kept in the reporter.
-	assert.Equal(t, "Percentage of covered code branches.", defs[string(config.BranchCoverage)].Description)
+	assert.Equal(t, "Percentage of executed statements.", defs[string(config.StatementCoverage)].Description)
 }
 
 func TestUniqueReportLabels(t *testing.T) {
@@ -348,9 +280,31 @@ func TestUniqueReportLabels(t *testing.T) {
 
 func TestMetricOrder_FollowsConfiguredFileMetrics(t *testing.T) {
 	cfg := &config.AppConfig{
-		FileMetrics: []config.MetricKey{config.StatementCoverage, config.PatchMethodsHit, config.MaxCyclomaticComplexity, config.BranchCoverage},
+		FileMetrics: []config.MetricKey{config.StatementCoverage, config.PatchMethodsHit, config.MaxCyclomaticComplexity, config.MethodsHit},
 	}
 	b := NewHtmlReactReportBuilder(t.TempDir(), slog.New(slog.NewTextHandler(os.Stdout, nil)), false, cfg).(*HtmlReactReportBuilder)
 
-	assert.Equal(t, []string{"statement_coverage", "patch_methods_hit", "max_cyclomatic_complexity", "branch_coverage"}, b.metricOrder())
+	assert.Equal(t, []string{"statement_coverage", "patch_methods_hit", "max_cyclomatic_complexity", "methods_hit"}, b.metricOrder())
+}
+
+func TestComparingItems(t *testing.T) {
+	hash := "d26739fc86ec8b84bdf7b192e92288b8d616e583"
+	tree := &model.SummaryTree{
+		Versions: &model.Versions{
+			Base:       model.RunRef{Revision: hash, Stream: "main"},
+			Current:    model.RunRef{Revision: "//game/dev@120", Stream: "//game/dev"},
+			LocalEdits: true,
+			Diff:       "change.diff",
+		},
+		Comparison: &model.Comparison{Base: model.RunRef{Revision: hash}, Distance: 3},
+		Change:     &model.ChangeSet{Measured: []string{"a.go"}, Ignored: []string{"a_test.go"}},
+	}
+	assert.Equal(t, []MetadataItem{
+		{Label: "Base", Value: "main d26739fc"},
+		{Label: "Current", Value: "//game/dev@120 + edits"},
+		{Label: "Coverage base", Value: "d26739fc, 3 before base"},
+		{Label: "Changed files", Value: "2 from change.diff"},
+	}, comparingItems(tree))
+
+	assert.Empty(t, comparingItems(&model.SummaryTree{}), "a report without a diff or revisions has no section")
 }

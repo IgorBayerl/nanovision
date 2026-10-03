@@ -103,26 +103,6 @@ func (o *processingOrchestrator) processLines(lines []string) ([]parsers.FileCov
 			continue
 		}
 
-		// Handle Branch Data: BRDA:<lineNumber>,<blockNumber>,<branchNumber>,<taken>
-		if after, ok := strings.CutPrefix(line, "BRDA:"); ok {
-			parts := strings.Split(after, ",")
-			if len(parts) >= 4 {
-				ln, err := strconv.Atoi(parts[0])
-				if err == nil && ln > 0 {
-					metric := currentLines[ln]
-					metric.TotalBranches++
-
-					// LCOV uses '-' for not taken, or a number for hit count
-					takenStr := parts[3]
-					if takenStr != "-" && takenStr != "0" {
-						metric.CoveredBranches++
-					}
-					currentLines[ln] = metric
-				}
-			}
-			continue
-		}
-
 		// Handle End of Record
 		if line == "end_of_record" {
 			finishRecord()
