@@ -1,0 +1,9 @@
+# Folder config for cmd.
+# It applies to this folder and everything below it.
+# A folder config can set only: reports, ignore_files, metrics (warning ranges).
+
+# The e2e tests check most of the command line code. Use a lower range.
+metrics:
+  files:
+    - name: statement_coverage
+      warning: "40..60"

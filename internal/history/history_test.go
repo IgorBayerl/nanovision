@@ -7,10 +7,8 @@ import (
 	"log/slog"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"testing"
 
-	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/diff"
 	"github.com/IgorBayerl/nanovision/internal/model"
@@ -26,24 +24,10 @@ func repoRoot(t *testing.T) string {
 	return filepath.Dir(filepath.Dir(filepath.Dir(file)))
 }
 
-func registerMetrics() {
-	var files, methods []config.MetricKey
-	for k := range calculator.FileRegistry {
-		files = append(files, k)
-	}
-	for k := range calculator.MethodRegistry {
-		methods = append(methods, k)
-	}
-	sort.Slice(files, func(i, j int) bool { return files[i] < files[j] })
-	sort.Slice(methods, func(i, j int) bool { return methods[i] < methods[j] })
-	config.RegisterDefaultMetrics(files, methods)
-}
-
 // demoTree runs the real pipeline on the demo projects: Go, and C++ measured
 // by two reports, so lines carry per-report hits.
 func demoTree(t *testing.T, withDiff bool) (*model.SummaryTree, *config.AppConfig) {
 	t.Helper()
-	registerMetrics()
 	root := repoRoot(t)
 	demo := func(parts ...string) string {
 		return filepath.Join(append([]string{root, "demo_projects"}, parts...)...)
@@ -51,13 +35,13 @@ func demoTree(t *testing.T, withDiff bool) (*model.SummaryTree, *config.AppConfi
 
 	// the test runs in this package's folder, which has no nanovision.yaml to pick up
 	cfg, err := config.Load("", config.RawConfigInput{
-		ReportPatterns: demo("go", "report", "gocover", "coverage.out") + ";" +
+		Reports: []string{demo("go", "report", "gocover", "coverage.out") + ";" +
 			demo("cpp", "report", "gcov", "branch-probabilities", "*.gcov") + ";" +
-			demo("cpp", "report", "cobertura", "cobertura.xml"),
+			demo("cpp", "report", "cobertura", "cobertura.xml")},
 		SourceDirs:  demo("go", "project") + ";" + demo("cpp", "project") + ";" + demo("cpp", "project"),
 		ReportTypes: "TextSummary,Html", OutputDir: "coverage-report", LogFormat: "text", Verbosity: "Info",
 		IgnoreCache: true,
-		StatusBands: []string{"statement_coverage=60..80", "cyclomatic_complexity=0..5"},
+		StatusBands: []string{"statement_coverage=60..80", "methods.complexity=0..5"},
 	})
 	require.NoError(t, err)
 	cfg.ProjectRoot = root

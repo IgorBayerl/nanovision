@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/IgorBayerl/nanovision/internal/calculator"
@@ -52,12 +53,20 @@ func TestHtmlReactReportBuilder_ActiveFileMetricsFilter(t *testing.T) {
 
 	totalsData := b.buildTotals(tree, 1, 0)
 
-	if totalsData.LineCoverage == nil {
-		t.Errorf("Expected LineCoverage to be present, got nil")
+	if _, ok := totalsData.Metrics[string(config.LineCoverage)]; !ok {
+		t.Errorf("Expected line_coverage to be present")
 	}
-	if totalsData.StatementCoverage != nil {
-		t.Errorf("Expected StatementCoverage to be nil, got %+v", totalsData.StatementCoverage)
+	if _, ok := totalsData.Metrics[string(config.StatementCoverage)]; ok {
+		t.Errorf("Expected statement_coverage to be absent: it is not an active metric")
 	}
+
+	// in JSON the metrics sit next to the counts
+	data, err := json.Marshal(totalsData)
+	require.NoError(t, err)
+	var flat map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(data, &flat))
+	assert.Contains(t, flat, "line_coverage")
+	assert.JSONEq(t, "1", string(flat["files"]))
 }
 
 // TestBuildMetricsMap_GoldenFile verifies that the provider-loop output is
@@ -139,13 +148,13 @@ func TestBuildMetricsMap_GoldenFile(t *testing.T) {
 	assert.Equal(t, 80.0, lc.Percentage)
 
 	// Verify methods_hit detail shape
-	var mh methodsHitDetail
+	var mh countDetail
 	require.NoError(t, json.Unmarshal(roundTrip[string(config.MethodsHit)], &mh))
 	assert.Equal(t, 4, mh.Covered)
 	assert.Equal(t, 6, mh.Total)
 
 	// Verify methods_fully_covered detail shape
-	var mfc methodsFullyCoveredDetail
+	var mfc countDetail
 	require.NoError(t, json.Unmarshal(roundTrip[string(config.MethodsFullyCovered)], &mfc))
 	assert.Equal(t, 2, mfc.Covered)
 	assert.Equal(t, 6, mfc.Total)
@@ -166,7 +175,7 @@ func TestBuildMetricsMap_GoldenFile(t *testing.T) {
 	assert.Equal(t, 20, plc.Total)
 
 	// Verify patch_methods_hit detail shape
-	var pmh methodsHitDetail
+	var pmh countDetail
 	require.NoError(t, json.Unmarshal(roundTrip[string(config.PatchMethodsHit)], &pmh))
 	assert.Equal(t, 1, pmh.Covered)
 	assert.Equal(t, 2, pmh.Total)
@@ -200,37 +209,34 @@ func TestBuildMetricsMap_GuardsSkipEmptyData(t *testing.T) {
 // Every metric the UI can show needs a tooltip description, so a new metric
 // cannot ship without one.
 func TestBuildMetricDefinitions_EveryMetricIsDescribed(t *testing.T) {
-	b := &HtmlReactReportBuilder{config: &config.AppConfig{
-		ActiveFileMetrics: map[config.MetricKey]bool{
-			config.StatementCoverage:       true,
-			config.LineCoverage:            true,
-			config.MethodsHit:              true,
-			config.MethodsFullyCovered:     true,
-			config.PatchStatementCoverage:  true,
-			config.PatchLineCoverage:       true,
-			config.PatchMethodsHit:         true,
-			config.MaxCyclomaticComplexity: true,
-		},
-		ActiveMethodMetrics: map[config.MetricKey]bool{
-			config.MethodStatementCoverage:      true,
-			config.MethodLineCoverage:           true,
-			config.MethodPatchStatementCoverage: true,
-			config.MethodPatchLineCoverage:      true,
-			config.CyclomaticComplexity:         true,
-			config.MethodCrapScore:              true,
-			config.MethodExposedRisk:            true,
-		},
-	}}
+	cfg := &config.AppConfig{
+		FileMetrics:         config.DefaultFileMetrics,
+		MethodMetrics:       config.DefaultMethodMetrics,
+		ActiveFileMetrics:   map[config.MetricKey]bool{},
+		ActiveMethodMetrics: map[config.MetricKey]bool{},
+	}
+	for _, k := range cfg.FileMetrics {
+		cfg.ActiveFileMetrics[k] = true
+	}
+	for _, k := range cfg.MethodMetrics {
+		cfg.ActiveMethodMetrics[k] = true
+	}
+	b := &HtmlReactReportBuilder{config: cfg}
 
 	defs := b.buildMetricDefinitions()
-	assert.NotEmpty(t, defs)
+	assert.Len(t, defs, len(config.FileMetricDefs)+len(config.MethodMetricDefs), "every metric of the tables has a definition")
 
 	for key, def := range defs {
 		assert.NotEmpty(t, def.Description, "metric %q has no tooltip description", key)
+		assert.NotEmpty(t, def.SubMetrics, "metric %q has no columns", key)
 	}
 
-	// Descriptions come from the evaluators, not a copy kept in the reporter.
-	assert.Equal(t, "Percentage of executed statements.", defs[string(config.StatementCoverage)].Description)
+	// The text comes from the metric tables, not a copy kept in the reporter.
+	statements, _ := config.Metric(config.StatementCoverage)
+	assert.Equal(t, statements.Doc, defs[string(config.StatementCoverage)].Description)
+	// method metrics are keyed by their configured position
+	assert.Equal(t, "Statements", defs["a_statement_coverage"].Label)
+	assert.Equal(t, "value", defs["e_complexity"].Kind)
 }
 
 func TestUniqueReportLabels(t *testing.T) {
@@ -307,4 +313,39 @@ func TestComparingItems(t *testing.T) {
 	}, comparingItems(tree))
 
 	assert.Empty(t, comparingItems(&model.SummaryTree{}), "a report without a diff or revisions has no section")
+}
+
+func TestBuildConfigs(t *testing.T) {
+	band := &config.Band{Min: 80, Max: 90}
+	root := t.TempDir()
+	b := &HtmlReactReportBuilder{config: &config.AppConfig{
+		ProjectRoot: root,
+		ConfigFile:  filepath.Join(root, "nanovision.yaml"),
+		Folders: []config.FolderConfig{
+			{Path: "cmd", File: filepath.Join(root, "cmd", "nanovision.yaml"), ScopedConfig: config.ScopedConfig{IgnoreFiles: []string{"gen/**"}}},
+			{Path: "internal/store", File: filepath.Join(root, "internal", "store", "nanovision.yaml"), ScopedConfig: config.ScopedConfig{
+				Metrics: config.MetricsConfig{Files: []config.MetricSetting{{Name: "statement_coverage", Warning: band}}},
+				Reports: []config.ReportInput{{Path: "store.out", Name: "store"}},
+			}},
+		},
+	}}
+
+	assert.Equal(t, []configFile{
+		{Source: "nanovision.yaml"},
+		{Path: "cmd", Source: "cmd/nanovision.yaml"},
+		{Path: "internal/store", Source: "internal/store/nanovision.yaml"},
+	}, b.buildConfigs())
+
+	assert.Equal(t, "internal/store/nanovision.yaml", b.configSourceFor("internal/store/blob/manifest.go"))
+	assert.Equal(t, "", b.configSourceFor("internal/storekeeper/a.go"), "a folder name that only starts the same is another folder")
+
+	// a config file is a row of its folder
+	assert.Equal(t, "nanovision.yaml", b.configFileIn("."))
+	assert.Equal(t, "nanovision.yaml", b.configFileIn("internal/store"))
+	assert.Equal(t, "", b.configFileIn("internal"))
+	files, folders := countFlatNodes([]fileNode{{Type: "folder"}, {Type: "file"}, {Type: "file", Config: true}})
+	assert.Equal(t, []int{1, 1}, []int{files, folders}, "a config row is not a measured file")
+
+	b.config.Folders = nil
+	assert.Nil(t, b.buildConfigs(), "a run without folder settings lists no config files")
 }

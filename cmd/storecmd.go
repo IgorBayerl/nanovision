@@ -10,6 +10,7 @@ import (
 	"go.yaml.in/yaml/v3"
 	"os"
 
+	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/store"
 )
 
@@ -86,7 +87,10 @@ func resolveStoreDir(flagValue, configPath string) (string, error) {
 		return filepath.Abs(flagValue)
 	}
 	if configPath == "" {
-		configPath = "nanovision.yaml"
+		// a missing file is fine: the store then has its default folder
+		if configPath, _ = config.FindFile("."); configPath == "" {
+			configPath = config.FileNames[0]
+		}
 	}
 	base := filepath.Dir(configPath)
 	if data, err := os.ReadFile(configPath); err == nil {

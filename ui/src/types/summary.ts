@@ -31,6 +31,8 @@ export interface FileNode {
     componentName?: string
     targetUrl?: string | null
     diffStatus?: DiffStatus
+    /** A config file of the run, listed in its folder. It has no metrics. */
+    config?: boolean
 }
 
 export interface Totals {

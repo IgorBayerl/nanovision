@@ -131,7 +131,7 @@ func build(
 	if v := valueString(calc, key); v != "" {
 		msg += " " + v
 	}
-	if h := bandHint(cfg.StatusBands, key); h != "" {
+	if h := bandHint(cfg.BandsFor(file), key); h != "" {
 		msg += fmt.Sprintf(" (threshold %s)", h)
 	}
 

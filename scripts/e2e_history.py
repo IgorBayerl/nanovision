@@ -30,14 +30,19 @@ TOKEN = "e2e-upload-token"
 
 CONFIG = """\
 title: "Calculator (history e2e)"
-reports: ["cov.out"]
-source_dirs: ["project"]
+reports:
+  - path: "cov.out"
+    source: "project"
 report_types: ["TextSummary"]
 output_dir: "out"
 verbosity: "Warning"
 ignore_files: ["**/*_test.go"]
-status_bands:
-  statement_coverage: "60..80"
+metrics:
+  files:
+    - name: statement_coverage
+      warning: "60..80"
+    - name: methods_hit
+    - name: max_complexity
 history:
   project: "calculator"
   profile: "unit"

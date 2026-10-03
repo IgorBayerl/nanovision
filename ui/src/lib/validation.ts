@@ -39,6 +39,18 @@ const statusBandSchema = z.object({
     max: z.number(),
 })
 
+/** The warning ranges a folder sets for itself, over the ones of the report. */
+const folderBandsSchema = z.object({
+    path: z.string(),
+    bands: z.record(z.string(), statusBandSchema),
+})
+
+/** One source of settings: the root config file (path ""), or the settings of a folder. */
+const configFileSchema = z.object({
+    path: z.string(),
+    source: z.string(),
+})
+
 const reportSchema = z.object({
     name: z.string(),
     path: z.string(),
@@ -58,6 +70,7 @@ export type FileNode = {
     statuses?: z.infer<typeof statusesSchema>
     targetUrl?: string | null
     diffStatus?: z.infer<typeof diffStatusSchema>
+    config?: boolean
 }
 
 const fileNodeSchema: z.ZodType<FileNode> = z.object({
@@ -71,6 +84,8 @@ const fileNodeSchema: z.ZodType<FileNode> = z.object({
     statuses: statusesSchema,
     targetUrl: z.string().nullable().optional(),
     diffStatus: diffStatusSchema.optional(),
+    /** A config file of the run, listed in its folder. It has no metrics. */
+    config: z.boolean().optional(),
 })
 
 // A schema for the overall totals section
@@ -204,6 +219,8 @@ export type ChangeSet = z.infer<typeof changeSetSchema>
 export type ReportBucket = z.infer<typeof reportBucketSchema>
 export type ReportIndex = z.infer<typeof reportIndexSchema>
 export type StatusBand = z.infer<typeof statusBandSchema>
+export type FolderBands = z.infer<typeof folderBandsSchema>
+export type ConfigFile = z.infer<typeof configFileSchema>
 export type ReportRef = z.infer<typeof reportSchema>
 
 export const summaryV1Schema = z.object({
@@ -228,6 +245,10 @@ export const summaryV1Schema = z.object({
     reports: z.array(reportSchema).optional(),
     reportIndexes: z.record(z.string(), reportIndexSchema).optional(),
     statusBands: z.record(z.string(), statusBandSchema).optional(),
+    /** Folders with their own warning ranges, outer folders first. */
+    folderBands: z.array(folderBandsSchema).optional(),
+    /** The config files of the run; absent when no folder has its own settings. */
+    configs: z.array(configFileSchema).optional(),
 })
 
 export type SummaryV1 = z.infer<typeof summaryV1Schema>

@@ -136,9 +136,9 @@ DEMO_PROJECT_TESTS = [
     ),
     # Failure Case
     TestCase(
-        name="Failure - Missing Report Argument",
-        output_dir_name="failure_missing_report_arg",
-        args=["-sourcedirs=."],
+        name="Failure - Report File Does Not Exist",
+        output_dir_name="failure_missing_report",
+        args=["-report=does-not-exist.xml", "-sourcedirs=."],
         expect_success=False,
         output_files=[] # No output expected on failure
     )
@@ -379,7 +379,10 @@ def main():
         print("\n" + "="*80)
         print("--- Running Primary E2E Tests ---")
         print("="*80)
-        e2e_results = run_test_suite(DEMO_PROJECT_TESTS, binary_path, global_cli_args, verbose=args.verbose)
+        # each demo test measures only the reports it names, so the folder
+        # configs of the repository stay out of it
+        demo_cli_args = global_cli_args + ["-set=nested_configs=false"]
+        e2e_results = run_test_suite(DEMO_PROJECT_TESTS, binary_path, demo_cli_args, verbose=args.verbose)
         all_results.extend(e2e_results)
 
         primary_tests_failed = any("FAILED" in r["status"] for r in e2e_results)

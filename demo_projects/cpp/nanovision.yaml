@@ -1,0 +1,7 @@
+# Folder config for demo_projects/cpp.
+# This demo lists its own coverage report. The root config does not know it.
+# Paths are relative to this folder.
+reports:
+  - path: "report/gcov/branch-probabilities/*.gcov"
+    source: "project"
+    name: "cpp demo (gcov)"

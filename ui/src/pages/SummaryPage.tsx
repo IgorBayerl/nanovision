@@ -73,6 +73,7 @@ export default function SummaryPage({ data: rawData, layout }: SummaryPageProps)
             validatedData.reportIndexes,
             validatedData.statusBands,
             reportSelection.selection,
+            validatedData.folderBands,
         )
 
         return {
@@ -153,6 +154,7 @@ export default function SummaryPage({ data: rawData, layout }: SummaryPageProps)
                             nodes={nodes}
                             availableMetrics={metricKeys}
                             metricDefinitions={validatedData.metricDefinitions}
+                            configs={validatedData.configs}
                             // like the side panel: the delta counts every report
                             deltas={reportSelection.isAllSelected ? validatedData.comparison?.deltas : undefined}
                             deltaMetrics={

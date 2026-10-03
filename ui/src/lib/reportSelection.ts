@@ -12,7 +12,7 @@
  * by the union of all reports, which is the same rule the per-line view on the
  * details page already follows.
  */
-import type { ReportBucket, ReportIndex, StatusBand } from '@/lib/validation'
+import type { FolderBands, ReportBucket, ReportIndex, StatusBand } from '@/lib/validation'
 import type { CoverageDetail, Metrics, RiskLevel, ScoreDetail, Statuses, Totals } from '@/types/summary'
 
 /** Bitmask of the selected reports; bit i is report i. */
@@ -100,6 +100,30 @@ function classify(value: number, band: StatusBand | undefined): RiskLevel | unde
 }
 
 type Bands = Record<string, StatusBand> | undefined
+
+/**
+ * The warning ranges of one node: the report's, changed by every folder with
+ * its own ranges on the way down to the node. The nearest folder wins, as in
+ * the annotator that set the statuses of the full report.
+ */
+function bandsLookup(bands: Bands, folderBands: FolderBands[] | undefined): (path: string) => Bands {
+    if (!folderBands || folderBands.length === 0) return () => bands
+
+    const cache = new Map<string, Bands>()
+    return (path) => {
+        const cached = cache.get(path)
+        if (cached || cache.has(path)) return cached
+
+        let merged = bands
+        for (const folder of folderBands) {
+            if (path === folder.path || path.startsWith(`${folder.path}/`)) {
+                merged = { ...merged, ...folder.bands }
+            }
+        }
+        cache.set(path, merged)
+        return merged
+    }
+}
 
 /** Sums buckets per metric, used to roll files up into folders and totals. */
 type TallyMap = Map<string, BucketTally>
@@ -196,8 +220,13 @@ export function applyReportSelection<N extends SelectableNode, T extends Totals>
     indexes: Record<string, ReportIndex> | undefined,
     bands: Bands,
     selection: ReportSelection,
+    folderBands?: FolderBands[],
 ): { nodes: N[]; totals: T } {
     if (!indexes) return { nodes, totals }
+
+    const bandsOf = bandsLookup(bands, folderBands)
+    // files share the ranges of their folder, so the lookup is cached per folder
+    const folderOf = (path: string) => path.slice(0, Math.max(0, path.lastIndexOf('/')))
 
     const subtree = new Map<string, TallyMap>()
     const rootTallies: TallyMap = new Map()
@@ -222,7 +251,7 @@ export function applyReportSelection<N extends SelectableNode, T extends Totals>
         if (node.type === 'folder') {
             const own = subtree.get(node.id) ?? new Map()
             subtree.delete(node.id)
-            nextNodes[i] = applyTalliesToNode(node, own, bands)
+            nextNodes[i] = applyTalliesToNode(node, own, bandsOf(node.path))
             mergeTallies(bucketFor(node.parentId), own)
             continue
         }
@@ -235,7 +264,7 @@ export function applyReportSelection<N extends SelectableNode, T extends Totals>
 
         const own: TallyMap = new Map()
         addTallies(own, index, selection)
-        nextNodes[i] = applyTalliesToNode(node, own, bands)
+        nextNodes[i] = applyTalliesToNode(node, own, bandsOf(folderOf(node.path)))
         mergeTallies(bucketFor(node.parentId), own)
     }
 

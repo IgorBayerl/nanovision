@@ -7,6 +7,7 @@ import { useFileExplorerState } from '@/hooks/useFileExplorerState'
 import { useFilteredAndSortedTree } from '@/hooks/useFilteredAndSortedTree'
 import { aggregateFolderDiff } from '@/lib/aggregateFolderDiff'
 import { camelCaseToTitleCase } from '@/lib/utils'
+import type { ConfigFile } from '@/lib/validation'
 import type { FileNode, MetricDefinition, MetricDefinitions } from '@/types/summary'
 import { Card, CardContent, CardHeader } from '@/ui/card'
 
@@ -30,6 +31,8 @@ interface FileExplorerProps {
     nodes: FileNode[]
     availableMetrics: string[]
     metricDefinitions: MetricDefinitions
+    /** The config files of the run; a folder with its own settings is marked. */
+    configs?: ConfigFile[]
     /** Path -> metric -> change against the base run, in percentage points. */
     deltas?: Record<string, Record<string, number>>
     /** The metrics the base run was compared on; each gets a Change column. */
@@ -40,6 +43,7 @@ export default function FileExplorer({
     nodes: reportNodes,
     availableMetrics,
     metricDefinitions,
+    configs,
     deltas,
     deltaMetrics,
 }: FileExplorerProps) {
@@ -81,6 +85,12 @@ export default function FileExplorer({
     // Diff status propagated up to folders (a folder is decorated when any
     // descendant file was added/modified).
     const folderDiffMap = useMemo(() => aggregateFolderDiff(nodes), [nodes])
+
+    // The folder config that applies to a path: the nearest folder with its own settings.
+    const configFor = useMemo(() => {
+        const folders = (configs ?? []).filter((c) => c.path !== '').sort((a, b) => b.path.length - a.path.length)
+        return (path: string) => folders.find((c) => path === c.path || path.startsWith(`${c.path}/`))
+    }, [configs])
 
     const finalView = useFilteredAndSortedTree({
         nodes,
@@ -131,6 +141,7 @@ export default function FileExplorer({
                             viewMode={state.viewMode}
                             isPinned={state.isNameColumnPinned}
                             folderDiffMap={folderDiffMap}
+                            configFor={configFor}
                         />
                     </div>
                 </div>

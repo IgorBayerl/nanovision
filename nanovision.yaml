@@ -3,29 +3,28 @@
 # ------------------------------------------------------------------
 # This file defines the default settings for generating nanovision's own coverage report.
 # CLI flags provided by the python script will override the settings in this file.
+#
+# `nanovision config docs` prints every key with its documentation.
+# `nanovision config check` validates this file and the ones in sub-folders.
 
-# A list of coverage report files to parse for the merged report.
+# The coverage reports to merge. `source` is the folder the paths inside the
+# report are relative to (default: the project root). `name` is the label in
+# the report selector (default: the file name).
+#
+# The three demo projects list their own reports. See the nanovision.yaml in
+# demo_projects/cpp, demo_projects/csharp and demo_projects/go.
 reports:
-  - "reports/nanovision_self_coverage/coverage-unit.out"
-  - "reports/nanovision_self_coverage/coverage-integration.out"
-  - "demo_projects/cpp/report/gcov/branch-probabilities/*.gcov"
-  - "demo_projects/csharp/report/cobertura/cobertura.xml"
-  - "demo_projects/go/report/gocover/coverage.out"
-
-# A list of source code directories. The order must match the `reports` list.
-source_dirs:
-  - "."
-  - "."
-  - "demo_projects/cpp/project"
-  - "demo_projects/csharp/project"
-  - "demo_projects/go/project"
+  - path: "reports/nanovision_self_coverage/coverage-unit.out"
+    name: "unit tests"
+  - path: "reports/nanovision_self_coverage/coverage-integration.out"
+    name: "e2e tests"
 
 # The directory where the final self-coverage report will be saved.
 output_dir: "reports/nanovision_self_coverage_full"
 
 # The types of reports to generate.
 report_types:
-  - "Html"          # opens on the Changes tab when the run has a diff or a base run
+  - "Html"          # has a Changes tab when the run has a diff or a base run
   # - "HtmlUnified" # the same report as one file
   - "TextSummary"
   - "Lcov"
@@ -43,42 +42,54 @@ ignore_files:
   - "**/*_test.go"
   - "scripts/**"
   - "vendor/**"
+  - "reports/**"   # generated output; also keeps the config search out of it
   - "internal/analyzer/analyzer.go"
   - "internal/filesystem/filesystem.go"
   - "internal/reporter/context.go"
   - "internal/testutil/**"
 
-
-# Risk Status Thresholds
-# Defines the percentage ranges for 'warning' status.
-# - Percentages BELOW the minimum are marked as 'danger'.
-# - Percentages WITHIN the range (inclusive) are 'warning'.
-# - Percentages ABOVE the maximum are 'safe'.
+# The metrics to show, in column order. `nanovision -list-metrics` lists them.
 #
-# Format: "min..max" (e.g., "60..75")
-# Metric keys must be in snake_case.
-# If a metric is not listed here, it will not have a status indicator.
-#
-status_bands:
-  # file and directory metrics
-  # line_coverage: "60..75"
-  statement_coverage: "60..75"
-  # methods_hit: "60..80"
-  # methods_fully_covered: "40..60"
-  # patch_line_coverage: "80..90"
-  patch_statement_coverage: "70..80"
-  patch_methods_hit: "80..90"
-  # statement_methods_hit: "60..80"
-  # statement_methods_fully_covered: "40..60"
-  # patch_statement_methods_hit: "80..90"
-  # max_cyclomatic_complexity: "10..20"
+# `warning` is the range "min..max" that counts as warning. For a coverage
+# metric, below the range is danger and above it is safe. For a
+# lower-is-better metric such as complexity, it is the reverse. A metric
+# without a range has no status indicator.
+metrics:
+  files:        # per file and folder
+    - name: statement_coverage
+      warning: "60..75"
+    - name: methods_hit
+    - name: methods_fully_covered
+    - name: patch_methods_hit
+      warning: "80..90"
+    - name: patch_statement_coverage
+      warning: "70..80"
+    - name: statement_methods_hit
+    - name: statement_methods_fully_covered
+    - name: patch_statement_methods_hit
+    - name: max_complexity
+    # - name: line_coverage
+    # - name: patch_line_coverage
 
-  # method and function metrics
-  # method_line_coverage: "60..75"
-  # method_statement_coverage: "60..75"
-  # method_patch_line_coverage: "80..90"
-  # method_patch_statement_coverage: "80..90"
-  # cyclomatic_complexity: "10..20"
+  methods:      # per method, on the file page
+    - name: statement_coverage
+    - name: complexity
+    - name: patch_statement_coverage
+    - name: crap_score
+    # - name: line_coverage
+    # - name: patch_line_coverage
+
+# A folder can have its own warning ranges, ignored files and reports.
+# Put a nanovision.yaml inside the folder. It applies to that folder and
+# everything below it. Every other key is valid only in this root file.
+#
+# This repository has four:
+#   cmd/nanovision.yaml              a lower range for the command line code
+#   internal/store/nanovision.yaml   stricter ranges for the run store
+#   demo_projects/*/nanovision.yaml  each demo lists its own report
+#
+# "nanovision config check" lists every config file it finds.
+# "nanovision config show internal/store" prints what applies to a folder.
 
 # filters applied on first open, unless the URL already carries a query string.
 # join them with '&':
@@ -99,28 +110,5 @@ review:
   hotspots: 10                         # how many risky changed methods to list
   # when to exit non-zero: "error", "warning" or "never". also set with -fail-on
   fail_on: "never"
-
-# metrics shown in the reports, see docs/evaluator_reference.md
-file_metrics:
-  # - "line_coverage"
-  - "statement_coverage"
-  - "methods_hit"
-  - "methods_fully_covered"
-  # - "patch_line_coverage"
-  - "patch_methods_hit"
-  - "patch_statement_coverage"
-  - "statement_methods_hit"
-  - "statement_methods_fully_covered"
-  - "patch_statement_methods_hit"
-  - "max_cyclomatic_complexity"
-
-method_metrics:
-  # - "method_line_coverage"
-  - "method_statement_coverage"
-  - "cyclomatic_complexity"
-  # - "method_patch_line_coverage"
-  - "method_patch_statement_coverage"
-  - "method_crap_score"
-  - "method_exposed_risk"
 
 ignore_cache: true

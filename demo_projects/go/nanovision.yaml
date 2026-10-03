@@ -1,0 +1,7 @@
+# Folder config for demo_projects/go.
+# This demo lists its own coverage report. The root config does not know it.
+# Paths are relative to this folder.
+reports:
+  - path: "report/gocover/coverage.out"
+    source: "project"
+    name: "go demo (gocover)"

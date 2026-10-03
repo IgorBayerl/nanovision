@@ -185,10 +185,8 @@ import CopyCode from '../components/CopyCode.jsx'
               <CopyCode
                 client:load
                 code={`reports:
-  - "coverage.out"
-
-source_dirs:
-  - "."
+  - path: "coverage.out"
+    source: "."
 
 output_dir: "coverage-report"
 

@@ -117,7 +117,7 @@ func TestSmokeLineCoverageOnly(t *testing.T) {
 		"-sourcedirs="+sourceDir,
 		"-reporttypes=TextSummary,Html",
 		"-output="+outDir,
-		"-file-metrics=line_coverage",
+		"-file-metric=line_coverage",
 	)
 	cmd.Dir = configFreeDir(t)
 	out, err := cmd.CombinedOutput()

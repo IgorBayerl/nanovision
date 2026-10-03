@@ -136,6 +136,13 @@ export function useFilteredAndSortedTree({
         }
 
         return (a, b) => {
+            // The config file of a folder leads its files whatever the sort:
+            // after the sub-folders by name, first of all by a metric.
+            if (viewMode === 'tree' && !a.config !== !b.config) {
+                const [config, other] = a.config ? [a, b] : [b, a]
+                const configFirst = !(sortKey === 'name' && other.type === 'folder')
+                return (config === a) === configFirst ? -1 : 1
+            }
             if (sortKey === 'name') return sortByName(a, b)
             if (typeof sortKey === 'object') return sortByMetric(a, b, sortKey)
             return 0

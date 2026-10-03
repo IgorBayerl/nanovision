@@ -21,7 +21,7 @@ func TestParseRevision(t *testing.T) {
 }
 
 func TestDetectNone(t *testing.T) {
-	v, err := Detect("none", t.TempDir(), Options{})
+	v, err := Detect("", t.TempDir(), Options{})
 	assert.NoError(t, err)
 	assert.Nil(t, v)
 }
@@ -72,7 +72,7 @@ func TestGitAdapter(t *testing.T) {
 	repo := gitRepo(t)
 	project := filepath.Join(repo, "game")
 
-	v, err := Detect("auto", project, Options{BaseBranch: "main"})
+	v, err := Detect("git", project, Options{BaseBranch: "main"})
 	require.NoError(t, err)
 	require.Equal(t, "git", v.Name())
 

@@ -1,21 +1,17 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"runtime"
-	"sort"
 	"strings"
 	"time"
 
 	"github.com/IgorBayerl/nanovision/internal/bootlog"
-	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/diagnostics"
 	"github.com/IgorBayerl/nanovision/internal/diff"
@@ -30,7 +26,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/reporter/sarif"
 	"github.com/IgorBayerl/nanovision/internal/reporter/textsummary"
 	"github.com/IgorBayerl/nanovision/internal/review"
-	"github.com/IgorBayerl/nanovision/internal/status"
 	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
 )
 
@@ -54,10 +49,15 @@ func (r *repeatedStringFlag) Set(value string) error {
 func parseAndBindFlags() *config.RawConfigInput {
 	rawInput := &config.RawConfigInput{}
 
-	flag.StringVar(&rawInput.ReportPatterns, "report", "", "Coverage report file paths or patterns (semicolon-separated)")
+	flag.Var((*repeatedStringFlag)(&rawInput.Reports), "report", "Coverage report: 'path[,source=DIR][,name=LABEL]'. Repeat it for each report.")
+	flag.StringVar(&rawInput.SourceDirs, "sourcedirs", "", "Source folder for the reports that name none (several: semicolon-separated, one for each report)")
+	flag.Var((*repeatedStringFlag)(&rawInput.FileMetrics), "file-metric", "File metric to show: 'name' or 'name=min..max' with a warning range. Repeat it, in column order. See -list-metrics.")
+	flag.Var((*repeatedStringFlag)(&rawInput.MethodMetrics), "method-metric", "Method metric to show: 'name' or 'name=min..max'. Repeat it, in column order. See -list-metrics.")
+	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Warning range of a metric: 'name=min..max', or 'methods.name=min..max' for a method metric. Repeat it.")
+	flag.Var((*repeatedStringFlag)(&rawInput.Set), "set", "Set any config key: 'key=value', e.g. 'review.hotspots=5'. Repeat it. 'nanovision config docs' lists the keys.")
+	flag.StringVar(&rawInput.VCS, "vcs", "", "Version control system: 'git' or 'perforce' (vcs.type)")
 	flag.StringVar(&rawInput.OutputDir, "output", "coverage-report", "Output directory for generated reports")
 	flag.StringVar(&rawInput.ReportTypes, "reporttypes", "TextSummary,Html", "Report types (comma-separated)")
-	flag.StringVar(&rawInput.SourceDirs, "sourcedirs", "", "Source directories (semicolon-separated, one per report pattern)")
 	flag.StringVar(&rawInput.Tag, "tag", "", "Optional tag, e.g. build number")
 	flag.StringVar(&rawInput.Title, "title", "", "Optional report title (default: 'Coverage Report')")
 	flag.StringVar(&rawInput.FileFilters, "filefilters", "", "File path filters (+Include;-Exclude, semicolon-separated)")
@@ -69,9 +69,6 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.StringVar(&rawInput.DiffStrip, "diff-strip", "", "Strip N leading components from diff paths ('auto' or 0-6)")
 	flag.BoolVar(&rawInput.OnlyChanged, "only-changed", false, "The HTML report holds only the changed files; needs a diff")
 	flag.BoolVar(&rawInput.IgnoreCache, "ignore-cache", false, "Ignore existing cache and force re-analysis")
-	flag.Var((*repeatedStringFlag)(&rawInput.StatusBands), "threshold", "Metric threshold (e.g. 'line_coverage=60..80'). Can be repeated.")
-	flag.StringVar(&rawInput.FileMetrics, "file-metrics", "", "Comma-separated list of file-level metrics to display (e.g., 'line_coverage,statement_coverage')")
-	flag.StringVar(&rawInput.MethodMetrics, "method-metrics", "", "Comma-separated list of method-level metrics to display (e.g., 'line_coverage,statement_coverage')")
 	flag.StringVar(&rawInput.DefaultFilters, "default-filters", "", "Raw URL query string of filters auto-applied when the report opens (e.g. 'diff=changed&risk=danger')")
 	flag.StringVar(&rawInput.FailOn, "fail-on", "", "Exit non-zero when the review gate fails or changed code has problems: 'error', 'warning' or 'never' (default)")
 
@@ -80,7 +77,6 @@ func parseAndBindFlags() *config.RawConfigInput {
 	flag.StringVar(&rawInput.Project, "project", "", "Project name in the run store (history.project, default: the project folder name)")
 	flag.StringVar(&rawInput.Profile, "profile", "", "Keeps runs of different test suites or platforms apart (history.profile, default 'default')")
 	flag.StringVar(&rawInput.RunKind, "run-kind", "", "Kind of this run: 'submit', 'review' or 'local' (default)")
-	flag.StringVar(&rawInput.VCS, "vcs", "", "Version control adapter: 'none', 'auto', 'git' or 'perforce' (vcs.type)")
 	flag.StringVar(&rawInput.Revision, "revision", "", "Revision of this run: a commit hash, or '//stream@changelist'. Use it only when the workspace matches it exactly")
 	flag.StringVar(&rawInput.BaseRevision, "base-revision", "", "Revision to compare with: a commit hash, or '//stream@changelist'")
 	flag.StringVar(&rawInput.Stream, "stream", "", "Stream or branch of this run, when no VCS adapter knows it")
@@ -111,32 +107,48 @@ func generateReports(appConfig *config.AppConfig, summaryTree *model.SummaryTree
 	for _, reportType := range appConfig.ReportTypes {
 		trimmedType := strings.TrimSpace(reportType)
 		logger.Info("Generating report", "type", trimmedType)
-		var err error
-		switch trimmedType {
-		case "TextSummary":
-			err = textsummary.NewTextReportBuilder(outputDir, logger, appConfig).CreateReport(summaryTree)
-		case "Html", "HtmlUnified":
-			if !appConfig.Diff.OnlyChanged {
-				warnLargeStaticReport(summaryTree, logger)
-			}
-			err = htmlreact.NewHtmlReactReportBuilder(outputDir, logger, trimmedType == "HtmlUnified", appConfig).CreateReport(summaryTree)
-		case "HtmlReview":
-			err = errors.New("HtmlReview is now the Changes tab of Html and HtmlUnified; " +
-				"for a report of only the changed files set diff.only_changed or pass -only-changed")
-		case "Lcov":
-			err = lcov.NewLcovReportBuilder(outputDir).CreateReport(summaryTree)
-		case "RawJson":
-			err = reporter_rawjson.NewRawJsonReportBuilder(outputDir).CreateReport(summaryTree)
-		case "Sarif":
-			err = sarif.NewSarifReportBuilder(outputDir, appConfig, evaluators.Registry).CreateReport(summaryTree)
-		case "Annotations":
-			err = annotations.NewAnnotationsReportBuilder(outputDir, appConfig, evaluators.Registry).CreateReport(summaryTree)
+		write, ok := reportWriters[trimmedType]
+		if !ok {
+			return fmt.Errorf("no writer for report type '%s'", trimmedType)
 		}
-		if err != nil {
+		if err := write(appConfig, summaryTree, logger); err != nil {
 			return fmt.Errorf("failed to generate '%s' report: %w", trimmedType, err)
 		}
 	}
 	return nil
+}
+
+// reportWriters writes each output format of config.OutputFormats. A test
+// fails when a format has no writer here, or a writer has no entry there.
+var reportWriters = map[string]func(cfg *config.AppConfig, tree *model.SummaryTree, logger *slog.Logger) error{
+	"TextSummary": func(cfg *config.AppConfig, tree *model.SummaryTree, logger *slog.Logger) error {
+		return textsummary.NewTextReportBuilder(cfg.OutputDir, logger, cfg).CreateReport(tree)
+	},
+	"Html": func(cfg *config.AppConfig, tree *model.SummaryTree, logger *slog.Logger) error {
+		return writeHTML(cfg, tree, logger, false)
+	},
+	"HtmlUnified": func(cfg *config.AppConfig, tree *model.SummaryTree, logger *slog.Logger) error {
+		return writeHTML(cfg, tree, logger, true)
+	},
+	"Lcov": func(cfg *config.AppConfig, tree *model.SummaryTree, _ *slog.Logger) error {
+		return lcov.NewLcovReportBuilder(cfg.OutputDir).CreateReport(tree)
+	},
+	"RawJson": func(cfg *config.AppConfig, tree *model.SummaryTree, _ *slog.Logger) error {
+		return reporter_rawjson.NewRawJsonReportBuilder(cfg.OutputDir).CreateReport(tree)
+	},
+	"Sarif": func(cfg *config.AppConfig, tree *model.SummaryTree, _ *slog.Logger) error {
+		return sarif.NewSarifReportBuilder(cfg.OutputDir, cfg, evaluators.Registry).CreateReport(tree)
+	},
+	"Annotations": func(cfg *config.AppConfig, tree *model.SummaryTree, _ *slog.Logger) error {
+		return annotations.NewAnnotationsReportBuilder(cfg.OutputDir, cfg, evaluators.Registry).CreateReport(tree)
+	},
+}
+
+func writeHTML(cfg *config.AppConfig, tree *model.SummaryTree, logger *slog.Logger, singleFile bool) error {
+	if !cfg.Diff.OnlyChanged {
+		warnLargeStaticReport(tree, logger)
+	}
+	return htmlreact.NewHtmlReactReportBuilder(cfg.OutputDir, logger, singleFile, cfg).CreateReport(tree)
 }
 
 // static HTML gets slow to write and to open above this many files
@@ -200,23 +212,6 @@ func evaluateReviewGate(appConfig *config.AppConfig, summaryTree *model.SummaryT
 	return reasons
 }
 
-func determineProjectRoot(configPath string) (string, error) {
-	if configPath != "" {
-		absConfigPath, err := filepath.Abs(configPath)
-		if err != nil {
-			return "", fmt.Errorf("could not determine absolute path for config file: %w", err)
-		}
-		return filepath.Dir(absConfigPath), nil
-	}
-
-	// Fallback to current working directory if no config file is used
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("could not get current working directory: %w", err)
-	}
-	return wd, nil
-}
-
 func main() {
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
@@ -224,38 +219,22 @@ func main() {
 			os.Exit(runServe(os.Args[2:]))
 		case "store":
 			os.Exit(runStoreCommand(os.Args[2:]))
+		case "config":
+			os.Exit(runConfigCommand(os.Args[2:]))
 		}
 	}
-
-	// Dynamically register all available metrics from the calculator registry as defaults
-	var defaultFileKeys []config.MetricKey
-	for k := range calculator.FileRegistry {
-		defaultFileKeys = append(defaultFileKeys, k)
-	}
-	sort.Slice(defaultFileKeys, func(i, j int) bool {
-		return string(defaultFileKeys[i]) < string(defaultFileKeys[j])
-	})
-
-	var defaultMethodKeys []config.MetricKey
-	for k := range calculator.MethodRegistry {
-		defaultMethodKeys = append(defaultMethodKeys, k)
-	}
-	sort.Slice(defaultMethodKeys, func(i, j int) bool {
-		return string(defaultMethodKeys[i]) < string(defaultMethodKeys[j])
-	})
-
-	config.RegisterDefaultMetrics(defaultFileKeys, defaultMethodKeys)
 
 	start := time.Now()
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  nanovision [flags]          make the reports of a coverage run\n")
-		fmt.Fprintf(os.Stderr, "  nanovision serve [flags]    browse the runs of a store (-h for its flags)\n")
-		fmt.Fprintf(os.Stderr, "  nanovision store <command>  look into a local store: runs, stats, dump, gc, backup\n\nFlags:\n")
+		fmt.Fprintf(os.Stderr, "  nanovision serve [flags]    run the team server on a store (-h for its flags)\n")
+		fmt.Fprintf(os.Stderr, "  nanovision store <command>  upkeep of a local store: gc, backup\n")
+		fmt.Fprintf(os.Stderr, "  nanovision config <command> the config reference and checks: docs, check, show, schema\n\nFlags:\n")
 		flag.PrintDefaults()
 	}
 
-	configPath := flag.String("config", "", "Path to a nanovision.yaml configuration file.")
+	configPath := flag.String("config", "", "Path to the config file (default: nanovision.yaml in this folder; .yml and a leading dot also work).")
 	watchFlag := flag.Bool("watch", false, "Enable watch mode to automatically regenerate reports on file changes")
 	versionFlag := flag.Bool("version", false, "Print version information and exit")
 	listParsersFlag := flag.Bool("list-parsers", false, "List supported coverage report parsers and exit")
@@ -275,33 +254,7 @@ func main() {
 	}
 
 	if *listMetricsFlag {
-		fmt.Println("NanoVision Supported Metrics")
-		fmt.Println("==================================================")
-
-		// Sort evaluators alphabetically
-		var evals []status.Evaluator
-		for _, ev := range evaluators.Registry {
-			evals = append(evals, ev)
-		}
-		sort.Slice(evals, func(i, j int) bool { return evals[i].Name() < evals[j].Name() })
-
-		fmt.Println("\nFile & Directory Metrics (yaml: file_metrics)")
-		fmt.Println("--------------------------------------------------")
-		for _, ev := range evals {
-			if bootlog.HasScope(ev, status.FileScope) {
-				fmt.Printf(" - %-35s : %s\n", ev.Key(), ev.Description())
-			}
-		}
-
-		fmt.Println("\nMethod & Function Metrics (yaml: method_metrics)")
-		fmt.Println("--------------------------------------------------")
-		for _, ev := range evals {
-			if bootlog.HasScope(ev, status.MethodScope) {
-				fmt.Printf(" - %-35s : %s\n", ev.Key(), ev.Description())
-			}
-		}
-
-		fmt.Println("\nTo configure these, add them to your nanovision.yaml file or pass them via CLI flags.")
+		printMetrics(os.Stdout)
 		os.Exit(0)
 	}
 
@@ -327,28 +280,6 @@ func main() {
 		}
 		os.Exit(1)
 	}
-
-	// Validate metrics against the evaluator registry (source of truth).
-	// Unknown keys are warned (not fatal): some keys are display-only
-	// metrics without a status evaluator, and a config written for an older
-	// version can name a metric that no longer exists.
-	for _, m := range appConfig.FileMetrics {
-		if _, ok := evaluators.Registry[m]; !ok {
-			fmt.Fprintf(os.Stderr, "Warning: file metric '%s' has no evaluator (display-only)\n", m)
-		}
-	}
-	for _, m := range appConfig.MethodMetrics {
-		if _, ok := evaluators.Registry[m]; !ok {
-			fmt.Fprintf(os.Stderr, "Warning: method metric '%s' has no evaluator (display-only)\n", m)
-		}
-	}
-
-	appConfig.ProjectRoot, err = determineProjectRoot(*configPath)
-	if err != nil {
-		slog.Error("Failed to determine project root", "error", err)
-		os.Exit(1)
-	}
-	slog.Info("Project root determined", "path", appConfig.ProjectRoot)
 
 	closer, err := buildLogger(appConfig)
 	if err != nil {

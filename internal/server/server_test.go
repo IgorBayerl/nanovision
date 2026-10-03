@@ -10,13 +10,11 @@ import (
 	"net/url"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/IgorBayerl/nanovision/internal/calculator"
 	"github.com/IgorBayerl/nanovision/internal/client"
 	"github.com/IgorBayerl/nanovision/internal/config"
 	"github.com/IgorBayerl/nanovision/internal/diff"
@@ -34,26 +32,15 @@ var quiet = slog.New(slog.NewTextHandler(io.Discard, nil))
 
 func demoRun(t *testing.T, withDiff bool) (*model.SummaryTree, *config.AppConfig) {
 	t.Helper()
-	var files, methods []config.MetricKey
-	for k := range calculator.FileRegistry {
-		files = append(files, k)
-	}
-	for k := range calculator.MethodRegistry {
-		methods = append(methods, k)
-	}
-	sort.Slice(files, func(i, j int) bool { return files[i] < files[j] })
-	sort.Slice(methods, func(i, j int) bool { return methods[i] < methods[j] })
-	config.RegisterDefaultMetrics(files, methods)
-
 	_, here, _, _ := runtime.Caller(0)
 	root := filepath.Dir(filepath.Dir(filepath.Dir(here)))
 	demo := func(parts ...string) string {
 		return filepath.Join(append([]string{root, "demo_projects"}, parts...)...)
 	}
 	cfg, err := config.Load("", config.RawConfigInput{
-		ReportPatterns: demo("go", "report", "gocover", "coverage.out") + ";" + demo("cpp", "report", "cobertura", "cobertura.xml"),
-		SourceDirs:     demo("go", "project") + ";" + demo("cpp", "project"),
-		ReportTypes:    "TextSummary,Html", OutputDir: "coverage-report", LogFormat: "text", Verbosity: "Info",
+		Reports:     []string{demo("go", "report", "gocover", "coverage.out") + ";" + demo("cpp", "report", "cobertura", "cobertura.xml")},
+		SourceDirs:  demo("go", "project") + ";" + demo("cpp", "project"),
+		ReportTypes: "TextSummary,Html", OutputDir: "coverage-report", LogFormat: "text", Verbosity: "Info",
 		IgnoreCache: true, StatusBands: []string{"statement_coverage=60..80"},
 	})
 	require.NoError(t, err)

@@ -1,8 +1,31 @@
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, File, Folder, FolderOpen } from 'lucide-react'
+import {
+    ArrowDown,
+    ArrowUp,
+    ChevronDown,
+    ChevronRight,
+    File,
+    Folder,
+    FolderOpen,
+    SlidersHorizontal,
+} from 'lucide-react'
 import DiffStatusBadge from '@/components/DiffStatusBadge'
 import InlineCoverage from '@/components/InlineCoverage'
 import { cn } from '@/lib/utils'
+import type { ConfigFile } from '@/lib/validation'
 import type { DiffStatus, FileNode, MetricConfig, Metrics, RiskLevel } from '@/types/summary'
+
+/**
+ * Marks a row that a folder config applies to. The tooltip is the path of the
+ * config. The folder that holds the config shows the file as a row instead.
+ */
+const ConfigMark = ({ config, path }: { config: ConfigFile; path: string }) => {
+    if (config.path === path) return null
+    return (
+        <span className="shrink-0" title={config.source}>
+            <SlidersHorizontal className="h-3 w-3 text-muted-foreground/40" />
+        </span>
+    )
+}
 
 /** The sub-column the explorer adds to a metric that was compared with a base run. */
 export const CHANGE_COLUMN = 'delta'
@@ -79,6 +102,7 @@ export function TreeRow({
     index,
     isPinned,
     diffStatus,
+    config,
 }: {
     node: FileNode
     depth: number
@@ -91,6 +115,8 @@ export function TreeRow({
     isPinned: boolean
     /** Effective diff status: aggregated from descendants for folders. */
     diffStatus?: DiffStatus
+    /** The folder config that applies to this row, if any. */
+    config?: ConfigFile
 }) {
     const isFolder = node.type === 'folder' && viewMode === 'tree'
     const metrics = metricsForNode(node)
@@ -152,10 +178,20 @@ export function TreeRow({
                         ) : (
                             <Folder className="h-4 w-4 shrink-0 text-primary" />
                         )
+                    ) : node.config ? (
+                        <SlidersHorizontal className="h-4 w-4 shrink-0 text-primary" />
                     ) : (
                         <File className="h-4 w-4 shrink-0 text-muted-foreground" />
                     )}
-                    <NodeName node={node} viewMode={viewMode} riskClass={riskClass} />
+                    {node.config ? (
+                        // a config file is listed to show it is there; it does not open
+                        <span className="truncate text-muted-foreground" title={node.path}>
+                            {viewMode === 'flat' ? node.path : node.name}
+                        </span>
+                    ) : (
+                        <NodeName node={node} viewMode={viewMode} riskClass={riskClass} />
+                    )}
+                    {config && !node.config && <ConfigMark config={config} path={node.path} />}
                     <DiffStatusBadge status={diffStatus} className="ml-auto pr-3 pl-2" />
                 </div>
 

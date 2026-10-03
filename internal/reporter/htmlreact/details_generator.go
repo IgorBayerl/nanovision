@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -73,8 +75,13 @@ func (b *HtmlReactReportBuilder) detailsWithSource(tree *model.SummaryTree, file
 		}
 	}
 
+	// a file under a folder with its own settings names the config it uses
+	if source := b.configSourceFor(fileNode.Path); source != "" {
+		addMeta(&metadata, "Config file", source)
+	}
+
 	// 2. Data Filtering Phase
-	reportsList := buildDetailsReports(tree, fileNode)
+	reportsList := b.buildDetailsReports(tree, fileNode)
 
 	// 3. Line & Method Mapping Phase
 	detailsLines := b.buildLineDetails(fileNode, sourceLines, len(tree.ReportNames))
@@ -96,7 +103,7 @@ func (b *HtmlReactReportBuilder) detailsWithSource(tree *model.SummaryTree, file
 		Lines:             detailsLines,
 		Reports:           reportsList,
 		ReportIndex:       b.buildDetailsReportIndex(tree, fileNode),
-		StatusBands:       b.buildStatusBands(),
+		StatusBands:       buildStatusBands(b.config.BandsFor(fileNode.Path)),
 		DefaultFilters:    b.config.DefaultFilters,
 	}, nil
 }
@@ -160,7 +167,7 @@ func generateEmptyLines(fileNode *model.FileNode) []string {
 // buildDetailsReports lists every parsed report, keeping the global order the
 // coverage masks use so a selection carries across screens. Reports that never
 // touched this file are flagged so the UI can dim them instead of hiding them.
-func buildDetailsReports(tree *model.SummaryTree, fileNode *model.FileNode) []report {
+func (b *HtmlReactReportBuilder) buildDetailsReports(tree *model.SummaryTree, fileNode *model.FileNode) []report {
 	relevant := make(map[int]bool)
 	for _, line := range fileNode.Lines {
 		for reportIdx, hits := range line.ReportHits {
@@ -170,7 +177,7 @@ func buildDetailsReports(tree *model.SummaryTree, fileNode *model.FileNode) []re
 		}
 	}
 
-	reports := buildGlobalReports(tree)
+	reports := b.buildGlobalReports(tree)
 	for i := range reports {
 		reports[i].Relevant = relevant[i]
 	}
@@ -239,42 +246,17 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 			Metrics:    make(map[string]methodMetric),
 		}
 
-		for key := range b.config.ActiveMethodMetrics {
-			if calcData, exists := method.Calculated[key]; exists {
-				switch key {
-				case config.MethodStatementCoverage:
-					if det, ok := calcData.(model.CoverageDetail); ok {
-						md.Metrics[MethodUIStmtCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
-					}
-				case config.MethodLineCoverage:
-					if det, ok := calcData.(model.CoverageDetail); ok {
-						md.Metrics[MethodUILineCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
-					}
-				case config.MethodPatchLineCoverage:
-					if det, ok := calcData.(model.CoverageDetail); ok {
-						if md.DiffStatus != "" {
-							md.Metrics[MethodUIPatchLineCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
-						}
-					}
-				case config.MethodPatchStatementCoverage:
-					if det, ok := calcData.(model.CoverageDetail); ok {
-						if md.DiffStatus != "" {
-							md.Metrics[MethodUIPatchStmtCoverage] = methodMetric{Value: fmt.Sprintf("%d / %d", det.Covered, det.Total)}
-						}
-					}
-				case config.CyclomaticComplexity:
-					if det, ok := calcData.(model.ScoreDetail); ok {
-						md.Metrics[MethodUICyclomaticComplexity] = methodMetric{Value: fmt.Sprintf("%.0f", det.Value)}
-					}
-				case config.MethodCrapScore:
-					if det, ok := calcData.(model.ScoreDetail); ok {
-						md.Metrics[MethodUICrapScore] = methodMetric{Value: fmt.Sprintf("%.2f", det.Value)}
-					}
-				case config.MethodExposedRisk:
-					if det, ok := calcData.(model.ScoreDetail); ok {
-						md.Metrics[MethodUIExposedRisk] = methodMetric{Value: fmt.Sprintf("%.2f", det.Value)}
-					}
-				}
+		for position, key := range b.config.MethodMetrics {
+			def, ok := config.Metric(key)
+			if !ok {
+				continue
+			}
+			switch detail := method.Calculated[key].(type) {
+			case model.CoverageDetail:
+				md.Metrics[methodUIKey(position, def)] = methodMetric{Value: fmt.Sprintf("%d / %d", detail.Covered, detail.Total)}
+			case model.ScoreDetail:
+				// whole numbers such as complexity print without decimals
+				md.Metrics[methodUIKey(position, def)] = methodMetric{Value: strconv.FormatFloat(math.Round(detail.Value*100)/100, 'f', -1, 64)}
 			}
 		}
 
@@ -297,53 +279,23 @@ func (b *HtmlReactReportBuilder) buildMethodDetails(fileNode *model.FileNode) ([
 // -----------------------------------------------------------------------------
 
 func (b *HtmlReactReportBuilder) buildFileTotals(fileNode *model.FileNode, maxCyclo int) totals {
-	fileMetrics := b.buildMetricsMap(fileNode.Metrics)
-
 	t := totals{
+		Metrics:  b.buildMetricsMap(fileNode.Metrics),
 		Files:    1,
-		Folders:  0,
 		Statuses: b.convertStatuses(fileNode.Statuses),
 	}
 
-	// Dynamic assignment helpers heavily reduce Cyclomatic Complexity here
-	assignLineMetric(&t.StatementCoverage, fileMetrics, string(config.StatementCoverage))
-	assignLineMetric(&t.LineCoverage, fileMetrics, string(config.LineCoverage))
-	assignMethodHitMetric(&t.MethodsHit, fileMetrics, string(config.MethodsHit))
-	assignMethodFullMetric(&t.MethodsFullyCovered, fileMetrics, string(config.MethodsFullyCovered))
-	assignLineMetric(&t.PatchStatementCoverage, fileMetrics, string(config.PatchStatementCoverage))
-	assignLineMetric(&t.PatchLineCoverage, fileMetrics, string(config.PatchLineCoverage))
-	assignMethodHitMetric(&t.PatchMethodsHit, fileMetrics, string(config.PatchMethodsHit))
-
-	// Overrides for specific edge cases
-	if b.config.ActiveFileMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil && t.PatchStatementCoverage == nil && fileNode.Metrics.StatementsValid > 0 {
-		t.PatchStatementCoverage = &lineCoverageDetail{Percentage: 100.0} // Fallback to safe when modified but no statements changed
+	// a modified file whose change holds no statement counts as fully covered
+	patch := string(config.PatchStatementCoverage)
+	if _, has := t.Metrics[patch]; !has && b.config.ActiveFileMetrics[config.PatchStatementCoverage] && fileNode.Diff != nil && fileNode.Metrics.StatementsValid > 0 {
+		t.Metrics[patch] = lineCoverageDetail{Percentage: 100.0}
 	}
 
 	if maxCyclo > 0 && b.config.ActiveFileMetrics[config.MaxCyclomaticComplexity] {
-		t.MaxCyclomaticComplexity = &scoreDetail{Value: float64(maxCyclo)}
+		t.Metrics[string(config.MaxCyclomaticComplexity)] = scoreDetail{Value: float64(maxCyclo)}
 	}
 
 	return t
-}
-
-// --- Reflection-free Dynamic Assignment Helpers ---
-
-func assignLineMetric(target **lineCoverageDetail, fm metricsMap, key string) {
-	if val, ok := fm[key].(lineCoverageDetail); ok {
-		*target = &val
-	}
-}
-
-func assignMethodHitMetric(target **methodsHitDetail, fm metricsMap, key string) {
-	if val, ok := fm[key].(methodsHitDetail); ok {
-		*target = &val
-	}
-}
-
-func assignMethodFullMetric(target **methodsFullyCoveredDetail, fm metricsMap, key string) {
-	if val, ok := fm[key].(methodsFullyCoveredDetail); ok {
-		*target = &val
-	}
 }
 
 // -----------------------------------------------------------------------------

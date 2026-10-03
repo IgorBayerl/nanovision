@@ -3,6 +3,7 @@ package htmlreact
 import (
 	"fmt"
 	"log/slog"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/reporter"
 	"github.com/IgorBayerl/nanovision/internal/review"
-	"github.com/IgorBayerl/nanovision/internal/status/evaluators"
 )
 
 type HtmlReactReportBuilder struct {
@@ -153,7 +153,9 @@ func (b *HtmlReactReportBuilder) transformTree(tree *model.SummaryTree) (summary
 		OnlyChanged:       b.onlyChanged,
 		Reports:           reports,
 		ReportIndexes:     indexes,
-		StatusBands:       b.buildStatusBands(),
+		StatusBands:       buildStatusBands(b.config.StatusBands),
+		FolderBands:       b.buildFolderBands(),
+		Configs:           b.buildConfigs(),
 	}, nil
 }
 
@@ -187,13 +189,21 @@ func (b *HtmlReactReportBuilder) buildReportIndexes(tree *model.SummaryTree) ([]
 	if len(indexes) == 0 {
 		return nil, nil
 	}
-	return buildGlobalReports(tree), indexes
+	return b.buildGlobalReports(tree), indexes
 }
 
 // buildGlobalReports lists every parsed report in the order the coverage masks
 // address them, so one selection means the same thing on every screen.
-func buildGlobalReports(tree *model.SummaryTree) []report {
+func (b *HtmlReactReportBuilder) buildGlobalReports(tree *model.SummaryTree) []report {
 	labels := uniqueReportLabels(tree.ReportNames)
+	// a name the config gives a report wins over its file name
+	for i, pattern := range tree.ReportNames {
+		for _, pair := range b.config.InputPairs {
+			if pair.ReportPattern == pattern && pair.Name != "" {
+				labels[i] = pair.Name
+			}
+		}
+	}
 
 	reports := make([]report, 0, len(tree.ReportNames))
 	for i, name := range tree.ReportNames {
@@ -276,15 +286,78 @@ func (b *HtmlReactReportBuilder) metricOrder() []string {
 	return order
 }
 
-func (b *HtmlReactReportBuilder) buildStatusBands() map[string]statusBand {
-	if len(b.config.StatusBands) == 0 {
+func buildStatusBands(source config.StatusBands) map[string]statusBand {
+	if len(source) == 0 {
 		return nil
 	}
-	bands := make(map[string]statusBand, len(b.config.StatusBands))
-	for key, band := range b.config.StatusBands {
+	bands := make(map[string]statusBand, len(source))
+	for key, band := range source {
 		bands[string(key)] = statusBand{Min: band.Min, Max: band.Max}
 	}
 	return bands
+}
+
+// buildConfigs lists the config files that shape the report, so the UI can
+// show which folders have their own settings and where they come from.
+func (b *HtmlReactReportBuilder) buildConfigs() []configFile {
+	cfg := b.config
+	if len(cfg.Folders) == 0 {
+		return nil
+	}
+	root := filepath.Base(cfg.ConfigFile)
+	out := []configFile{{Source: root}}
+	for _, o := range cfg.Folders {
+		out = append(out, configFile{Path: o.Path, Source: folderConfigSource(cfg, o)})
+	}
+	return out
+}
+
+// configFileIn returns the name of the config file that sits in a folder of
+// the tree, or "" when the folder has none. parentless is the tree root.
+func (b *HtmlReactReportBuilder) configFileIn(dirPath string) string {
+	cfg := b.config
+	if dirPath == "." || dirPath == "" {
+		if cfg.ConfigFile == "" {
+			return ""
+		}
+		return filepath.Base(cfg.ConfigFile)
+	}
+	for _, o := range cfg.Folders {
+		if o.Path == dirPath {
+			return filepath.Base(o.File)
+		}
+	}
+	return ""
+}
+
+// folderConfigSource is the path of a folder config, relative to the project root.
+func folderConfigSource(cfg *config.AppConfig, o config.FolderConfig) string {
+	if rel, err := filepath.Rel(cfg.ProjectRoot, o.File); err == nil {
+		return filepath.ToSlash(rel)
+	}
+	return o.Path + "/" + filepath.Base(o.File)
+}
+
+// configSourceFor names the config of the nearest folder with its own
+// settings above path, or "" when only the root config applies.
+func (b *HtmlReactReportBuilder) configSourceFor(path string) string {
+	source, longest := "", -1
+	for _, o := range b.config.Folders {
+		if (path == o.Path || strings.HasPrefix(path, o.Path+"/")) && len(o.Path) > longest {
+			source, longest = folderConfigSource(b.config, o), len(o.Path)
+		}
+	}
+	return source
+}
+
+// buildFolderBands lists the folders with their own warning ranges, outer
+// folders first, so the UI can re-classify their rows like the annotator did.
+func (b *HtmlReactReportBuilder) buildFolderBands() []folderBands {
+	var out []folderBands
+	for _, o := range b.config.FolderBands {
+		out = append(out, folderBands{Path: o.Path, Bands: buildStatusBands(o.Bands)})
+	}
+	return out
 }
 
 func (b *HtmlReactReportBuilder) convertStatuses(modelStatuses map[config.MetricKey]string) statuses {
@@ -431,6 +504,15 @@ func (b *HtmlReactReportBuilder) appendFlatNodes(out *[]fileNode, dir *model.Dir
 		emitted = true
 	}
 
+	// the config file of the folder, as a row that only shows it is there
+	if name := b.configFileIn(dir.Path); name != "" {
+		path := name
+		if parentID != "" {
+			path = dir.Path + "/" + name
+		}
+		*out = append(*out, fileNode{ID: path, Name: name, Type: "file", Path: path, ParentID: parentID, Depth: depth, Config: true})
+	}
+
 	files := make([]*model.FileNode, 0, len(dir.Files))
 	for _, file := range dir.Files {
 		files = append(files, file)
@@ -481,281 +563,130 @@ func isChangedFile(file *model.FileNode) bool {
 }
 
 func (b *HtmlReactReportBuilder) buildTotals(tree *model.SummaryTree, files, folders int) totals {
-	metrics := b.buildMetricsMap(tree.Metrics)
-
-	t := totals{
-		Files:   files,
-		Folders: folders,
-	}
-
-	if sc, ok := metrics[string(config.StatementCoverage)].(lineCoverageDetail); ok {
-		t.StatementCoverage = &sc
-	}
-	if lc, ok := metrics[string(config.LineCoverage)].(lineCoverageDetail); ok {
-		t.LineCoverage = &lc
-	}
-	if mc, ok := metrics[string(config.MethodsHit)].(methodsHitDetail); ok {
-		t.MethodsHit = &mc
-	}
-	if mfc, ok := metrics[string(config.MethodsFullyCovered)].(methodsFullyCoveredDetail); ok {
-		t.MethodsFullyCovered = &mfc
-	}
-
-	if psc, ok := metrics[string(config.PatchStatementCoverage)].(lineCoverageDetail); ok {
-		t.PatchStatementCoverage = &psc
-	}
-	if plc, ok := metrics[string(config.PatchLineCoverage)].(lineCoverageDetail); ok {
-		t.PatchLineCoverage = &plc
-	}
-
-	if pmc, ok := metrics[string(config.PatchMethodsHit)].(methodsHitDetail); ok {
-		t.PatchMethodsHit = &pmc
-	}
-
-	if mcc, ok := metrics[string(config.MaxCyclomaticComplexity)].(scoreDetail); ok {
-		t.MaxCyclomaticComplexity = &mcc
-	}
-
-	return t
+	return totals{Metrics: b.buildMetricsMap(tree.Metrics), Files: files, Folders: folders}
 }
 
+// buildMetricsMap shapes the calculated file metrics for the UI. A metric
+// needs no code here: a percentage and a plain value each have one shape.
 func (b *HtmlReactReportBuilder) buildMetricsMap(m model.CoverageMetrics) metricsMap {
 	metrics := metricsMap{}
 	for key := range b.config.ActiveFileMetrics {
-		if calcData, exists := m.Calculated[key]; exists {
+		switch detail := m.Calculated[key].(type) {
+		case model.ScoreDetail:
+			metrics[string(key)] = scoreDetail{Value: detail.Value}
+		case model.CoverageDetail:
+			if !countsCode[key] {
+				metrics[string(key)] = countDetail{Covered: detail.Covered, Total: detail.Total, Percentage: detail.Percentage}
+				continue
+			}
+			d := lineCoverageDetail{Covered: detail.Covered, Uncovered: detail.Uncovered, Coverable: detail.Total, Total: detail.Total, Percentage: detail.Percentage}
+			// lines also have a total that includes the lines nothing can cover
 			switch key {
 			case config.LineCoverage:
-				if detail, ok := calcData.(model.CoverageDetail); ok {
-					metrics[string(key)] = lineCoverageDetail{Covered: detail.Covered, Uncovered: detail.Uncovered, Coverable: detail.Total, Total: m.TotalLines, Percentage: detail.Percentage}
-				}
-			case config.StatementCoverage, config.PatchStatementCoverage:
-				if detail, ok := calcData.(model.CoverageDetail); ok {
-					metrics[string(key)] = lineCoverageDetail{Covered: detail.Covered, Uncovered: detail.Uncovered, Coverable: detail.Total, Total: detail.Total, Percentage: detail.Percentage}
-				}
+				d.Total = m.TotalLines
 			case config.PatchLineCoverage:
-				if detail, ok := calcData.(model.CoverageDetail); ok {
-					total := m.PatchLinesTotal
-					if total == 0 {
-						total = detail.Total
-					}
-					metrics[string(key)] = lineCoverageDetail{Covered: detail.Covered, Uncovered: detail.Uncovered, Coverable: detail.Total, Total: total, Percentage: detail.Percentage}
+				if m.PatchLinesTotal > 0 {
+					d.Total = m.PatchLinesTotal
 				}
-			case config.MethodsHit, config.PatchMethodsHit:
-				if detail, ok := calcData.(model.CoverageDetail); ok {
-					metrics[string(key)] = methodsHitDetail{Covered: detail.Covered, Total: detail.Total, Percentage: detail.Percentage}
-				}
-			case config.MethodsFullyCovered:
-				if detail, ok := calcData.(model.CoverageDetail); ok {
-					metrics[string(key)] = methodsFullyCoveredDetail{Covered: detail.Covered, Total: detail.Total, Percentage: detail.Percentage}
-				}
-			case config.MaxCyclomaticComplexity:
-				if score, ok := calcData.(model.ScoreDetail); ok {
-					metrics[string(key)] = scoreDetail{Value: score.Value}
-				}
-			default:
-				metrics[string(key)] = calcData
 			}
+			metrics[string(key)] = d
 		}
 	}
 	return metrics
 }
 
+// metrics that count lines or statements; the others count methods
+var countsCode = map[config.MetricKey]bool{
+	config.LineCoverage:           true,
+	config.StatementCoverage:      true,
+	config.PatchLineCoverage:      true,
+	config.PatchStatementCoverage: true,
+}
+
+// buildMetricDefinitions tells the UI how to label and lay out each active
+// metric. The text comes from the metric tables in internal/config.
 func (b *HtmlReactReportBuilder) buildMetricDefinitions() metricDefinitions {
 	defs := metricDefinitions{}
-
-	if b.config.ActiveFileMetrics[config.StatementCoverage] {
-		defs[string(config.StatementCoverage)] = metricDefinition{
-			Label:      "Statements",
-			ShortLabel: "Statements",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 100},
-				{ID: "uncovered", Label: "Uncovered", Width: 100},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
+	for _, def := range config.FileMetricDefs {
+		if b.config.ActiveFileMetrics[def.Key] {
+			defs[string(def.Key)] = fileMetricDefinition(def)
 		}
 	}
-	if b.config.ActiveMethodMetrics[config.MethodStatementCoverage] {
-		defs[MethodUIStmtCoverage] = metricDefinition{
-			Label:      "Statements",
-			ShortLabel: "Statements",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
+	for key, def := range b.methodMetricKeys() {
+		defs[key] = metricDefinition{
+			Label:       def.Label,
+			ShortLabel:  def.ShortLabel(),
+			Description: def.Doc,
+			Kind:        metricKind(def),
+			SubMetrics:  []subMetric{{ID: "value", Label: "Value", Width: 100}},
 		}
 	}
-
-	if b.config.ActiveMethodMetrics[config.MethodCrapScore] {
-		defs[MethodUICrapScore] = metricDefinition{
-			Label:      "CRAP Score",
-			ShortLabel: "CRAP",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
-		}
-	}
-
-	if b.config.ActiveMethodMetrics[config.MethodExposedRisk] {
-		defs[MethodUIExposedRisk] = metricDefinition{
-			Label:      "Exposed Risk",
-			ShortLabel: "Risk",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
-		}
-	}
-
-	if b.config.ActiveFileMetrics[config.LineCoverage] {
-		defs[string(config.LineCoverage)] = metricDefinition{
-			Label:      "Lines",
-			ShortLabel: "Lines",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 100},
-				{ID: "uncovered", Label: "Uncovered", Width: 100},
-				{ID: "coverable", Label: "Coverable", Width: 100},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		}
-	}
-	if b.config.ActiveMethodMetrics[config.MethodLineCoverage] {
-		defs[MethodUILineCoverage] = metricDefinition{
-			Label:      "Lines",
-			ShortLabel: "Lines",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
-		}
-	}
-
-	if b.config.ActiveFileMetrics[config.PatchStatementCoverage] {
-		defs[string(config.PatchStatementCoverage)] = metricDefinition{
-			Label:      "Patch Statements",
-			ShortLabel: "Patch Statements",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 100},
-				{ID: "uncovered", Label: "Uncovered", Width: 100},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		}
-	}
-	if b.config.ActiveMethodMetrics[config.MethodPatchStatementCoverage] {
-		defs[MethodUIPatchStmtCoverage] = metricDefinition{
-			Label:      "Patch Statements",
-			ShortLabel: "Patch Stmts",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
-		}
-	}
-
-	if b.config.ActiveFileMetrics[config.PatchLineCoverage] {
-		defs[string(config.PatchLineCoverage)] = metricDefinition{
-			Label:      "Patch Lines",
-			ShortLabel: "Patch Lines",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 100},
-				{ID: "uncovered", Label: "Uncovered", Width: 100},
-				{ID: "coverable", Label: "Coverable", Width: 100},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		}
-	}
-	if b.config.ActiveMethodMetrics[config.MethodPatchLineCoverage] {
-		defs[MethodUIPatchLineCoverage] = metricDefinition{
-			Label:      "Patch Lines",
-			ShortLabel: "Patch Lines",
-			SubMetrics: []subMetric{{ID: "total", Label: "Value", Width: 100}},
-		}
-	}
-
-	if b.config.ActiveFileMetrics[config.MaxCyclomaticComplexity] {
-		defs[string(config.MaxCyclomaticComplexity)] = metricDefinition{
-			Label:      "Max Cyclomatic Complexity",
-			ShortLabel: "Max Complexity",
-			Kind:       "value",
-			SubMetrics: []subMetric{
-				// Wide enough that the "Max Complexity" header never wraps.
-				{ID: "value", Label: "Value", Width: 140},
-			},
-		}
-	}
-	if b.config.ActiveMethodMetrics[config.CyclomaticComplexity] {
-		defs[MethodUICyclomaticComplexity] = metricDefinition{
-			Label:      "Cyclomatic Complexity",
-			ShortLabel: "Complexity",
-			Kind:       "value",
-			SubMetrics: []subMetric{{ID: "value", Label: "Value", Width: 100}},
-		}
-	}
-
-	if b.config.ActiveFileMetrics[config.MethodsHit] {
-		defs[string(config.MethodsHit)] = metricDefinition{
-			Label:      "Methods Hit",
-			ShortLabel: "Methods Hit",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Hit", Width: 80},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		}
-	}
-
-	if b.config.ActiveFileMetrics[config.MethodsFullyCovered] {
-		defs[string(config.MethodsFullyCovered)] = metricDefinition{
-			Label:      "Methods Fully Covered",
-			ShortLabel: "Fully Covered",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Covered", Width: 80},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		}
-	}
-
-	if b.config.ActiveFileMetrics[config.PatchMethodsHit] {
-		defs[string(config.PatchMethodsHit)] = metricDefinition{
-			Label:      "Patch Methods Hit",
-			ShortLabel: "Patch Methods Hit",
-			SubMetrics: []subMetric{
-				{ID: "covered", Label: "Hit", Width: 80},
-				{ID: "total", Label: "Total", Width: 80},
-				{ID: "percentage", Label: "Percentage %", Width: 160},
-			},
-		}
-	}
-
-	for key, def := range defs {
-		def.Description = describeMetric(key)
-		defs[key] = def
-	}
-
 	return defs
 }
 
-// uiMetricKeys maps the sort-prefixed method metric keys the UI uses back to
-// the config key whose evaluator owns the description.
-var uiMetricKeys = map[string]config.MetricKey{
-	MethodUIStmtCoverage:         config.MethodStatementCoverage,
-	MethodUILineCoverage:         config.MethodLineCoverage,
-	MethodUIPatchStmtCoverage:    config.MethodPatchStatementCoverage,
-	MethodUIPatchLineCoverage:    config.MethodPatchLineCoverage,
-	MethodUICyclomaticComplexity: config.CyclomaticComplexity,
-	MethodUICrapScore:            config.MethodCrapScore,
-	MethodUIExposedRisk:          config.MethodExposedRisk,
-}
-
-// describeMetric returns the one-line explanation shown in the UI tooltips. The
-// evaluator is the source of truth, so a metric is documented in one place.
-func describeMetric(key string) string {
-	metricKey := config.MetricKey(key)
-	if mapped, ok := uiMetricKeys[key]; ok {
-		metricKey = mapped
-	}
-
-	if evaluator, ok := evaluators.Registry[metricKey]; ok {
-		return evaluator.Description()
+func metricKind(def config.MetricDef) string {
+	if def.Value {
+		return "value"
 	}
 	return ""
 }
 
+func fileMetricDefinition(def config.MetricDef) metricDefinition {
+	out := metricDefinition{Label: def.Label, ShortLabel: def.ShortLabel(), Description: def.Doc, Kind: metricKind(def)}
+	percentage := subMetric{ID: "percentage", Label: "Percentage %", Width: 160}
+	switch {
+	case def.Value:
+		// wide enough that a header like "Max Complexity" never wraps
+		out.SubMetrics = []subMetric{{ID: "value", Label: "Value", Width: 140}}
+	case def.Key == config.LineCoverage || def.Key == config.PatchLineCoverage:
+		out.SubMetrics = []subMetric{
+			{ID: "covered", Label: "Covered", Width: 100},
+			{ID: "uncovered", Label: "Uncovered", Width: 100},
+			{ID: "coverable", Label: "Coverable", Width: 100},
+			{ID: "total", Label: "Total", Width: 80},
+			percentage,
+		}
+	case countsCode[def.Key]:
+		out.SubMetrics = []subMetric{
+			{ID: "covered", Label: "Covered", Width: 100},
+			{ID: "uncovered", Label: "Uncovered", Width: 100},
+			{ID: "total", Label: "Total", Width: 80},
+			percentage,
+		}
+	default:
+		covered := "Hit"
+		if strings.Contains(def.Name, "fully_covered") {
+			covered = "Covered"
+		}
+		out.SubMetrics = []subMetric{{ID: "covered", Label: covered, Width: 80}, {ID: "total", Label: "Total", Width: 80}, percentage}
+	}
+	return out
+}
+
+// methodMetricKeys gives each active method metric its key in the UI data.
+// The UI lists method metrics sorted by key, so the key starts with a letter
+// for the configured position: "a_statement_coverage", "b_complexity", ...
+func (b *HtmlReactReportBuilder) methodMetricKeys() map[string]config.MetricDef {
+	keys := make(map[string]config.MetricDef, len(b.config.MethodMetrics))
+	for i, key := range b.config.MethodMetrics {
+		if def, ok := config.Metric(key); ok {
+			keys[methodUIKey(i, def)] = def
+		}
+	}
+	return keys
+}
+
+func methodUIKey(position int, def config.MetricDef) string {
+	return string(rune('a'+position)) + "_" + def.Name
+}
+
 func countFlatNodes(nodes []fileNode) (files, folders int) {
 	for _, node := range nodes {
-		if node.Type == "file" {
+		switch {
+		case node.Config:
+		case node.Type == "file":
 			files++
-		} else {
+		default:
 			folders++
 		}
 	}

@@ -21,10 +21,12 @@ func Annotate(tree *model.SummaryTree, cfg *config.AppConfig, caps Capabilities,
 		return
 	}
 	walk(tree.Root, func(dir *model.DirNode) {
-		annotateMetrics(dir.Metrics, &dir.Statuses, cfg.ActiveFileMetrics, cfg.StatusBands, caps, registry)
+		// a folder can have its own warning ranges; its files share them
+		bands := cfg.BandsFor(dir.Path)
+		annotateMetrics(dir.Metrics, &dir.Statuses, cfg.ActiveFileMetrics, bands, caps, registry)
 		for _, file := range dir.Files {
-			annotateMetrics(file.Metrics, &file.Statuses, cfg.ActiveFileMetrics, cfg.StatusBands, caps, registry)
-			annotateMethodNodes(file.Methods, cfg.ActiveMethodMetrics, cfg.StatusBands, caps, registry)
+			annotateMetrics(file.Metrics, &file.Statuses, cfg.ActiveFileMetrics, bands, caps, registry)
+			annotateMethodNodes(file.Methods, cfg.ActiveMethodMetrics, bands, caps, registry)
 		}
 	})
 }

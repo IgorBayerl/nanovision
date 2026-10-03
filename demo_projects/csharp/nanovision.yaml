@@ -1,0 +1,7 @@
+# Folder config for demo_projects/csharp.
+# This demo lists its own coverage report. The root config does not know it.
+# Paths are relative to this folder.
+reports:
+  - path: "report/cobertura/cobertura.xml"
+    source: "project"
+    name: "csharp demo (cobertura)"

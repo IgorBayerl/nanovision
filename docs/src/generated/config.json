@@ -1,0 +1,478 @@
+{
+  "fields": [
+    {
+      "key": "title",
+      "type": "string",
+      "doc": "Title of the HTML report.",
+      "default": "Coverage Report",
+      "flag": "title",
+      "rootOnly": true
+    },
+    {
+      "key": "output_dir",
+      "type": "string",
+      "doc": "Folder for the output files.",
+      "default": "coverage-report",
+      "flag": "output",
+      "rootOnly": true
+    },
+    {
+      "key": "report_types",
+      "type": "list of strings",
+      "doc": "Output formats to write.",
+      "default": "TextSummary, Html",
+      "values": [
+        "Html",
+        "HtmlUnified",
+        "TextSummary",
+        "Lcov",
+        "RawJson",
+        "Sarif",
+        "Annotations"
+      ],
+      "flag": "reporttypes",
+      "rootOnly": true
+    },
+    {
+      "key": "reports",
+      "type": "list",
+      "doc": "Coverage reports to read.",
+      "fields": [
+        {
+          "key": "reports[].path",
+          "type": "string",
+          "doc": "Report file or glob pattern."
+        },
+        {
+          "key": "reports[].source",
+          "type": "string",
+          "doc": "Folder of the source code for this report. Default: the project root."
+        },
+        {
+          "key": "reports[].name",
+          "type": "string",
+          "doc": "Label in the report selector. Default: the file name."
+        }
+      ]
+    },
+    {
+      "key": "ignore_files",
+      "type": "list of strings",
+      "doc": "Source files to leave out. Glob patterns."
+    },
+    {
+      "key": "metrics",
+      "type": "object",
+      "doc": "Metrics to show, with their warning ranges.",
+      "fields": [
+        {
+          "key": "metrics.files",
+          "type": "list",
+          "doc": "File and folder metrics, in column order. Empty shows all.",
+          "fields": [
+            {
+              "key": "metrics.files[].name",
+              "type": "string",
+              "doc": "Metric name."
+            },
+            {
+              "key": "metrics.files[].warning",
+              "type": "range",
+              "doc": "Warning range \"min..max\". Below is danger, above is safe. Reversed for lower-is-better metrics."
+            }
+          ]
+        },
+        {
+          "key": "metrics.methods",
+          "type": "list",
+          "doc": "Method metrics, in column order. Empty shows all.",
+          "fields": [
+            {
+              "key": "metrics.methods[].name",
+              "type": "string",
+              "doc": "Metric name."
+            },
+            {
+              "key": "metrics.methods[].warning",
+              "type": "range",
+              "doc": "Warning range \"min..max\". Below is danger, above is safe. Reversed for lower-is-better metrics."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "file_filters",
+      "type": "list of strings",
+      "doc": "Source files to include (+pattern) or exclude (-pattern).",
+      "flag": "filefilters",
+      "rootOnly": true
+    },
+    {
+      "key": "nested_configs",
+      "type": "boolean",
+      "doc": "Read the nanovision.yaml files in sub-folders.",
+      "default": "true",
+      "rootOnly": true
+    },
+    {
+      "key": "diff",
+      "type": "object",
+      "doc": "The change to measure.",
+      "rootOnly": true,
+      "fields": [
+        {
+          "key": "diff.file",
+          "type": "string",
+          "doc": "Unified diff file. Empty: the VCS makes the diff.",
+          "flag": "diff"
+        },
+        {
+          "key": "diff.strip",
+          "type": "string",
+          "doc": "Leading path parts to remove: auto, or 0 to 6.",
+          "default": "auto",
+          "flag": "diff-strip"
+        },
+        {
+          "key": "diff.only_changed",
+          "type": "boolean",
+          "doc": "The HTML report holds only the changed files.",
+          "flag": "only-changed"
+        },
+        {
+          "key": "diff.root_override",
+          "type": "string",
+          "doc": "Folder the diff paths are relative to."
+        },
+        {
+          "key": "diff.path_maps",
+          "type": "list",
+          "doc": "Rewrite rules for diff paths.",
+          "fields": [
+            {
+              "key": "diff.path_maps[].from",
+              "type": "string",
+              "doc": "Path prefix in the diff."
+            },
+            {
+              "key": "diff.path_maps[].to",
+              "type": "string",
+              "doc": "Path prefix in the project."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "review",
+      "type": "object",
+      "doc": "Rules for the changed code.",
+      "rootOnly": true,
+      "fields": [
+        {
+          "key": "review.gate",
+          "type": "object",
+          "doc": "Limits for the changed code.",
+          "fields": [
+            {
+              "key": "review.gate.patch_statement_coverage",
+              "type": "number",
+              "doc": "Minimum coverage of the changed statements, 0 to 100."
+            },
+            {
+              "key": "review.gate.max_changed_method_complexity",
+              "type": "number",
+              "doc": "Maximum complexity of a changed method."
+            }
+          ]
+        },
+        {
+          "key": "review.hotspots",
+          "type": "number",
+          "doc": "Number of risky changed methods to list.",
+          "default": "10"
+        },
+        {
+          "key": "review.fail_on",
+          "type": "string",
+          "doc": "Fail the build on errors in changed code, or also on warnings.",
+          "default": "never",
+          "values": [
+            "never",
+            "error",
+            "warning"
+          ],
+          "flag": "fail-on"
+        }
+      ]
+    },
+    {
+      "key": "vcs",
+      "type": "object",
+      "doc": "Version control.",
+      "rootOnly": true,
+      "fields": [
+        {
+          "key": "vcs.type",
+          "type": "string",
+          "doc": "Version control system. Empty turns it off.",
+          "values": [
+            "git",
+            "perforce"
+          ],
+          "flag": "vcs"
+        },
+        {
+          "key": "vcs.base_branch",
+          "type": "string",
+          "doc": "Git: branch to compare with. Default: the remote default branch."
+        }
+      ]
+    },
+    {
+      "key": "history",
+      "type": "object",
+      "doc": "Run store. It gives the comparison with a base run.",
+      "rootOnly": true,
+      "fields": [
+        {
+          "key": "history.store",
+          "type": "string",
+          "doc": "Server URL or local folder. Empty turns history off.",
+          "flag": "store"
+        },
+        {
+          "key": "history.project",
+          "type": "string",
+          "doc": "Project name. Default: the project folder name.",
+          "flag": "project"
+        },
+        {
+          "key": "history.profile",
+          "type": "string",
+          "doc": "Name of the test suite. Keeps its runs apart.",
+          "default": "default",
+          "flag": "profile"
+        },
+        {
+          "key": "history.max_distance",
+          "type": "number",
+          "doc": "Revisions to search back for a base run.",
+          "default": "50"
+        },
+        {
+          "key": "history.keep_local",
+          "type": "number",
+          "doc": "Local runs to keep for each stream.",
+          "default": "20"
+        }
+      ]
+    },
+    {
+      "key": "default_filters",
+      "type": "string",
+      "doc": "Filters applied when the report opens. Example: risk=danger.",
+      "flag": "default-filters",
+      "rootOnly": true
+    },
+    {
+      "key": "tag",
+      "type": "string",
+      "doc": "Tag of the run. Example: a build number.",
+      "flag": "tag",
+      "rootOnly": true
+    },
+    {
+      "key": "verbosity",
+      "type": "string",
+      "doc": "Log level.",
+      "default": "Info",
+      "values": [
+        "Off",
+        "Error",
+        "Warning",
+        "Info",
+        "Verbose"
+      ],
+      "flag": "verbosity",
+      "rootOnly": true
+    },
+    {
+      "key": "log_file",
+      "type": "string",
+      "doc": "Also write the log to this file.",
+      "flag": "logfile",
+      "rootOnly": true
+    },
+    {
+      "key": "log_format",
+      "type": "string",
+      "doc": "Log format.",
+      "default": "text",
+      "values": [
+        "text",
+        "json"
+      ],
+      "flag": "logformat",
+      "rootOnly": true
+    },
+    {
+      "key": "ignore_cache",
+      "type": "boolean",
+      "doc": "Analyze every file again. Do not use the cache.",
+      "flag": "ignore-cache",
+      "rootOnly": true
+    }
+  ],
+  "metrics": {
+    "files": [
+      {
+        "name": "statement_coverage",
+        "label": "Statements",
+        "doc": "Statements run by tests.",
+        "kind": "percentage"
+      },
+      {
+        "name": "line_coverage",
+        "label": "Lines",
+        "doc": "Lines run by tests.",
+        "kind": "percentage"
+      },
+      {
+        "name": "methods_hit",
+        "label": "Methods Hit",
+        "doc": "Methods entered by tests.",
+        "kind": "percentage"
+      },
+      {
+        "name": "methods_fully_covered",
+        "label": "Methods Fully Covered",
+        "doc": "Methods with every line run.",
+        "kind": "percentage"
+      },
+      {
+        "name": "statement_methods_hit",
+        "label": "Statement Methods Hit",
+        "doc": "Methods with a statement run.",
+        "kind": "percentage"
+      },
+      {
+        "name": "statement_methods_fully_covered",
+        "label": "Statement Methods Fully Covered",
+        "doc": "Methods with every statement run.",
+        "kind": "percentage"
+      },
+      {
+        "name": "patch_statement_coverage",
+        "label": "Patch Statements",
+        "doc": "Changed statements run by tests. Needs a diff.",
+        "kind": "percentage"
+      },
+      {
+        "name": "patch_line_coverage",
+        "label": "Patch Lines",
+        "doc": "Changed lines run by tests. Needs a diff.",
+        "kind": "percentage"
+      },
+      {
+        "name": "patch_methods_hit",
+        "label": "Patch Methods Hit",
+        "doc": "Changed methods entered by tests. Needs a diff.",
+        "kind": "percentage"
+      },
+      {
+        "name": "patch_statement_methods_hit",
+        "label": "Patch Statement Methods Hit",
+        "doc": "Changed methods with a statement run. Needs a diff.",
+        "kind": "percentage"
+      },
+      {
+        "name": "max_complexity",
+        "label": "Max Cyclomatic Complexity",
+        "doc": "Highest method complexity. Lower is better.",
+        "kind": "value",
+        "lowerIsBetter": true
+      }
+    ],
+    "methods": [
+      {
+        "name": "statement_coverage",
+        "label": "Statements",
+        "doc": "Statements run by tests.",
+        "kind": "percentage"
+      },
+      {
+        "name": "line_coverage",
+        "label": "Lines",
+        "doc": "Lines run by tests.",
+        "kind": "percentage"
+      },
+      {
+        "name": "patch_statement_coverage",
+        "label": "Patch Statements",
+        "doc": "Changed statements run by tests. Needs a diff.",
+        "kind": "percentage"
+      },
+      {
+        "name": "patch_line_coverage",
+        "label": "Patch Lines",
+        "doc": "Changed lines run by tests. Needs a diff.",
+        "kind": "percentage"
+      },
+      {
+        "name": "complexity",
+        "label": "Cyclomatic Complexity",
+        "doc": "Paths through the method. Lower is better.",
+        "kind": "value",
+        "lowerIsBetter": true
+      },
+      {
+        "name": "crap_score",
+        "label": "CRAP Score",
+        "doc": "Complexity weighted by missing coverage. Lower is better.",
+        "kind": "value",
+        "lowerIsBetter": true
+      }
+    ]
+  },
+  "outputFormats": [
+    {
+      "name": "Html",
+      "writes": "index.html",
+      "doc": "Interactive web report.",
+      "default": true
+    },
+    {
+      "name": "HtmlUnified",
+      "writes": "index.html",
+      "doc": "The web report as one file."
+    },
+    {
+      "name": "TextSummary",
+      "writes": "Summary.txt",
+      "doc": "Summary table. Also printed to the console.",
+      "default": true
+    },
+    {
+      "name": "Lcov",
+      "writes": "lcov.info",
+      "doc": "Merged coverage in lcov format."
+    },
+    {
+      "name": "RawJson",
+      "writes": "RawJson.json",
+      "doc": "All data as JSON."
+    },
+    {
+      "name": "Sarif",
+      "writes": "nanovision.sarif.json",
+      "doc": "Problems as SARIF, for IDEs and code scanning."
+    },
+    {
+      "name": "Annotations",
+      "writes": "Annotations.md",
+      "doc": "Problems as a Markdown list."
+    }
+  ]
+}

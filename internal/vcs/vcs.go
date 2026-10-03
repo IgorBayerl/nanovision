@@ -106,27 +106,19 @@ type Options struct {
 // ErrNotFound means auto detection found neither git nor Perforce.
 var ErrNotFound = errors.New("no git repository or Perforce workspace contains the project root")
 
-// Detect returns the adapter for kind: "none" gives nil, "auto" tries git
-// first and then Perforce.
+// Detect returns the adapter for kind: "git" or "perforce". An empty kind
+// gives nil: version control is off.
 func Detect(kind, projectRoot string, opts Options) (VCS, error) {
 	if opts.Runner == nil {
 		opts.Runner = DefaultRunner
 	}
 	switch strings.ToLower(kind) {
-	case "", "none":
+	case "":
 		return nil, nil
 	case "git":
 		return newGit(projectRoot, opts)
 	case "perforce", "p4":
 		return newPerforce(projectRoot, opts)
-	case "auto":
-		if g, err := newGit(projectRoot, opts); err == nil {
-			return g, nil
-		}
-		if p, err := newPerforce(projectRoot, opts); err == nil {
-			return p, nil
-		}
-		return nil, ErrNotFound
 	default:
 		return nil, fmt.Errorf("unknown vcs type %q", kind)
 	}

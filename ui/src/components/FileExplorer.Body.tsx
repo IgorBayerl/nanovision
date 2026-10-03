@@ -1,6 +1,7 @@
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { TreeRow } from '@/components/Tree.Row'
+import type { ConfigFile } from '@/lib/validation'
 import type { DiffStatus, FileNode, MetricConfig, Metrics } from '@/types/summary'
 
 type RenderNode = FileNode & { depth: number }
@@ -14,6 +15,8 @@ interface BodyProps {
     isPinned: boolean
     /** Folder id -> diff status aggregated from descendant files. */
     folderDiffMap: Map<string, DiffStatus>
+    /** The folder config that applies to a path, if any. */
+    configFor: (path: string) => ConfigFile | undefined
 }
 
 const metricsForNode = (node: FileNode): Partial<Metrics> | undefined => {
@@ -31,6 +34,7 @@ export default function FileExplorerBody({
     viewMode,
     isPinned,
     folderDiffMap,
+    configFor,
 }: BodyProps) {
     const listRef = useRef<HTMLDivElement>(null)
 
@@ -89,6 +93,7 @@ export default function FileExplorerBody({
                                 index={virtualRow.index}
                                 isPinned={isPinned}
                                 diffStatus={diffStatus}
+                                config={configFor(node.path)}
                             />
                         </div>
                     )

@@ -41,7 +41,7 @@ type runIdentity struct {
 func resolveIdentity(cfg *config.AppConfig, logger *slog.Logger) runIdentity {
 	id := runIdentity{kind: store.RunKind(cfg.Run.Kind)}
 
-	if cfg.VCS.Type != "none" {
+	if cfg.VCS.Type != "" {
 		v, err := vcs.Detect(cfg.VCS.Type, cfg.ProjectRoot, vcs.Options{BaseBranch: cfg.VCS.BaseBranch})
 		switch {
 		case errors.Is(err, vcs.ErrNotFound):

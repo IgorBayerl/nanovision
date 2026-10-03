@@ -5,105 +5,59 @@ import (
 	"github.com/IgorBayerl/nanovision/internal/model"
 )
 
-// Calculator is a constraint for types that have a DependsOn method.
-type Calculator interface {
-	DependsOn() []config.MetricKey
-}
-
-// topSortCalculators returns a slice of MetricKeys sorted such that
-// for every calculator C, its dependencies appear before C in the slice.
-func topSortCalculators[C Calculator](registry map[config.MetricKey]C, active map[config.MetricKey]bool) []config.MetricKey {
+// methodOrder returns the active method metrics and their dependencies, each
+// after the metrics it depends on.
+func methodOrder(active map[config.MetricKey]bool) []config.MetricKey {
 	var sorted []config.MetricKey
 	visited := make(map[config.MetricKey]bool)
-	visiting := make(map[config.MetricKey]bool)
 
 	var visit func(key config.MetricKey)
 	visit = func(key config.MetricKey) {
-		if visited[key] || visiting[key] {
+		if visited[key] {
 			return
 		}
-		visiting[key] = true
-
-		if calc, ok := registry[key]; ok {
-			for _, dep := range calc.DependsOn() {
-				visit(dep)
-			}
-		}
-
-		visiting[key] = false
 		visited[key] = true
+		for _, dep := range MethodRegistry[key].Deps {
+			visit(dep)
+		}
 		sorted = append(sorted, key)
 	}
-
-	// Copy initial keys to avoid map iteration issues while modifying active.
-	initialKeys := make([]config.MetricKey, 0, len(active))
-	for k := range active {
-		initialKeys = append(initialKeys, k)
-	}
-
-	for _, key := range initialKeys {
+	for key := range active {
 		visit(key)
 	}
 	return sorted
 }
 
-func topSortFileCalculators(active map[config.MetricKey]bool) []config.MetricKey {
-	return topSortCalculators(FileRegistry, active)
-}
-
-func topSortMethodCalculators(active map[config.MetricKey]bool) []config.MetricKey {
-	return topSortCalculators(MethodRegistry, active)
-}
-
 // CalculateTree traverses the coverage tree and populates the Calculated map on every metric.
 func CalculateTree(tree *model.SummaryTree, activeFileMetrics map[config.MetricKey]bool, activeMethodMetrics map[config.MetricKey]bool) {
-	sortedFileKeys := topSortFileCalculators(activeFileMetrics)
-	sortedMethodKeys := topSortMethodCalculators(activeMethodMetrics)
+	methodKeys := methodOrder(activeMethodMetrics)
 
-	// First do the root
-	if tree.Metrics.Calculated == nil {
-		tree.Metrics.Calculated = make(map[config.MetricKey]any)
-	}
-	for _, key := range sortedFileKeys {
-		if calc, ok := FileRegistry[key]; ok {
-			if res, ok := calc.Calculate(tree.Metrics, tree.Metrics.Calculated); ok {
-				tree.Metrics.Calculated[key] = res
+	calculateFile := func(m *model.CoverageMetrics) {
+		if m.Calculated == nil {
+			m.Calculated = make(map[config.MetricKey]any)
+		}
+		for key := range activeFileMetrics {
+			if calc, ok := FileRegistry[key]; ok {
+				if res, ok := calc(*m); ok {
+					m.Calculated[key] = res
+				}
 			}
 		}
 	}
+
+	calculateFile(&tree.Metrics)
 
 	var walk func(n *model.DirNode)
 	walk = func(n *model.DirNode) {
-		if n.Metrics.Calculated == nil {
-			n.Metrics.Calculated = make(map[config.MetricKey]any)
-		}
-		for _, key := range sortedFileKeys {
-			if calc, ok := FileRegistry[key]; ok {
-				if res, ok := calc.Calculate(n.Metrics, n.Metrics.Calculated); ok {
-					n.Metrics.Calculated[key] = res
-				}
-			}
-		}
-
+		calculateFile(&n.Metrics)
 		for _, file := range n.Files {
-			if file.Metrics.Calculated == nil {
-				file.Metrics.Calculated = make(map[config.MetricKey]any)
-			}
-			for _, key := range sortedFileKeys {
-				if calc, ok := FileRegistry[key]; ok {
-					if res, ok := calc.Calculate(file.Metrics, file.Metrics.Calculated); ok {
-						file.Metrics.Calculated[key] = res
-					}
-				}
-			}
-
-			// Methods
+			calculateFile(&file.Metrics)
 			for i := range file.Methods {
-				m := &file.Methods[i] // need pointer to modify the slice element
+				m := &file.Methods[i]
 				if m.Calculated == nil {
 					m.Calculated = make(map[config.MetricKey]any)
 				}
-				for _, key := range sortedMethodKeys {
+				for _, key := range methodKeys {
 					if calc, ok := MethodRegistry[key]; ok {
 						if res, ok := calc.Calculate(*m, m.Calculated); ok {
 							m.Calculated[key] = res
@@ -112,12 +66,10 @@ func CalculateTree(tree *model.SummaryTree, activeFileMetrics map[config.MetricK
 				}
 			}
 		}
-
 		for _, sub := range n.Subdirs {
 			walk(sub)
 		}
 	}
-
 	if tree.Root != nil {
 		walk(tree.Root)
 	}

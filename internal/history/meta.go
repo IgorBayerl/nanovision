@@ -49,14 +49,21 @@ type BaseRef struct {
 
 // ConfigSnapshot is the part of the configuration that decides how a run looks.
 type ConfigSnapshot struct {
-	FileMetrics    []config.MetricKey        `json:"fileMetrics,omitempty"`
-	MethodMetrics  []config.MetricKey        `json:"methodMetrics,omitempty"`
-	StatusBands    map[config.MetricKey]Band `json:"statusBands,omitempty"`
-	Gate           Gate                      `json:"gate"`
-	Hotspots       int                       `json:"hotspots,omitempty"`
-	DefaultFilters string                    `json:"defaultFilters,omitempty"`
+	FileMetrics   []config.MetricKey        `json:"fileMetrics,omitempty"`
+	MethodMetrics []config.MetricKey        `json:"methodMetrics,omitempty"`
+	StatusBands   map[config.MetricKey]Band `json:"statusBands,omitempty"`
+	// warning ranges that single folders set for themselves, outer folders first
+	FolderBands    []FolderBands `json:"folderBands,omitempty"`
+	Gate           Gate          `json:"gate"`
+	Hotspots       int           `json:"hotspots,omitempty"`
+	DefaultFilters string        `json:"defaultFilters,omitempty"`
 	// file_filters and ignore_files, as filter rules
 	Filters []string `json:"filters,omitempty"`
+}
+
+type FolderBands struct {
+	Path  string                    `json:"path"`
+	Bands map[config.MetricKey]Band `json:"bands"`
 }
 
 type Band struct {
@@ -77,17 +84,39 @@ func SnapshotConfig(cfg *config.AppConfig) ConfigSnapshot {
 		Hotspots:       cfg.Review.Hotspots,
 		DefaultFilters: cfg.DefaultFilters,
 	}
-	if len(cfg.StatusBands) > 0 {
-		snap.StatusBands = make(map[config.MetricKey]Band, len(cfg.StatusBands))
-		for k, b := range cfg.StatusBands {
-			snap.StatusBands[k] = Band{Min: b.Min, Max: b.Max}
-		}
+	snap.StatusBands = snapshotBands(cfg.StatusBands)
+	for _, o := range cfg.FolderBands {
+		snap.FolderBands = append(snap.FolderBands, FolderBands{Path: o.Path, Bands: snapshotBands(o.Bands)})
 	}
 	snap.Filters = append(snap.Filters, cfg.FileFilters...)
 	for _, pattern := range cfg.IgnoreFiles {
 		snap.Filters = append(snap.Filters, "-"+pattern)
 	}
+	for _, o := range cfg.Folders {
+		for _, pattern := range o.IgnoreFiles {
+			snap.Filters = append(snap.Filters, "-"+o.Path+"/"+pattern)
+		}
+	}
 	return snap
+}
+
+func snapshotBands(bands config.StatusBands) map[config.MetricKey]Band {
+	if len(bands) == 0 {
+		return nil
+	}
+	out := make(map[config.MetricKey]Band, len(bands))
+	for k, b := range bands {
+		out[k] = Band{Min: b.Min, Max: b.Max}
+	}
+	return out
+}
+
+func restoreBands(bands map[config.MetricKey]Band) config.StatusBands {
+	out := make(config.StatusBands, len(bands))
+	for k, b := range bands {
+		out[k] = config.Band{Min: b.Min, Max: b.Max}
+	}
+	return out
 }
 
 // AppConfig rebuilds the configuration a stored run was made with, enough for
@@ -115,9 +144,9 @@ func (m Meta) AppConfig() (*config.AppConfig, error) {
 	for _, k := range cfg.MethodMetrics {
 		cfg.ActiveMethodMetrics[k] = true
 	}
-	cfg.StatusBands = make(config.StatusBands, len(snap.StatusBands))
-	for k, b := range snap.StatusBands {
-		cfg.StatusBands[k] = config.Band{Min: b.Min, Max: b.Max}
+	cfg.StatusBands = restoreBands(snap.StatusBands)
+	for _, f := range snap.FolderBands {
+		cfg.FolderBands = append(cfg.FolderBands, config.FolderBand{Path: f.Path, Bands: restoreBands(f.Bands)})
 	}
 	cfg.Review.Gate = config.ReviewGate{PatchStatementCoverage: snap.Gate.PatchStatementCoverage, MaxChangedMethodComplexity: snap.Gate.MaxChangedMethodComplexity}
 	cfg.Review.Hotspots = snap.Hotspots

@@ -27,3 +27,4 @@ build
 
 my_changes.diff
 .claude/
+scripts/__pycache__/

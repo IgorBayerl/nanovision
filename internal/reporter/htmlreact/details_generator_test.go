@@ -42,7 +42,7 @@ func TestBuildDetailsReports(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			reportsList := buildDetailsReports(tree, tc.fileNode)
+			reportsList := (&HtmlReactReportBuilder{config: &config.AppConfig{}}).buildDetailsReports(tree, tc.fileNode)
 			// The list is always global, so masks mean the same on every screen.
 			assert.Len(t, reportsList, len(tree.ReportNames))
 			for i, want := range tc.expectedRelevant {
@@ -119,15 +119,13 @@ func TestBuildFileTotals(t *testing.T) {
 
 	totalsData := builder.buildFileTotals(fileNode, maxCyclo)
 
-	// Explicit assignment tests
-	assert.NotNil(t, totalsData.LineCoverage)
-	assert.Equal(t, 150, totalsData.LineCoverage.Total)
+	lines := totalsData.Metrics[string(config.LineCoverage)].(lineCoverageDetail)
+	assert.Equal(t, 150, lines.Total)
 
-	assert.NotNil(t, totalsData.MaxCyclomaticComplexity)
-	assert.Equal(t, 12.0, totalsData.MaxCyclomaticComplexity.Value)
+	assert.Equal(t, scoreDetail{Value: 12}, totalsData.Metrics[string(config.MaxCyclomaticComplexity)])
 
-	// Edge case: PatchStatementCoverage explicitly forced to 100% when nil
-	assert.NotNil(t, totalsData.PatchStatementCoverage)
-	assert.Equal(t, 100.0, totalsData.PatchStatementCoverage.Percentage)
-	assert.Equal(t, 0, totalsData.PatchStatementCoverage.Total)
+	// Edge case: patch statement coverage is 100% when the change holds no statement
+	patch := totalsData.Metrics[string(config.PatchStatementCoverage)].(lineCoverageDetail)
+	assert.Equal(t, 100.0, patch.Percentage)
+	assert.Equal(t, 0, patch.Total)
 }

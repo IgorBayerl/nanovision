@@ -108,9 +108,31 @@ nanovision -report="coverage.out" -sourcedirs="." -diff="changes.diff"
 
 ## Configuration
 
-You can run nanovision entirely via CLI flags, or use a `nanovision.yaml` file for complex setups (like file filtering, risk thresholds, and excluded paths).
+You can run nanovision entirely via CLI flags, or use a `nanovision.yaml` file for complex setups (like file filtering, warning ranges, and excluded paths).
 
-See the **[Configuration Documentation](https://igorbayerl.github.io/nanovision/docs/configs/)** for details.
+```yaml
+reports:
+  - path: "coverage.out"
+    source: "."
+
+metrics:
+  files:
+    - name: statement_coverage
+      warning: "60..75"   # below is danger, above is safe
+    - name: methods_hit
+```
+
+The tool documents its own configuration:
+
+```bash
+nanovision config docs          # every key and every metric, with its description
+nanovision config check         # validate nanovision.yaml and the configs in sub-folders
+nanovision config show src/api  # the settings that apply to a folder, and which file sets each
+```
+
+In a monorepo, a folder can have its own warning ranges, ignored files and reports: put a `nanovision.yaml` inside the folder. It applies to that folder and everything below it. Every other setting is valid only in the root file.
+
+You can also build the file with the **[Configurator](https://igorbayerl.github.io/nanovision/docs/configurator)**.
 
 ## Contributing
 

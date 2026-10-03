@@ -1,6 +1,9 @@
 package htmlreact
 
 import (
+	"encoding/json"
+	"maps"
+
 	"github.com/IgorBayerl/nanovision/internal/aggregator"
 	"github.com/IgorBayerl/nanovision/internal/model"
 	"github.com/IgorBayerl/nanovision/internal/review"
@@ -22,13 +25,8 @@ type lineCoverageDetail struct {
 	Percentage float64 `json:"percentage"`
 }
 
-type methodsHitDetail struct {
-	Covered    int     `json:"covered"`
-	Total      int     `json:"total"`
-	Percentage float64 `json:"percentage"`
-}
-
-type methodsFullyCoveredDetail struct {
+// a metric that counts methods
+type countDetail struct {
 	Covered    int     `json:"covered"`
 	Total      int     `json:"total"`
 	Percentage float64 `json:"percentage"`
@@ -39,34 +37,25 @@ type scoreDetail struct {
 	Value float64 `json:"value"`
 }
 
-// UI specific method metric keys to enforce alphabetical sorting
-const (
-	MethodUIStmtCoverage         = "a_statement_coverage"
-	MethodUILineCoverage         = "b_line_coverage"
-	MethodUIPatchStmtCoverage    = "c_patch_statement_coverage"
-	MethodUIPatchLineCoverage    = "d_patch_line_coverage"
-	MethodUICyclomaticComplexity = "f_cyclomatic_complexity"
-	MethodUICrapScore            = "g_crap_score"
-	MethodUIExposedRisk          = "i_exposed_risk"
-)
-
 type metricsMap map[string]any
 
+// totals is the metrics of the whole report or of one file, next to its
+// counts. In JSON the metrics sit beside "files", "folders" and "statuses".
 type totals struct {
-	StatementCoverage       *lineCoverageDetail        `json:"statement_coverage,omitempty"`
-	LineCoverage            *lineCoverageDetail        `json:"line_coverage,omitempty"`
-	MethodsHit              *methodsHitDetail          `json:"methods_hit,omitempty"`
-	MethodsFullyCovered     *methodsFullyCoveredDetail `json:"methods_fully_covered,omitempty"`
-	MaxCyclomaticComplexity *scoreDetail               `json:"max_cyclomatic_complexity,omitempty"`
+	Metrics  metricsMap
+	Files    int
+	Folders  int
+	Statuses statuses
+}
 
-	// Patch / diff-based metrics.
-	PatchStatementCoverage *lineCoverageDetail `json:"patch_statement_coverage,omitempty"`
-	PatchLineCoverage      *lineCoverageDetail `json:"patch_line_coverage,omitempty"`
-	PatchMethodsHit        *methodsHitDetail   `json:"patch_methods_hit,omitempty"`
-
-	Files    int      `json:"files"`
-	Folders  int      `json:"folders"`
-	Statuses statuses `json:"statuses,omitempty"`
+func (t totals) MarshalJSON() ([]byte, error) {
+	out := make(map[string]any, len(t.Metrics)+3)
+	maps.Copy(out, t.Metrics)
+	out["files"], out["folders"] = t.Files, t.Folders
+	if len(t.Statuses) > 0 {
+		out["statuses"] = t.Statuses
+	}
+	return json.Marshal(out)
 }
 
 type statuses map[string]riskLevel
@@ -88,6 +77,8 @@ type fileNode struct {
 	TargetURL     string     `json:"targetUrl,omitempty"`
 	DiffStatus    string     `json:"diffStatus,omitempty"`
 	ComponentName string     `json:"componentName,omitempty"`
+	// a config file of the run, listed in its folder; it has no metrics
+	Config bool `json:"config,omitempty"`
 }
 
 type lineStatus string
@@ -136,6 +127,18 @@ type reportIndex map[string][]aggregator.ReportBucket
 type statusBand struct {
 	Min float64 `json:"min"`
 	Max float64 `json:"max"`
+}
+
+type folderBands struct {
+	Path  string                `json:"path"`
+	Bands map[string]statusBand `json:"bands"`
+}
+
+// configFile is one source of settings: the root config file (Path ""), or
+// the settings of one folder.
+type configFile struct {
+	Path   string `json:"path"`   // the folder it applies to
+	Source string `json:"source"` // the file that holds the settings
 }
 
 // MetadataItem is one line of the information block of a report page.
@@ -190,6 +193,10 @@ type summaryV1 struct {
 	// was parsed, or when there are too many to address with a bitmask
 	ReportIndexes map[string]reportIndex `json:"reportIndexes,omitempty"`
 	StatusBands   map[string]statusBand  `json:"statusBands,omitempty"`
+	// folders with their own warning ranges, outer folders first
+	FolderBands []folderBands `json:"folderBands,omitempty"`
+	// the config files of the run; absent when no folder has its own settings
+	Configs []configFile `json:"configs,omitempty"`
 }
 
 type detailsV1 struct {

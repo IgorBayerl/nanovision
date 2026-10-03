@@ -1,0 +1,16 @@
+# Folder config for internal/store.
+# The root nanovision.yaml finds this file and applies it to this folder.
+# A folder config can set only: reports, ignore_files, metrics (warning ranges).
+
+# The run store keeps data for a long time. Use stricter ranges than the root.
+metrics:
+  files:
+    - name: statement_coverage
+      warning: "80..90"
+  methods:
+    - name: complexity
+      warning: "10..15"
+
+# A folder can also leave files out. Patterns are relative to this folder.
+# ignore_files:
+#   - "generated/**"

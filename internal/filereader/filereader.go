@@ -61,7 +61,7 @@ func CountLinesInFile(filePath string) (int, error) {
 
 	scanner := bufio.NewScanner(file)
 
-	// Override default buffer capacity to prevent "token too long" for minified assets
+	// FolderConfig default buffer capacity to prevent "token too long" for minified assets
 	buf := make([]byte, bufio.MaxScanTokenSize)
 	scanner.Buffer(buf, maxLineLength)
 
@@ -105,7 +105,7 @@ func ReadLinesInFile(filePath string) ([]string, error) {
 	var lines []string
 	scanner := bufio.NewScanner(reader)
 
-	// Override default buffer capacity to prevent "token too long" for minified assets
+	// FolderConfig default buffer capacity to prevent "token too long" for minified assets
 	buf := make([]byte, bufio.MaxScanTokenSize)
 	scanner.Buffer(buf, maxLineLength)
 
